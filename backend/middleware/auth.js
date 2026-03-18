@@ -7,7 +7,13 @@ const requireAuth = async (req, res, next) => {
     const token = req.headers.authorization?.split(' ')[1];
     if (!token) return res.status(401).json({ error: 'Unauthorised' });
 
-    const payload = await clerk.verifyToken(token);
+    const payload = await clerk.verifyToken(token, {
+      authorizedParties: [
+        process.env.FRONTEND_URL,
+        'http://localhost:3000',
+      ].filter(Boolean),
+    });
+
     req.clerkUserId = payload.sub;
 
     const pool = require('../db/pool');
@@ -26,12 +32,11 @@ const requireAuth = async (req, res, next) => {
     req.user = user.rows[0];
     next();
   } catch (err) {
-    console.error('Auth error:', err);
+    console.error('Auth error:', err.message);
     res.status(401).json({ error: 'Unauthorised' });
   }
 };
 
-// Requires x-church-id header and valid non-revoked membership
 const requireMembership = async (req, res, next) => {
   try {
     const pool = require('../db/pool');
@@ -52,7 +57,6 @@ const requireMembership = async (req, res, next) => {
   }
 };
 
-// Requires admin role
 const requireAdmin = async (req, res, next) => {
   try {
     const pool = require('../db/pool');
@@ -73,7 +77,6 @@ const requireAdmin = async (req, res, next) => {
   }
 };
 
-// Aliases for backward compatibility
 const requireChurchMember = requireMembership;
 const requireChurchAdmin = requireAdmin;
 
