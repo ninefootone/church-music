@@ -1,0 +1,221 @@
+/* Adobe Fonts - Halyard Display */
+@import url('https://use.typekit.net/waf6equ.css');
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* ============================================================
+   DESIGN TOKENS — update site-wide from here
+============================================================ */
+:root {
+  /* Brand blues */
+  --color-brand-50:  #f0f5f9;
+  --color-brand-100: #dbe7f0;
+  --color-brand-200: #b8d0e3;
+  --color-brand-400: #6496b8;
+  --color-brand-500: #4a7fa5;
+  --color-brand-600: #3a6a8a;
+  --color-brand-700: #2c5270;
+  --color-brand-900: #1a3347;
+
+  /* Accent - sage green */
+  --color-accent-light: #e8f2ec;
+  --color-accent:       #6aa885;
+  --color-accent-dark:  #3d7a5c;
+
+  /* Neutrals */
+  --color-neutral-50:  #f5f7fa;
+  --color-neutral-100: #eaecf0;
+  --color-neutral-200: #d5d9e0;
+  --color-neutral-400: #8a95a0;
+  --color-neutral-600: #5a6570;
+  --color-neutral-900: #1a2530;
+
+  /* Semantic */
+  --color-text-primary:   var(--color-neutral-900);
+  --color-text-secondary: var(--color-neutral-600);
+  --color-text-muted:     var(--color-neutral-400);
+  --color-bg:             var(--color-neutral-50);
+  --color-surface:        #ffffff;
+  --color-border:         var(--color-neutral-100);
+  --color-border-hover:   var(--color-brand-200);
+
+  /* Worship categories */
+  --cat-praise-bg:      #eef3fb; --cat-praise-text:      #3a5fa0;
+  --cat-confession-bg:  #fdf0f0; --cat-confession-text:  #9a3a3a;
+  --cat-assurance-bg:   #e8f2ec; --cat-assurance-text:   #3a7a5a;
+  --cat-communion-bg:   #f5f0fb; --cat-communion-text:   #6a3a9a;
+  --cat-lament-bg:      #fdf5e8; --cat-lament-text:      #9a6a20;
+  --cat-response-bg:    #e8f5fb; --cat-response-text:    #1a6a8a;
+  --cat-sending-bg:     #f0f8e8; --cat-sending-text:     #4a7a20;
+
+  /* Spacing */
+  --space-xs:  4px;
+  --space-sm:  8px;
+  --space-md:  16px;
+  --space-lg:  24px;
+  --space-xl:  32px;
+
+  /* Radii */
+  --radius-sm:   6px;
+  --radius-md:   10px;
+  --radius-lg:   14px;
+  --radius-pill: 999px;
+
+  /* Shadows */
+  --shadow-sm: 0 1px 3px rgba(26,51,71,0.07);
+  --shadow-md: 0 3px 10px rgba(26,51,71,0.09);
+
+  /* Transitions */
+  --transition-fast: 0.12s ease;
+  --transition-base: 0.18s ease;
+}
+
+@layer base {
+  body {
+    font-family: 'Halyard Display', 'Helvetica Neue', system-ui, sans-serif;
+    background-color: var(--color-bg);
+    color: var(--color-text-primary);
+  }
+}
+
+@layer components {
+  /* Buttons */
+  .btn {
+    @apply inline-flex items-center gap-1 rounded-md font-medium transition-colors;
+    padding: 7px 14px;
+    font-size: 14px;
+  }
+
+  .btn-primary {
+    background: var(--color-brand-500);
+    color: white;
+  }
+  .btn-primary:hover { background: var(--color-brand-600); }
+
+  .btn-secondary {
+    background: var(--color-neutral-100);
+    color: var(--color-text-secondary);
+  }
+  .btn-secondary:hover {
+    background: var(--color-neutral-200);
+    color: var(--color-text-primary);
+  }
+
+  .btn-ghost {
+    background: transparent;
+    color: var(--color-brand-500);
+    padding: 4px 0;
+    font-size: 12px;
+  }
+  .btn-ghost:hover { color: var(--color-brand-700); }
+
+  .btn-sm { padding: 5px 12px; font-size: 12px; }
+
+  /* Cards */
+  .card {
+    background: var(--color-surface);
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-lg);
+    padding: var(--space-lg);
+    box-shadow: var(--shadow-sm);
+  }
+
+  /* Badges */
+  .badge {
+    @apply inline-flex items-center font-semibold;
+    padding: 2px 8px;
+    border-radius: var(--radius-pill);
+    font-size: 11px;
+    letter-spacing: 0.02em;
+    white-space: nowrap;
+  }
+
+  .badge-key {
+    background: var(--color-brand-50);
+    color: var(--color-brand-600);
+    border: 1px solid var(--color-brand-100);
+    font-size: 10px;
+    font-weight: 700;
+    padding: 1px 7px;
+    border-radius: var(--radius-pill);
+  }
+
+  .badge-upcoming {
+    background: var(--color-accent-light);
+    color: var(--color-accent-dark);
+  }
+
+  .badge-past {
+    background: var(--color-neutral-100);
+    color: var(--color-neutral-400);
+  }
+
+  /* Category badges */
+  .cat-badge { @apply badge; border-radius: var(--radius-pill); }
+  .cat-praise     { background: var(--cat-praise-bg);     color: var(--cat-praise-text); }
+  .cat-confession { background: var(--cat-confession-bg); color: var(--cat-confession-text); }
+  .cat-assurance  { background: var(--cat-assurance-bg);  color: var(--cat-assurance-text); }
+  .cat-communion  { background: var(--cat-communion-bg);  color: var(--cat-communion-text); }
+  .cat-lament     { background: var(--cat-lament-bg);     color: var(--cat-lament-text); }
+  .cat-response   { background: var(--cat-response-bg);   color: var(--cat-response-text); }
+  .cat-sending    { background: var(--cat-sending-bg);    color: var(--cat-sending-text); }
+
+  /* Tags */
+  .tag {
+    @apply inline-flex items-center;
+    font-size: 11px;
+    color: var(--color-text-secondary);
+    background: var(--color-neutral-50);
+    border: 1px solid var(--color-border);
+    padding: 2px 9px;
+    border-radius: var(--radius-pill);
+  }
+
+  /* Form inputs */
+  .input {
+    @apply w-full outline-none transition-colors;
+    padding: 10px 14px;
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-md);
+    font-family: inherit;
+    font-size: 14px;
+    color: var(--color-text-primary);
+    background: var(--color-surface);
+  }
+  .input:focus {
+    border-color: var(--color-brand-400);
+    box-shadow: 0 0 0 3px rgba(74,127,165,0.1);
+  }
+  .input::placeholder { color: var(--color-text-muted); }
+
+  .label {
+    display: block;
+    font-size: 12px;
+    font-weight: 600;
+    color: var(--color-text-secondary);
+    margin-bottom: 6px;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+  }
+
+  /* Section titles */
+  .section-label {
+    font-size: 11px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.07em;
+    color: var(--color-text-muted);
+    margin-bottom: 10px;
+  }
+
+  /* Page title */
+  .page-title {
+    font-size: 28px;
+    font-weight: 700;
+    color: var(--color-text-primary);
+    letter-spacing: -0.025em;
+    line-height: 1.1;
+  }
+}

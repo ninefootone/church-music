@@ -1,0 +1,18 @@
+# Dependencies
+node_modules/
+.npm
+
+# Environment
+.env
+.env.local
+.env.production
+
+# Build
+.next/
+dist/
+out/
+
+# Misc
+.DS_Store
+*.log
+.vercel
