@@ -27,25 +27,29 @@ const ChurchContext = createContext<ChurchContextType>({
 })
 
 export function ChurchProvider({ children }: { children: ReactNode }) {
-  const { getToken, isSignedIn } = useAuth()
+  const { getToken, isSignedIn, isLoaded } = useAuth()
   const [church, setChurch] = useState<Church | null>(null)
   const [loading, setLoading] = useState(true)
 
   const fetchChurch = async () => {
-    if (!isSignedIn) {
+    if (!isLoaded || !isSignedIn) {
       setLoading(false)
       return
     }
 
     try {
+      // Get fresh token and attach to all requests
       const token = await getToken()
+      if (!token) {
+        setLoading(false)
+        return
+      }
       setAuthToken(token)
 
       const { data } = await api.get('/api/churches/mine')
       if (data && data.length > 0) {
         const c = data[0]
         setChurch(c)
-        // Set church ID header for all future requests
         api.defaults.headers.common['x-church-id'] = c.id
       }
     } catch (err) {
@@ -56,8 +60,10 @@ export function ChurchProvider({ children }: { children: ReactNode }) {
   }
 
   useEffect(() => {
-    fetchChurch()
-  }, [isSignedIn])
+    if (isLoaded) {
+      fetchChurch()
+    }
+  }, [isLoaded, isSignedIn])
 
   return (
     <ChurchContext.Provider value={{
