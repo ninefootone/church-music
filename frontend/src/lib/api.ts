@@ -5,22 +5,16 @@ const api = axios.create({
   headers: { 'Content-Type': 'application/json' },
 })
 
-// Attach Clerk token to every request
-api.interceptors.request.use(async (config) => {
-  try {
-    // Token injected by calling code via setAuthToken()
-    return config
-  } catch {
-    return config
-  }
-})
-
 export function setAuthToken(token: string | null) {
   if (token) {
     api.defaults.headers.common['Authorization'] = `Bearer ${token}`
   } else {
     delete api.defaults.headers.common['Authorization']
   }
+}
+
+export function setChurchId(churchId: string) {
+  api.defaults.headers.common['x-church-id'] = churchId
 }
 
 export default api
