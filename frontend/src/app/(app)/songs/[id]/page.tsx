@@ -1,48 +1,38 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import Link from 'next/link'
+import { useParams, useRouter } from 'next/navigation'
 import { format } from 'date-fns'
 import { ArrowLeft, Download, ExternalLink, Edit, Plus } from 'lucide-react'
 import { CategoryBadge, KeyBadge } from '@/components/ui/badges'
-import { Category } from '@/types'
-
-const song = {
-  id: '1',
-  title: '10,000 Reasons (Bless The Lord)',
-  author: 'Jonas Myrin, Matt Redman',
-  default_key: 'E',
-  category: 'praise' as Category,
-  first_line: 'Bless the Lord, O my soul, O my soul…',
-  ccli_number: '6016351',
-  youtube_url: 'https://www.youtube.com/watch?v=PLAN9NsS3I8',
-  lyrics: `Verse 1\nBless the Lord, O my soul\nO my soul, worship His holy name\nSing like never before, O my soul\nI'll worship Your holy name\n\nChorus\n10,000 reasons for my heart to find\nBless the Lord, O my soul\nWorship His holy name\nSing like never before, O my soul\nI'll worship Your holy name`,
-  tags: ['Thanksgiving', 'Trinity', 'New Wine 2024'],
-  files: [
-    { id: '1', file_type: 'chords', label: 'Chord chart', key_of: 'E' },
-    { id: '2', file_type: 'lead', label: 'Lead sheet', key_of: 'E' },
-    { id: '3', file_type: 'vocal', label: 'Vocal score', key_of: 'E' },
-    { id: '4', file_type: 'full_score', label: 'Full score', key_of: 'E' },
-    { id: '5', file_type: 'chords', label: 'Chord chart', key_of: 'A' },
-    { id: '6', file_type: 'chords', label: 'Chord chart', key_of: 'D' },
-    { id: '7', file_type: 'vocal', label: 'Vocal score', key_of: 'Bb' },
-  ],
-  usage: { times_sung: 14, times_planned: 3, last_sung: '2026-03-01' },
-  recent_services: [
-    { id: '1', date: '2026-03-01', key_used: 'E', service_time: '9.15am' },
-    { id: '2', date: '2026-01-19', key_used: 'E', service_time: '9.15am' },
-    { id: '3', date: '2025-11-03', key_used: 'A', service_time: '9.15am' },
-    { id: '4', date: '2025-09-14', key_used: 'E', service_time: '9.15am' },
-  ],
-}
+import { Song } from '@/types'
+import api from '@/lib/api'
+import { useChurch } from '@/context/ChurchContext'
 
 export default function SongDetailPage() {
+  const { id } = useParams()
+  const { isAdmin } = useChurch()
+  const [song, setSong] = useState<Song | null>(null)
+  const [loading, setLoading] = useState(true)
   const [showFullLyrics, setShowFullLyrics] = useState(false)
-  const mainFiles = song.files.filter(f => f.key_of === song.default_key)
-  const otherFiles = song.files.filter(f => f.key_of !== song.default_key)
+
+  useEffect(() => {
+    if (!id) return
+    api.get(`/api/songs/${id}`)
+      .then(r => setSong(r.data))
+      .catch(err => console.error('Failed to fetch song:', err))
+      .finally(() => setLoading(false))
+  }, [id])
+
+  if (loading) return <div style={{ color: 'var(--color-text-muted)', padding: 'var(--space-xl)' }}>Loading…</div>
+  if (!song) return <div style={{ color: 'var(--color-text-muted)', padding: 'var(--space-xl)' }}>Song not found.</div>
+
+  const mainFiles = (song.files || []).filter(f => f.key_of === song.default_key)
+  const otherFiles = (song.files || []).filter(f => f.key_of !== song.default_key)
 
   const metaRow = (label: string, children: React.ReactNode) => (
-    <div style={{ display: 'flex', alignItems: 'center', gap: 10, flexWrap: 'wrap' }}>
+    <div style={{ display: 'flex', alignItems: 'center', gap: 10, flexWrap: 'wrap' as const }}>
       <span style={{ fontSize: 11, fontWeight: 700, textTransform: 'uppercase' as const, letterSpacing: '0.07em', color: 'var(--color-text-muted)', width: 80, flexShrink: 0 }}>
         {label}
       </span>
@@ -62,27 +52,28 @@ export default function SongDetailPage() {
           <h1 style={{ fontSize: 28, fontWeight: 700, color: 'var(--color-text-primary)', letterSpacing: '-0.025em', lineHeight: 1.15 }}>
             {song.title}
           </h1>
-          <div style={{ display: 'flex', gap: 8, flexShrink: 0, marginTop: 4 }}>
-            <Link href={`/songs/${song.id}/edit`} className="btn btn-sm btn-secondary"><Edit size={13} /> Edit</Link>
-            <button className="btn btn-sm btn-primary"><Plus size={13} /> Add to service</button>
-          </div>
+          {isAdmin && (
+            <div style={{ display: 'flex', gap: 8, flexShrink: 0, marginTop: 4 }}>
+              <Link href={`/songs/${song.id}/edit`} className="btn btn-sm btn-secondary"><Edit size={13} /> Edit</Link>
+              <button className="btn btn-sm btn-primary"><Plus size={13} /> Add to service</button>
+            </div>
+          )}
         </div>
 
         <div style={{ fontSize: 15, color: 'var(--color-text-secondary)', marginBottom: 'var(--space-md)' }}>{song.author}</div>
 
-        {/* Meta */}
         <div style={{ borderTop: '1px solid var(--color-border)', borderBottom: '1px solid var(--color-border)', padding: 'var(--space-md) 0', marginBottom: 'var(--space-md)', display: 'flex', flexDirection: 'column' as const, gap: 10 }}>
-          {metaRow('Category', <CategoryBadge category={song.category} />)}
-          {metaRow('Key',
+          {song.category && metaRow('Category', <CategoryBadge category={song.category} />)}
+          {song.default_key && metaRow('Key',
             <>
               <KeyBadge keyOf={song.default_key} />
               {otherFiles.length > 0 && <span style={{ fontSize: 11, color: 'var(--color-text-muted)' }}>Other keys: {[...new Set(otherFiles.map(f => f.key_of))].join(', ')}</span>}
             </>
           )}
           {song.first_line && metaRow('First line', <span style={{ fontSize: 14, color: 'var(--color-text-secondary)', fontStyle: 'italic' }}>"{song.first_line}"</span>)}
-          {song.tags.length > 0 && metaRow('Tags',
+          {song.tags && song.tags.length > 0 && metaRow('Tags',
             <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap' as const }}>
-              {song.tags.map(t => <span key={t} className="tag">{t}</span>)}
+              {song.tags.map((t: string) => <span key={t} className="tag">{t}</span>)}
             </div>
           )}
           {song.ccli_number && metaRow('CCLI',
@@ -117,16 +108,13 @@ export default function SongDetailPage() {
             </div>
           ) : (
             <p style={{ fontSize: 13, color: 'var(--color-text-muted)', fontStyle: 'italic' }}>
-              No lyrics added yet.{' '}
-              <a href={`https://songselect.ccli.com/songs/${song.ccli_number}`} target="_blank" rel="noopener noreferrer" style={{ color: 'var(--color-brand-500)' }}>
-                Find them on SongSelect
-              </a>{' '}and paste them in when editing this song.
+              No lyrics added yet.{song.ccli_number && <> Find them on <a href={`https://songselect.ccli.com/songs/${song.ccli_number}`} target="_blank" rel="noopener noreferrer" style={{ color: 'var(--color-brand-500)' }}>SongSelect ↗</a> and add them by editing this song.</>}
             </p>
           )}
         </div>
       </div>
 
-      {/* Downloads card */}
+      {/* Downloads */}
       <div className="card" style={{ marginBottom: 'var(--space-md)' }}>
         <div className="section-label" style={{ marginBottom: 'var(--space-md)' }}>Downloads</div>
 
@@ -161,6 +149,10 @@ export default function SongDetailPage() {
           </>
         )}
 
+        {mainFiles.length === 0 && otherFiles.length === 0 && (
+          <p style={{ fontSize: 13, color: 'var(--color-text-muted)', fontStyle: 'italic', marginBottom: 'var(--space-md)' }}>No files uploaded yet.</p>
+        )}
+
         {song.youtube_url && (
           <>
             <div style={{ borderTop: '1px solid var(--color-border)', margin: 'var(--space-md) 0' }} />
@@ -175,21 +167,23 @@ export default function SongDetailPage() {
           </>
         )}
 
-        <div style={{ borderTop: '1px solid var(--color-border)', marginTop: 'var(--space-md)', paddingTop: 'var(--space-md)' }}>
-          <button style={{ fontSize: 12, color: 'var(--color-brand-500)', background: 'none', border: 'none', cursor: 'pointer', fontFamily: 'inherit', display: 'inline-flex', alignItems: 'center', gap: 4 }}>
-            <Plus size={13} /> Upload a file
-          </button>
-        </div>
+        {isAdmin && (
+          <div style={{ borderTop: '1px solid var(--color-border)', marginTop: 'var(--space-md)', paddingTop: 'var(--space-md)' }}>
+            <button style={{ fontSize: 12, color: 'var(--color-brand-500)', background: 'none', border: 'none', cursor: 'pointer', fontFamily: 'inherit', display: 'inline-flex', alignItems: 'center', gap: 4 }}>
+              <Plus size={13} /> Upload a file
+            </button>
+          </div>
+        )}
       </div>
 
-      {/* Usage card */}
+      {/* Usage */}
       <div className="card">
         <div className="section-label" style={{ marginBottom: 'var(--space-md)' }}>Usage</div>
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 'var(--space-md)', marginBottom: 'var(--space-md)' }}>
           {[
-            { value: song.usage.times_sung, label: 'Times sung' },
-            { value: song.usage.times_planned, label: 'Planned' },
-            { value: format(new Date(song.usage.last_sung), 'd MMM'), label: 'Last sung' },
+            { value: song.usage?.times_sung || 0, label: 'Times sung' },
+            { value: song.usage?.times_planned || 0, label: 'Planned' },
+            { value: song.usage?.last_sung ? format(new Date(song.usage.last_sung), 'd MMM') : '—', label: 'Last sung' },
           ].map(stat => (
             <div key={stat.label} style={{ textAlign: 'center', padding: 'var(--space-md)', background: 'var(--color-neutral-50)', borderRadius: 'var(--radius-md)', border: '1px solid var(--color-border)' }}>
               <div style={{ fontSize: 22, fontWeight: 700, color: 'var(--color-brand-600)', letterSpacing: '-0.02em', marginBottom: 3 }}>{stat.value}</div>
@@ -197,14 +191,18 @@ export default function SongDetailPage() {
             </div>
           ))}
         </div>
-        <div style={{ fontSize: 12, fontWeight: 600, color: 'var(--color-text-secondary)', marginBottom: 8 }}>Recent services</div>
-        {song.recent_services.map((s, i) => (
-          <div key={s.id} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '7px 0', borderBottom: i < song.recent_services.length - 1 ? '1px solid var(--color-border)' : 'none', fontSize: 13 }}>
-            <span style={{ color: 'var(--color-text-secondary)' }}>{format(new Date(s.date), 'd MMMM yyyy')}</span>
-            <KeyBadge keyOf={s.key_used} />
-            <span style={{ fontSize: 11, color: 'var(--color-text-muted)' }}>{s.service_time}</span>
-          </div>
-        ))}
+        {song.recent_services && song.recent_services.length > 0 && (
+          <>
+            <div style={{ fontSize: 12, fontWeight: 600, color: 'var(--color-text-secondary)', marginBottom: 8 }}>Recent services</div>
+            {song.recent_services.map((s: any, i: number) => (
+              <div key={s.id} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '7px 0', borderBottom: i < song.recent_services!.length - 1 ? '1px solid var(--color-border)' : 'none', fontSize: 13 }}>
+                <span style={{ color: 'var(--color-text-secondary)' }}>{format(new Date(s.date), 'd MMMM yyyy')}</span>
+                {s.key_used && <KeyBadge keyOf={s.key_used} />}
+                <span style={{ fontSize: 11, color: 'var(--color-text-muted)' }}>{s.service_time}</span>
+              </div>
+            ))}
+          </>
+        )}
       </div>
     </div>
   )
