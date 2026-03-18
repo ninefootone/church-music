@@ -1,17 +1,14 @@
-const { createClerkClient } = require('@clerk/backend');
+const { verifyToken, createClerkClient } = require('@clerk/backend');
 
-const clerk = createClerkClient({ secretKey: process.env.CLERK_SECRET_KEY });
+const clerkClient = createClerkClient({ secretKey: process.env.CLERK_SECRET_KEY });
 
 const requireAuth = async (req, res, next) => {
   try {
     const token = req.headers.authorization?.split(' ')[1];
     if (!token) return res.status(401).json({ error: 'Unauthorised' });
 
-    const payload = await clerk.verifyToken(token, {
-      authorizedParties: [
-        process.env.FRONTEND_URL,
-        'http://localhost:3000',
-      ].filter(Boolean),
+    const payload = await verifyToken(token, {
+      secretKey: process.env.CLERK_SECRET_KEY,
     });
 
     req.clerkUserId = payload.sub;
@@ -20,7 +17,7 @@ const requireAuth = async (req, res, next) => {
     let user = await pool.query('SELECT * FROM users WHERE clerk_id = $1', [payload.sub]);
 
     if (user.rows.length === 0) {
-      const clerkUser = await clerk.users.getUser(payload.sub);
+      const clerkUser = await clerkClient.users.getUser(payload.sub);
       const email = clerkUser.emailAddresses[0]?.emailAddress || '';
       const name = `${clerkUser.firstName || ''} ${clerkUser.lastName || ''}`.trim();
       user = await pool.query(
