@@ -5,11 +5,11 @@ import { format, parseISO } from 'date-fns'
 import { CategoryBadge } from '@/components/ui/badges'
 import { useChurch } from '@/context/ChurchContext'
 import api from '@/lib/api'
-import { StatsData, Category } from '@/types'
+import { Category } from '@/types'
 
 export default function StatsPage() {
   const { church } = useChurch()
-  const [stats, setStats] = useState<StatsData | null>(null)
+  const [stats, setStats] = useState<any>(null)
   const [loading, setLoading] = useState(true)
   const [period, setPeriod] = useState(365)
 
@@ -23,21 +23,30 @@ export default function StatsPage() {
   }, [church, period])
 
   const exportCCLI = async () => {
-    const { data } = await api.get('/api/stats/ccli-export', { params: { period } })
-    const rows = [['CCLI Number', 'Title', 'Author', 'Times Used', 'Last Used']]
-    data.forEach((s: any) => rows.push([s.ccli_number, s.title, s.author, s.times_used, s.last_used ? format(parseISO(s.last_used), 'dd/MM/yyyy') : '']))
-    const csv = rows.map(r => r.join(',')).join('\n')
-    const blob = new Blob([csv], { type: 'text/csv' })
-    const url = URL.createObjectURL(blob)
-    const a = document.createElement('a')
-    a.href = url; a.download = `ccli-report-${period}days.csv`; a.click()
+    try {
+      const { data } = await api.get('/api/stats/ccli-export', { params: { period } })
+      if (!data || data.length === 0) { alert('No CCLI data to export for this period.'); return }
+      const rows = [['CCLI Number', 'Title', 'Author', 'Times Used', 'Last Used']]
+      data.forEach((s: any) => rows.push([
+        s.ccli_number || '', s.title, s.author || '',
+        s.times_used, s.last_used ? format(parseISO(s.last_used), 'dd/MM/yyyy') : ''
+      ]))
+      const csv = rows.map(r => r.map((v: any) => `"${v}"`).join(',')).join('\n')
+      const blob = new Blob([csv], { type: 'text/csv' })
+      const url = URL.createObjectURL(blob)
+      const a = document.createElement('a')
+      a.href = url; a.download = `ccli-report-${period}days.csv`; a.click()
+      URL.revokeObjectURL(url)
+    } catch (err) {
+      console.error('Export failed:', err)
+    }
   }
 
   return (
     <div>
       <div style={{ display: 'flex', alignItems: 'baseline', justifyContent: 'space-between', marginBottom: 'var(--space-lg)' }}>
         <h1 className="page-title">Stats</h1>
-        <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
+        <div style={{ display: 'flex', gap: 8, alignItems: 'center', flexWrap: 'wrap' }}>
           {[30, 90, 365].map(p => (
             <button key={p} onClick={() => setPeriod(p)} style={{ padding: '4px 12px', borderRadius: 'var(--radius-pill)', border: '1px solid var(--color-border)', fontSize: 12, fontWeight: 500, fontFamily: 'inherit', cursor: 'pointer', background: period === p ? 'var(--color-brand-50)' : 'var(--color-surface)', color: period === p ? 'var(--color-brand-600)' : 'var(--color-text-secondary)', borderColor: period === p ? 'var(--color-brand-200)' : 'var(--color-border)' }}>
               {p === 365 ? '1 year' : `${p} days`}
@@ -53,7 +62,6 @@ export default function StatsPage() {
         <div style={{ color: 'var(--color-text-muted)', padding: 'var(--space-xl)' }}>No data yet.</div>
       ) : (
         <>
-          {/* Summary cards */}
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: 'var(--space-md)', marginBottom: 'var(--space-md)' }}>
             {[
               { value: stats.total_songs, label: 'Songs in library' },
@@ -66,20 +74,21 @@ export default function StatsPage() {
             ))}
           </div>
 
-          {/* Top songs */}
           <div className="card">
             <div className="section-label" style={{ marginBottom: 'var(--space-md)' }}>Most sung songs</div>
-            {stats.top_songs.length === 0 ? (
-              <div style={{ fontSize: 14, color: 'var(--color-text-muted)', textAlign: 'center', padding: 'var(--space-lg)' }}>No services recorded in this period yet.</div>
+            {!stats.top_songs || stats.top_songs.length === 0 ? (
+              <div style={{ fontSize: 14, color: 'var(--color-text-muted)', textAlign: 'center', padding: 'var(--space-lg)' }}>
+                No services recorded in this period yet. Add songs to services to see stats here.
+              </div>
             ) : (
-              stats.top_songs.map((song, i) => (
+              stats.top_songs.map((song: any, i: number) => (
                 <div key={song.song_id} style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '10px 0', borderBottom: i < stats.top_songs.length - 1 ? '1px solid var(--color-border)' : 'none' }}>
                   <div style={{ fontSize: 18, fontWeight: 700, color: 'var(--color-brand-200)', width: 32, textAlign: 'center', flexShrink: 0 }}>{i + 1}</div>
                   <div style={{ flex: 1 }}>
                     <div style={{ fontSize: 14, fontWeight: 500, color: 'var(--color-text-primary)', marginBottom: 2 }}>{song.title}</div>
                     <div style={{ fontSize: 11, color: 'var(--color-text-muted)' }}>{song.author}</div>
                   </div>
-                  <CategoryBadge category={song.category as Category} />
+                  {song.category && <CategoryBadge category={song.category as Category} />}
                   <div style={{ textAlign: 'right', flexShrink: 0 }}>
                     <div style={{ fontSize: 16, fontWeight: 700, color: 'var(--color-brand-600)' }}>{song.count}</div>
                     <div style={{ fontSize: 10, color: 'var(--color-text-muted)', textTransform: 'uppercase', letterSpacing: '0.05em' }}>times</div>

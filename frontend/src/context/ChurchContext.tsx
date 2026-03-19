@@ -21,10 +21,7 @@ interface ChurchContextType {
 }
 
 const ChurchContext = createContext<ChurchContextType>({
-  church: null,
-  loading: true,
-  isAdmin: false,
-  refetch: () => {},
+  church: null, loading: true, isAdmin: false, refetch: () => {},
 })
 
 export function ChurchProvider({ children }: { children: ReactNode }) {
@@ -35,29 +32,19 @@ export function ChurchProvider({ children }: { children: ReactNode }) {
   const [loading, setLoading] = useState(true)
 
   const fetchChurch = async () => {
-    if (!isLoaded || !isSignedIn) {
-      setLoading(false)
-      return
-    }
+    if (!isLoaded || !isSignedIn) { setLoading(false); return }
     try {
       const token = await getToken()
       if (!token) { setLoading(false); return }
       setAuthToken(token)
-
       const { data } = await api.get('/api/churches/mine')
       if (data && data.length > 0) {
         const c = data[0]
         setChurch(c)
         api.defaults.headers.common['x-church-id'] = c.id
-        // If on onboarding but already have a church, redirect to dashboard
-        if (pathname === '/onboarding') {
-          router.push('/dashboard')
-        }
+        if (pathname === '/onboarding') router.push('/dashboard')
       } else {
-        // No church — redirect to onboarding unless already there
-        if (pathname !== '/onboarding') {
-          router.push('/onboarding')
-        }
+        if (pathname !== '/onboarding') router.push('/onboarding')
       }
     } catch (err) {
       console.error('Failed to fetch church:', err)
@@ -66,9 +53,7 @@ export function ChurchProvider({ children }: { children: ReactNode }) {
     }
   }
 
-  useEffect(() => {
-    if (isLoaded) fetchChurch()
-  }, [isLoaded, isSignedIn])
+  useEffect(() => { if (isLoaded) fetchChurch() }, [isLoaded, isSignedIn])
 
   return (
     <ChurchContext.Provider value={{ church, loading, isAdmin: church?.role === 'admin', refetch: fetchChurch }}>
@@ -77,6 +62,4 @@ export function ChurchProvider({ children }: { children: ReactNode }) {
   )
 }
 
-export function useChurch() {
-  return useContext(ChurchContext)
-}
+export function useChurch() { return useContext(ChurchContext) }

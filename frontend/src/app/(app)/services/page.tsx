@@ -6,7 +6,14 @@ import { format, isFuture, isToday, parseISO } from 'date-fns'
 import { Plus, ChevronRight } from 'lucide-react'
 import { useChurch } from '@/context/ChurchContext'
 import api from '@/lib/api'
-import { Service } from '@/types'
+
+interface Service {
+  id: string
+  service_date: string
+  service_time: string | null
+  title: string | null
+  public_token: string
+}
 
 export default function ServicesPage() {
   const { church, isAdmin } = useChurch()
@@ -47,25 +54,14 @@ export default function ServicesPage() {
         <h1 className="page-title">Services</h1>
         {isAdmin && <Link href="/services/new" className="btn btn-primary"><Plus size={15} /> Add new service</Link>}
       </div>
-
       {services.length === 0 ? (
         <div className="card" style={{ textAlign: 'center', padding: 'var(--space-xl)', color: 'var(--color-text-muted)' }}>
-          No services yet. {isAdmin && <Link href="/services/new" style={{ color: 'var(--color-brand-500)' }}>Plan your first service</Link>}
+          No services yet.{isAdmin && <> <Link href="/services/new" style={{ color: 'var(--color-brand-500)' }}>Plan your first service</Link></>}
         </div>
       ) : (
         <>
-          {upcoming.length > 0 && (
-            <>
-              <div className="section-label">Upcoming</div>
-              {upcoming.map(s => <ServiceCard key={s.id} service={s} />)}
-            </>
-          )}
-          {past.length > 0 && (
-            <>
-              <div className="section-label" style={{ marginTop: 'var(--space-lg)' }}>Past</div>
-              {past.map(s => <ServiceCard key={s.id} service={s} isPast />)}
-            </>
-          )}
+          {upcoming.length > 0 && <><div className="section-label">Upcoming</div>{upcoming.map(s => <ServiceCard key={s.id} service={s} />)}</>}
+          {past.length > 0 && <><div className="section-label" style={{ marginTop: 'var(--space-lg)' }}>Past</div>{past.map(s => <ServiceCard key={s.id} service={s} isPast />)}</>}
         </>
       )}
     </div>
