@@ -59,7 +59,7 @@ export default function OnboardingPage() {
             <Music size={24} color="white" />
           </div>
           <h1 style={{ fontSize: 24, fontWeight: 700, color: 'var(--color-text-primary)', letterSpacing: '-0.02em', marginBottom: 8 }}>
-            Welcome to Church Music
+            Welcome to Song Stack
           </h1>
           <p style={{ fontSize: 15, color: 'var(--color-text-secondary)' }}>
             Get started by creating a new church or joining an existing one.
@@ -87,7 +87,10 @@ export default function OnboardingPage() {
 
         {mode === 'create' && (
           <form onSubmit={handleCreate} style={{ background: 'var(--color-surface)', border: '1px solid var(--color-border)', borderRadius: '14px', padding: '24px' }}>
-            <h2 style={{ fontSize: 18, fontWeight: 600, color: 'var(--color-text-primary)', marginBottom: '20px' }}>Create your church</h2>
+            <h2 style={{ fontSize: 18, fontWeight: 600, color: 'var(--color-text-primary)', marginBottom: '8px' }}>Create your church</h2>
+            <p style={{ fontSize: 13, color: 'var(--color-text-muted)', marginBottom: '20px' }}>
+              Tip: include your location if your church name is common, e.g. "Grace Church Sheffield"
+            </p>
             <label style={{ display: 'block', fontSize: 12, fontWeight: 600, color: 'var(--color-text-secondary)', marginBottom: 6, textTransform: 'uppercase' as const, letterSpacing: '0.05em' }}>
               Church name
             </label>

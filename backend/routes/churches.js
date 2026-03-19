@@ -2,18 +2,19 @@ const express = require('express');
 const router = express.Router();
 const pool = require('../db/pool');
 const { requireAuth } = require('../middleware/auth');
-const { v4: uuidv4 } = require('uuid');
 
-// Generate invite code
 const generateInviteCode = () => Math.random().toString(36).substring(2, 8).toUpperCase();
+const generateShortId = () => Math.random().toString(36).substring(2, 6);
 
 // Create a church
-router.post('/', requireAuth, async (req, res) => {
+router.post('/', requireAuth, async (req, res, next) => {
   try {
     const { name } = req.body;
     if (!name) return res.status(400).json({ error: 'Church name required' });
 
-    const slug = name.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, '');
+    // Append short random ID to slug to avoid collisions
+    const baseSlug = name.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, '')
+    const slug = `${baseSlug}-${generateShortId()}`
     const invite_code = generateInviteCode();
 
     const church = await pool.query(
@@ -21,7 +22,6 @@ router.post('/', requireAuth, async (req, res) => {
       [name, slug, invite_code, req.user.id]
     );
 
-    // Make creator an admin
     await pool.query(
       'INSERT INTO memberships (church_id, user_id, role) VALUES ($1, $2, $3)',
       [church.rows[0].id, req.user.id, 'admin']
@@ -38,13 +38,13 @@ router.post('/join', requireAuth, async (req, res, next) => {
   try {
     const { invite_code } = req.body;
     const church = await pool.query('SELECT * FROM churches WHERE invite_code = $1', [invite_code]);
-    if (church.rows.length === 0) return res.status(404).json({ error: 'Invalid invite code' });
+    if (church.rows.length === 0) return res.status(404).json({ error: 'Invalid invite code — please check and try again' });
 
     const existing = await pool.query(
       'SELECT * FROM memberships WHERE church_id = $1 AND user_id = $2',
       [church.rows[0].id, req.user.id]
     );
-    if (existing.rows.length > 0) return res.status(400).json({ error: 'Already a member' });
+    if (existing.rows.length > 0) return res.status(400).json({ error: 'You are already a member of this church' });
 
     await pool.query(
       'INSERT INTO memberships (church_id, user_id, role) VALUES ($1, $2, $3)',
