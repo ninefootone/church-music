@@ -81,6 +81,12 @@ export interface Song {
     times_planned: number
     last_sung: string | null
   }
+  recent_services?: {
+    id: string
+    date: string
+    key_used: string | null
+    service_time: string | null
+  }[]
 }
 
 export interface ServiceItem {
