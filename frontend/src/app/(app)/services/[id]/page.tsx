@@ -1,181 +1,100 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import Link from 'next/link'
-import { ArrowLeft, Share2, Plus, GripVertical, Music, Book, Mic, X } from 'lucide-react'
+import { useParams } from 'next/navigation'
 import { format, parseISO } from 'date-fns'
-import { KeyBadge, CategoryBadge } from '@/components/ui/badges'
+import { ArrowLeft, Plus, Share2, Music, GripVertical, X } from 'lucide-react'
+import { useChurch } from '@/context/ChurchContext'
+import { KeyBadge } from '@/components/ui/badges'
+import api from '@/lib/api'
+import { Service } from '@/types'
 
-const service = {
-  id: '1',
-  service_date: '2026-03-22',
-  service_time: '9.15am',
-  public_token: 'abc123',
-  items: [
-    { id: '1', type: 'custom',     title: 'Welcome',              song: null,       key_override: null, notes: 'Notices and welcome' },
-    { id: '2', type: 'song',       title: '10,000 Reasons',       song: { id: '1', title: '10,000 Reasons (Bless The Lord)', author: 'Jonas Myrin, Matt Redman', default_key: 'E', category: 'praise' as const }, key_override: 'E', notes: '' },
-    { id: '3', type: 'song',       title: 'You Alone Can Rescue', song: { id: '2', title: 'You Alone Can Rescue', author: 'Matt Redman', default_key: 'G', category: 'praise' as const }, key_override: 'G', notes: '' },
-    { id: '4', type: 'custom',     title: 'Confession',           song: null,       key_override: null, notes: '' },
-    { id: '5', type: 'custom',     title: 'Assurance',            song: null,       key_override: null, notes: '' },
-    { id: '6', type: 'song',       title: 'In Christ Alone',      song: { id: '3', title: 'In Christ Alone', author: 'Keith Getty, Stuart Townend', default_key: 'G', category: 'assurance' as const }, key_override: 'G', notes: 'Capo 2' },
-    { id: '7', type: 'custom',     title: "Kids item",            song: null,       key_override: null, notes: '' },
-    { id: '8', type: 'custom',     title: 'Bible reading',        song: null,       key_override: null, notes: 'Romans 8:1–17' },
-    { id: '9', type: 'custom',     title: 'Sermon',               song: null,       key_override: null, notes: '' },
-    { id: '10', type: 'song',      title: 'Yet Not I',            song: { id: '4', title: 'Yet Not I But Through Christ In Me', author: 'CityAlight', default_key: 'A', category: 'response' as const }, key_override: 'A', notes: '' },
-    { id: '11', type: 'custom',    title: 'Closing prayer',       song: null,       key_override: null, notes: '' },
-  ],
-}
+const ITEM_TYPES = ['welcome', 'song', 'prayer', 'confession', 'assurance', 'reading', 'sermon', 'announcement', 'other']
 
-const typeIcon = (type: string) => {
-  if (type === 'song') return <Music size={14} />
-  if (type === 'custom' || type === 'reading') return <Book size={14} />
-  return <Mic size={14} />
-}
+export default function ServiceDetailPage() {
+  const { id } = useParams()
+  const { isAdmin } = useChurch()
+  const [service, setService] = useState<Service | null>(null)
+  const [loading, setLoading] = useState(true)
+  const [copied, setCopied] = useState(false)
 
-const typeColour = (type: string) => type === 'song'
-  ? { bg: 'var(--color-brand-50)', color: 'var(--color-brand-600)' }
-  : { bg: 'var(--color-neutral-100)', color: 'var(--color-neutral-600)' }
+  useEffect(() => {
+    if (!id) return
+    api.get(`/api/services/${id}`)
+      .then(r => setService(r.data))
+      .catch(err => console.error('Failed to fetch service:', err))
+      .finally(() => setLoading(false))
+  }, [id])
 
-export default function ServiceDetailPage({ params }: { params: { id: string } }) {
-  const [items, setItems] = useState(service.items)
-  const [shareTooltip, setShareTooltip] = useState(false)
-
-  const songs = items.filter(i => i.type === 'song')
-  const publicUrl = `${typeof window !== 'undefined' ? window.location.origin : ''}/s/${service.public_token}`
-
-  function copyShareLink() {
-    navigator.clipboard?.writeText(publicUrl)
-    setShareTooltip(true)
-    setTimeout(() => setShareTooltip(false), 2000)
+  const copyShareLink = () => {
+    if (!service) return
+    const url = `${window.location.origin}/s/${service.public_token}`
+    navigator.clipboard.writeText(url)
+    setCopied(true)
+    setTimeout(() => setCopied(false), 2000)
   }
+
+  if (loading) return <div style={{ color: 'var(--color-text-muted)', padding: 'var(--space-xl)' }}>Loading…</div>
+  if (!service) return <div style={{ color: 'var(--color-text-muted)', padding: 'var(--space-xl)' }}>Service not found.</div>
+
+  const date = parseISO(service.service_date)
 
   return (
     <div style={{ maxWidth: 720, margin: '0 auto' }}>
-      <Link href="/services" style={{ display: 'inline-flex', alignItems: 'center', gap: 4, fontSize: 13, color: 'var(--color-text-muted)', textDecoration: 'none', marginBottom: '24px' }}>
-        <ArrowLeft size={14} /> Back to services
+      <Link href="/services" style={{ display: 'inline-flex', alignItems: 'center', gap: 4, fontSize: 12, color: 'var(--color-text-muted)', textDecoration: 'none', marginBottom: 'var(--space-lg)' }}>
+        <ArrowLeft size={13} /> Back to services
       </Link>
 
-      {/* Header */}
-      <div className="card" style={{ marginBottom: '16px' }}>
-        <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: '16px' }}>
+      <div className="card" style={{ marginBottom: 'var(--space-md)' }}>
+        <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: 16 }}>
           <div>
-            <h1 style={{ fontSize: 26, fontWeight: 700, color: 'var(--color-text-primary)', letterSpacing: '-0.02em', lineHeight: 1.2, marginBottom: 4 }}>
-              {format(parseISO(service.service_date), 'd MMMM yyyy')}
+            <h1 style={{ fontSize: 24, fontWeight: 700, color: 'var(--color-text-primary)', letterSpacing: '-0.02em', marginBottom: 4 }}>
+              {format(date, 'd MMMM yyyy')}
+              {service.service_time && <span style={{ fontWeight: 400, color: 'var(--color-text-secondary)' }}> · {service.service_time}</span>}
             </h1>
-            <div style={{ fontSize: 15, color: 'var(--color-text-secondary)' }}>{service.service_time}</div>
+            {service.title && <div style={{ fontSize: 15, color: 'var(--color-text-secondary)' }}>{service.title}</div>}
           </div>
-          <div style={{ display: 'flex', gap: 8, flexShrink: 0 }}>
-            <div style={{ position: 'relative' }}>
-              <button className="btn btn-secondary btn-sm" onClick={copyShareLink} style={{ display: 'flex', alignItems: 'center', gap: 5 }}>
-                <Share2 size={13} /> Share
-              </button>
-              {shareTooltip && (
-                <div style={{ position: 'absolute', top: '110%', right: 0, background: 'var(--color-neutral-900)', color: 'white', fontSize: 11, padding: '4px 10px', borderRadius: '6px', whiteSpace: 'nowrap' }}>
-                  Link copied!
-                </div>
-              )}
-            </div>
-          </div>
-        </div>
-
-        <div style={{ marginTop: '16px', paddingTop: '16px', borderTop: '1px solid var(--color-border)', display: 'flex', gap: '24px' }}>
-          <div style={{ fontSize: 13, color: 'var(--color-text-muted)' }}>
-            <span style={{ fontWeight: 600, color: 'var(--color-text-primary)' }}>{items.length}</span> items
-          </div>
-          <div style={{ fontSize: 13, color: 'var(--color-text-muted)' }}>
-            <span style={{ fontWeight: 600, color: 'var(--color-text-primary)' }}>{songs.length}</span> songs
-          </div>
-        </div>
-      </div>
-
-      {/* Order of service */}
-      <div className="card" style={{ marginBottom: '16px' }}>
-        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '16px' }}>
-          <span className="section-label">Order of service</span>
-          <button className="btn btn-ghost" style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
-            <Plus size={13} /> Add item
+          <button onClick={copyShareLink} className="btn btn-secondary" style={{ flexShrink: 0, display: 'flex', alignItems: 'center', gap: 6 }}>
+            <Share2 size={14} /> {copied ? 'Copied!' : 'Share'}
           </button>
         </div>
-
-        {items.map((item, i) => {
-          const colours = typeColour(item.type)
-          return (
-            <div
-              key={item.id}
-              style={{
-                display: 'flex', alignItems: 'flex-start', gap: '12px',
-                padding: '10px 0',
-                borderBottom: i < items.length - 1 ? '1px solid var(--color-border)' : 'none',
-              }}
-            >
-              {/* Drag handle */}
-              <div style={{ color: 'var(--color-text-muted)', marginTop: 2, cursor: 'grab', flexShrink: 0 }}>
-                <GripVertical size={15} />
-              </div>
-
-              {/* Position number */}
-              <div style={{ fontSize: 11, fontWeight: 700, color: 'var(--color-text-muted)', width: 18, flexShrink: 0, marginTop: 3, textAlign: 'right' }}>
-                {i + 1}
-              </div>
-
-              {/* Type icon */}
-              <div style={{ width: 26, height: 26, borderRadius: '6px', background: colours.bg, color: colours.color, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
-                {typeIcon(item.type)}
-              </div>
-
-              {/* Content */}
-              <div style={{ flex: 1, minWidth: 0 }}>
-                {item.song ? (
-                  <>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 2 }}>
-                      <Link href={`/songs/${item.song.id}`} style={{ fontSize: 14, fontWeight: 500, color: 'var(--color-text-primary)', textDecoration: 'none' }}>
-                        {item.song.title}
-                      </Link>
-                      {item.key_override && <KeyBadge keyOf={item.key_override} />}
-                    </div>
-                    <div style={{ fontSize: 11, color: 'var(--color-text-muted)', display: 'flex', alignItems: 'center', gap: 8 }}>
-                      <span>{item.song.author}</span>
-                      <CategoryBadge category={item.song.category} />
-                    </div>
-                    {item.notes && <div style={{ fontSize: 12, color: 'var(--color-brand-600)', marginTop: 3 }}>{item.notes}</div>}
-                  </>
-                ) : (
-                  <>
-                    <div style={{ fontSize: 14, fontWeight: 500, color: 'var(--color-text-primary)' }}>{item.title}</div>
-                    {item.notes && <div style={{ fontSize: 12, color: 'var(--color-text-muted)', marginTop: 2 }}>{item.notes}</div>}
-                  </>
-                )}
-              </div>
-
-              {/* Remove */}
-              <button
-                style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'var(--color-text-muted)', padding: 2, flexShrink: 0, marginTop: 2 }}
-                onClick={() => setItems(items.filter(it => it.id !== item.id))}
-              >
-                <X size={14} />
-              </button>
-            </div>
-          )
-        })}
       </div>
 
-      {/* Songs summary */}
+      {/* Service items */}
       <div className="card">
-        <span className="section-label" style={{ display: 'block', marginBottom: '16px' }}>Songs in this service</span>
-        {songs.map((item, i) => (
-          item.song && (
-            <div key={item.id} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '8px 0', borderBottom: i < songs.length - 1 ? '1px solid var(--color-border)' : 'none' }}>
-              <div>
-                <div style={{ fontSize: 14, fontWeight: 500, color: 'var(--color-text-primary)', marginBottom: 2 }}>{item.song.title}</div>
-                <div style={{ fontSize: 11, color: 'var(--color-text-muted)' }}>{item.song.author}</div>
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 'var(--space-md)' }}>
+          <span className="section-label">Running order</span>
+          {isAdmin && (
+            <Link href={`/services/${service.id}/edit`} className="btn btn-primary" style={{ display: 'inline-flex', alignItems: 'center', gap: 4 }}>
+              <Plus size={14} /> Edit order
+            </Link>
+          )}
+        </div>
+
+        {!service.items || service.items.length === 0 ? (
+          <div style={{ textAlign: 'center', padding: 'var(--space-xl)', color: 'var(--color-text-muted)', fontSize: 14 }}>
+            No items added yet.{isAdmin && <> <Link href={`/services/${service.id}/edit`} style={{ color: 'var(--color-brand-500)' }}>Build the running order</Link></>}
+          </div>
+        ) : (
+          service.items.map((item, i) => (
+            <div key={item.id} style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '10px 0', borderBottom: i < service.items!.length - 1 ? '1px solid var(--color-border)' : 'none' }}>
+              <div style={{ fontSize: 12, color: 'var(--color-text-muted)', width: 20, textAlign: 'center', flexShrink: 0 }}>{i + 1}</div>
+              <div style={{ flex: 1 }}>
+                <div style={{ fontSize: 14, fontWeight: 500, color: 'var(--color-text-primary)' }}>
+                  {item.type === 'song' && item.song ? item.song.title : (item.title || item.type.charAt(0).toUpperCase() + item.type.slice(1))}
+                </div>
+                {item.type === 'song' && item.song && (
+                  <div style={{ fontSize: 11, color: 'var(--color-text-muted)' }}>{item.song.author}</div>
+                )}
+                {item.notes && <div style={{ fontSize: 12, color: 'var(--color-text-muted)', fontStyle: 'italic', marginTop: 2 }}>{item.notes}</div>}
               </div>
-              <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-                {item.key_override && <KeyBadge keyOf={item.key_override} />}
-                <Link href={`/songs/${item.song.id}`} style={{ fontSize: 12, color: 'var(--color-brand-500)', textDecoration: 'none' }}>View song →</Link>
-              </div>
+              {item.type === 'song' && (item.key_override || item.song?.default_key) && (
+                <KeyBadge keyOf={item.key_override || item.song!.default_key} />
+              )}
             </div>
-          )
-        ))}
+          ))
+        )}
       </div>
     </div>
   )

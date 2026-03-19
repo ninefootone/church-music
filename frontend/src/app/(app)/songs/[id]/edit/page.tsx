@@ -1,0 +1,96 @@
+'use client'
+
+import { useState, useEffect } from 'react'
+import Link from 'next/link'
+import { useParams, useRouter } from 'next/navigation'
+import { useAuth } from '@clerk/nextjs'
+import { ArrowLeft } from 'lucide-react'
+import { CATEGORIES, Category, Song } from '@/types'
+import api, { setAuthToken } from '@/lib/api'
+
+export default function EditSongPage() {
+  const { id } = useParams()
+  const router = useRouter()
+  const { getToken } = useAuth()
+  const [loading, setLoading] = useState(false)
+  const [fetching, setFetching] = useState(true)
+  const [error, setError] = useState('')
+  const [form, setForm] = useState({ title: '', author: '', default_key: '', category: '' as Category | '', first_line: '', ccli_number: '', youtube_url: '', lyrics: '', tags: '' })
+
+  const keys = ['C', 'C#', 'Db', 'D', 'Eb', 'E', 'F', 'F#', 'Gb', 'G', 'Ab', 'A', 'Bb', 'B']
+
+  useEffect(() => {
+    if (!id) return
+    api.get(`/api/songs/${id}`).then(r => {
+      const s: Song = r.data
+      setForm({ title: s.title, author: s.author || '', default_key: s.default_key || '', category: s.category || '', first_line: s.first_line || '', ccli_number: s.ccli_number || '', youtube_url: s.youtube_url || '', lyrics: s.lyrics || '', tags: (s.tags || []).join(', ') })
+    }).catch(() => setError('Failed to load song')).finally(() => setFetching(false))
+  }, [id])
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault()
+    setLoading(true); setError('')
+    try {
+      const token = await getToken()
+      setAuthToken(token)
+      const tags = form.tags.split(',').map(t => t.trim()).filter(Boolean)
+      await api.put(`/api/songs/${id}`, { ...form, tags })
+      router.push(`/songs/${id}`)
+    } catch (err: any) {
+      setError(err.response?.data?.error || 'Failed to save changes')
+      setLoading(false)
+    }
+  }
+
+  const ls: React.CSSProperties = { display: 'block', fontSize: 12, fontWeight: 600, color: 'var(--color-text-secondary)', marginBottom: 6, textTransform: 'uppercase', letterSpacing: '0.05em' }
+  const mb: React.CSSProperties = { marginBottom: 'var(--space-md)' }
+
+  if (fetching) return <div style={{ color: 'var(--color-text-muted)', padding: 'var(--space-xl)' }}>Loading…</div>
+
+  return (
+    <div style={{ maxWidth: 680, margin: '0 auto' }}>
+      <Link href={`/songs/${id}`} style={{ display: 'inline-flex', alignItems: 'center', gap: 4, fontSize: 12, color: 'var(--color-text-muted)', textDecoration: 'none', marginBottom: 'var(--space-lg)' }}>
+        <ArrowLeft size={13} /> Back to song
+      </Link>
+      <h1 className="page-title" style={{ marginBottom: 'var(--space-lg)' }}>Edit song</h1>
+      {error && <div style={{ background: '#fdf0f0', border: '1px solid #f5c0c0', borderRadius: 10, padding: '12px 16px', marginBottom: 16, fontSize: 14, color: '#9a3a3a' }}>{error}</div>}
+      <div className="card">
+        <form onSubmit={handleSubmit}>
+          <div style={mb}><label style={ls}>Song title *</label><input className="input" required value={form.title} onChange={e => setForm(f => ({ ...f, title: e.target.value }))} /></div>
+          <div style={mb}><label style={ls}>Author(s)</label><input className="input" value={form.author} onChange={e => setForm(f => ({ ...f, author: e.target.value }))} /></div>
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 'var(--space-md)', ...mb }}>
+            <div>
+              <label style={ls}>Default key</label>
+              <select className="input" value={form.default_key} onChange={e => setForm(f => ({ ...f, default_key: e.target.value }))}>
+                <option value="">Select key…</option>
+                {keys.map(k => <option key={k} value={k}>{k}</option>)}
+              </select>
+            </div>
+            <div>
+              <label style={ls}>Category</label>
+              <select className="input" value={form.category} onChange={e => setForm(f => ({ ...f, category: e.target.value as Category }))}>
+                <option value="">Select category…</option>
+                {CATEGORIES.map(c => <option key={c.value} value={c.value}>{c.label}</option>)}
+              </select>
+            </div>
+          </div>
+          <div style={mb}><label style={ls}>First line</label><input className="input" value={form.first_line} onChange={e => setForm(f => ({ ...f, first_line: e.target.value }))} /></div>
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 'var(--space-md)', ...mb }}>
+            <div><label style={ls}>CCLI number</label><input className="input" value={form.ccli_number} onChange={e => setForm(f => ({ ...f, ccli_number: e.target.value }))} /></div>
+            <div><label style={ls}>YouTube URL</label><input className="input" value={form.youtube_url} onChange={e => setForm(f => ({ ...f, youtube_url: e.target.value }))} /></div>
+          </div>
+          <div style={mb}><label style={ls}>Tags <span style={{ fontWeight: 400, textTransform: 'none', letterSpacing: 0 }}>(comma separated)</span></label><input className="input" value={form.tags} onChange={e => setForm(f => ({ ...f, tags: e.target.value }))} /></div>
+          <div style={mb}>
+            <label style={ls}>Lyrics</label>
+            <textarea className="input" rows={12} value={form.lyrics} onChange={e => setForm(f => ({ ...f, lyrics: e.target.value }))} style={{ resize: 'vertical' }} />
+            {form.ccli_number && <div style={{ marginTop: 6, fontSize: 12, color: 'var(--color-text-muted)' }}>Find lyrics on <a href={`https://songselect.ccli.com/songs/${form.ccli_number}`} target="_blank" rel="noopener noreferrer" style={{ color: 'var(--color-brand-500)' }}>SongSelect ↗</a></div>}
+          </div>
+          <div style={{ borderTop: '1px solid var(--color-border)', paddingTop: 'var(--space-md)', display: 'flex', gap: 8, justifyContent: 'flex-end' }}>
+            <Link href={`/songs/${id}`} className="btn btn-secondary">Cancel</Link>
+            <button type="submit" className="btn btn-primary" disabled={loading}>{loading ? 'Saving…' : 'Save changes'}</button>
+          </div>
+        </form>
+      </div>
+    </div>
+  )
+}

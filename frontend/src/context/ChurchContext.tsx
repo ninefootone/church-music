@@ -2,6 +2,7 @@
 
 import { createContext, useContext, useEffect, useState, ReactNode } from 'react'
 import { useAuth } from '@clerk/nextjs'
+import { useRouter, usePathname } from 'next/navigation'
 import api, { setAuthToken } from '@/lib/api'
 
 interface Church {
@@ -28,6 +29,8 @@ const ChurchContext = createContext<ChurchContextType>({
 
 export function ChurchProvider({ children }: { children: ReactNode }) {
   const { getToken, isSignedIn, isLoaded } = useAuth()
+  const router = useRouter()
+  const pathname = usePathname()
   const [church, setChurch] = useState<Church | null>(null)
   const [loading, setLoading] = useState(true)
 
@@ -36,14 +39,9 @@ export function ChurchProvider({ children }: { children: ReactNode }) {
       setLoading(false)
       return
     }
-
     try {
-      // Get fresh token and attach to all requests
       const token = await getToken()
-      if (!token) {
-        setLoading(false)
-        return
-      }
+      if (!token) { setLoading(false); return }
       setAuthToken(token)
 
       const { data } = await api.get('/api/churches/mine')
@@ -51,6 +49,15 @@ export function ChurchProvider({ children }: { children: ReactNode }) {
         const c = data[0]
         setChurch(c)
         api.defaults.headers.common['x-church-id'] = c.id
+        // If on onboarding but already have a church, redirect to dashboard
+        if (pathname === '/onboarding') {
+          router.push('/dashboard')
+        }
+      } else {
+        // No church — redirect to onboarding unless already there
+        if (pathname !== '/onboarding') {
+          router.push('/onboarding')
+        }
       }
     } catch (err) {
       console.error('Failed to fetch church:', err)
@@ -60,18 +67,11 @@ export function ChurchProvider({ children }: { children: ReactNode }) {
   }
 
   useEffect(() => {
-    if (isLoaded) {
-      fetchChurch()
-    }
+    if (isLoaded) fetchChurch()
   }, [isLoaded, isSignedIn])
 
   return (
-    <ChurchContext.Provider value={{
-      church,
-      loading,
-      isAdmin: church?.role === 'admin',
-      refetch: fetchChurch,
-    }}>
+    <ChurchContext.Provider value={{ church, loading, isAdmin: church?.role === 'admin', refetch: fetchChurch }}>
       {children}
     </ChurchContext.Provider>
   )
