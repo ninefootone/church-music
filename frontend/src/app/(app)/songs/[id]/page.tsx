@@ -25,58 +25,73 @@ export default function SongDetailPage() {
       .finally(() => setLoading(false))
   }, [id])
 
-  if (loading) return <div className="loading-state">Loading…</div>
-  if (!song) return <div className="loading-state">Song not found.</div>
+  if (loading) return <p className="text-muted" style={{ padding: 'var(--space-xl)' }}>Loading…</p>
+  if (!song) return <p className="text-muted" style={{ padding: 'var(--space-xl)' }}>Song not found.</p>
 
   const mainFiles = (song.files || []).filter(f => f.key_of === song.default_key)
   const otherFiles = (song.files || []).filter(f => f.key_of !== song.default_key)
 
-  const metaRow = (label: string, children: React.ReactNode) => (
-    <div style={{ display: 'flex', alignItems: 'center', gap: 10, flexWrap: 'wrap' as const }}>
-      <span className="meta-key">{label}</span>
-      {children}
-    </div>
-  )
-
   return (
-    <div style={{ maxWidth: 720, margin: '0 auto' }}>
-      <Link href="/songs" className="back-link">
-        <ArrowLeft size={13} /> Back to songs
-      </Link>
+    <div style={{ maxWidth: 'var(--width-page)', margin: '0 auto' }}>
+      <Link href="/songs" className="back-link"><ArrowLeft size={14} /> Back to songs</Link>
 
       {/* Header card */}
       <div className="card" style={{ marginBottom: 'var(--space-md)' }}>
-        <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: 16, marginBottom: 4 }}>
-          <h1 className="detail-title">{song.title}</h1>
+        <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: 16, marginBottom: 6 }}>
+          <h1 className="song-detail-title">{song.title}</h1>
           {isAdmin && (
             <div style={{ display: 'flex', gap: 8, flexShrink: 0, marginTop: 4 }}>
-              <Link href={`/songs/${song.id}/edit`} className="btn btn-sm btn-secondary"><Edit size={13} /> Edit</Link>
-              <button className="btn btn-sm btn-primary"><Plus size={13} /> Add to service</button>
+              <Link href={`/songs/${song.id}/edit`} className="btn btn-sm btn-secondary"><Edit size={14} /> Edit</Link>
+              <button className="btn btn-sm btn-primary"><Plus size={14} /> Add to service</button>
             </div>
           )}
         </div>
 
-        <div className="item-meta" style={{ fontSize: 15, marginBottom: 'var(--space-md)' }}>{song.author}</div>
+        <p className="song-detail-author">{song.author}</p>
 
-        <div style={{ borderTop: '1px solid var(--color-border)', borderBottom: '1px solid var(--color-border)', padding: 'var(--space-md) 0', marginBottom: 'var(--space-md)', display: 'flex', flexDirection: 'column' as const, gap: 10 }}>
-          {song.category && metaRow('Category', <CategoryBadge category={song.category} />)}
-          {song.default_key && metaRow('Key',
-            <>
-              <KeyBadge keyOf={song.default_key} />
-              {otherFiles.length > 0 && <span className="item-meta">Other keys: {[...new Set(otherFiles.map(f => f.key_of))].join(', ')}</span>}
-            </>
-          )}
-          {song.first_line && metaRow('First line', <span style={{ fontSize: 14, color: 'var(--color-text-secondary)', fontStyle: 'italic' }}>"{song.first_line}"</span>)}
-          {song.tags && song.tags.length > 0 && metaRow('Tags',
-            <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap' as const }}>
-              {song.tags.map((t: string) => <span key={t} className="tag">{t}</span>)}
+        {/* Meta block */}
+        <div className="meta-block">
+          {song.category && (
+            <div className="meta-row">
+              <span className="meta-label">Category</span>
+              <CategoryBadge category={song.category} />
             </div>
           )}
-          {song.ccli_number && metaRow('CCLI',
-            <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-              <span style={{ fontSize: 14, fontWeight: 600, color: 'var(--color-text-secondary)' }}>{song.ccli_number}</span>
-              <a href={`https://songselect.ccli.com/songs/${song.ccli_number}`} target="_blank" rel="noopener noreferrer" className="ccli-link">
-                View on SongSelect <ExternalLink size={11} />
+          {song.default_key && (
+            <div className="meta-row">
+              <span className="meta-label">Key</span>
+              <KeyBadge keyOf={song.default_key} />
+              {otherFiles.length > 0 && (
+                <span className="text-muted" style={{ fontSize: 14 }}>
+                  Other keys: {[...new Set(otherFiles.map(f => f.key_of))].join(', ')}
+                </span>
+              )}
+            </div>
+          )}
+          {song.first_line && (
+            <div className="meta-row">
+              <span className="meta-label">First line</span>
+              <span className="first-line-text">"{song.first_line}"</span>
+            </div>
+          )}
+          {song.tags && song.tags.length > 0 && (
+            <div className="meta-row">
+              <span className="meta-label">Tags</span>
+              <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap' }}>
+                {song.tags.map((t: string) => <span key={t} className="tag">{t}</span>)}
+              </div>
+            </div>
+          )}
+          {song.ccli_number && (
+            <div className="meta-row">
+              <span className="meta-label">CCLI</span>
+              <span className="ccli-number">{song.ccli_number}</span>
+              <a
+                href={`https://songselect.ccli.com/songs/${song.ccli_number}`}
+                target="_blank" rel="noopener noreferrer"
+                className="ccli-link"
+              >
+                View on SongSelect <ExternalLink size={12} />
               </a>
             </div>
           )}
@@ -84,44 +99,47 @@ export default function SongDetailPage() {
 
         {/* Lyrics */}
         <div>
-          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 10 }}>
-            <span className="section-label">Lyrics</span>
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 12 }}>
+            <span className="section-label" style={{ marginBottom: 0 }}>Lyrics</span>
             {song.lyrics && (
-              <button onClick={() => setShowFullLyrics(!showFullLyrics)} className="btn-inline">
+              <button onClick={() => setShowFullLyrics(!showFullLyrics)} className="btn btn-ghost">
                 {showFullLyrics ? 'Collapse' : 'Show full lyrics'}
               </button>
             )}
           </div>
           {song.lyrics ? (
             <div style={{ position: 'relative' }}>
-              <div className="lyrics" style={{ maxHeight: showFullLyrics ? 'none' : 120, overflow: 'hidden' }}>
+              <div className="lyrics-text" style={{ maxHeight: showFullLyrics ? 'none' : 140, overflow: 'hidden' }}>
                 {song.lyrics}
               </div>
               {!showFullLyrics && (
-                <div style={{ position: 'absolute', bottom: 0, left: 0, right: 0, height: 48, background: 'linear-gradient(transparent, white)' }} />
+                <div style={{ position: 'absolute', bottom: 0, left: 0, right: 0, height: 56, background: 'linear-gradient(transparent, white)' }} />
               )}
             </div>
           ) : (
-            <p className="text-empty">
-              No lyrics added yet.{song.ccli_number && <> Find them on <a href={`https://songselect.ccli.com/songs/${song.ccli_number}`} target="_blank" rel="noopener noreferrer" className="link-brand">SongSelect ↗</a> and add them by editing this song.</>}
+            <p className="text-muted" style={{ fontStyle: 'italic' }}>
+              No lyrics added yet.{' '}
+              {song.ccli_number && (
+                <a href={`https://songselect.ccli.com/songs/${song.ccli_number}`} target="_blank" rel="noopener noreferrer" className="link">
+                  Find them on SongSelect ↗
+                </a>
+              )}
             </p>
           )}
         </div>
       </div>
 
-      {/* Downloads */}
+      {/* Downloads card */}
       <div className="card" style={{ marginBottom: 'var(--space-md)' }}>
-        <div className="section-label" style={{ marginBottom: 'var(--space-md)' }}>Downloads</div>
+        <div className="section-label">Downloads</div>
 
         {mainFiles.length > 0 && (
           <div style={{ marginBottom: 'var(--space-md)' }}>
-            <div className="subsection-label" style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
-              Main key — <KeyBadge keyOf={song.default_key} />
-            </div>
+            <p className="downloads-group-label">Main key — <KeyBadge keyOf={song.default_key} /></p>
             <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8 }}>
               {mainFiles.map(f => (
                 <button key={f.id} className="download-btn">
-                  <Download size={13} style={{ opacity: 0.6 }} /> {f.label}
+                  <Download size={14} /> {f.label}
                 </button>
               ))}
             </div>
@@ -130,13 +148,13 @@ export default function SongDetailPage() {
 
         {otherFiles.length > 0 && (
           <>
-            <div style={{ borderTop: '1px solid var(--color-border)', margin: 'var(--space-md) 0' }} />
+            <div className="divider" />
             <div style={{ marginBottom: 'var(--space-md)' }}>
-              <div className="subsection-label">Other keys</div>
+              <p className="downloads-group-label">Other keys</p>
               <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8 }}>
                 {otherFiles.map(f => (
                   <button key={f.id} className="download-btn">
-                    <Download size={13} style={{ opacity: 0.6 }} /> {f.label} <KeyBadge keyOf={f.key_of!} />
+                    <Download size={14} /> {f.label} <KeyBadge keyOf={f.key_of!} />
                   </button>
                 ))}
               </div>
@@ -145,55 +163,52 @@ export default function SongDetailPage() {
         )}
 
         {mainFiles.length === 0 && otherFiles.length === 0 && (
-          <p className="text-empty" style={{ marginBottom: 'var(--space-md)' }}>No files uploaded yet.</p>
+          <p className="text-muted" style={{ fontStyle: 'italic', marginBottom: 'var(--space-md)' }}>No files uploaded yet.</p>
         )}
 
         {song.youtube_url && (
           <>
-            <div style={{ borderTop: '1px solid var(--color-border)', margin: 'var(--space-md) 0' }} />
-            <div className="subsection-label">Reference</div>
-            <a href={song.youtube_url} target="_blank" rel="noopener noreferrer"
-              style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '8px 14px', border: '1px solid var(--color-border)', borderRadius: 'var(--radius-sm)', background: 'var(--color-neutral-50)', textDecoration: 'none' }}>
-              <div style={{ width: 20, height: 20, background: '#e33', borderRadius: 4, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
-                <div style={{ width: 0, height: 0, borderTop: '5px solid transparent', borderBottom: '5px solid transparent', borderLeft: '8px solid white', marginLeft: 2 }} />
-              </div>
-              <span className="item-title" style={{ marginBottom: 0 }}>YouTube reference video</span>
+            <div className="divider" />
+            <p className="downloads-group-label">Reference</p>
+            <a href={song.youtube_url} target="_blank" rel="noopener noreferrer" className="youtube-link">
+              <span className="youtube-icon"><span className="youtube-play" /></span>
+              YouTube reference video
             </a>
           </>
         )}
 
         {isAdmin && (
           <div style={{ borderTop: '1px solid var(--color-border)', marginTop: 'var(--space-md)', paddingTop: 'var(--space-md)' }}>
-            <button className="btn-inline" style={{ display: 'inline-flex', alignItems: 'center', gap: 4 }}>
-              <Plus size={13} /> Upload a file
-            </button>
+            <button className="btn btn-ghost"><Plus size={14} /> Upload a file</button>
           </div>
         )}
       </div>
 
-      {/* Usage */}
+      {/* Usage card */}
       <div className="card">
-        <div className="section-label" style={{ marginBottom: 'var(--space-md)' }}>Usage</div>
+        <div className="section-label">Usage</div>
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 'var(--space-md)', marginBottom: 'var(--space-md)' }}>
-          {[
-            { value: song.usage?.times_sung || 0, label: 'Times sung' },
-            { value: song.usage?.times_planned || 0, label: 'Planned' },
-            { value: song.usage?.last_sung ? format(new Date(song.usage.last_sung), 'd MMM') : '—', label: 'Last sung' },
-          ].map(stat => (
-            <div key={stat.label} style={{ textAlign: 'center', padding: 'var(--space-md)', background: 'var(--color-neutral-50)', borderRadius: 'var(--radius-md)', border: '1px solid var(--color-border)' }}>
-              <div className="stat-value">{stat.value}</div>
-              <div className="stat-label">{stat.label}</div>
-            </div>
-          ))}
+          <div className="stat-box">
+            <div className="stat-number">{song.usage?.times_sung || 0}</div>
+            <div className="stat-label">Times sung</div>
+          </div>
+          <div className="stat-box">
+            <div className="stat-number">{song.usage?.times_planned || 0}</div>
+            <div className="stat-label">Planned</div>
+          </div>
+          <div className="stat-box">
+            <div className="stat-number">{song.usage?.last_sung ? format(new Date(song.usage.last_sung), 'd MMM') : '—'}</div>
+            <div className="stat-label">Last sung</div>
+          </div>
         </div>
         {song.recent_services && song.recent_services.length > 0 && (
           <>
-            <div className="subsection-label">Recent services</div>
+            <p className="downloads-group-label">Recent services</p>
             {song.recent_services.map((s: any, i: number) => (
-              <div key={s.id} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '7px 0', borderBottom: i < song.recent_services!.length - 1 ? '1px solid var(--color-border)' : 'none' }}>
-                <span className="item-meta" style={{ fontSize: 13, color: 'var(--color-text-secondary)' }}>{format(new Date(s.date), 'd MMMM yyyy')}</span>
+              <div key={s.id} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '8px 0', borderBottom: i < song.recent_services!.length - 1 ? '1px solid var(--color-border)' : 'none' }}>
+                <span style={{ fontSize: 15, color: 'var(--color-text-secondary)' }}>{format(new Date(s.date), 'd MMMM yyyy')}</span>
                 {s.key_used && <KeyBadge keyOf={s.key_used} />}
-                <span className="item-meta">{s.service_time}</span>
+                <span className="text-muted" style={{ fontSize: 14 }}>{s.service_time}</span>
               </div>
             ))}
           </>
