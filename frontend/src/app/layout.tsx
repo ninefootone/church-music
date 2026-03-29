@@ -1,3 +1,9 @@
+<html lang="en">
+  <head>
+    <link rel="stylesheet" href="https://use.typekit.net/waf6equ.css" />
+  </head>
+  <body></body>
+
 import type { Metadata } from 'next'
 import { ClerkProvider } from '@clerk/nextjs'
 import { Toaster } from 'react-hot-toast'
@@ -6,7 +12,7 @@ import './globals.css'
 export const dynamic = 'force-dynamic'
  
 export const metadata: Metadata = {
-  title: 'Church Music',
+  title: 'Song Stack',
   description: 'Song library and service planning for churches',
 }
  
