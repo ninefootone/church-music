@@ -48,18 +48,18 @@ export default function StatsPage() {
         <h1 className="page-title">Stats</h1>
         <div style={{ display: 'flex', gap: 8, alignItems: 'center', flexWrap: 'wrap' }}>
           {[30, 90, 365].map(p => (
-            <button key={p} onClick={() => setPeriod(p)} style={{ padding: '4px 12px', borderRadius: 'var(--radius-pill)', border: '1px solid var(--color-border)', fontSize: 12, fontWeight: 500, fontFamily: 'inherit', cursor: 'pointer', background: period === p ? 'var(--color-brand-50)' : 'var(--color-surface)', color: period === p ? 'var(--color-brand-600)' : 'var(--color-text-secondary)', borderColor: period === p ? 'var(--color-brand-200)' : 'var(--color-border)' }}>
+            <button key={p} onClick={() => setPeriod(p)} className={`filter-btn${period === p ? ' filter-btn-active' : ''}`}>
               {p === 365 ? '1 year' : `${p} days`}
             </button>
           ))}
-          <button onClick={exportCCLI} className="btn btn-secondary" style={{ fontSize: 12 }}>Export CCLI CSV</button>
+          <button onClick={exportCCLI} className="btn btn-secondary btn-sm">Export CCLI CSV</button>
         </div>
       </div>
 
       {loading ? (
-        <div style={{ color: 'var(--color-text-muted)', padding: 'var(--space-xl)' }}>Loading…</div>
+        <div className="loading-state">Loading…</div>
       ) : !stats ? (
-        <div style={{ color: 'var(--color-text-muted)', padding: 'var(--space-xl)' }}>No data yet.</div>
+        <div className="loading-state">No data yet.</div>
       ) : (
         <>
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: 'var(--space-md)', marginBottom: 'var(--space-md)' }}>
@@ -68,8 +68,8 @@ export default function StatsPage() {
               { value: stats.total_services, label: `Services in last ${period === 365 ? 'year' : period + ' days'}` },
             ].map(stat => (
               <div key={stat.label} className="card" style={{ textAlign: 'center' }}>
-                <div style={{ fontSize: 36, fontWeight: 700, color: 'var(--color-brand-600)', letterSpacing: '-0.03em', marginBottom: 4 }}>{stat.value}</div>
-                <div style={{ fontSize: 12, color: 'var(--color-text-muted)', textTransform: 'uppercase', letterSpacing: '0.05em', fontWeight: 500 }}>{stat.label}</div>
+                <div className="stat-value-lg">{stat.value}</div>
+                <div className="stat-label">{stat.label}</div>
               </div>
             ))}
           </div>
@@ -77,21 +77,21 @@ export default function StatsPage() {
           <div className="card">
             <div className="section-label" style={{ marginBottom: 'var(--space-md)' }}>Most sung songs</div>
             {!stats.top_songs || stats.top_songs.length === 0 ? (
-              <div style={{ fontSize: 14, color: 'var(--color-text-muted)', textAlign: 'center', padding: 'var(--space-lg)' }}>
+              <div className="empty-state">
                 No services recorded in this period yet. Add songs to services to see stats here.
               </div>
             ) : (
               stats.top_songs.map((song: any, i: number) => (
                 <div key={song.song_id} style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '10px 0', borderBottom: i < stats.top_songs.length - 1 ? '1px solid var(--color-border)' : 'none' }}>
-                  <div style={{ fontSize: 18, fontWeight: 700, color: 'var(--color-brand-200)', width: 32, textAlign: 'center', flexShrink: 0 }}>{i + 1}</div>
+                  <div className="rank-number">{i + 1}</div>
                   <div style={{ flex: 1 }}>
-                    <div style={{ fontSize: 14, fontWeight: 500, color: 'var(--color-text-primary)', marginBottom: 2 }}>{song.title}</div>
-                    <div style={{ fontSize: 11, color: 'var(--color-text-muted)' }}>{song.author}</div>
+                    <div className="item-title">{song.title}</div>
+                    <div className="item-meta">{song.author}</div>
                   </div>
                   {song.category && <CategoryBadge category={song.category as Category} />}
                   <div style={{ textAlign: 'right', flexShrink: 0 }}>
                     <div style={{ fontSize: 16, fontWeight: 700, color: 'var(--color-brand-600)' }}>{song.count}</div>
-                    <div style={{ fontSize: 10, color: 'var(--color-text-muted)', textTransform: 'uppercase', letterSpacing: '0.05em' }}>times</div>
+                    <div className="stat-label">times</div>
                   </div>
                 </div>
               ))

@@ -31,15 +31,15 @@ export default function ServicesPage() {
   const upcoming = services.filter(s => isFuture(parseISO(s.service_date)) || isToday(parseISO(s.service_date)))
   const past = services.filter(s => !isFuture(parseISO(s.service_date)) && !isToday(parseISO(s.service_date)))
 
-  if (loading) return <div style={{ color: 'var(--color-text-muted)', padding: 'var(--space-xl)' }}>Loading…</div>
+  if (loading) return <div className="loading-state">Loading…</div>
 
   const ServiceCard = ({ service, isPast }: { service: Service; isPast?: boolean }) => (
     <Link href={`/services/${service.id}`} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 'var(--space-md)', background: 'var(--color-surface)', border: '1px solid var(--color-border)', borderRadius: 'var(--radius-lg)', padding: 'var(--space-md) var(--space-lg)', marginBottom: 'var(--space-sm)', textDecoration: 'none', opacity: isPast ? 0.65 : 1, boxShadow: 'var(--shadow-sm)' }}>
       <div style={{ flex: 1, minWidth: 0 }}>
-        <div style={{ fontSize: 15, fontWeight: 600, color: 'var(--color-text-primary)', letterSpacing: '-0.01em', marginBottom: 3 }}>
+        <div className="item-title" style={{ fontSize: 15, letterSpacing: '-0.01em' }}>
           {format(parseISO(service.service_date), 'd MMMM yyyy')}{service.service_time ? ` · ${service.service_time}` : ''}
         </div>
-        {service.title && <div style={{ fontSize: 12, color: 'var(--color-text-muted)' }}>{service.title}</div>}
+        {service.title && <div className="item-meta">{service.title}</div>}
       </div>
       <div style={{ display: 'flex', alignItems: 'center', gap: 8, flexShrink: 0 }}>
         <span className={`badge ${isPast ? 'badge-past' : 'badge-upcoming'}`}>{isPast ? 'PAST' : 'UPCOMING'}</span>
@@ -55,8 +55,8 @@ export default function ServicesPage() {
         {isAdmin && <Link href="/services/new" className="btn btn-primary"><Plus size={15} /> Add new service</Link>}
       </div>
       {services.length === 0 ? (
-        <div className="card" style={{ textAlign: 'center', padding: 'var(--space-xl)', color: 'var(--color-text-muted)' }}>
-          No services yet.{isAdmin && <> <Link href="/services/new" style={{ color: 'var(--color-brand-500)' }}>Plan your first service</Link></>}
+        <div className="card empty-state">
+          No services yet.{isAdmin && <> <Link href="/services/new" className="link-brand">Plan your first service</Link></>}
         </div>
       ) : (
         <>

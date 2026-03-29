@@ -225,4 +225,236 @@
     letter-spacing: -0.025em;
     line-height: 1.1;
   }
+
+  /* Detail/card-level heading (used inside cards) */
+  .detail-title {
+    font-size: 28px;
+    font-weight: 700;
+    color: var(--color-text-primary);
+    letter-spacing: -0.025em;
+    line-height: 1.15;
+  }
+
+  /* Back navigation link */
+  .back-link {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    font-size: 12px;
+    color: var(--color-text-muted);
+    text-decoration: none;
+    margin-bottom: var(--space-lg);
+  }
+  .back-link:hover { color: var(--color-text-secondary); }
+
+  /* List item / row primary text */
+  .item-title {
+    font-size: 14px;
+    font-weight: 500;
+    color: var(--color-text-primary);
+    margin-bottom: 2px;
+  }
+
+  /* Small secondary/meta text (author, time, etc.) */
+  .item-meta {
+    font-size: 11px;
+    color: var(--color-text-muted);
+  }
+
+  /* Loading / page-level state */
+  .loading-state {
+    color: var(--color-text-muted);
+    padding: var(--space-xl);
+  }
+
+  /* Centered empty list message */
+  .empty-state {
+    font-size: 14px;
+    color: var(--color-text-muted);
+    text-align: center;
+    padding: var(--space-xl);
+  }
+
+  /* Italic placeholder / empty hint text */
+  .text-empty {
+    font-size: 13px;
+    color: var(--color-text-muted);
+    font-style: italic;
+  }
+
+  /* Small hint text (below inputs, etc.) */
+  .text-hint {
+    font-size: 12px;
+    color: var(--color-text-muted);
+  }
+
+  /* Inline brand-coloured anchor */
+  .link-brand { color: var(--color-brand-500); }
+  .link-brand:hover { color: var(--color-brand-700); }
+
+  /* Error / validation banner */
+  .error-banner {
+    background: #fdf0f0;
+    border: 1px solid #f5c0c0;
+    border-radius: var(--radius-md);
+    padding: 12px 16px;
+    margin-bottom: 16px;
+    font-size: 14px;
+    color: #9a3a3a;
+  }
+
+  /* Filter / period pill toggle button */
+  .filter-btn {
+    padding: 4px 12px;
+    border-radius: var(--radius-pill);
+    border: 1px solid var(--color-border);
+    font-size: 12px;
+    font-weight: 500;
+    font-family: inherit;
+    cursor: pointer;
+    background: var(--color-surface);
+    color: var(--color-text-secondary);
+  }
+  .filter-btn-active {
+    background: var(--color-brand-50);
+    color: var(--color-brand-600);
+    border-color: var(--color-brand-200);
+  }
+
+  /* File download button */
+  .download-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 7px 14px;
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-sm);
+    background: var(--color-surface);
+    font-size: 13px;
+    font-weight: 500;
+    color: var(--color-text-secondary);
+    font-family: inherit;
+    cursor: pointer;
+  }
+
+  /* Sub-section heading */
+  .subsection-label {
+    font-size: 12px;
+    font-weight: 600;
+    color: var(--color-text-secondary);
+    margin-bottom: 8px;
+  }
+
+  /* Large stat number */
+  .stat-value {
+    font-size: 22px;
+    font-weight: 700;
+    color: var(--color-brand-600);
+    letter-spacing: -0.02em;
+    margin-bottom: 3px;
+  }
+
+  /* Hero stat number (page-level) */
+  .stat-value-lg {
+    font-size: 36px;
+    font-weight: 700;
+    color: var(--color-brand-600);
+    letter-spacing: -0.03em;
+    margin-bottom: 4px;
+  }
+
+  /* Stat descriptor */
+  .stat-label {
+    font-size: 11px;
+    color: var(--color-text-muted);
+    font-weight: 500;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+  }
+
+  /* Ranking number in a list */
+  .rank-number {
+    font-size: 18px;
+    font-weight: 700;
+    color: var(--color-brand-200);
+    width: 32px;
+    text-align: center;
+    flex-shrink: 0;
+  }
+
+  /* Song lyrics block */
+  .lyrics {
+    font-size: 14px;
+    color: var(--color-text-secondary);
+    line-height: 1.7;
+    white-space: pre-wrap;
+  }
+
+  /* Inline ghost action button (no border/bg) */
+  .btn-inline {
+    background: none;
+    border: none;
+    cursor: pointer;
+    font-family: inherit;
+    font-size: 12px;
+    color: var(--color-brand-500);
+    padding: 0;
+  }
+  .btn-inline:hover { color: var(--color-brand-700); }
+
+  /* Meta table key column */
+  .meta-key {
+    font-size: 11px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.07em;
+    color: var(--color-text-muted);
+    width: 80px;
+    flex-shrink: 0;
+  }
+
+  /* CCLI SongSelect pill link */
+  .ccli-link {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    font-size: 12px;
+    font-weight: 500;
+    color: var(--color-brand-500);
+    background: var(--color-brand-50);
+    border: 1px solid var(--color-brand-100);
+    padding: 4px 12px;
+    border-radius: var(--radius-pill);
+    text-decoration: none;
+  }
+  .ccli-link:hover { color: var(--color-brand-700); }
+
+  /* Member avatar circle */
+  .member-avatar {
+    width: 28px;
+    height: 28px;
+    border-radius: 50%;
+    background: var(--color-brand-100);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 10px;
+    font-weight: 700;
+    color: var(--color-brand-700);
+    flex-shrink: 0;
+  }
+
+  /* Site footer */
+  .site-footer {
+    font-size: 13px;
+    color: var(--color-text-muted);
+  }
+
+  /* Label note (resets bold/uppercase within a .label) */
+  .label-note {
+    font-weight: 400;
+    text-transform: none;
+    letter-spacing: 0;
+    font-size: inherit;
+  }
 }

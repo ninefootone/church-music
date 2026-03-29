@@ -14,7 +14,7 @@ export default async function AppLayout({ children }: { children: React.ReactNod
         <main style={{ maxWidth: 'var(--width-app)', margin: '0 auto', padding: 'var(--space-xl) var(--space-lg)' }}>
           {children}
         </main>
-        <footer style={{ textAlign: 'center', padding: 'var(--space-xl) var(--space-lg)', fontSize: 13, color: 'var(--color-text-muted)', borderTop: '1px solid var(--color-border)', marginTop: 'var(--space-xl)' }}>
+        <footer className="site-footer" style={{ textAlign: 'center', padding: 'var(--space-xl) var(--space-lg)', borderTop: '1px solid var(--color-border)', marginTop: 'var(--space-xl)' }}>
           Song Stack · Legal · Privacy · Copyright
         </footer>
       </div>

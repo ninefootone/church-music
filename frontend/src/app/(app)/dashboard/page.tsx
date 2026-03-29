@@ -28,7 +28,7 @@ export default function DashboardPage() {
   }, [church])
 
   if (churchLoading || (loading && !songs.length)) return (
-    <div style={{ color: 'var(--color-text-muted)', padding: 'var(--space-xl)' }}>Loading…</div>
+    <div className="loading-state">Loading…</div>
   )
 
   return (
@@ -40,12 +40,12 @@ export default function DashboardPage() {
             {isAdmin && <Link href="/songs/new" className="btn btn-ghost">Add new +</Link>}
           </div>
           {songs.length === 0 ? (
-            <div style={{ fontSize: 13, color: 'var(--color-text-muted)' }}>No songs yet. <Link href="/songs/new" style={{ color: 'var(--color-brand-500)' }}>Add your first</Link></div>
+            <div className="text-hint">No songs yet. <Link href="/songs/new" className="link-brand">Add your first</Link></div>
           ) : songs.map((song, i) => (
             <Link key={song.id} href={`/songs/${song.id}`} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '9px 0', borderBottom: i < songs.length - 1 ? '1px solid var(--color-border)' : 'none', textDecoration: 'none' }}>
               <div>
-                <div style={{ fontSize: 14, fontWeight: 500, color: 'var(--color-text-primary)', marginBottom: 2 }}>{song.title}</div>
-                <div style={{ fontSize: 11, color: 'var(--color-text-muted)', display: 'flex', alignItems: 'center', gap: 8 }}>
+                <div className="item-title">{song.title}</div>
+                <div className="item-meta" style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
                   <span>{song.author}</span>
                   {song.default_key && <KeyBadge keyOf={song.default_key} />}
                 </div>
@@ -64,17 +64,17 @@ export default function DashboardPage() {
             {isAdmin && <Link href="/services/new" className="btn btn-ghost">Add new +</Link>}
           </div>
           {services.length === 0 ? (
-            <div style={{ fontSize: 13, color: 'var(--color-text-muted)' }}>No services yet. <Link href="/services/new" style={{ color: 'var(--color-brand-500)' }}>Add your first</Link></div>
+            <div className="text-hint">No services yet. <Link href="/services/new" className="link-brand">Add your first</Link></div>
           ) : services.map((service, i) => {
             const date = parseISO(service.service_date)
             const upcoming = isFuture(date) || isToday(date)
             return (
               <Link key={service.id} href={`/services/${service.id}`} style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', padding: '9px 0', borderBottom: i < services.length - 1 ? '1px solid var(--color-border)' : 'none', gap: 8, textDecoration: 'none' }}>
                 <div>
-                  <div style={{ fontSize: 14, fontWeight: 500, color: 'var(--color-text-primary)', marginBottom: 2 }}>
+                  <div className="item-title">
                     {format(date, 'd MMM')}{service.service_time ? ` · ${service.service_time}` : ''}
                   </div>
-                  {service.title && <div style={{ fontSize: 11, color: 'var(--color-text-muted)' }}>{service.title}</div>}
+                  {service.title && <div className="item-meta">{service.title}</div>}
                 </div>
                 <span className={`badge ${upcoming ? 'badge-upcoming' : 'badge-past'}`}>{upcoming ? 'UPCOMING' : 'PAST'}</span>
               </Link>
@@ -102,12 +102,12 @@ export default function DashboardPage() {
         {members.map((member, i) => (
           <div key={member.id} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '9px 0', borderBottom: i < members.length - 1 ? '1px solid var(--color-border)' : 'none' }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: 'var(--space-sm)' }}>
-              <div style={{ width: 28, height: 28, borderRadius: '50%', background: 'var(--color-brand-100)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 10, fontWeight: 700, color: 'var(--color-brand-700)', flexShrink: 0 }}>
+              <div className="member-avatar">
                 {(member.name || member.email || '?').charAt(0).toUpperCase()}
               </div>
               <div>
-                <div style={{ fontSize: 14, fontWeight: 500, color: 'var(--color-text-primary)' }}>{member.name || member.email}</div>
-                <div style={{ fontSize: 11, color: 'var(--color-text-muted)', textTransform: 'capitalize' }}>{member.role}</div>
+                <div className="item-title" style={{ marginBottom: 0 }}>{member.name || member.email}</div>
+                <div className="item-meta" style={{ textTransform: 'capitalize' }}>{member.role}</div>
               </div>
             </div>
           </div>

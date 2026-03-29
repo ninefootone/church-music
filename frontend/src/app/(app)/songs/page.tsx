@@ -36,7 +36,7 @@ export default function SongsPage() {
     }
   }
 
-  if (churchLoading) return <div style={{ color: 'var(--color-text-muted)', padding: 'var(--space-xl)' }}>Loading…</div>
+  if (churchLoading) return <div className="loading-state">Loading…</div>
 
   return (
     <div>
@@ -64,15 +64,7 @@ export default function SongsPage() {
           <button
             key={cat}
             onClick={() => setActiveCategory(cat as Category | 'all')}
-            style={{
-              padding: '4px 12px',
-              borderRadius: 'var(--radius-pill)',
-              border: '1px solid var(--color-border)',
-              fontSize: 12, fontWeight: 500, fontFamily: 'inherit', cursor: 'pointer',
-              background: activeCategory === cat ? 'var(--color-brand-50)' : 'var(--color-surface)',
-              color: activeCategory === cat ? 'var(--color-brand-600)' : 'var(--color-text-secondary)',
-              borderColor: activeCategory === cat ? 'var(--color-brand-200)' : 'var(--color-border)',
-            }}
+            className={`filter-btn${activeCategory === cat ? ' filter-btn-active' : ''}`}
           >
             {cat === 'all' ? 'All' : CATEGORIES.find(c => c.value === cat)?.label}
           </button>
@@ -81,10 +73,10 @@ export default function SongsPage() {
 
       <div style={{ background: 'var(--color-surface)', border: '1px solid var(--color-border)', borderRadius: 'var(--radius-lg)', overflow: 'hidden', boxShadow: 'var(--shadow-sm)' }}>
         {loading ? (
-          <div style={{ padding: 'var(--space-xl)', textAlign: 'center', color: 'var(--color-text-muted)' }}>Loading songs…</div>
+          <div className="empty-state">Loading songs…</div>
         ) : songs.length === 0 ? (
-          <div style={{ padding: 'var(--space-xl)', textAlign: 'center', color: 'var(--color-text-muted)', fontSize: 14 }}>
-            No songs yet. <Link href="/songs/new" style={{ color: 'var(--color-brand-500)' }}>Add your first song</Link>
+          <div className="empty-state">
+            No songs yet. <Link href="/songs/new" className="link-brand">Add your first song</Link>
           </div>
         ) : (
           songs.map((song, i) => (
@@ -100,10 +92,10 @@ export default function SongsPage() {
               }}
             >
               <div style={{ flex: 1, minWidth: 0 }}>
-                <div style={{ fontSize: 15, fontWeight: 500, color: 'var(--color-text-primary)', marginBottom: 3, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                <div className="item-title" style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
                   {song.title}
                 </div>
-                <div style={{ fontSize: 11, color: 'var(--color-text-muted)', display: 'flex', alignItems: 'center', gap: 8 }}>
+                <div className="item-meta" style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
                   <span>{song.author}</span>
                   {song.default_key && <KeyBadge keyOf={song.default_key} />}
                   {song.usage?.last_sung && <span>Last sung {format(new Date(song.usage.last_sung), 'd MMM yyyy')}</span>}
