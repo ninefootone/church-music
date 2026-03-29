@@ -36,22 +36,22 @@ export default function SongsPage() {
     }
   }
 
-  if (churchLoading) return <div className="loading-state">Loading…</div>
+  if (churchLoading) return <div className="text-muted" style={{ padding: 'var(--space-xl)' }}>Loading…</div>
 
   return (
     <div>
-      <div style={{ display: 'flex', alignItems: 'baseline', justifyContent: 'space-between', marginBottom: 'var(--space-lg)' }}>
+      <div className="page-header">
         <h1 className="page-title">Songs</h1>
         <Link href="/songs/new" className="btn btn-primary">
-          <Plus size={15} /> Add new song
+          <Plus size={16} /> Add new song
         </Link>
       </div>
 
       <div style={{ position: 'relative', marginBottom: 'var(--space-sm)' }}>
-        <Search size={15} style={{ position: 'absolute', left: 12, top: '50%', transform: 'translateY(-50%)', color: 'var(--color-text-muted)' }} />
+        <Search size={16} style={{ position: 'absolute', left: 14, top: '50%', transform: 'translateY(-50%)', color: 'var(--color-text-muted)' }} />
         <input
           className="input"
-          style={{ paddingLeft: 36 }}
+          style={{ paddingLeft: 42 }}
           type="text"
           placeholder="Search by title, author, theme or lyric…"
           value={search}
@@ -60,54 +60,37 @@ export default function SongsPage() {
       </div>
 
       <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6, marginBottom: 'var(--space-md)' }}>
-        {['all', ...CATEGORIES.map(c => c.value)].map(cat => (
-          <button
-            key={cat}
-            onClick={() => setActiveCategory(cat as Category | 'all')}
-            className={`filter-btn${activeCategory === cat ? ' filter-btn-active' : ''}`}
-          >
-            {cat === 'all' ? 'All' : CATEGORIES.find(c => c.value === cat)?.label}
+        <button className={`filter-chip ${activeCategory === 'all' ? 'is-active' : ''}`} onClick={() => setActiveCategory('all')}>All</button>
+        {CATEGORIES.map(cat => (
+          <button key={cat.value} className={`filter-chip ${activeCategory === cat.value ? 'is-active' : ''}`} onClick={() => setActiveCategory(cat.value)}>
+            {cat.label}
           </button>
         ))}
       </div>
 
-      <div style={{ background: 'var(--color-surface)', border: '1px solid var(--color-border)', borderRadius: 'var(--radius-lg)', overflow: 'hidden', boxShadow: 'var(--shadow-sm)' }}>
+      <div className="songs-table">
         {loading ? (
-          <div className="empty-state">Loading songs…</div>
+          <div style={{ padding: 'var(--space-xl)', textAlign: 'center', color: 'var(--color-text-muted)' }}>Loading songs…</div>
         ) : songs.length === 0 ? (
-          <div className="empty-state">
-            No songs yet. <Link href="/songs/new" className="link-brand">Add your first song</Link>
+          <div style={{ padding: 'var(--space-xl)', textAlign: 'center', color: 'var(--color-text-muted)' }}>
+            No songs found. <Link href="/songs/new" style={{ color: 'var(--color-brand-500)' }}>Add one?</Link>
           </div>
-        ) : (
-          songs.map((song, i) => (
-            <Link
-              key={song.id}
-              href={`/songs/${song.id}`}
-              style={{
-                display: 'flex', alignItems: 'center', justifyContent: 'space-between',
-                padding: '12px var(--space-md)',
-                borderBottom: i < songs.length - 1 ? '1px solid var(--color-border)' : 'none',
-                textDecoration: 'none', gap: 'var(--space-md)',
-                transition: 'background var(--transition-fast)',
-              }}
-            >
-              <div style={{ flex: 1, minWidth: 0 }}>
-                <div className="item-title" style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
-                  {song.title}
-                </div>
-                <div className="item-meta" style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-                  <span>{song.author}</span>
-                  {song.default_key && <KeyBadge keyOf={song.default_key} />}
-                  {song.usage?.last_sung && <span>Last sung {format(new Date(song.usage.last_sung), 'd MMM yyyy')}</span>}
-                </div>
+        ) : songs.map((song, i) => (
+          <Link key={song.id} href={`/songs/${song.id}`} className="song-row">
+            <div style={{ flex: 1, minWidth: 0 }}>
+              <div className="song-title" style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{song.title}</div>
+              <div className="song-meta">
+                <span>{song.author}</span>
+                {song.default_key && <KeyBadge keyOf={song.default_key} />}
+                {song.usage?.last_sung && <span>Last sung {format(new Date(song.usage.last_sung), 'd MMM yyyy')}</span>}
               </div>
-              <div style={{ display: 'flex', alignItems: 'center', gap: 8, flexShrink: 0 }}>
-                {song.category && <CategoryBadge category={song.category} />}
-                <ChevronRight size={16} style={{ color: 'var(--color-text-muted)' }} />
-              </div>
-            </Link>
-          ))
-        )}
+            </div>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 10, flexShrink: 0 }}>
+              {song.category && <CategoryBadge category={song.category} />}
+              <ChevronRight size={18} style={{ color: 'var(--color-text-muted)' }} />
+            </div>
+          </Link>
+        ))}
       </div>
     </div>
   )
