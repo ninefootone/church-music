@@ -8,29 +8,29 @@ import { useChurch } from '@/context/ChurchContext'
 
 const navLinks = [
   { href: '/dashboard', label: 'Home' },
-  { href: '/songs', label: 'Songs' },
-  { href: '/services', label: 'Services' },
-  { href: '/stats', label: 'Stats' },
+  { href: '/songs',     label: 'Songs' },
+  { href: '/services',  label: 'Services' },
+  { href: '/stats',     label: 'Stats' },
 ]
 
 export function AppNavClient() {
   const pathname = usePathname()
   const { church, loading } = useChurch()
-  const churchName = loading ? '…' : (church?.name || 'Church Music')
+  const churchName = loading ? '…' : (church?.name || 'Song Stack')
 
   return (
     <nav style={{ background: 'var(--color-surface)', borderBottom: '1px solid var(--color-border)', boxShadow: 'var(--shadow-sm)', position: 'sticky', top: 0, zIndex: 100 }}>
-      <div style={{ maxWidth: 960, margin: '0 auto', padding: '0 var(--space-lg)', height: 52, display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+      <div style={{ maxWidth: 'var(--width-app)', margin: '0 auto', padding: '0 var(--space-lg)', height: 58, display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: 'var(--space-xs)' }}>
-          <Link href="/dashboard" style={{ display: 'flex', alignItems: 'center', gap: 6, fontSize: 15, fontWeight: 600, color: 'var(--color-text-primary)', letterSpacing: '-0.01em', textDecoration: 'none' }}>
-            <Music size={16} style={{ color: 'var(--color-brand-500)' }} />
+          <Link href="/dashboard" style={{ display: 'flex', alignItems: 'center', gap: 8, fontSize: 17, fontWeight: 600, color: 'var(--color-text-primary)', letterSpacing: '-0.01em', textDecoration: 'none' }}>
+            <Music size={18} style={{ color: 'var(--color-brand-500)' }} />
             {churchName}
           </Link>
-          <span style={{ color: 'var(--color-border)', margin: '0 4px', fontSize: 18 }}>·</span>
+          <span style={{ color: 'var(--color-border)', margin: '0 4px', fontSize: 20 }}>·</span>
           {navLinks.map(link => {
             const isActive = pathname === link.href || pathname.startsWith(link.href + '/')
             return (
-              <Link key={link.href} href={link.href} style={{ fontSize: 14, fontWeight: 500, color: isActive ? 'var(--color-brand-600)' : 'var(--color-text-secondary)', background: isActive ? 'var(--color-brand-50)' : 'transparent', padding: '4px 8px', borderRadius: 'var(--radius-sm)', textDecoration: 'none' }}>
+              <Link key={link.href} href={link.href} style={{ fontSize: 15, fontWeight: 500, color: isActive ? 'var(--color-brand-600)' : 'var(--color-text-secondary)', background: isActive ? 'var(--color-brand-50)' : 'transparent', padding: '5px 10px', borderRadius: 'var(--radius-sm)', textDecoration: 'none' }}>
                 {link.label}
               </Link>
             )
