@@ -80,7 +80,7 @@
 
 @layer base {
   body {
-    font-family: 'Halyard Display', 'Helvetica Neue', system-ui, sans-serif;
+    font-family: 'Figtree', 'Helvetica Neue', system-ui, sans-serif;
     font-size: var(--text-base);
     line-height: 1.6;
     background-color: var(--color-bg);

@@ -24,11 +24,11 @@ export default function RootLayout({
     >
       <html lang="en">
         <head>
-          <link rel="stylesheet" href="https://use.typekit.net/waf6equ.css" />
+          <link href="https://fonts.googleapis.com/css2?family=Figtree:ital,wght@0,300;0,400;0,500;0,600;0,700;0,800;0,900;1,300;1,400;1,500;1,600;1,700&display=swap" rel="stylesheet" />
         </head>
         <body>
           {children}
-          <Toaster position="top-right" toastOptions={{ style: { fontFamily: 'Halyard Display, Helvetica Neue, sans-serif', fontSize: '14px', borderRadius: '10px' } }} />
+          <Toaster position="top-right" toastOptions={{ style: { fontFamily: 'Figtree, Helvetica Neue, sans-serif', fontSize: '14px', borderRadius: '10px' } }} />
         </body>
       </html>
     </ClerkProvider>
