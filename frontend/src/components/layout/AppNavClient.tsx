@@ -1,9 +1,10 @@
 'use client'
 
+import { useState } from 'react'
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
 import { UserButton } from '@clerk/nextjs'
-import { Music } from 'lucide-react'
+import { Music, Menu, X } from 'lucide-react'
 import { useChurch } from '@/context/ChurchContext'
 
 const navLinks = [
@@ -17,27 +18,59 @@ export function AppNavClient() {
   const pathname = usePathname()
   const { church, loading } = useChurch()
   const churchName = loading ? '…' : (church?.name || 'Song Stack')
+  const [menuOpen, setMenuOpen] = useState(false)
+
+  const isActive = (href: string) => pathname === href || pathname.startsWith(href + '/')
 
   return (
-    <nav style={{ background: 'var(--color-surface)', borderBottom: '1px solid var(--color-border)', boxShadow: 'var(--shadow-sm)', position: 'sticky', top: 0, zIndex: 100 }}>
-      <div style={{ maxWidth: 'var(--width-app)', margin: '0 auto', padding: '0 var(--space-lg)', height: 58, display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-        <div style={{ display: 'flex', alignItems: 'center', gap: 'var(--space-xs)' }}>
-          <Link href="/dashboard" style={{ display: 'flex', alignItems: 'center', gap: 8, fontSize: 17, fontWeight: 600, color: 'var(--color-text-primary)', letterSpacing: '-0.01em', textDecoration: 'none' }}>
-            <Music size={18} style={{ color: 'var(--color-brand-500)' }} />
-            {churchName}
-          </Link>
-          <span style={{ color: 'var(--color-border)', margin: '0 4px', fontSize: 20 }}>·</span>
-          {navLinks.map(link => {
-            const isActive = pathname === link.href || pathname.startsWith(link.href + '/')
-            return (
-              <Link key={link.href} href={link.href} style={{ fontSize: 15, fontWeight: 500, color: isActive ? 'var(--color-brand-600)' : 'var(--color-text-secondary)', background: isActive ? 'var(--color-brand-50)' : 'transparent', padding: '5px 10px', borderRadius: 'var(--radius-sm)', textDecoration: 'none' }}>
-                {link.label}
-              </Link>
-            )
-          })}
+    <>
+      <nav className="app-nav">
+        <div className="app-nav-inner">
+          <div className="app-nav-left">
+            <Link href="/dashboard" className="app-nav-brand">
+              <Music size={18} />
+              {churchName}
+            </Link>
+            <span className="app-nav-sep">·</span>
+            <div className="app-nav-links">
+              {navLinks.map(link => (
+                <Link
+                  key={link.href}
+                  href={link.href}
+                  className={`app-nav-link ${isActive(link.href) ? 'is-active' : ''}`}
+                >
+                  {link.label}
+                </Link>
+              ))}
+            </div>
+          </div>
+          <div className="app-nav-right">
+            <UserButton afterSignOutUrl="/" />
+            <button
+              className="app-nav-hamburger"
+              onClick={() => setMenuOpen(!menuOpen)}
+              aria-label="Toggle menu"
+            >
+              {menuOpen ? <X size={22} /> : <Menu size={22} />}
+            </button>
+          </div>
         </div>
-        <UserButton afterSignOutUrl="/" />
-      </div>
-    </nav>
+      </nav>
+
+      {/* Mobile menu */}
+      {menuOpen && (
+        <div className="app-nav-mobile" onClick={() => setMenuOpen(false)}>
+          {navLinks.map(link => (
+            <Link
+              key={link.href}
+              href={link.href}
+              className={`app-nav-mobile-link ${isActive(link.href) ? 'is-active' : ''}`}
+            >
+              {link.label}
+            </Link>
+          ))}
+        </div>
+      )}
+    </>
   )
 }

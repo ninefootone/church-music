@@ -37,10 +37,9 @@ export default function DashboardPage() {
 
   return (
     <div>
-      {/* 60/40 grid */}
-      <div style={{ display: 'grid', gridTemplateColumns: '3fr 2fr', gap: 'var(--space-md)', marginBottom: 'var(--space-md)' }}>
+      {/* 60/40 grid — collapses to single column on mobile */}
+      <div className="dashboard-grid" style={{ display: 'grid', gridTemplateColumns: '3fr 2fr', gap: 'var(--space-md)', marginBottom: 'var(--space-md)' }}>
 
-        {/* Songs card */}
         <div className="card">
           <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 'var(--space-md)' }}>
             <span className="section-label">Songs</span>
@@ -51,9 +50,9 @@ export default function DashboardPage() {
           ) : songs.map((song, i) => (
             <Link key={song.id} href={`/songs/${song.id}`} className="dash-row">
               <div style={{ flex: 1, minWidth: 0 }}>
-                <p className="dash-row-title">{song.title}</p>
+                <p className="dash-row-title" style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{song.title}</p>
                 <p className="dash-row-meta">
-                  {song.author}
+                  <span>{song.author}</span>
                   {song.default_key && <KeyBadge keyOf={song.default_key} />}
                 </p>
               </div>
@@ -65,7 +64,6 @@ export default function DashboardPage() {
           </div>
         </div>
 
-        {/* Services card */}
         <div className="card">
           <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 'var(--space-md)' }}>
             <span className="section-label">Services</span>
@@ -94,7 +92,6 @@ export default function DashboardPage() {
         </div>
       </div>
 
-      {/* Team card */}
       <div className="card">
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 'var(--space-md)' }}>
           <span className="section-label">Team</span>

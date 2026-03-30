@@ -8,13 +8,10 @@ export const dynamic = 'force-dynamic'
 export const metadata: Metadata = {
   title: 'Song Stack',
   description: 'Song library and service planning for churches',
+  viewport: 'width=device-width, initial-scale=1',
 }
 
-export default function RootLayout({
-  children,
-}: {
-  children: React.ReactNode
-}) {
+export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
     <ClerkProvider
       signInUrl="/sign-in"
@@ -24,11 +21,21 @@ export default function RootLayout({
     >
       <html lang="en">
         <head>
-          <link href="https://fonts.googleapis.com/css2?family=Figtree:ital,wght@0,300;0,400;0,500;0,600;0,700;0,800;0,900;1,300;1,400;1,500;1,600;1,700&display=swap" rel="stylesheet" />
+          <link href="https://fonts.googleapis.com/css2?family=Figtree:ital,wght@0,300;0,400;0,500;0,600;0,700;0,800;0,900;1,400&display=swap" rel="stylesheet" />
         </head>
         <body>
           {children}
-          <Toaster position="top-right" toastOptions={{ style: { fontFamily: 'Figtree, Helvetica Neue, sans-serif', fontSize: '14px', borderRadius: '10px' } }} />
+          <Toaster
+            position="top-right"
+            toastOptions={{
+              style: {
+                fontFamily: 'Figtree, Helvetica Neue, sans-serif',
+                fontSize: '14px',
+                borderRadius: '10px',
+                border: '1px solid var(--color-border)',
+              },
+            }}
+          />
         </body>
       </html>
     </ClerkProvider>

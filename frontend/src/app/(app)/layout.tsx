@@ -11,7 +11,10 @@ export default async function AppLayout({ children }: { children: React.ReactNod
     <ChurchProvider>
       <div style={{ minHeight: '100vh', background: 'var(--color-bg)' }}>
         <AppNavClient />
-        <main style={{ maxWidth: 'var(--width-app)', margin: '0 auto', padding: 'var(--space-xl) var(--space-lg)' }}>
+        <main
+          className="app-main-content"
+          style={{ maxWidth: 'var(--width-app)', margin: '0 auto', padding: 'var(--space-xl) var(--space-lg)' }}
+        >
           {children}
         </main>
         <footer className="app-footer">
