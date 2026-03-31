@@ -217,11 +217,13 @@ export default function SongDetailPage() {
           <>
             <p className="downloads-group-label">Recent services</p>
             {song.recent_services.map((s: any, i: number) => (
-              <div key={s.id} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '8px 0', borderBottom: i < song.recent_services!.length - 1 ? '1px solid var(--color-border)' : 'none' }}>
-                <span style={{ fontSize: 'var(--text-base)', color: 'var(--color-text-secondary)' }}>{s.date ? format(parseISO(s.date), 'd MMMM yyyy') : ''}</span>
-                {s.key_used && <KeyBadge keyOf={s.key_used} />}
+              <Link key={s.id} href={`/services/${s.id}`} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '8px 0', borderBottom: i < song.recent_services!.length - 1 ? '1px solid var(--color-border)' : 'none', textDecoration: 'none' }}>
+                <span style={{ fontSize: 'var(--text-base)', color: 'var(--color-text-secondary)' }}>
+                  {s.service_date ? format(parseISO(s.service_date), 'd MMMM yyyy') : ''}
+                </span>
+                {s.key_override && <KeyBadge keyOf={s.key_override} />}
                 <span className="text-muted" style={{ fontSize: 'var(--text-sm)' }}>{s.service_time}</span>
-              </div>
+              </Link>
             ))}
           </>
         )}
