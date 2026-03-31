@@ -3,7 +3,7 @@
 import { useState, useEffect } from 'react'
 import Link from 'next/link'
 import { useParams } from 'next/navigation'
-import { format } from 'date-fns'
+import { format, parseISO } from 'date-fns'
 import { ArrowLeft, Download, ExternalLink, Edit, Plus } from 'lucide-react'
 import { CategoryBadge, KeyBadge } from '@/components/ui/badges'
 import { LyricsDisplay } from '@/components/ui/LyricsDisplay'
@@ -209,7 +209,7 @@ export default function SongDetailPage() {
             <div className="stat-label">Planned</div>
           </div>
           <div className="stat-box">
-            <div className="stat-number">{song.usage?.last_sung ? format(new Date(song.usage.last_sung), 'd MMM') : '—'}</div>
+            <div className="stat-number">{song.usage?.last_sung ? format(parseISO(song.usage.last_sung), 'd MMM') : '—'}</div>
             <div className="stat-label">Last sung</div>
           </div>
         </div>
@@ -218,7 +218,7 @@ export default function SongDetailPage() {
             <p className="downloads-group-label">Recent services</p>
             {song.recent_services.map((s: any, i: number) => (
               <div key={s.id} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '8px 0', borderBottom: i < song.recent_services!.length - 1 ? '1px solid var(--color-border)' : 'none' }}>
-                <span style={{ fontSize: 'var(--text-base)', color: 'var(--color-text-secondary)' }}>{format(new Date(s.date), 'd MMMM yyyy')}</span>
+                <span style={{ fontSize: 'var(--text-base)', color: 'var(--color-text-secondary)' }}>{s.date ? format(parseISO(s.date), 'd MMMM yyyy') : ''}</span>
                 {s.key_used && <KeyBadge keyOf={s.key_used} />}
                 <span className="text-muted" style={{ fontSize: 'var(--text-sm)' }}>{s.service_time}</span>
               </div>
