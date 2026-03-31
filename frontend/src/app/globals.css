@@ -719,8 +719,6 @@
   font-style: italic;
 }
 
-/* Add these to the bottom of globals.css */
-
 /* ── Service detail header ── */
 .service-detail-header {
   display: flex;
@@ -761,6 +759,21 @@
 }
 
 /* ── Responsive ── */
+@media (max-width: 940px) {
+  .service-edit-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .service-edit-sidebar {
+    position: static;
+    order: -1;
+  }
+
+  .hide-mobile {
+    display: none;
+  }
+}
+
 @media (max-width: 768px) {
   .service-detail-header {
     flex-direction: column;
@@ -774,18 +787,5 @@
   .service-detail-actions .btn {
     flex: 1;
     justify-content: center;
-  }
-
-  .service-edit-grid {
-    grid-template-columns: 1fr;
-  }
-
-  .service-edit-sidebar {
-    position: static;
-    order: -1; /* Show add panel above running order on mobile */
-  }
-
-  .hide-mobile {
-    display: none;
   }
 }
