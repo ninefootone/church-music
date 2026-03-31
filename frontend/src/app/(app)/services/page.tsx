@@ -16,33 +16,38 @@ interface Service {
 }
 
 export default function ServicesPage() {
-  const { church, isAdmin } = useChurch()
+  const { church, loading: churchLoading, isAdmin } = useChurch()
   const [services, setServices] = useState<Service[]>([])
   const [loading, setLoading] = useState(true)
 
   useEffect(() => {
-    if (!church) return
+    if (!church || churchLoading) return
     api.get('/api/services')
       .then(r => setServices(r.data))
       .catch(err => console.error('Failed to fetch services:', err))
       .finally(() => setLoading(false))
-  }, [church])
+  }, [church, churchLoading])
 
   const upcoming = services.filter(s => isFuture(parseISO(s.service_date)) || isToday(parseISO(s.service_date)))
   const past = services.filter(s => !isFuture(parseISO(s.service_date)) && !isToday(parseISO(s.service_date)))
 
-  if (loading) return <div style={{ color: 'var(--color-text-muted)', padding: 'var(--space-xl)' }}>Loading…</div>
+  if (loading || churchLoading) return <p className="text-muted" style={{ padding: 'var(--space-xl)' }}>Loading…</p>
 
   return (
     <div>
       <div className="page-header">
         <h1 className="page-title">Services</h1>
-        {isAdmin && <Link href="/services/new" className="btn btn-primary"><Plus size={16} /> Add new service</Link>}
+        {isAdmin && (
+          <Link href="/services/new" className="btn btn-primary">
+            <Plus size={16} /> Add new service
+          </Link>
+        )}
       </div>
 
       {services.length === 0 ? (
-        <div className="card" style={{ textAlign: 'center', padding: 'var(--space-xl)', color: 'var(--color-text-muted)' }}>
-          No services yet.{isAdmin && <> <Link href="/services/new" style={{ color: 'var(--color-brand-500)' }}>Plan your first service</Link></>}
+        <div className="card" style={{ textAlign: 'center', padding: 'var(--space-xl)' }}>
+          <p className="text-muted">No services yet.</p>
+          {isAdmin && <Link href="/services/new" className="link" style={{ marginTop: 8, display: 'inline-block' }}>Plan your first service</Link>}
         </div>
       ) : (
         <>
@@ -52,10 +57,11 @@ export default function ServicesPage() {
               {upcoming.map(s => (
                 <Link key={s.id} href={`/services/${s.id}`} className="service-card">
                   <div style={{ flex: 1, minWidth: 0 }}>
-                    <div className="service-date">
-                      {format(parseISO(s.service_date), 'd MMMM yyyy')}{s.service_time ? ` · ${s.service_time}` : ''}
-                    </div>
-                    {s.title && <div style={{ fontSize: 14, color: 'var(--color-text-muted)' }}>{s.title}</div>}
+                    <p className="service-date">
+                      {format(parseISO(s.service_date), 'd MMMM yyyy')}
+                      {s.service_time && <span style={{ fontWeight: 400, color: 'var(--color-text-secondary)' }}> · {s.service_time}</span>}
+                    </p>
+                    {s.title && <p className="dash-row-meta">{s.title}</p>}
                   </div>
                   <div style={{ display: 'flex', alignItems: 'center', gap: 10, flexShrink: 0 }}>
                     <span className="badge badge-upcoming">UPCOMING</span>
@@ -71,10 +77,11 @@ export default function ServicesPage() {
               {past.map(s => (
                 <Link key={s.id} href={`/services/${s.id}`} className="service-card is-past">
                   <div style={{ flex: 1, minWidth: 0 }}>
-                    <div className="service-date">
-                      {format(parseISO(s.service_date), 'd MMMM yyyy')}{s.service_time ? ` · ${s.service_time}` : ''}
-                    </div>
-                    {s.title && <div style={{ fontSize: 14, color: 'var(--color-text-muted)' }}>{s.title}</div>}
+                    <p className="service-date">
+                      {format(parseISO(s.service_date), 'd MMMM yyyy')}
+                      {s.service_time && <span style={{ fontWeight: 400, color: 'var(--color-text-secondary)' }}> · {s.service_time}</span>}
+                    </p>
+                    {s.title && <p className="dash-row-meta">{s.title}</p>}
                   </div>
                   <div style={{ display: 'flex', alignItems: 'center', gap: 10, flexShrink: 0 }}>
                     <span className="badge badge-past">PAST</span>
