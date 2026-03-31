@@ -670,3 +670,33 @@
 @media (max-width: 480px) {
   .badge-upcoming, .badge-past { font-size: 10px; padding: 2px 7px; }
 }
+
+.song-detail-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 16px;
+  margin-bottom: 6px;
+}
+
+.song-detail-actions {
+  display: flex;
+  gap: 8px;
+  flex-shrink: 0;
+  margin-top: 4px;
+}
+
+@media (max-width: 768px) {
+  .song-detail-header {
+    flex-direction: column;
+    gap: 12px;
+  }
+  .song-detail-actions {
+    margin-top: 0;
+    width: 100%;
+  }
+  .song-detail-actions .btn {
+    flex: 1;
+    justify-content: center;
+  }
+}

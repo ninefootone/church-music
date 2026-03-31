@@ -37,10 +37,10 @@ export default function SongDetailPage() {
 
       {/* Header card */}
       <div className="card" style={{ marginBottom: 'var(--space-md)' }}>
-        <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: 16, marginBottom: 6 }}>
+        <div className="song-detail-header">
           <h1 className="song-detail-title">{song.title}</h1>
           {isAdmin && (
-            <div style={{ display: 'flex', gap: 8, flexShrink: 0, marginTop: 4 }}>
+            <div className="song-detail-actions">
               <Link href={`/songs/${song.id}/edit`} className="btn btn-sm btn-secondary"><Edit size={14} /> Edit</Link>
               <button className="btn btn-sm btn-primary"><Plus size={14} /> Add to service</button>
             </div>
