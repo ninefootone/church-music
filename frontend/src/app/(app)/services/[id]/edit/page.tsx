@@ -95,7 +95,7 @@ function SortableItem({
           <div
             {...attributes}
             {...listeners}
-            style={{ cursor: 'grab', color: 'var(--color-text-muted)', flexShrink: 0, display: 'flex', alignItems: 'center', touchAction: 'none', padding: '4px 2px' }}
+            style={{ cursor: 'grab', color: 'var(--color-text-muted)', flexShrink: 0, display: 'flex', alignItems: 'center', touchAction: 'none', padding: '4px 2px', userSelect: 'none', WebkitUserSelect: 'none' }}
           >
             <GripVertical size={18} />
           </div>
@@ -319,9 +319,9 @@ export default function ServiceEditPage() {
         {/* Left — running order */}
         <div>
           {/* Label and count on same line, no overlap */}
-          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 12 }}>
-            <span className="section-label" style={{ marginBottom: 0 }}>Running order</span>
-            <span style={{ fontSize: 'var(--text-sm)', color: 'var(--color-text-muted)' }}>
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 12, gap: 8 }}>
+            <span className="section-label" style={{ marginBottom: 0, whiteSpace: 'nowrap' }}>Running order</span>
+            <span style={{ fontSize: 'var(--text-sm)', color: 'var(--color-text-muted)', whiteSpace: 'nowrap' }}>
               {items.length} item{items.length !== 1 ? 's' : ''}
             </span>
           </div>

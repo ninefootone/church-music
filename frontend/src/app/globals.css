@@ -787,6 +787,17 @@
   align-items: start;
 }
 
+.service-edit-grid * {
+  -webkit-user-select: none;
+  user-select: none;
+}
+
+.service-edit-grid input,
+.service-edit-grid textarea {
+  -webkit-user-select: text;
+  user-select: text;
+}
+
 .service-edit-sidebar {
   position: sticky;
   top: 80px;
