@@ -54,7 +54,7 @@ export default function PublicServicePage() {
         </div>
       </nav>
 
-      <main style={{ maxWidth: 720, margin: '0 auto', padding: 'var(--space-xl) var(--space-lg)' }}>
+      <main style={{ maxWidth: 'var(--width-app)', margin: '0 auto', padding: 'var(--space-xl) var(--space-lg)' }}>
         {/* Date / time header */}
         <div style={{ marginBottom: 'var(--space-xl)' }}>
           <h1 className="page-title" style={{ marginBottom: 4 }}>
