@@ -334,8 +334,7 @@ export default function ServiceEditPage() {
                   key={song.id}
                   type="button"
                   onClick={() => addSong(song)}
-                  style={{ width: '100%', display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 8, padding: '9px 0', borderBottom: '1px solid var(--color-border)', background: 'none', border: 'none', borderBottom: '1px solid var(--color-border)', cursor: 'pointer', fontFamily: 'inherit', textAlign: 'left' }}
-                >
+                  style={{ width: '100%', display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 8, padding: '9px 0', borderBottom: '1px solid var(--color-border)', background: 'none', border: 'none', cursor: 'pointer', fontFamily: 'inherit', textAlign: 'left' as const }}>
                   <div style={{ flex: 1, minWidth: 0 }}>
                     <p className="dash-row-title" style={{ fontSize: 'var(--text-base)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{song.title}</p>
                     <p className="dash-row-meta">{song.author}</p>
