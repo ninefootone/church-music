@@ -7,6 +7,7 @@ import { useAuth } from '@clerk/nextjs'
 import { ArrowLeft } from 'lucide-react'
 import { CATEGORIES, Category, Song } from '@/types'
 import api, { setAuthToken } from '@/lib/api'
+import { LyricsEditor } from '@/components/ui/LyricsEditor'
 
 export default function EditSongPage() {
   const { id } = useParams()
@@ -81,7 +82,7 @@ export default function EditSongPage() {
           <div style={mb}><label className="label">Tags <span className="label-note">(comma separated)</span></label><input className="input" value={form.tags} onChange={e => setForm(f => ({ ...f, tags: e.target.value }))} /></div>
           <div style={mb}>
             <label className="label">Lyrics</label>
-            <textarea className="input" rows={12} value={form.lyrics} onChange={e => setForm(f => ({ ...f, lyrics: e.target.value }))} style={{ resize: 'vertical' }} />
+            <LyricsEditor value={form.lyrics} onChange={v => setForm(f => ({ ...f, lyrics: v }))} />
             {form.ccli_number && (
               <div className="text-hint" style={{ marginTop: 6 }}>
                 Find lyrics on <a href={`https://songselect.ccli.com/songs/${form.ccli_number}`} target="_blank" rel="noopener noreferrer" className="link-brand">SongSelect ↗</a>

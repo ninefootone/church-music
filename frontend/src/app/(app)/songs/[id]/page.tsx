@@ -9,6 +9,7 @@ import { CategoryBadge, KeyBadge } from '@/components/ui/badges'
 import { Song } from '@/types'
 import api from '@/lib/api'
 import { useChurch } from '@/context/ChurchContext'
+import { LyricsDisplay } from '@/components/ui/LyricsDisplay'
 
 export default function SongDetailPage() {
   const { id } = useParams()
@@ -109,8 +110,8 @@ export default function SongDetailPage() {
           </div>
           {song.lyrics ? (
             <div style={{ position: 'relative' }}>
-              <div className="lyrics-text" style={{ maxHeight: showFullLyrics ? 'none' : 140, overflow: 'hidden' }}>
-                {song.lyrics}
+              <div style={{ maxHeight: showFullLyrics ? 'none' : 140, overflow: 'hidden' }}>
+                <LyricsDisplay lyrics={song.lyrics ?? ''} />
               </div>
               {!showFullLyrics && (
                 <div style={{ position: 'absolute', bottom: 0, left: 0, right: 0, height: 56, background: 'linear-gradient(transparent, white)' }} />

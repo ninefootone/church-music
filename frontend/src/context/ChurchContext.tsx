@@ -1,9 +1,9 @@
 'use client'
 
-import { createContext, useContext, useEffect, useState, ReactNode } from 'react'
+import { createContext, useContext, useEffect, useState, ReactNode, useCallback } from 'react'
 import { useAuth } from '@clerk/nextjs'
 import { useRouter, usePathname } from 'next/navigation'
-import api, { setAuthToken } from '@/lib/api'
+import api, { setAuthToken, setChurchId } from '@/lib/api'
 
 interface Church {
   id: string
@@ -31,17 +31,24 @@ export function ChurchProvider({ children }: { children: ReactNode }) {
   const [church, setChurch] = useState<Church | null>(null)
   const [loading, setLoading] = useState(true)
 
-  const fetchChurch = async () => {
-    if (!isLoaded || !isSignedIn) { setLoading(false); return }
+  const fetchChurch = useCallback(async () => {
+    if (!isLoaded || !isSignedIn) {
+      setLoading(false)
+      return
+    }
     try {
       const token = await getToken()
       if (!token) { setLoading(false); return }
+
+      // Set token first, then fetch
       setAuthToken(token)
+
       const { data } = await api.get('/api/churches/mine')
       if (data && data.length > 0) {
         const c = data[0]
+        // Set church ID header immediately before any other requests
+        setChurchId(c.id)
         setChurch(c)
-        api.defaults.headers.common['x-church-id'] = c.id
         if (pathname === '/onboarding') router.push('/dashboard')
       } else {
         if (pathname !== '/onboarding') router.push('/onboarding')
@@ -51,15 +58,24 @@ export function ChurchProvider({ children }: { children: ReactNode }) {
     } finally {
       setLoading(false)
     }
-  }
+  }, [isLoaded, isSignedIn, pathname])
 
-  useEffect(() => { if (isLoaded) fetchChurch() }, [isLoaded, isSignedIn])
+  useEffect(() => {
+    if (isLoaded) fetchChurch()
+  }, [isLoaded, isSignedIn])
 
   return (
-    <ChurchContext.Provider value={{ church, loading, isAdmin: church?.role === 'admin', refetch: fetchChurch }}>
+    <ChurchContext.Provider value={{
+      church,
+      loading,
+      isAdmin: church?.role === 'admin',
+      refetch: fetchChurch,
+    }}>
       {children}
     </ChurchContext.Provider>
   )
 }
 
-export function useChurch() { return useContext(ChurchContext) }
+export function useChurch() {
+  return useContext(ChurchContext)
+}

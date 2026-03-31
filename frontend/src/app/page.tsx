@@ -1,7 +1,13 @@
+import { auth } from '@clerk/nextjs/server'
+import { redirect } from 'next/navigation'
 import Link from 'next/link'
 import { Music } from 'lucide-react'
 
-export default function HomePage() {
+export default async function HomePage() {
+  // If already signed in, go straight to dashboard
+  const { userId } = await auth()
+  if (userId) redirect('/dashboard')
+
   return (
     <div style={{ minHeight: '100vh', background: 'var(--color-bg)', display: 'flex', flexDirection: 'column' }}>
       <nav style={{ background: 'var(--color-surface)', borderBottom: '1px solid var(--color-border)', padding: '0 var(--space-lg)', height: 58, display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
@@ -20,9 +26,9 @@ export default function HomePage() {
             Your church&apos;s<br />song library
           </h1>
           <p style={{ fontSize: 20, color: 'var(--color-text-secondary)', lineHeight: 1.6, marginBottom: 36 }}>
-            Manage your worship songs, plan services, and share chord charts — all in one place, for your whole team.
+            Manage your worship songs, plan services, and share chord charts &mdash; all in one place, for your whole team.
           </p>
-          <div style={{ display: 'flex', gap: 12, justifyContent: 'center' }}>
+          <div style={{ display: 'flex', gap: 12, justifyContent: 'center', flexWrap: 'wrap' }}>
             <Link href="/sign-up" className="btn btn-primary" style={{ padding: '11px 28px', fontSize: 16 }}>Get started free</Link>
             <Link href="/sign-in" className="btn btn-secondary" style={{ padding: '11px 28px', fontSize: 16 }}>Sign in</Link>
           </div>
@@ -30,7 +36,7 @@ export default function HomePage() {
       </main>
 
       <footer className="app-footer">
-        Song Stack · <Link href="/sign-in" style={{ color: 'var(--color-text-muted)', textDecoration: 'none' }}>Sign in</Link>
+        Song Stack &copy; 2026
       </footer>
     </div>
   )
