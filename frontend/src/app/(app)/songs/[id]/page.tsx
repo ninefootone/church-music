@@ -33,7 +33,7 @@ export default function SongDetailPage() {
   const otherFiles = (song.files || []).filter(f => f.key_of !== song.default_key)
 
   return (
-    <div style={{ maxWidth: 'var(--width-page)', margin: '0 auto' }}>
+    <div style={{ maxWidth: 'var(--width-app)', margin: '0 auto' }}>
       <Link href="/songs" className="back-link"><ArrowLeft size={14} /> Back to songs</Link>
 
       {/* Header card */}
