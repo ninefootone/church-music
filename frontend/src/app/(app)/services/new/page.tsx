@@ -30,7 +30,7 @@ export default function NewServicePage() {
   }
 
   return (
-    <div style={{ maxWidth: 'var(--width-narrow)', margin: '0 auto' }}>
+    <div style={{ maxWidth: 'var(--width-form)', margin: '0 auto' }}>
       <Link href="/services" className="back-link"><ArrowLeft size={14} /> Back to services</Link>
       <h1 className="page-title" style={{ marginBottom: 'var(--space-lg)' }}>New service</h1>
       {error && <div className="error-box">{error}</div>}
