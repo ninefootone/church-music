@@ -6,28 +6,42 @@ import { useParams } from 'next/navigation'
 import { format } from 'date-fns'
 import { ArrowLeft, Download, ExternalLink, Edit, Plus } from 'lucide-react'
 import { CategoryBadge, KeyBadge } from '@/components/ui/badges'
+import { LyricsDisplay } from '@/components/ui/LyricsDisplay'
 import { Song } from '@/types'
 import api from '@/lib/api'
 import { useChurch } from '@/context/ChurchContext'
-import { LyricsDisplay } from '@/components/ui/LyricsDisplay'
 
 export default function SongDetailPage() {
   const { id } = useParams()
-  const { isAdmin } = useChurch()
+  const { isAdmin, loading: churchLoading } = useChurch()
   const [song, setSong] = useState<Song | null>(null)
   const [loading, setLoading] = useState(true)
+  const [notFound, setNotFound] = useState(false)
   const [showFullLyrics, setShowFullLyrics] = useState(false)
 
   useEffect(() => {
-    if (!id) return
+    // Wait for church context to finish loading before fetching
+    if (!id || churchLoading) return
+    setLoading(true)
+    setNotFound(false)
     api.get(`/api/songs/${id}`)
       .then(r => setSong(r.data))
-      .catch(err => console.error('Failed to fetch song:', err))
+      .catch(err => {
+        console.error('Failed to fetch song:', err)
+        setNotFound(true)
+      })
       .finally(() => setLoading(false))
-  }, [id])
+  }, [id, churchLoading])
 
-  if (loading) return <p className="text-muted" style={{ padding: 'var(--space-xl)' }}>Loading…</p>
-  if (!song) return <p className="text-muted" style={{ padding: 'var(--space-xl)' }}>Song not found.</p>
+  if (loading || churchLoading) return (
+    <p className="text-muted" style={{ padding: 'var(--space-xl)' }}>Loading…</p>
+  )
+  if (notFound || !song) return (
+    <div style={{ padding: 'var(--space-xl)' }}>
+      <p className="text-muted" style={{ marginBottom: 'var(--space-md)' }}>Song not found.</p>
+      <Link href="/songs" className="back-link"><ArrowLeft size={14} /> Back to songs</Link>
+    </div>
+  )
 
   const mainFiles = (song.files || []).filter(f => f.key_of === song.default_key)
   const otherFiles = (song.files || []).filter(f => f.key_of !== song.default_key)
@@ -50,7 +64,6 @@ export default function SongDetailPage() {
 
         <p className="song-detail-author">{song.author}</p>
 
-        {/* Meta block */}
         <div className="meta-block">
           {song.category && (
             <div className="meta-row">
@@ -63,7 +76,7 @@ export default function SongDetailPage() {
               <span className="meta-label">Key</span>
               <KeyBadge keyOf={song.default_key} />
               {otherFiles.length > 0 && (
-                <span className="text-muted" style={{ fontSize: 14 }}>
+                <span className="text-muted" style={{ fontSize: 'var(--text-sm)' }}>
                   Other keys: {[...new Set(otherFiles.map(f => f.key_of))].join(', ')}
                 </span>
               )}
@@ -72,7 +85,7 @@ export default function SongDetailPage() {
           {song.first_line && (
             <div className="meta-row">
               <span className="meta-label">First line</span>
-              <span className="first-line-text">"{song.first_line}"</span>
+              <span className="first-line-text">&ldquo;{song.first_line}&rdquo;</span>
             </div>
           )}
           {song.tags && song.tags.length > 0 && (
@@ -111,10 +124,10 @@ export default function SongDetailPage() {
           {song.lyrics ? (
             <div style={{ position: 'relative' }}>
               <div style={{ maxHeight: showFullLyrics ? 'none' : 140, overflow: 'hidden' }}>
-                <LyricsDisplay lyrics={song.lyrics ?? ''} />
+                <LyricsDisplay lyrics={song.lyrics} />
               </div>
               {!showFullLyrics && (
-                <div style={{ position: 'absolute', bottom: 0, left: 0, right: 0, height: 56, background: 'linear-gradient(transparent, white)' }} />
+                <div style={{ position: 'absolute', bottom: 0, left: 0, right: 0, height: 56, background: 'linear-gradient(transparent, white)', pointerEvents: 'none' }} />
               )}
             </div>
           ) : (
@@ -130,7 +143,7 @@ export default function SongDetailPage() {
         </div>
       </div>
 
-      {/* Downloads card */}
+      {/* Downloads */}
       <div className="card" style={{ marginBottom: 'var(--space-md)' }}>
         <div className="section-label">Downloads</div>
 
@@ -139,9 +152,7 @@ export default function SongDetailPage() {
             <p className="downloads-group-label">Main key — <KeyBadge keyOf={song.default_key} /></p>
             <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8 }}>
               {mainFiles.map(f => (
-                <button key={f.id} className="download-btn">
-                  <Download size={14} /> {f.label}
-                </button>
+                <button key={f.id} className="download-btn"><Download size={14} /> {f.label}</button>
               ))}
             </div>
           </div>
@@ -185,7 +196,7 @@ export default function SongDetailPage() {
         )}
       </div>
 
-      {/* Usage card */}
+      {/* Usage */}
       <div className="card">
         <div className="section-label">Usage</div>
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 'var(--space-md)', marginBottom: 'var(--space-md)' }}>
@@ -207,9 +218,9 @@ export default function SongDetailPage() {
             <p className="downloads-group-label">Recent services</p>
             {song.recent_services.map((s: any, i: number) => (
               <div key={s.id} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '8px 0', borderBottom: i < song.recent_services!.length - 1 ? '1px solid var(--color-border)' : 'none' }}>
-                <span style={{ fontSize: 15, color: 'var(--color-text-secondary)' }}>{format(new Date(s.date), 'd MMMM yyyy')}</span>
+                <span style={{ fontSize: 'var(--text-base)', color: 'var(--color-text-secondary)' }}>{format(new Date(s.date), 'd MMMM yyyy')}</span>
                 {s.key_used && <KeyBadge keyOf={s.key_used} />}
-                <span className="text-muted" style={{ fontSize: 14 }}>{s.service_time}</span>
+                <span className="text-muted" style={{ fontSize: 'var(--text-sm)' }}>{s.service_time}</span>
               </div>
             ))}
           </>

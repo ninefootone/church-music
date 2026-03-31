@@ -48,7 +48,7 @@ export default function EditSongPage() {
   if (fetching) return <div className="loading-state">Loading…</div>
 
   return (
-    <div style={{ maxWidth: 680, margin: '0 auto' }}>
+    <div style={{ maxWidth: 'var(--width-app)', margin: '0 auto' }}>
       <Link href={`/songs/${id}`} className="back-link">
         <ArrowLeft size={13} /> Back to song
       </Link>
