@@ -4,7 +4,7 @@ import { useState, useEffect, useRef } from 'react'
 import Link from 'next/link'
 import { useParams, useRouter } from 'next/navigation'
 import { format, parseISO } from 'date-fns'
-import { ArrowLeft, GripVertical, X, Plus, Music, Search, ChevronDown, ChevronUp } from 'lucide-react'
+import { ArrowLeft, ArrowUp, ArrowDown, X, Plus, Music, Search, ChevronDown, ChevronUp } from 'lucide-react'
 import { KeyBadge, CategoryBadge } from '@/components/ui/badges'
 import { useChurch } from '@/context/ChurchContext'
 import api from '@/lib/api'
@@ -61,8 +61,10 @@ export default function ServiceEditPage() {
   const [error, setError] = useState('')
   const [showSongPicker, setShowSongPicker] = useState(false)
 
+  // Desktop drag state
   const dragIndex = useRef<number | null>(null)
   const dragOverIndex = useRef<number | null>(null)
+  const [dragOver, setDragOver] = useState<number | null>(null)
 
   useEffect(() => {
     if (!id || churchLoading) return
@@ -114,15 +116,35 @@ export default function ServiceEditPage() {
   }
 
   const removeItem = (idx: number) => setItems(prev => prev.filter((_, i) => i !== idx))
+
   const updateItem = (idx: number, updates: Partial<ServiceItem>) =>
     setItems(prev => prev.map((item, i) => i === idx ? { ...item, ...updates } : item))
+
   const toggleExpanded = (idx: number) =>
     setItems(prev => prev.map((item, i) => i === idx ? { ...item, expanded: !item.expanded } : item))
 
+  // Move item up or down (works on all devices)
+  const moveItem = (idx: number, direction: 'up' | 'down') => {
+    const newItems = [...items]
+    const targetIdx = direction === 'up' ? idx - 1 : idx + 1
+    if (targetIdx < 0 || targetIdx >= newItems.length) return;
+    [newItems[idx], newItems[targetIdx]] = [newItems[targetIdx], newItems[idx]]
+    setItems(newItems)
+  }
+
+  // Desktop drag handlers
   const onDragStart = (idx: number) => { dragIndex.current = idx }
-  const onDragOver = (e: React.DragEvent, idx: number) => { e.preventDefault(); dragOverIndex.current = idx }
-  const onDrop = () => {
-    if (dragIndex.current === null || dragOverIndex.current === null || dragIndex.current === dragOverIndex.current) return
+  const onDragOver = (e: React.DragEvent, idx: number) => {
+    e.preventDefault()
+    dragOverIndex.current = idx
+    setDragOver(idx)
+  }
+  const onDragLeave = () => setDragOver(null)
+  const onDrop = (e: React.DragEvent) => {
+    e.preventDefault()
+    setDragOver(null)
+    if (dragIndex.current === null || dragOverIndex.current === null) return
+    if (dragIndex.current === dragOverIndex.current) return
     const newItems = [...items]
     const [moved] = newItems.splice(dragIndex.current, 1)
     newItems.splice(dragOverIndex.current, 0, moved)
@@ -166,7 +188,7 @@ export default function ServiceEditPage() {
             )}
           </h1>
         </div>
-        <div style={{ display: 'flex', gap: 8, flexShrink: 0 }}>
+        <div style={{ display: 'flex', gap: 8 }}>
           <Link href={`/services/${id}`} className="btn btn-secondary">Cancel</Link>
           <button className="btn btn-primary" onClick={handleSave} disabled={saving}>
             {saving ? 'Saving…' : 'Save order'}
@@ -176,16 +198,17 @@ export default function ServiceEditPage() {
 
       {error && <div className="error-box">{error}</div>}
 
-      {/* Two column on desktop, stacked on mobile */}
       <div className="service-edit-grid">
 
         {/* Left — running order */}
         <div>
-          <div className="section-label">Running order — {items.length} item{items.length !== 1 ? 's' : ''}</div>
+          <div className="section-label">
+            Running order — {items.length} item{items.length !== 1 ? 's' : ''}
+          </div>
 
           {items.length === 0 ? (
             <div className="card" style={{ textAlign: 'center', padding: 'var(--space-xl)' }}>
-              <p className="text-muted">Add songs and items using the buttons below</p>
+              <p className="text-muted">Add songs and items using the panel on the right</p>
             </div>
           ) : items.map((item, idx) => (
             <div
@@ -193,21 +216,49 @@ export default function ServiceEditPage() {
               draggable
               onDragStart={() => onDragStart(idx)}
               onDragOver={e => onDragOver(e, idx)}
+              onDragLeave={onDragLeave}
               onDrop={onDrop}
-              style={{ marginBottom: 6 }}
+              style={{
+                marginBottom: 6,
+                opacity: dragOver === idx ? 0.6 : 1,
+                transition: 'opacity 0.1s',
+              }}
             >
               <div className="card" style={{ padding: 0, overflow: 'hidden' }}>
-                <div style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '12px var(--space-md)' }}>
-                  <div style={{ cursor: 'grab', color: 'var(--color-text-muted)', flexShrink: 0 }}>
-                    <GripVertical size={18} />
+                <div style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '12px var(--space-md)' }}>
+
+                  {/* Up/down buttons — work on all devices */}
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: 1, flexShrink: 0 }}>
+                    <button
+                      type="button"
+                      onClick={() => moveItem(idx, 'up')}
+                      disabled={idx === 0}
+                      style={{ background: 'none', border: 'none', cursor: idx === 0 ? 'default' : 'pointer', color: idx === 0 ? 'var(--color-border)' : 'var(--color-text-muted)', padding: '2px 4px', display: 'flex', lineHeight: 1 }}
+                    >
+                      <ArrowUp size={14} />
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => moveItem(idx, 'down')}
+                      disabled={idx === items.length - 1}
+                      style={{ background: 'none', border: 'none', cursor: idx === items.length - 1 ? 'default' : 'pointer', color: idx === items.length - 1 ? 'var(--color-border)' : 'var(--color-text-muted)', padding: '2px 4px', display: 'flex', lineHeight: 1 }}
+                    >
+                      <ArrowDown size={14} />
+                    </button>
                   </div>
+
+                  {/* Position number */}
                   <div style={{ fontSize: 'var(--text-sm)', color: 'var(--color-text-muted)', width: 20, textAlign: 'center', flexShrink: 0 }}>
                     {idx + 1}
                   </div>
+
+                  {/* Title */}
                   <div style={{ flex: 1, minWidth: 0 }}>
                     {item.type === 'song' ? (
                       <>
-                        <p className="dash-row-title" style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{item.song_title}</p>
+                        <p className="dash-row-title" style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                          {item.song_title}
+                        </p>
                         <p className="dash-row-meta">{item.song_author}</p>
                       </>
                     ) : (
@@ -220,6 +271,8 @@ export default function ServiceEditPage() {
                       />
                     )}
                   </div>
+
+                  {/* Key override for songs */}
                   {item.type === 'song' && (
                     <select
                       value={item.key_override}
@@ -230,20 +283,37 @@ export default function ServiceEditPage() {
                       {KEYS.map(k => <option key={k} value={k}>{k}</option>)}
                     </select>
                   )}
+
+                  {/* Category badge — hidden on small screens */}
                   {item.type === 'song' && item.song_category && (
                     <div className="hide-mobile">
                       <CategoryBadge category={item.song_category as any} />
                     </div>
                   )}
-                  <button type="button" onClick={() => toggleExpanded(idx)} style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'var(--color-text-muted)', padding: 4, display: 'flex', flexShrink: 0 }}>
+
+                  {/* Notes toggle */}
+                  <button
+                    type="button"
+                    onClick={() => toggleExpanded(idx)}
+                    title="Add notes"
+                    style={{ background: 'none', border: 'none', cursor: 'pointer', color: item.notes ? 'var(--color-brand-500)' : 'var(--color-text-muted)', padding: 4, display: 'flex', flexShrink: 0 }}
+                  >
                     {item.expanded ? <ChevronUp size={16} /> : <ChevronDown size={16} />}
                   </button>
-                  <button type="button" onClick={() => removeItem(idx)} style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'var(--color-text-muted)', padding: 4, display: 'flex', flexShrink: 0 }}>
+
+                  {/* Remove */}
+                  <button
+                    type="button"
+                    onClick={() => removeItem(idx)}
+                    style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'var(--color-text-muted)', padding: 4, display: 'flex', flexShrink: 0 }}
+                  >
                     <X size={16} />
                   </button>
                 </div>
+
+                {/* Notes row */}
                 {item.expanded && (
-                  <div style={{ padding: '0 var(--space-md) var(--space-sm)', paddingLeft: 64, borderTop: '1px solid var(--color-border)' }}>
+                  <div style={{ padding: '0 var(--space-md) var(--space-sm) 60px', borderTop: '1px solid var(--color-border)' }}>
                     <input
                       className="input"
                       value={item.notes}
@@ -261,28 +331,32 @@ export default function ServiceEditPage() {
         {/* Right — add panel */}
         <div className="service-edit-sidebar">
 
-          {/* Add song */}
+          {/* Song picker */}
           <div className="card" style={{ marginBottom: 'var(--space-md)' }}>
             <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: showSongPicker ? 'var(--space-sm)' : 0 }}>
-              <span className="section-label" style={{ marginBottom: 0 }}>Add a song</span>
-              <button type="button" onClick={() => setShowSongPicker(!showSongPicker)} className="btn btn-primary btn-sm">
-                <Music size={14} /> {showSongPicker ? 'Close' : 'Pick song'}
+              <span className="section-label" style={{ marginBottom: 0 }}>Songs</span>
+              <button
+                type="button"
+                onClick={() => { setShowSongPicker(!showSongPicker); setSongSearch('') }}
+                className="btn btn-primary btn-sm"
+              >
+                <Music size={14} /> {showSongPicker ? 'Close' : 'Add song'}
               </button>
             </div>
             {showSongPicker && (
               <>
-                <div style={{ position: 'relative', margin: 'var(--space-sm) 0' }}>
-                  <Search size={14} style={{ position: 'absolute', left: 12, top: '50%', transform: 'translateY(-50%)', color: 'var(--color-text-muted)' }} />
+                <div style={{ position: 'relative', marginTop: 'var(--space-sm)', marginBottom: 'var(--space-sm)' }}>
+                  <Search size={14} style={{ position: 'absolute', left: 12, top: '50%', transform: 'translateY(-50%)', color: 'var(--color-text-muted)', pointerEvents: 'none' }} />
                   <input
                     className="input"
-                    style={{ paddingLeft: 34, fontSize: 'var(--text-sm)', padding: '9px 12px 9px 34px' }}
+                    style={{ paddingLeft: 34 }}
                     placeholder="Search songs…"
                     value={songSearch}
                     onChange={e => setSongSearch(e.target.value)}
                     autoFocus
                   />
                 </div>
-                <div style={{ maxHeight: 280, overflowY: 'auto' }}>
+                <div style={{ maxHeight: 300, overflowY: 'auto' }}>
                   {filteredSongs.length === 0 ? (
                     <p className="text-muted" style={{ fontSize: 'var(--text-sm)', padding: '8px 0' }}>No songs found</p>
                   ) : filteredSongs.map(song => (
@@ -290,10 +364,10 @@ export default function ServiceEditPage() {
                       key={song.id}
                       type="button"
                       onClick={() => addSong(song)}
-                      style={{ width: '100%', display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 8, padding: '9px 0', borderTop: 'none', borderLeft: 'none', borderRight: 'none', borderBottom: '1px solid var(--color-border)', background: 'none', cursor: 'pointer', fontFamily: 'inherit', textAlign: 'left' as const }}
+                      style={{ width: '100%', display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 8, padding: '10px 0', background: 'none', border: 'none', borderBottom: '1px solid var(--color-border)', cursor: 'pointer', fontFamily: 'inherit', textAlign: 'left' as const }}
                     >
                       <div style={{ flex: 1, minWidth: 0 }}>
-                        <p className="dash-row-title" style={{ fontSize: 'var(--text-base)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{song.title}</p>
+                        <p className="dash-row-title" style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{song.title}</p>
                         <p className="dash-row-meta">{song.author}</p>
                       </div>
                       <div style={{ display: 'flex', alignItems: 'center', gap: 6, flexShrink: 0 }}>
@@ -307,12 +381,17 @@ export default function ServiceEditPage() {
             )}
           </div>
 
-          {/* Add other items */}
+          {/* Other item types */}
           <div className="card">
-            <div className="section-label">Add an item</div>
+            <div className="section-label">Other items</div>
             <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6 }}>
               {ITEM_TYPES.map(({ type, label }) => (
-                <button key={type} type="button" onClick={() => addItem(type, label)} className="filter-chip">
+                <button
+                  key={type}
+                  type="button"
+                  onClick={() => addItem(type, label)}
+                  className="filter-chip"
+                >
                   + {label}
                 </button>
               ))}
