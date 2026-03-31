@@ -54,17 +54,19 @@ export default function ServiceDetailPage() {
 
       {/* Header */}
       <div className="card" style={{ marginBottom: 'var(--space-md)' }}>
-        <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: 16 }}>
-          <div>
-            <h1 style={{ fontSize: 'var(--text-2xl)', fontWeight: 700, color: 'var(--color-text-primary)', letterSpacing: '-0.02em', marginBottom: 4 }}>
+        <div className="service-detail-header">
+          <div style={{ minWidth: 0 }}>
+            <h1 className="service-detail-title">
               {format(parseISO(service.service_date), 'd MMMM yyyy')}
-              {service.service_time && (
-                <span style={{ fontWeight: 400, color: 'var(--color-text-secondary)' }}> · {service.service_time}</span>
-              )}
             </h1>
-            {service.title && <p style={{ fontSize: 'var(--text-md)', color: 'var(--color-text-secondary)' }}>{service.title}</p>}
+            {service.service_time && (
+              <p style={{ fontSize: 'var(--text-md)', color: 'var(--color-text-secondary)', marginTop: 2 }}>{service.service_time}</p>
+            )}
+            {service.title && (
+              <p style={{ fontSize: 'var(--text-md)', color: 'var(--color-text-muted)', marginTop: 2 }}>{service.title}</p>
+            )}
           </div>
-          <div style={{ display: 'flex', gap: 8, flexShrink: 0 }}>
+          <div className="service-detail-actions">
             <button onClick={copyShareLink} className="btn btn-secondary btn-sm">
               <Share2 size={14} /> {copied ? 'Copied!' : 'Share'}
             </button>
@@ -92,50 +94,24 @@ export default function ServiceDetailPage() {
           </div>
         ) : (
           service.items.map((item: any, i: number) => (
-            <div
-              key={item.id}
-              style={{
-                display: 'flex',
-                alignItems: 'flex-start',
-                gap: 14,
-                padding: '12px 0',
-                borderBottom: i < service.items.length - 1 ? '1px solid var(--color-border)' : 'none',
-              }}
-            >
-              {/* Position */}
-              <div style={{ fontSize: 'var(--text-sm)', color: 'var(--color-text-muted)', width: 24, textAlign: 'center', flexShrink: 0, paddingTop: 2 }}>
-                {i + 1}
-              </div>
-
-              {/* Icon */}
-              <div style={{ color: 'var(--color-text-muted)', flexShrink: 0, paddingTop: 3 }}>
-                {typeIcon(item.type)}
-              </div>
-
-              {/* Content */}
+            <div key={item.id} style={{ display: 'flex', alignItems: 'flex-start', gap: 14, padding: '12px 0', borderBottom: i < service.items.length - 1 ? '1px solid var(--color-border)' : 'none' }}>
+              <div style={{ fontSize: 'var(--text-sm)', color: 'var(--color-text-muted)', width: 24, textAlign: 'center', flexShrink: 0, paddingTop: 2 }}>{i + 1}</div>
+              <div style={{ color: 'var(--color-text-muted)', flexShrink: 0, paddingTop: 3 }}>{typeIcon(item.type)}</div>
               <div style={{ flex: 1, minWidth: 0 }}>
                 <p className="dash-row-title">
-                  {item.type === 'song' && item.song_title
-                    ? item.song_title
-                    : (item.title || item.type.charAt(0).toUpperCase() + item.type.slice(1))}
+                  {item.type === 'song' && item.song_title ? item.song_title : (item.title || item.type.charAt(0).toUpperCase() + item.type.slice(1))}
                 </p>
-                {item.type === 'song' && item.song_author && (
-                  <p className="dash-row-meta">{item.song_author}</p>
+                {item.type === 'song' && item.song_author && <p className="dash-row-meta">{item.song_author}</p>}
+                {item.notes && <p className="dash-row-meta" style={{ fontStyle: 'italic', marginTop: 2 }}>{item.notes}</p>}
+              </div>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 8, flexShrink: 0 }}>
+                {item.type === 'song' && (item.key_override || item.song_default_key) && (
+                  <KeyBadge keyOf={item.key_override || item.song_default_key} />
                 )}
-                {item.notes && (
-                  <p className="dash-row-meta" style={{ fontStyle: 'italic', marginTop: 2 }}>{item.notes}</p>
+                {item.type === 'song' && item.song_category && (
+                  <CategoryBadge category={item.song_category} />
                 )}
               </div>
-
-              {/* Key badge */}
-              {item.type === 'song' && (item.key_override || item.song_default_key) && (
-                <KeyBadge keyOf={item.key_override || item.song_default_key} />
-              )}
-
-              {/* Category badge */}
-              {item.type === 'song' && item.song_category && (
-                <CategoryBadge category={item.song_category} />
-              )}
             </div>
           ))
         )}

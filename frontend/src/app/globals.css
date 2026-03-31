@@ -718,3 +718,74 @@
 .lyrics-editor-content em {
   font-style: italic;
 }
+
+/* Add these to the bottom of globals.css */
+
+/* ── Service detail header ── */
+.service-detail-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: var(--space-md);
+}
+
+.service-detail-title {
+  font-size: var(--text-2xl);
+  font-weight: 700;
+  color: var(--color-text-primary);
+  letter-spacing: -0.02em;
+  line-height: 1.2;
+}
+
+.service-detail-actions {
+  display: flex;
+  gap: 8px;
+  flex-shrink: 0;
+}
+
+/* ── Service edit layout ── */
+.service-edit-grid {
+  display: grid;
+  grid-template-columns: 1fr 320px;
+  gap: var(--space-md);
+  align-items: start;
+}
+
+.service-edit-sidebar {
+  position: sticky;
+  top: 80px;
+}
+
+.hide-mobile {
+  display: flex;
+}
+
+/* ── Responsive ── */
+@media (max-width: 768px) {
+  .service-detail-header {
+    flex-direction: column;
+    gap: var(--space-sm);
+  }
+
+  .service-detail-actions {
+    width: 100%;
+  }
+
+  .service-detail-actions .btn {
+    flex: 1;
+    justify-content: center;
+  }
+
+  .service-edit-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .service-edit-sidebar {
+    position: static;
+    order: -1; /* Show add panel above running order on mobile */
+  }
+
+  .hide-mobile {
+    display: none;
+  }
+}

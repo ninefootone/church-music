@@ -30,22 +30,24 @@ export default function NewServicePage() {
   }
 
   return (
-    <div style={{ maxWidth: 'var(--width-form)', margin: '0 auto' }}>
+    <div>
       <Link href="/services" className="back-link"><ArrowLeft size={14} /> Back to services</Link>
       <h1 className="page-title" style={{ marginBottom: 'var(--space-lg)' }}>New service</h1>
       {error && <div className="error-box">{error}</div>}
       <div className="card">
         <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-md)' }}>
-          <div>
-            <label className="label">Date *</label>
-            <input className="input" type="date" required value={form.service_date} onChange={e => setForm(f => ({ ...f, service_date: e.target.value }))} />
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 'var(--space-md)' }} className="form-grid-2">
+            <div>
+              <label className="label">Date *</label>
+              <input className="input" type="date" required value={form.service_date} onChange={e => setForm(f => ({ ...f, service_date: e.target.value }))} />
+            </div>
+            <div>
+              <label className="label">Time</label>
+              <input className="input" type="text" placeholder="e.g. 9.15am" value={form.service_time} onChange={e => setForm(f => ({ ...f, service_time: e.target.value }))} />
+            </div>
           </div>
           <div>
-            <label className="label">Time</label>
-            <input className="input" type="text" placeholder="e.g. 9.15am" value={form.service_time} onChange={e => setForm(f => ({ ...f, service_time: e.target.value }))} />
-          </div>
-          <div>
-            <label className="label">Title <span style={{ fontWeight: 400, textTransform: 'none', letterSpacing: 0, fontSize: 13, color: 'var(--color-text-muted)' }}>(optional)</span></label>
+            <label className="label">Title <span style={{ fontWeight: 400, textTransform: 'none', letterSpacing: 0, fontSize: 'var(--text-sm)', color: 'var(--color-text-muted)' }}>(optional)</span></label>
             <input className="input" placeholder="e.g. Easter Sunday" value={form.title} onChange={e => setForm(f => ({ ...f, title: e.target.value }))} />
           </div>
           <div style={{ display: 'flex', gap: 8, justifyContent: 'flex-end', paddingTop: 'var(--space-sm)' }}>
