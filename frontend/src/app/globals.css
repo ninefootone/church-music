@@ -700,3 +700,21 @@
     justify-content: center;
   }
 }
+
+/* Tiptap editor */
+.lyrics-editor-content:focus {
+  outline: none;
+}
+
+.lyrics-editor-content p {
+  margin: 0;
+  min-height: 1.6em;
+}
+
+.lyrics-editor-content strong {
+  font-weight: 700;
+}
+
+.lyrics-editor-content em {
+  font-style: italic;
+}
