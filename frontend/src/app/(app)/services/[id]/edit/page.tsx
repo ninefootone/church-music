@@ -319,13 +319,12 @@ export default function ServiceEditPage() {
         {/* Left — running order */}
         <div>
           {/* Label and count on same line, no overlap */}
-          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 12, gap: 8 }}>
-            <span style={{ fontSize: 'var(--text-xs)', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.08em', color: 'var(--color-text-muted)', whiteSpace: 'nowrap' }}>Running order</span>
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 12, gap: 8, overflow: 'hidden' }}>
+            <span style={{ fontSize: 'var(--text-xs)', fontWeight: 700, textTransform: 'uppercase' as const, letterSpacing: '0.08em', color: 'var(--color-text-muted)', whiteSpace: 'nowrap', display: 'block', flexShrink: 0 }}>Running order</span>
             <span style={{ fontSize: 'var(--text-sm)', color: 'var(--color-text-muted)', whiteSpace: 'nowrap', flexShrink: 0 }}>
-              {items.length} item{items.length !== 1 ? 's' : ''}
+             {items.length} item{items.length !== 1 ? 's' : ''}
             </span>
           </div>
-
           {items.length === 0 ? (
             <div className="card" style={{ textAlign: 'center', padding: 'var(--space-xl)' }}>
               <p className="text-muted">Add songs and items from the panel above</p>
