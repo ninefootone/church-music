@@ -826,4 +826,14 @@
     flex: 1;
     justify-content: center;
   }
+
+  .service-edit-grid,
+  .service-edit-grid * {
+    max-width: 100%;
+    box-sizing: border-box;
+  }
+
+  .service-edit-grid .card {
+    overflow: hidden;
+  }
 }

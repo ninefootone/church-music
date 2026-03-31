@@ -401,7 +401,7 @@ export default function ServiceEditPage() {
       </div>
 
       {/* Fixed bottom save bar */}
-      <div style={{ position: 'fixed', bottom: 0, left: 0, right: 0, background: 'var(--color-surface)', borderTop: '1px solid var(--color-border)', padding: '14px var(--space-lg)', display: 'flex', justifyContent: 'flex-end', gap: 8, zIndex: 50, boxShadow: '0 -2px 8px rgba(0,0,0,0.06)' }}>
+      <div style={{ position: 'fixed', bottom: 0, left: 0, right: 0, background: 'var(--color-surface)', borderTop: '1px solid var(--color-border)', padding: '14px var(--space-md)', display: 'flex', justifyContent: 'flex-end', gap: 8, zIndex: 50, boxShadow: '0 -2px 8px rgba(0,0,0,0.06)', flexWrap: 'wrap' }}>
         <Link href={`/services/${id}`} className="btn btn-secondary">Cancel</Link>
         <button className="btn btn-primary" onClick={handleSave} disabled={saving}>
           {saving ? 'Saving…' : `Save running order (${items.length} item${items.length !== 1 ? 's' : ''})`}
