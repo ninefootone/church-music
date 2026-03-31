@@ -1,6 +1,6 @@
 'use client'
 
-import { createContext, useContext, useEffect, useState, ReactNode, useCallback } from 'react'
+import { createContext, useContext, useEffect, useState, useCallback, ReactNode } from 'react'
 import { useAuth } from '@clerk/nextjs'
 import { useRouter, usePathname } from 'next/navigation'
 import api, { setAuthToken, setChurchId } from '@/lib/api'
@@ -39,14 +39,10 @@ export function ChurchProvider({ children }: { children: ReactNode }) {
     try {
       const token = await getToken()
       if (!token) { setLoading(false); return }
-
-      // Set token first, then fetch
       setAuthToken(token)
-
       const { data } = await api.get('/api/churches/mine')
       if (data && data.length > 0) {
         const c = data[0]
-        // Set church ID header immediately before any other requests
         setChurchId(c.id)
         setChurch(c)
         if (pathname === '/onboarding') router.push('/dashboard')
@@ -66,8 +62,7 @@ export function ChurchProvider({ children }: { children: ReactNode }) {
 
   return (
     <ChurchContext.Provider value={{
-      church,
-      loading,
+      church, loading,
       isAdmin: church?.role === 'admin',
       refetch: fetchChurch,
     }}>
