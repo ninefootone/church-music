@@ -10,7 +10,7 @@ import { useChurch } from '@/context/ChurchContext'
 import api from '@/lib/api'
 
 export default function SongsPage() {
-  const { church, loading: churchLoading } = useChurch()
+  const { church, loading: churchLoading, isAdmin } = useChurch()
   const [songs, setSongs] = useState<Song[]>([])
   const [loading, setLoading] = useState(true)
   const [search, setSearch] = useState('')
@@ -42,9 +42,11 @@ export default function SongsPage() {
     <div>
       <div className="page-header">
         <h1 className="page-title">Songs</h1>
-        <Link href="/songs/new" className="btn btn-primary">
-          <Plus size={16} /> Add new song
-        </Link>
+        {isAdmin && (
+          <Link href="/songs/new" className="btn btn-primary">
+            <Plus size={16} /> Add new song
+          </Link>
+        )}
       </div>
 
       <div style={{ position: 'relative', marginBottom: 'var(--space-sm)' }}>
@@ -73,7 +75,7 @@ export default function SongsPage() {
           <div style={{ padding: 'var(--space-xl)', textAlign: 'center', color: 'var(--color-text-muted)' }}>Loading songs…</div>
         ) : songs.length === 0 ? (
           <div style={{ padding: 'var(--space-xl)', textAlign: 'center', color: 'var(--color-text-muted)' }}>
-            No songs found. <Link href="/songs/new" style={{ color: 'var(--color-brand-500)' }}>Add one?</Link>
+            No songs found.{isAdmin && <> <Link href="/songs/new" style={{ color: 'var(--color-brand-500)' }}>Add one?</Link></>}
           </div>
         ) : songs.map((song, i) => (
           <Link key={song.id} href={`/songs/${song.id}`} className="song-row">

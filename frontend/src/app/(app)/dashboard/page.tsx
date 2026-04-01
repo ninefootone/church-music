@@ -43,7 +43,7 @@ export default function DashboardPage() {
             {isAdmin && <Link href="/songs/new" className="btn btn-ghost">Add new +</Link>}
           </div>
           {songs.length === 0 ? (
-            <p className="text-muted">No songs yet. <Link href="/songs/new" className="link">Add your first</Link></p>
+            <p className="text-muted">No songs yet.{isAdmin && <> <Link href="/songs/new" className="link">Add your first</Link></>}</p>
           ) : songs.map((song, i) => (
             <Link key={song.id} href={`/songs/${song.id}`} className="dash-row">
               <div style={{ flex: 1, minWidth: 0 }}>
@@ -65,7 +65,7 @@ export default function DashboardPage() {
         <div className="card">
           <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 'var(--space-md)' }}>
             <span className="section-label" style={{ marginBottom: 0 }}>Upcoming services</span>
-            {isAdmin && <Link href="/services/new" className="btn btn-ghost">Add new +</Link>}
+            {church && <Link href="/services/new" className="btn btn-ghost">Add new +</Link>}
           </div>
           {services.length === 0 ? (
             <p className="text-muted">No upcoming services. <Link href="/services/new" className="link">Plan one</Link></p>
