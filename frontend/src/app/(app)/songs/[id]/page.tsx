@@ -1,12 +1,13 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useCallback } from 'react'
 import Link from 'next/link'
 import { useParams } from 'next/navigation'
 import { format, parseISO } from 'date-fns'
-import { ArrowLeft, Download, ExternalLink, Edit, Plus } from 'lucide-react'
+import { ArrowLeft, Download, ExternalLink, Edit, Plus, Trash2 } from 'lucide-react'
 import { CategoryBadge, KeyBadge } from '@/components/ui/badges'
 import { LyricsDisplay } from '@/components/ui/LyricsDisplay'
+import { FileUploadModal } from '@/components/ui/FileUploadModal'
 import { Song } from '@/types'
 import api from '@/lib/api'
 import { useChurch } from '@/context/ChurchContext'
@@ -18,24 +19,53 @@ export default function SongDetailPage() {
   const [loading, setLoading] = useState(true)
   const [notFound, setNotFound] = useState(false)
   const [showFullLyrics, setShowFullLyrics] = useState(false)
+  const [showUploadModal, setShowUploadModal] = useState(false)
+  const [downloadingId, setDownloadingId] = useState<string | null>(null)
+  const [deletingId, setDeletingId] = useState<string | null>(null)
 
-  useEffect(() => {
-    // Wait for church context to finish loading before fetching
+  const fetchSong = useCallback(() => {
     if (!id || churchLoading) return
     setLoading(true)
     setNotFound(false)
     api.get(`/api/songs/${id}`)
       .then(r => setSong(r.data))
-      .catch(err => {
-        console.error('Failed to fetch song:', err)
-        setNotFound(true)
-      })
+      .catch(() => setNotFound(true))
       .finally(() => setLoading(false))
   }, [id, churchLoading])
 
-  if (loading || churchLoading) return (
-    <p className="text-muted" style={{ padding: 'var(--space-xl)' }}>Loading…</p>
-  )
+  useEffect(() => { fetchSong() }, [fetchSong])
+
+  const handleDownload = async (fileId: string, label: string) => {
+    if (!song) return
+    setDownloadingId(fileId)
+    try {
+      const { data } = await api.get(`/api/uploads/songs/${song.id}/files/${fileId}/url`)
+      const a = document.createElement('a')
+      a.href = data.url
+      a.download = label
+      a.target = '_blank'
+      a.click()
+    } catch (err) {
+      console.error('Download failed:', err)
+    } finally {
+      setDownloadingId(null)
+    }
+  }
+
+  const handleDelete = async (fileId: string) => {
+    if (!song || !confirm('Delete this file?')) return
+    setDeletingId(fileId)
+    try {
+      await api.delete(`/api/uploads/songs/${song.id}/files/${fileId}`)
+      fetchSong() // Refresh to show updated files
+    } catch (err) {
+      console.error('Delete failed:', err)
+    } finally {
+      setDeletingId(null)
+    }
+  }
+
+  if (loading || churchLoading) return <p className="text-muted" style={{ padding: 'var(--space-xl)' }}>Loading…</p>
   if (notFound || !song) return (
     <div style={{ padding: 'var(--space-xl)' }}>
       <p className="text-muted" style={{ marginBottom: 'var(--space-md)' }}>Song not found.</p>
@@ -43,14 +73,47 @@ export default function SongDetailPage() {
     </div>
   )
 
-  const mainFiles = (song.files || []).filter(f => f.key_of === song.default_key)
-  const otherFiles = (song.files || []).filter(f => f.key_of !== song.default_key)
+  const mainFiles = (song.files || []).filter(f => f.key_of === song.default_key || !f.key_of)
+  const otherFiles = (song.files || []).filter(f => f.key_of && f.key_of !== song.default_key)
+
+  const FileButton = ({ file }: { file: any }) => (
+    <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+      <button
+        onClick={() => handleDownload(file.id, file.label)}
+        disabled={downloadingId === file.id}
+        className="download-btn"
+      >
+        <Download size={14} />
+        {downloadingId === file.id ? 'Downloading…' : file.label}
+        {file.key_of && file.key_of !== song.default_key && <KeyBadge keyOf={file.key_of} />}
+      </button>
+      {isAdmin && (
+        <button
+          onClick={() => handleDelete(file.id)}
+          disabled={deletingId === file.id}
+          style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'var(--color-text-muted)', padding: 4, display: 'flex', opacity: deletingId === file.id ? 0.5 : 1 }}
+          title="Delete file"
+        >
+          <Trash2 size={14} />
+        </button>
+      )}
+    </div>
+  )
 
   return (
     <div style={{ maxWidth: 'var(--width-app)', margin: '0 auto' }}>
+      {showUploadModal && (
+        <FileUploadModal
+          songId={song.id}
+          defaultKey={song.default_key}
+          onClose={() => setShowUploadModal(false)}
+          onUploaded={fetchSong}
+        />
+      )}
+
       <Link href="/songs" className="back-link"><ArrowLeft size={14} /> Back to songs</Link>
 
-      {/* Header card */}
+      {/* Header */}
       <div className="card" style={{ marginBottom: 'var(--space-md)' }}>
         <div className="song-detail-header">
           <h1 className="song-detail-title">{song.title}</h1>
@@ -61,7 +124,6 @@ export default function SongDetailPage() {
             </div>
           )}
         </div>
-
         <p className="song-detail-author">{song.author}</p>
 
         <div className="meta-block">
@@ -75,11 +137,6 @@ export default function SongDetailPage() {
             <div className="meta-row">
               <span className="meta-label">Key</span>
               <KeyBadge keyOf={song.default_key} />
-              {otherFiles.length > 0 && (
-                <span className="text-muted" style={{ fontSize: 'var(--text-sm)' }}>
-                  Other keys: {[...new Set(otherFiles.map(f => f.key_of))].join(', ')}
-                </span>
-              )}
             </div>
           )}
           {song.first_line && (
@@ -100,11 +157,7 @@ export default function SongDetailPage() {
             <div className="meta-row">
               <span className="meta-label">CCLI</span>
               <span className="ccli-number">{song.ccli_number}</span>
-              <a
-                href={`https://songselect.ccli.com/songs/${song.ccli_number}`}
-                target="_blank" rel="noopener noreferrer"
-                className="ccli-link"
-              >
+              <a href={`https://songselect.ccli.com/songs/${song.ccli_number}`} target="_blank" rel="noopener noreferrer" className="ccli-link">
                 View on SongSelect <ExternalLink size={12} />
               </a>
             </div>
@@ -143,41 +196,49 @@ export default function SongDetailPage() {
         </div>
       </div>
 
-      {/* Downloads */}
+      {/* Files */}
       <div className="card" style={{ marginBottom: 'var(--space-md)' }}>
-        <div className="section-label">Downloads</div>
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 'var(--space-md)' }}>
+          <span className="section-label" style={{ marginBottom: 0 }}>Files</span>
+          {isAdmin && (
+            <button onClick={() => setShowUploadModal(true)} className="btn btn-primary btn-sm">
+              <Plus size={14} /> Upload file
+            </button>
+          )}
+        </div>
 
-        {mainFiles.length > 0 && (
-          <div style={{ marginBottom: 'var(--space-md)' }}>
-            <p className="downloads-group-label">Main key — <KeyBadge keyOf={song.default_key} /></p>
-            <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8 }}>
-              {mainFiles.map(f => (
-                <button key={f.id} className="download-btn"><Download size={14} /> {f.label}</button>
-              ))}
-            </div>
-          </div>
-        )}
-
-        {otherFiles.length > 0 && (
+        {song.files && song.files.length > 0 ? (
           <>
-            <div className="divider" />
-            <div style={{ marginBottom: 'var(--space-md)' }}>
-              <p className="downloads-group-label">Other keys</p>
-              <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8 }}>
-                {otherFiles.map(f => (
-                  <button key={f.id} className="download-btn">
-                    <Download size={14} /> {f.label} <KeyBadge keyOf={f.key_of!} />
-                  </button>
-                ))}
+            {mainFiles.length > 0 && (
+              <div style={{ marginBottom: 'var(--space-md)' }}>
+                <p className="downloads-group-label">
+                  Main key{song.default_key && <> — <KeyBadge keyOf={song.default_key} /></>}
+                </p>
+                <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8 }}>
+                  {mainFiles.map(f => <FileButton key={f.id} file={f} />)}
+                </div>
               </div>
-            </div>
+            )}
+            {otherFiles.length > 0 && (
+              <>
+                {mainFiles.length > 0 && <div className="divider" />}
+                <div>
+                  <p className="downloads-group-label">Other keys</p>
+                  <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8 }}>
+                    {otherFiles.map(f => <FileButton key={f.id} file={f} />)}
+                  </div>
+                </div>
+              </>
+            )}
           </>
+        ) : (
+          <p className="text-muted" style={{ fontStyle: 'italic' }}>
+            No files uploaded yet.
+            {isAdmin && <> <button onClick={() => setShowUploadModal(true)} style={{ background: 'none', border: 'none', cursor: 'pointer', fontFamily: 'inherit', fontSize: 'inherit', color: 'var(--color-brand-500)', padding: 0 }}>Upload a chord chart or sheet music.</button></>}
+          </p>
         )}
 
-        {mainFiles.length === 0 && otherFiles.length === 0 && (
-          <p className="text-muted" style={{ fontStyle: 'italic', marginBottom: 'var(--space-md)' }}>No files uploaded yet.</p>
-        )}
-
+        {/* YouTube */}
         {song.youtube_url && (
           <>
             <div className="divider" />
@@ -187,12 +248,6 @@ export default function SongDetailPage() {
               YouTube reference video
             </a>
           </>
-        )}
-
-        {isAdmin && (
-          <div style={{ borderTop: '1px solid var(--color-border)', marginTop: 'var(--space-md)', paddingTop: 'var(--space-md)' }}>
-            <button className="btn btn-ghost"><Plus size={14} /> Upload a file</button>
-          </div>
         )}
       </div>
 
