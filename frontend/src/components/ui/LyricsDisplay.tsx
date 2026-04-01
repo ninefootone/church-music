@@ -5,36 +5,33 @@ interface LyricsDisplayProps {
   className?: string
 }
 
-// Renders **bold** and _italic_ markers in lyrics
-export function LyricsDisplay({ lyrics, className }: LyricsDisplayProps) {
-  const renderLine = (line: string, key: number) => {
-    // Split on **bold** and _italic_ markers
-    const parts = line.split(/(\*\*[^*]+\*\*|_[^_]+_)/g)
-    return (
-      <span key={key}>
-        {parts.map((part, i) => {
-          if (part.startsWith('**') && part.endsWith('**')) {
-            return <strong key={i}>{part.slice(2, -2)}</strong>
-          }
-          if (part.startsWith('_') && part.endsWith('_')) {
-            return <em key={i}>{part.slice(1, -1)}</em>
-          }
-          return part
-        })}
-      </span>
-    )
-  }
+// Detects whether lyrics are stored as HTML or plain text with ** markers
+function isHTML(str: string) {
+  return str.trim().startsWith('<')
+}
 
-  const lines = lyrics.split('\n')
+// Convert legacy ** and _ markers to HTML
+function markersToHTML(text: string) {
+  return text
+    .split('\n')
+    .map(line => {
+      let html = line
+        .replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>')
+        .replace(/_(.+?)_/g, '<em>$1</em>')
+      return `<p>${html || '<br>'}</p>`
+    })
+    .join('')
+}
+
+export function LyricsDisplay({ lyrics, className }: LyricsDisplayProps) {
+  if (!lyrics) return null
+
+  const html = isHTML(lyrics) ? lyrics : markersToHTML(lyrics)
 
   return (
-    <div className={`lyrics-text ${className || ''}`}>
-      {lines.map((line, i) => (
-        <span key={i}>
-          {renderLine(line, i)}
-          {i < lines.length - 1 && '\n'}
-        </span>
-      ))}
-    </div>
+    <div
+      className={`lyrics-text ${className || ''}`}
+      dangerouslySetInnerHTML={{ __html: html }}
+    />
   )
 }

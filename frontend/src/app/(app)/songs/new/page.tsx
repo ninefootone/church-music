@@ -58,7 +58,7 @@ export default function NewSongPage() {
   }
 
   return (
-    <div style={{ maxWidth: 'var(--width-form)', margin: '0 auto' }}>
+    <div style={{ maxWidth: 'var(--width-app)', margin: '0 auto' }}>
       <Link href="/songs" className="back-link"><ArrowLeft size={14} /> Back to songs</Link>
       <h1 className="page-title" style={{ marginBottom: 'var(--space-lg)' }}>Add new song</h1>
       {error && <div className="error-box">{error}</div>}
