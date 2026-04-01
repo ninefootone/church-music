@@ -129,7 +129,7 @@ export default function SongDetailPage() {
           {isAdmin && (
             <div className="song-detail-actions">
               <Link href={`/songs/${song.id}/edit`} className="btn btn-sm btn-secondary"><Edit size={14} /> Edit</Link>
-              <button onClick={() => setShowAddToService(true)} className=“btn btn-sm btn-primary”><Plus size={14} /> Add to service</button>
+              <button onClick={() => setShowAddToService(true)} className="btn btn-sm btn-primary"><Plus size={14} /> Add to service</button>
             </div>
           )}
         </div>

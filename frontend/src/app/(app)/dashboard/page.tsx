@@ -93,7 +93,7 @@ export default function DashboardPage() {
       <div className="card">
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 'var(--space-md)' }}>
           <span className="section-label" style={{ marginBottom: 0 }}>Team</span>
-          {isAdmin && <button onClick={() => setShowInviteModal(true)} className=“btn btn-ghost”>Invite member +</button>}
+          {isAdmin && <button onClick={() => setShowInviteModal(true)} className="btn btn-ghost">Invite member +</button>}
         </div>
         {members.map((member) => (
           <div key={member.id} className="member-row">
