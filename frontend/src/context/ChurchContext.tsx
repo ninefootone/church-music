@@ -3,7 +3,7 @@
 import { createContext, useContext, useEffect, useState, useCallback, ReactNode } from 'react'
 import { useAuth } from '@clerk/nextjs'
 import { useRouter, usePathname } from 'next/navigation'
-import api, { setAuthToken, setChurchId } from '@/lib/api'
+import api, { setAuthToken, setChurchId, registerTokenRefresher } from '@/lib/api'
 
 interface Church {
   id: string
@@ -30,6 +30,15 @@ export function ChurchProvider({ children }: { children: ReactNode }) {
   const pathname = usePathname()
   const [church, setChurch] = useState<Church | null>(null)
   const [loading, setLoading] = useState(true)
+
+  // Register token refresher so api interceptor can auto-retry on 401
+  useEffect(() => {
+    registerTokenRefresher(async () => {
+      const token = await getToken()
+      if (token) setAuthToken(token)
+      return token
+    })
+  }, [getToken])
 
   const fetchChurch = useCallback(async () => {
     if (!isLoaded || !isSignedIn) {

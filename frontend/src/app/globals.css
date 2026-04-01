@@ -849,3 +849,18 @@
     overflow: hidden;
   }
 }
+
+.input,
+input,
+select,
+textarea {
+  font-size: max(16px, var(--text-base)) !important;
+}
+
+/* Override for places where we explicitly want smaller inputs
+   (e.g. the key dropdown and inline item title inputs in service editor)
+   but still need to prevent iOS zoom */
+.service-edit-grid input,
+.service-edit-grid select {
+  font-size: 16px !important;
+}
