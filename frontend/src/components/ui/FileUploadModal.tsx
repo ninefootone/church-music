@@ -56,8 +56,13 @@ export function FileUploadModal({ songId, defaultKey, onClose, onUploaded }: Fil
       formData.append('key_of', keyOf)
 
       await api.post(`/api/uploads/songs/${songId}`, formData, {
-        headers: { 'Content-Type': 'multipart/form-data' },
+        headers: {
+          'Content-Type': 'multipart/form-data',
+          'Authorization': api.defaults.headers.common['Authorization'] as string,
+          'x-church-id': api.defaults.headers.common['x-church-id'] as string,
+        },
       })
+
 
       onUploaded()
       onClose()
