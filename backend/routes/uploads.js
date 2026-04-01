@@ -17,6 +17,17 @@ const r2 = new S3Client({
   },
 })
 
+const r2 = new S3Client({ ... })
+
+// Temporary debug — remove after fixing
+console.log('R2 config:', {
+  endpoint: process.env.R2_ENDPOINT || `https://${process.env.R2_ACCOUNT_ID}.r2.cloudflarestorage.com`,
+  accountId: process.env.R2_ACCOUNT_ID ? 'SET' : 'MISSING',
+  accessKeyId: process.env.R2_ACCESS_KEY_ID ? 'SET' : 'MISSING',
+  secretKey: process.env.R2_SECRET_ACCESS_KEY ? 'SET' : 'MISSING',
+  bucket: process.env.R2_BUCKET_NAME ? 'SET' : 'MISSING',
+})
+
 const BUCKET = process.env.R2_BUCKET_NAME;
 
 // Multer - memory storage, 20MB limit
