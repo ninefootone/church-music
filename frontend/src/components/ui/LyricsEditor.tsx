@@ -50,7 +50,7 @@ export function LyricsEditor({ value, onChange }: LyricsEditorProps) {
     if (!editor) return
     const current = editor.getHTML()
     if (current !== value && value !== undefined) {
-      editor.commands.setContent(value || '<p></p>', false)
+      editor.commands.setContent(value || '<p></p>', { emitUpdate: false })
     }
   }, [value, editor])
 
