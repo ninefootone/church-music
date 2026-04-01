@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useRef } from 'react'
 import Link from 'next/link'
-import { format, isFuture, isToday, parseISO } from 'date-fns'
+import { format, parseISO } from 'date-fns'
 import { CategoryBadge, KeyBadge } from '@/components/ui/badges'
 import { useChurch } from '@/context/ChurchContext'
 import api from '@/lib/api'
@@ -20,7 +20,8 @@ export default function DashboardPage() {
     fetchedRef.current = true
     Promise.all([
       api.get('/api/songs').then(r => setSongs(r.data.slice(0, 4))),
-      api.get('/api/services').then(r => setServices(r.data.slice(0, 3))),
+      // Only fetch upcoming services, ascending so next service is first
+      api.get('/api/services', { params: { upcoming: 'true' } }).then(r => setServices(r.data.slice(0, 3))),
       api.get('/api/members').then(r => setMembers(r.data)),
     ]).finally(() => setLoading(false))
   }, [church])
@@ -37,12 +38,12 @@ export default function DashboardPage() {
 
   return (
     <div>
-      {/* 60/40 grid — collapses to single column on mobile */}
       <div className="dashboard-grid" style={{ display: 'grid', gridTemplateColumns: '3fr 2fr', gap: 'var(--space-md)', marginBottom: 'var(--space-md)' }}>
 
+        {/* Songs */}
         <div className="card">
           <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 'var(--space-md)' }}>
-            <span className="section-label">Songs</span>
+            <span className="section-label" style={{ marginBottom: 0 }}>Songs</span>
             {isAdmin && <Link href="/songs/new" className="btn btn-ghost">Add new +</Link>}
           </div>
           {songs.length === 0 ? (
@@ -64,25 +65,25 @@ export default function DashboardPage() {
           </div>
         </div>
 
+        {/* Services — upcoming only */}
         <div className="card">
           <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 'var(--space-md)' }}>
-            <span className="section-label">Services</span>
+            <span className="section-label" style={{ marginBottom: 0 }}>Upcoming services</span>
             {isAdmin && <Link href="/services/new" className="btn btn-ghost">Add new +</Link>}
           </div>
           {services.length === 0 ? (
-            <p className="text-muted">No services yet. <Link href="/services/new" className="link">Add your first</Link></p>
-          ) : services.map((service, i) => {
+            <p className="text-muted">No upcoming services. <Link href="/services/new" className="link">Plan one</Link></p>
+          ) : services.map((service) => {
             const date = parseISO(service.service_date)
-            const upcoming = isFuture(date) || isToday(date)
             return (
               <Link key={service.id} href={`/services/${service.id}`} className="dash-row">
                 <div style={{ flex: 1 }}>
-                  <p className="dash-row-title">{format(date, 'd MMM')}{service.service_time ? ` · ${service.service_time}` : ''}</p>
+                  <p className="dash-row-title">
+                    {format(date, 'd MMM')}{service.service_time ? ` · ${service.service_time}` : ''}
+                  </p>
                   {service.title && <p className="dash-row-meta">{service.title}</p>}
                 </div>
-                <span className={`badge ${upcoming ? 'badge-upcoming' : 'badge-past'}`}>
-                  {upcoming ? 'UPCOMING' : 'PAST'}
-                </span>
+                <span className="badge badge-upcoming">UPCOMING</span>
               </Link>
             )
           })}
@@ -92,12 +93,13 @@ export default function DashboardPage() {
         </div>
       </div>
 
+      {/* Team */}
       <div className="card">
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 'var(--space-md)' }}>
-          <span className="section-label">Team</span>
+          <span className="section-label" style={{ marginBottom: 0 }}>Team</span>
           {isAdmin && <button onClick={handleInvite} className="btn btn-ghost">Invite member +</button>}
         </div>
-        {members.map((member, i) => (
+        {members.map((member) => (
           <div key={member.id} className="member-row">
             <div className="member-avatar">
               {(member.name || member.email || '?').charAt(0).toUpperCase()}
