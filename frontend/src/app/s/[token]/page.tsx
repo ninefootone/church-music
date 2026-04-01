@@ -3,14 +3,136 @@
 import { useParams } from 'next/navigation'
 import { useEffect, useState } from 'react'
 import { format, parseISO } from 'date-fns'
-import { Music, BookOpen, Mic2 } from 'lucide-react'
+import { Music, BookOpen, Mic2, ChevronDown, ChevronUp, FileText, ExternalLink } from 'lucide-react'
 import axios from 'axios'
 
+const API = process.env.NEXT_PUBLIC_API_URL
+
 const typeIcon = (type: string) => {
-  if (type === 'song') return <Music size={14} style={{ color: 'var(--color-text-muted)' }} />
-  if (type === 'reading') return <BookOpen size={14} style={{ color: 'var(--color-text-muted)' }} />
-  if (type === 'sermon') return <Mic2 size={14} style={{ color: 'var(--color-text-muted)' }} />
+  if (type === 'song') return <Music size={15} style={{ color: 'var(--color-brand-500)', flexShrink: 0 }} />
+  if (type === 'reading') return <BookOpen size={15} style={{ color: 'var(--color-text-muted)', flexShrink: 0 }} />
+  if (type === 'sermon') return <Mic2 size={15} style={{ color: 'var(--color-text-muted)', flexShrink: 0 }} />
   return null
+}
+
+interface SongFile {
+  id: string
+  label: string
+  file_type: string
+  key_of: string | null
+  url: string
+}
+
+function SongItem({ item, index }: { item: any; index: number }) {
+  const [expanded, setExpanded] = useState(false)
+  const [files, setFiles] = useState<SongFile[] | null>(null)
+  const [loadingFiles, setLoadingFiles] = useState(false)
+
+  const handleExpand = async () => {
+    if (!expanded && item.song_id && files === null) {
+      setLoadingFiles(true)
+      try {
+        const res = await axios.get(`${API}/api/uploads/public/songs/${item.song_id}/files`)
+        setFiles(res.data)
+      } catch (err) {
+        setFiles([])
+      } finally {
+        setLoadingFiles(false)
+      }
+    }
+    setExpanded(!expanded)
+  }
+
+  const isSong = item.type === 'song'
+
+  return (
+    <div style={{ background: 'var(--color-surface)', border: '1px solid var(--color-border)', borderRadius: 'var(--radius-md)', overflow: 'hidden', marginBottom: 8 }}>
+      <div
+        style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '14px var(--space-md)', cursor: isSong ? 'pointer' : 'default' }}
+        onClick={isSong ? handleExpand : undefined}
+      >
+        <span style={{ fontSize: 'var(--text-sm)', color: 'var(--color-text-muted)', width: 24, textAlign: 'center', flexShrink: 0 }}>
+          {index + 1}
+        </span>
+
+        {typeIcon(item.type)}
+
+        <div style={{ flex: 1, minWidth: 0 }}>
+          <p style={{ fontSize: 'var(--text-md)', fontWeight: isSong ? 600 : 400, color: isSong ? 'var(--color-text-primary)' : 'var(--color-text-secondary)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', marginBottom: isSong && item.song_author ? 2 : 0 }}>
+            {isSong && item.song_title ? item.song_title : (item.title || item.type)}
+          </p>
+          {isSong && item.song_author && (
+            <p style={{ fontSize: 'var(--text-sm)', color: 'var(--color-text-muted)' }}>{item.song_author}</p>
+          )}
+          {item.notes && (
+            <p style={{ fontSize: 'var(--text-sm)', color: 'var(--color-text-muted)', fontStyle: 'italic', marginTop: 2 }}>{item.notes}</p>
+          )}
+        </div>
+
+        <div style={{ display: 'flex', alignItems: 'center', gap: 8, flexShrink: 0 }}>
+          {isSong && (item.key_override || item.song_default_key) && (
+            <span className="badge-key">{item.key_override || item.song_default_key}</span>
+          )}
+          {isSong && item.song_youtube_url && (
+            <a
+              href={item.song_youtube_url}
+              target="_blank"
+              rel="noopener noreferrer"
+              onClick={e => e.stopPropagation()}
+              style={{ width: 28, height: 28, background: '#e33', borderRadius: 5, display: 'flex', alignItems: 'center', justifyContent: 'center', textDecoration: 'none', flexShrink: 0 }}
+            >
+              <span style={{ width: 0, height: 0, borderTop: '5px solid transparent', borderBottom: '5px solid transparent', borderLeft: '9px solid white', marginLeft: 2 }} />
+            </a>
+          )}
+          {isSong && (
+            <span style={{ color: 'var(--color-text-muted)', display: 'flex' }}>
+              {expanded ? <ChevronUp size={18} /> : <ChevronDown size={18} />}
+            </span>
+          )}
+        </div>
+      </div>
+
+      {isSong && expanded && (
+        <div style={{ borderTop: '1px solid var(--color-border)', padding: 'var(--space-md)', background: 'var(--color-neutral-50)' }}>
+          {loadingFiles ? (
+            <p style={{ fontSize: 'var(--text-sm)', color: 'var(--color-text-muted)' }}>Loading files...</p>
+          ) : files && files.length > 0 ? (
+            <div>
+              <p style={{ fontSize: 'var(--text-xs)', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.07em', color: 'var(--color-text-muted)', marginBottom: 10 }}>Sheet music</p>
+              <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8 }}>
+                {files.map(file => (
+                  <a
+                    key={file.id}
+                    href={file.url}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    style={{ display: 'inline-flex', alignItems: 'center', gap: 6, padding: '8px 14px', background: 'var(--color-surface)', border: '1px solid var(--color-border)', borderRadius: 'var(--radius-sm)', fontSize: 'var(--text-sm)', fontWeight: 500, color: 'var(--color-brand-600)', textDecoration: 'none', transition: 'all var(--transition-fast)' }}
+                  >
+                    <FileText size={14} />
+                    {file.label}
+                    {file.key_of && (
+                      <span className="badge-key" style={{ marginLeft: 2 }}>{file.key_of}</span>
+                    )}
+                    <ExternalLink size={12} style={{ opacity: 0.5 }} />
+                  </a>
+                ))}
+              </div>
+            </div>
+          ) : (
+            <p style={{ fontSize: 'var(--text-sm)', color: 'var(--color-text-muted)', fontStyle: 'italic' }}>
+              No sheet music uploaded for this song yet.
+            </p>
+          )}
+
+          {item.song_ccli_number && (
+            <p style={{ fontSize: 'var(--text-xs)', color: 'var(--color-text-muted)', marginTop: 10 }}>
+              CCLI {item.song_ccli_number}
+            </p>
+          )}
+        </div>
+      )}
+    </div>
+  )
 }
 
 export default function PublicServicePage() {
@@ -21,7 +143,7 @@ export default function PublicServicePage() {
 
   useEffect(() => {
     if (!token) return
-    axios.get(`${process.env.NEXT_PUBLIC_API_URL}/api/services/public/${token}`)
+    axios.get(`${API}/api/services/public/${token}`)
       .then(r => setService(r.data))
       .catch(() => setError('Service not found'))
       .finally(() => setLoading(false))
@@ -29,7 +151,7 @@ export default function PublicServicePage() {
 
   if (loading) return (
     <div style={{ minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', background: 'var(--color-bg)' }}>
-      <p className="text-muted">Loading…</p>
+      <p className="text-muted">Loading...</p>
     </div>
   )
 
@@ -41,21 +163,15 @@ export default function PublicServicePage() {
 
   return (
     <div style={{ minHeight: '100vh', background: 'var(--color-bg)' }}>
-      {/* Nav */}
       <nav style={{ background: 'var(--color-surface)', borderBottom: '1px solid var(--color-border)', boxShadow: 'var(--shadow-sm)', padding: '0 var(--space-lg)', height: 58, display: 'flex', alignItems: 'center' }}>
         <div style={{ maxWidth: 'var(--width-app)', margin: '0 auto', width: '100%', display: 'flex', alignItems: 'center', gap: 8 }}>
           <Music size={18} style={{ color: 'var(--color-brand-500)' }} />
-          <span style={{ fontSize: 17, fontWeight: 700, color: 'var(--color-text-primary)', letterSpacing: '-0.01em' }}>
-            Song Stack
-          </span>
-          <span style={{ color: 'var(--color-text-muted)', fontSize: 'var(--text-sm)', marginLeft: 4 }}>
-            · View-only
-          </span>
+          <span style={{ fontSize: 17, fontWeight: 700, color: 'var(--color-text-primary)', letterSpacing: '-0.01em' }}>Song Stack</span>
+          <span style={{ fontSize: 'var(--text-sm)', color: 'var(--color-text-muted)', marginLeft: 4 }}>View only</span>
         </div>
       </nav>
 
       <main style={{ maxWidth: 'var(--width-app)', margin: '0 auto', padding: 'var(--space-xl) var(--space-lg)' }}>
-        {/* Date / time header */}
         <div style={{ marginBottom: 'var(--space-xl)' }}>
           <h1 className="page-title" style={{ marginBottom: 4 }}>
             {format(parseISO(service.service_date), 'd MMMM yyyy')}
@@ -68,66 +184,18 @@ export default function PublicServicePage() {
           )}
         </div>
 
-        {/* Running order */}
-        <div className="card" style={{ padding: 0, overflow: 'hidden' }}>
-          {(!service.items || service.items.length === 0) ? (
-            <p className="text-muted" style={{ padding: 'var(--space-xl)', textAlign: 'center' }}>No items in this service yet.</p>
-          ) : service.items.map((item: any, i: number) => (
-            <div
-              key={i}
-              style={{
-                display: 'flex',
-                alignItems: 'flex-start',
-                gap: 14,
-                padding: '14px var(--space-lg)',
-                borderBottom: i < service.items.length - 1 ? '1px solid var(--color-border)' : 'none',
-              }}
-            >
-              {/* Position */}
-              <div style={{ fontSize: 'var(--text-sm)', color: 'var(--color-text-muted)', width: 24, textAlign: 'center', flexShrink: 0, paddingTop: 2 }}>
-                {i + 1}
-              </div>
-
-              {/* Icon */}
-              <div style={{ flexShrink: 0, paddingTop: 3 }}>{typeIcon(item.type)}</div>
-
-              {/* Content */}
-              <div style={{ flex: 1, minWidth: 0 }}>
-                <p className="dash-row-title">
-                  {item.type === 'song' && item.song_title
-                    ? item.song_title
-                    : (item.title || item.type.charAt(0).toUpperCase() + item.type.slice(1))}
-                </p>
-                {item.type === 'song' && item.song_author && (
-                  <p className="dash-row-meta">{item.song_author}</p>
-                )}
-                {item.notes && (
-                  <p className="dash-row-meta" style={{ fontStyle: 'italic', marginTop: 2 }}>{item.notes}</p>
-                )}
-                {item.type === 'song' && item.song_ccli_number && (
-                  <p className="dash-row-meta" style={{ marginTop: 2 }}>CCLI {item.song_ccli_number}</p>
-                )}
-              </div>
-
-              {/* Key + YouTube */}
-              <div style={{ display: 'flex', alignItems: 'center', gap: 10, flexShrink: 0 }}>
-                {item.type === 'song' && (item.key_override || item.song_default_key) && (
-                  <span className="badge-key">{item.key_override || item.song_default_key}</span>
-                )}
-                {item.type === 'song' && item.song_youtube_url && (
-                  <a
-                    href={item.song_youtube_url}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    style={{ width: 28, height: 28, background: '#e33', borderRadius: 6, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0, textDecoration: 'none' }}
-                  >
-                    <span style={{ width: 0, height: 0, borderTop: '5px solid transparent', borderBottom: '5px solid transparent', borderLeft: '9px solid white', marginLeft: 2 }} />
-                  </a>
-                )}
-              </div>
-            </div>
-          ))}
-        </div>
+        {(!service.items || service.items.length === 0) ? (
+          <p className="text-muted">No items in this service yet.</p>
+        ) : (
+          <>
+            <p style={{ fontSize: 'var(--text-sm)', color: 'var(--color-text-muted)', marginBottom: 'var(--space-md)' }}>
+              Tap a song to view sheet music
+            </p>
+            {service.items.map((item: any, i: number) => (
+              <SongItem key={i} item={item} index={i} />
+            ))}
+          </>
+        )}
       </main>
 
       <footer className="app-footer">

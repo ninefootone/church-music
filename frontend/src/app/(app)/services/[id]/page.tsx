@@ -4,7 +4,7 @@ import { useState, useEffect } from 'react'
 import Link from 'next/link'
 import { useParams } from 'next/navigation'
 import { format, parseISO } from 'date-fns'
-import { ArrowLeft, Share2, Plus, Music, BookOpen, Mic2 } from 'lucide-react'
+import { ArrowLeft, Share2, Plus, Music, BookOpen, Mic2, ExternalLink } from 'lucide-react'
 import { KeyBadge, CategoryBadge } from '@/components/ui/badges'
 import { useChurch } from '@/context/ChurchContext'
 import api from '@/lib/api'
@@ -70,6 +70,9 @@ export default function ServiceDetailPage() {
             <button onClick={copyShareLink} className="btn btn-secondary btn-sm">
               <Share2 size={14} /> {copied ? 'Copied!' : 'Share'}
             </button>
+            <a href={'/s/' + service.public_token} target="_blank" rel="noopener noreferrer" className="btn btn-secondary btn-sm">
+              <ExternalLink size={14} /> Open public view
+            </a>
             {isAdmin && (
               <Link href={`/services/${id}/edit`} className="btn btn-primary btn-sm">
                 <Plus size={14} /> Edit order

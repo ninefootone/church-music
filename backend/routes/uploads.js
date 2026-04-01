@@ -21,14 +21,6 @@ const r2 = new S3Client({
 
 const BUCKET = process.env.R2_BUCKET_NAME;
 
-console.log('R2 config check:', {
-  endpoint: endpoint,
-  accountId: process.env.R2_ACCOUNT_ID ? 'SET' : 'MISSING',
-  accessKeyId: process.env.R2_ACCESS_KEY_ID ? 'SET' : 'MISSING',
-  secretKey: process.env.R2_SECRET_ACCESS_KEY ? 'SET' : 'MISSING',
-  bucket: process.env.R2_BUCKET_NAME ? 'SET' : 'MISSING',
-});
-
 const upload = multer({
   storage: multer.memoryStorage(),
   limits: { fileSize: 20 * 1024 * 1024 },
@@ -92,6 +84,28 @@ router.get('/songs/:songId/files/:fileId/url', requireAuth, requireAdmin, async 
     );
 
     res.json({ url: url });
+  } catch (err) {
+    next(err);
+  }
+});
+
+router.get('/public/songs/:songId/files', async function(req, res, next) {
+  try {
+    const files = await pool.query(
+      'SELECT * FROM song_files WHERE song_id = $1 ORDER BY key_of, file_type',
+      [req.params.songId]
+    );
+
+    const filesWithUrls = await Promise.all(files.rows.map(async function(file) {
+      const url = await getSignedUrl(
+        r2,
+        new GetObjectCommand({ Bucket: BUCKET, Key: file.r2_key }),
+        { expiresIn: 3600 }
+      );
+      return Object.assign({}, file, { url: url });
+    }));
+
+    res.json(filesWithUrls);
   } catch (err) {
     next(err);
   }
