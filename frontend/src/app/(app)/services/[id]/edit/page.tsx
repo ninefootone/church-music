@@ -319,10 +319,12 @@ export default function ServiceEditPage() {
         {/* Left — running order */}
         <div>
           {/* Label and count on same line, no overlap */}
-          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 12, gap: 8, overflow: 'hidden' }}>
-            <span style={{ fontSize: 'var(--text-xs)', fontWeight: 700, textTransform: 'uppercase' as const, letterSpacing: '0.08em', color: 'var(--color-text-muted)', whiteSpace: 'nowrap', display: 'block', flexShrink: 0 }}>Running order</span>
-            <span style={{ fontSize: 'var(--text-sm)', color: 'var(--color-text-muted)', whiteSpace: 'nowrap', flexShrink: 0 }}>
-             {items.length} item{items.length !== 1 ? 's' : ''}
+          <div style={{ position: 'relative', height: 28, marginBottom: 12 }}>
+            <span style={{ position: 'absolute', left: 0, fontSize: 'var(--text-xs)', fontWeight: 700, textTransform: 'uppercase' as const, letterSpacing: '0.08em', color: 'var(--color-text-muted)' }}>
+              Running order
+            </span>
+            <span style={{ position: 'absolute', right: 0, fontSize: 'var(--text-sm)', color: 'var(--color-text-muted)' }}>
+              {items.length} item{items.length !== 1 ? 's' : ''}
             </span>
           </div>
           {items.length === 0 ? (
