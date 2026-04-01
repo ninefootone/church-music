@@ -435,7 +435,7 @@
   .member-role {
     font-size: var(--text-sm);
     color: var(--color-text-muted);
-    text-transform: capitalize;
+    text-transform: none;
   }
 
   /* ── Songs list ── */
