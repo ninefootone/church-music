@@ -63,7 +63,7 @@ export default function ServicesPage() {
     <div>
       <div className="page-header">
         <h1 className="page-title">Services</h1>
-        {isAdmin && (
+        {church && (
           <Link href="/services/new" className="btn btn-primary">
             <Plus size={16} /> Add new service
           </Link>
