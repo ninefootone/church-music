@@ -66,13 +66,29 @@ export default function ServiceDetailPage() {
               <p style={{ fontSize: 'var(--text-md)', color: 'var(--color-text-muted)', marginTop: 2 }}>{service.title}</p>
             )}
           </div>
-          <div className="service-detail-actions">
-            <button onClick={copyShareLink} className="btn btn-secondary btn-sm">
-              <Share2 size={14} /> {copied ? 'Copied!' : 'Share'}
+                    <div className="service-detail-actions">
+            {/* Share — compact icon+label button */}
+            <button
+              onClick={copyShareLink}
+              className="btn btn-secondary"
+              style={{ padding: '7px 10px', fontSize: 'var(--text-xs)', gap: 4 }}
+              title="Copy share link"
+            >
+              <Share2 size={14} />
+              <span>{copied ? 'Copied!' : 'Share'}</span>
             </button>
-            <a href={'/s/' + service.public_token} target="_blank" rel="noopener noreferrer" className="btn btn-secondary btn-sm">
-              <ExternalLink size={14} /> Open public view
+
+            {/* Open public view */}
+            <a
+              href={'/s/' + service.public_token}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="btn btn-secondary btn-sm"
+            >
+              <ExternalLink size={14} /> Public view
             </a>
+
+            {/* Edit order — admin only */}
             {isAdmin && (
               <Link href={`/services/${id}/edit`} className="btn btn-primary btn-sm">
                 <Plus size={14} /> Edit order

@@ -64,7 +64,7 @@ export default function NewSongPage() {
       {error && <div className="error-box">{error}</div>}
 
       <div className="card">
-        <form onSubmit={handleSubmit}>
+        <form id="song-edit-form" onSubmit={handleSubmit}>
           <div style={{ marginBottom: 'var(--space-md)' }}>
             <label className="label">Song title *</label>
             <input className="input" placeholder="Start typing to search the shared library…" value={form.title} onChange={e => handleTitleChange(e.target.value)} />
@@ -130,12 +130,14 @@ export default function NewSongPage() {
               </div>
             )}
           </div>
-
-          <div style={{ borderTop: '1px solid var(--color-border)', paddingTop: 'var(--space-md)', display: 'flex', gap: 8, justifyContent: 'flex-end' }}>
-            <Link href="/songs" className="btn btn-secondary">Cancel</Link>
-            <button type="submit" className="btn btn-primary" disabled={loading}>{loading ? 'Saving…' : 'Save song'}</button>
-          </div>
         </form>
+      </div>
+      <div className="song-form-footer-spacer" />
+      <div className="song-form-footer">
+        <Link href={`/songs/${id}`} className="btn btn-secondary">Cancel</Link>
+        <button type="submit" form="song-edit-form" className="btn btn-primary" disabled={loading}>
+          {loading ? 'Saving...' : 'Save changes'}
+        </button>
       </div>
     </div>
   )

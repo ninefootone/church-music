@@ -902,3 +902,58 @@ textarea {
 .lyrics-text em {
   font-style: italic;
 }
+
+/* Service detail action buttons */
+.service-detail-actions {
+  display: flex;
+  gap: 8px;
+  flex-shrink: 0;
+  align-items: center;
+}
+
+.service-share-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 6px 12px;
+  font-size: var(--text-sm);
+}
+
+@media (max-width: 768px) {
+  .service-detail-header {
+    flex-direction: column;
+    gap: var(--space-sm);
+  }
+
+  .service-detail-actions {
+    width: 100%;
+    display: grid;
+    grid-template-columns: auto 1fr 1fr;
+    gap: 8px;
+  }
+
+  .service-detail-actions .btn-primary {
+    grid-column: span 1;
+  }
+}
+
+/* Fixed footer for song edit/new forms */
+.song-form-footer {
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  background: var(--color-surface);
+  border-top: 1px solid var(--color-border);
+  padding: 14px var(--space-lg);
+  display: flex;
+  justify-content: flex-end;
+  gap: 8px;
+  z-index: 50;
+  box-shadow: 0 -2px 8px rgba(0,0,0,0.06);
+}
+
+/* Spacer to prevent content being hidden behind fixed footer */
+.song-form-footer-spacer {
+  height: 72px;
+}

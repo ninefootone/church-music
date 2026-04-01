@@ -55,7 +55,7 @@ export default function EditSongPage() {
       <h1 className="page-title" style={{ marginBottom: 'var(--space-lg)' }}>Edit song</h1>
       {error && <div className="error-banner">{error}</div>}
       <div className="card">
-        <form onSubmit={handleSubmit}>
+        <form id="song-edit-form" onSubmit={handleSubmit}>
           <div style={mb}><label className="label">Song title *</label><input className="input" required value={form.title} onChange={e => setForm(f => ({ ...f, title: e.target.value }))} /></div>
           <div style={mb}><label className="label">Author(s)</label><input className="input" value={form.author} onChange={e => setForm(f => ({ ...f, author: e.target.value }))} /></div>
           <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 'var(--space-md)', ...mb }}>
@@ -89,11 +89,14 @@ export default function EditSongPage() {
               </div>
             )}
           </div>
-          <div style={{ borderTop: '1px solid var(--color-border)', paddingTop: 'var(--space-md)', display: 'flex', gap: 8, justifyContent: 'flex-end' }}>
-            <Link href={`/songs/${id}`} className="btn btn-secondary">Cancel</Link>
-            <button type="submit" className="btn btn-primary" disabled={loading}>{loading ? 'Saving…' : 'Save changes'}</button>
-          </div>
         </form>
+      </div>
+      <div className="song-form-footer-spacer" />
+      <div className="song-form-footer">
+        <Link href={`/songs/${id}`} className="btn btn-secondary">Cancel</Link>
+        <button type="submit" form="song-edit-form" className="btn btn-primary" disabled={loading}>
+          {loading ? 'Saving...' : 'Save changes'}
+        </button>
       </div>
     </div>
   )
