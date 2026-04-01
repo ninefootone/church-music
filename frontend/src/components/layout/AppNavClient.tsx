@@ -50,9 +50,12 @@ export function AppNavClient() {
 
           <div className="app-nav-right">
             {/* Desktop: show Clerk UserButton */}
-            <div className="app-nav-user-desktop">
+            <div className="app-nav-user-desktop" style={{ position: 'relative' }}>
               {user && (
-                <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                <button
+                  onClick={() => setMenuOpen(!menuOpen)}
+                  style={{ background: 'none', border: 'none', cursor: 'pointer', padding: 0, display: 'flex', alignItems: 'center', gap: 8 }}
+                >
                   {user.imageUrl ? (
                     <img src={user.imageUrl} alt="" style={{ width: 32, height: 32, borderRadius: '50%', objectFit: 'cover' }} />
                   ) : (
@@ -60,10 +63,9 @@ export function AppNavClient() {
                       {(user.firstName || user.emailAddresses[0]?.emailAddress || '?').charAt(0).toUpperCase()}
                     </div>
                   )}
-                </div>
+                </button>
               )}
             </div>
-
             {/* Mobile: hamburger */}
             <button
               className="app-nav-hamburger"
