@@ -82,7 +82,7 @@ router.get('/public/:token', async function(req, res, next) {
   }
 });
 
-router.post('/', requireAuth, requireAdmin, async function(req, res, next) {
+router.post('/', requireAuth, requireMembership, async function(req, res, next) {
   try {
     const churchId = req.churchId;
     const service_date = req.body.service_date;
@@ -116,7 +116,7 @@ router.put('/:id', requireAuth, requireAdmin, async function(req, res, next) {
   }
 });
 
-router.put('/:id/items', requireAuth, requireAdmin, async function(req, res, next) {
+router.put('/:id/items', requireAuth, requireMembership, async function(req, res, next) {
   try {
     const items = req.body.items;
     const serviceId = req.params.id;

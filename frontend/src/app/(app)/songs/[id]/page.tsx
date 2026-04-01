@@ -11,6 +11,7 @@ import { FileUploadModal } from '@/components/ui/FileUploadModal'
 import { Song } from '@/types'
 import api from '@/lib/api'
 import { useChurch } from '@/context/ChurchContext'
+import { AddToServiceModal } from '@/components/ui/AddToServiceModal'
 
 export default function SongDetailPage() {
   const { id } = useParams()
@@ -22,6 +23,7 @@ export default function SongDetailPage() {
   const [showUploadModal, setShowUploadModal] = useState(false)
   const [downloadingId, setDownloadingId] = useState<string | null>(null)
   const [deletingId, setDeletingId] = useState<string | null>(null)
+  const [showAddToService, setShowAddToService] = useState(false)
 
   const fetchSong = useCallback(() => {
     if (!id || churchLoading) return
@@ -111,6 +113,13 @@ export default function SongDetailPage() {
         />
       )}
 
+      {showAddToService && song && (
+        <AddToServiceModal
+          song={song}
+          onClose={() => setShowAddToService(false)}
+        />
+      )}
+
       <Link href="/songs" className="back-link"><ArrowLeft size={14} /> Back to songs</Link>
 
       {/* Header */}
@@ -120,7 +129,7 @@ export default function SongDetailPage() {
           {isAdmin && (
             <div className="song-detail-actions">
               <Link href={`/songs/${song.id}/edit`} className="btn btn-sm btn-secondary"><Edit size={14} /> Edit</Link>
-              <button className="btn btn-sm btn-primary"><Plus size={14} /> Add to service</button>
+              <button onClick={() => setShowAddToService(true)} className=“btn btn-sm btn-primary”><Plus size={14} /> Add to service</button>
             </div>
           )}
         </div>

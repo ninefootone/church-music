@@ -6,6 +6,7 @@ import { format, parseISO } from 'date-fns'
 import { CategoryBadge, KeyBadge } from '@/components/ui/badges'
 import { useChurch } from '@/context/ChurchContext'
 import api from '@/lib/api'
+import { InviteMemberModal } from '@/components/ui/InviteMemberModal'
 
 export default function DashboardPage() {
   const { church, loading: churchLoading, isAdmin } = useChurch()
@@ -14,7 +15,8 @@ export default function DashboardPage() {
   const [members, setMembers] = useState<any[]>([])
   const [loading, setLoading] = useState(true)
   const fetchedRef = useRef(false)
-
+  const [showInviteModal, setShowInviteModal] = useState(false)
+  
   useEffect(() => {
     if (!church || fetchedRef.current) return
     fetchedRef.current = true
@@ -25,12 +27,6 @@ export default function DashboardPage() {
       api.get('/api/members').then(r => setMembers(r.data)),
     ]).finally(() => setLoading(false))
   }, [church])
-
-  const handleInvite = () => {
-    if (!church) return
-    navigator.clipboard.writeText(church.invite_code)
-    alert(`Invite code copied: ${church.invite_code}\n\nAsk them to visit app.songstack.church and choose "Join an existing church"`)
-  }
 
   if (churchLoading || (loading && !songs.length)) return (
     <p className="text-muted" style={{ padding: 'var(--space-xl)' }}>Loading…</p>
@@ -97,7 +93,7 @@ export default function DashboardPage() {
       <div className="card">
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 'var(--space-md)' }}>
           <span className="section-label" style={{ marginBottom: 0 }}>Team</span>
-          {isAdmin && <button onClick={handleInvite} className="btn btn-ghost">Invite member +</button>}
+          {isAdmin && <button onClick={() => setShowInviteModal(true)} className=“btn btn-ghost”>Invite member +</button>}
         </div>
         {members.map((member) => (
           <div key={member.id} className="member-row">
@@ -111,6 +107,14 @@ export default function DashboardPage() {
           </div>
         ))}
       </div>
+
+    {showInviteModal && church && (
+      <InviteMemberModal
+        church={church}
+        onClose={() => setShowInviteModal(false)}
+      />
+    )} 
+
     </div>
   )
 }
