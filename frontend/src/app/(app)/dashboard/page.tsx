@@ -93,20 +93,54 @@ export default function DashboardPage() {
       <div className="card">
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 'var(--space-md)' }}>
           <span className="section-label" style={{ marginBottom: 0 }}>Team</span>
-          {isAdmin && <button onClick={() => setShowInviteModal(true)} className="btn btn-ghost">Invite member +</button>}
+          {isAdmin && (
+            <button onClick={() => setShowInviteModal(true)} className="btn btn-ghost">
+              Invite member +
+            </button>
+          )}
         </div>
         {members.map((member) => (
           <div key={member.id} className="member-row">
             <div className="member-avatar">
               {(member.name || member.email || '?').charAt(0).toUpperCase()}
             </div>
-            <div>
+            <div style={{ flex: 1, minWidth: 0 }}>
               <p className="member-name">{member.name || member.email}</p>
-              <p className="member-role">{member.role}</p>
+              {member.name && member.email && (
+                <p className="member-role">{member.email}</p>
+              )}
             </div>
+            {isAdmin ? (
+              <select
+                value={member.role}
+                onChange={async (e) => {
+                  try {
+                    await api.put(`/api/members/${member.id}/role`, { role: e.target.value })
+                    setMembers(prev => prev.map(m =>
+                      m.id === member.id ? { ...m, role: e.target.value } : m
+                    ))
+                  } catch (err) {
+                    console.error('Failed to update role:', err)
+                  }
+                }}
+                style={{ padding: '4px 8px', border: '1px solid var(--color-border)', borderRadius: 'var(--radius-sm)', fontFamily: 'inherit', fontSize: 'var(--text-sm)', background: 'var(--color-surface)', color: 'var(--color-text-secondary)', cursor: 'pointer' }}
+              >
+                <option value="member">Member</option>
+                <option value="admin">Admin</option>
+              </select>
+            ) : (
+              <p className="member-role" style={{ textTransform: 'capitalize' }}>{member.role}</p>
+            )}
           </div>
         ))}
+        {showInviteModal && church && (
+          <InviteMemberModal
+            church={church}
+            onClose={() => setShowInviteModal(false)}
+          />
+        )}
       </div>
+
 
     {showInviteModal && church && (
       <InviteMemberModal
