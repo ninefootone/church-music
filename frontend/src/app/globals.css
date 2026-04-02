@@ -183,16 +183,20 @@
   }
 
   input[type="date"] {
+    -webkit-appearance: none;
+    appearance: none;
     max-width: 100%;
     width: 100%;
     box-sizing: border-box;
     padding-left: 8px;
     padding-right: 8px;
   }
+
   .input:focus {
     border-color: var(--color-brand-400);
     box-shadow: 0 0 0 3px rgba(74,127,165,0.1);
   }
+  
   .input::placeholder { color: var(--color-text-muted); }
 
   .label {
