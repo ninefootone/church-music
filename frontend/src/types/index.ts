@@ -78,6 +78,8 @@ export interface Song {
   template_status: TemplateStatus | null
   contributed_by: string | null
   created_at: string
+  last_sung?: string | null
+  times_planned?: number | null
   tags?: string[]
   files?: SongFile[]
   usage?: {
