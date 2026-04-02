@@ -89,7 +89,7 @@ export default function SongsPage() {
                 {!song.usage?.last_sung && Number(song.usage?.times_planned) > 0 && (
                   <span>Last sung {format(parseISO(song.usage!.last_sung!), 'd MMM yyyy')}</span>
                 )}
-                {!song.usage?.last_sung && song.usage?.times_planned > 0 && (
+                {!song.usage?.last_sung && Number(song.usage?.times_planned ?? 0) > 0 && (
                   <span>Planned</span>
                 )}
               </div>
