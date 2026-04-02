@@ -70,7 +70,8 @@ router.get('/:id', requireAuth, requireMembership, async (req, res, next) => {
       `SELECT
         COUNT(*) FILTER (WHERE srv.service_date <= NOW()) AS times_sung,
         COUNT(*) FILTER (WHERE srv.service_date > NOW()) AS times_planned,
-        MAX(srv.service_date) FILTER (WHERE srv.service_date <= NOW()) AS last_sung
+        MAX(srv.service_date) FILTER (WHERE srv.service_date <= NOW()) AS last_sung,
+        MIN(srv.service_date) FILTER (WHERE srv.service_date > NOW()) AS next_planned
        FROM service_items si
        JOIN services srv ON srv.id = si.service_id
        WHERE si.song_id = $1 AND srv.church_id = $2`,

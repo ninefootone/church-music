@@ -87,8 +87,8 @@ export default function SongsPage() {
                 )}
                 {song.last_sung
                   ? <span>Last sung {format(parseISO(song.last_sung as string), 'd MMM yyyy')}</span>
-                  : Number(song.times_planned ?? 0) > 0
-                    ? <span>Planned</span>
+                  : song.next_planned
+                    ? <span>Planned {format(parseISO(song.next_planned as string), 'd MMM yyyy')}</span>
                     : null
                 }
               </div>

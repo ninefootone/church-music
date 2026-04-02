@@ -49,9 +49,15 @@ export default function DashboardPage() {
               <div style={{ flex: 1, minWidth: 0 }}>
                 <p className="dash-row-title" style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{song.title}</p>
                 <p className="dash-row-meta">
-                  <span style={{ fontStyle: song.first_line ? 'italic' : 'normal' }}>
-                    {song.first_line || song.author}
-                  </span>
+                  {song.first_line && (
+                    <span style={{ fontStyle: 'italic' }}>{song.first_line}</span>
+                  )}
+                  {song.last_sung
+                    ? <span>Last sung {format(parseISO(song.last_sung as string), 'd MMM yyyy')}</span>
+                    : song.next_planned
+                      ? <span>Planned {format(parseISO(song.next_planned as string), 'd MMM yyyy')}</span>
+                      : null
+                  }
                 </p>
               </div>
               {song.category && <CategoryBadge category={song.category} />}
