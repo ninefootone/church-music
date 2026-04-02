@@ -38,9 +38,7 @@ export default function NewServicePage() {
         <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-md)' }}>
           <div>
             <label className="label">Date *</label>
-            <div style={{ overflow: 'hidden', borderRadius: 'var(--radius-md)' }}>
-              <input className="input" type="date" required value={form.service_date} onChange={e => setForm(f => ({ ...f, service_date: e.target.value }))} />
-            </div>
+            <input className="input" type="date" required value={form.service_date} onChange={e => setForm(f => ({ ...f, service_date: e.target.value }))} />
           </div>
           <div>
             <label className="label">Time</label>

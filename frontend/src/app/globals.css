@@ -190,6 +190,7 @@
     box-sizing: border-box;
     padding-left: 8px;
     padding-right: 8px;
+     min-height: 46px;
   }
 
   .input:focus {
