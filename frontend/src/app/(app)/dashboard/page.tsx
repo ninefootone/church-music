@@ -3,7 +3,7 @@
 import { useState, useEffect, useRef } from 'react'
 import Link from 'next/link'
 import { format, parseISO } from 'date-fns'
-import { CategoryBadge } from '@/components/ui/badges'
+import { CategoryBadge, KeyBadge } from '@/components/ui/badges'
 import { useChurch } from '@/context/ChurchContext'
 import api from '@/lib/api'
 import { InviteMemberModal } from '@/components/ui/InviteMemberModal'
