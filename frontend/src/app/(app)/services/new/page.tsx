@@ -42,7 +42,7 @@ export default function NewServicePage() {
           </div>
           <div>
             <label className="label">Time</label>
-            <input className="input" type="text" ... />
+            <input className="input" type="text" placeholder="e.g. 9.15am" value={form.service_time} onChange={e => setForm(f => ({ ...f, service_time: e.target.value }))} />
           </div>
           <div>
             <label className="label">Title <span style={{ fontWeight: 400, textTransform: 'none', letterSpacing: 0, fontSize: 'var(--text-sm)', color: 'var(--color-text-muted)' }}>(optional)</span></label>
