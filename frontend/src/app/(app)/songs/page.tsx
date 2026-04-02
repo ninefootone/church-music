@@ -82,13 +82,15 @@ export default function SongsPage() {
             <div style={{ flex: 1, minWidth: 0 }}>
               <div className="song-title" style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{song.title}</div>
               <div className="song-meta">
-                {song.first_line
-                  ? <span style={{ fontStyle: 'italic' }}>{song.first_line}</span>
-                  : <span>{song.author}</span>
-                }
-                {song.usage?.last_sung && (
-                  <span>Last sung {format(parseISO(song.usage.last_sung), 'd MMM yyyy')}</span>
+                {song.first_line && (
+                  <span style={{ fontStyle: 'italic' }}>{song.first_line}</span>
                 )}
+                {song.last_sung
+                  ? <span>Last sung {format(parseISO(song.last_sung as string), 'd MMM yyyy')}</span>
+                  : Number(song.times_planned ?? 0) > 0
+                    ? <span>Planned</span>
+                    : null
+                }
               </div>
             </div>
             <div style={{ display: 'flex', alignItems: 'center', gap: 10, flexShrink: 0 }}>

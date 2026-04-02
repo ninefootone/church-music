@@ -49,8 +49,9 @@ export default function DashboardPage() {
               <div style={{ flex: 1, minWidth: 0 }}>
                 <p className="dash-row-title" style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{song.title}</p>
                 <p className="dash-row-meta">
-                  <span>{song.author}</span>
-                  {song.default_key && <KeyBadge keyOf={song.default_key} />}
+                  <span style={{ fontStyle: song.first_line ? 'italic' : 'normal' }}>
+                    {song.first_line || song.author}
+                  </span>
                 </p>
               </div>
               {song.category && <CategoryBadge category={song.category} />}
