@@ -2,9 +2,9 @@
 
 import { useState, useEffect } from 'react'
 import Link from 'next/link'
-import { useParams } from 'next/navigation'
+import { useParams, useRouter } from 'next/navigation'
 import { format, parseISO } from 'date-fns'
-import { ArrowLeft, Share2, Plus, Music, BookOpen, Mic2, ExternalLink } from 'lucide-react'
+import { ArrowLeft, Share2, Plus, Music, BookOpen, Mic2, ExternalLink, Trash2 } from 'lucide-react'
 import { KeyBadge, CategoryBadge } from '@/components/ui/badges'
 import { useChurch } from '@/context/ChurchContext'
 import api from '@/lib/api'
@@ -18,6 +18,7 @@ const typeIcon = (type: string) => {
 
 export default function ServiceDetailPage() {
   const { id } = useParams()
+  const router = useRouter()
   const { isAdmin, loading: churchLoading } = useChurch()
   const [service, setService] = useState<any>(null)
   const [loading, setLoading] = useState(true)
@@ -93,6 +94,19 @@ export default function ServiceDetailPage() {
               <Link href={`/services/${id}/edit`} className="btn btn-primary btn-sm">
                 <Plus size={14} /> Edit order
               </Link>
+            )}
+            {isAdmin && (
+              <button
+                onClick={async () => {
+                  if (!confirm('Delete this service? This cannot be undone.')) return
+                  await api.delete(`/api/services/${id}`)
+                  router.push('/services')
+                }}
+                className="btn btn-secondary btn-sm"
+                style={{ color: '#9a3a3a' }}
+              >
+                <Trash2 size={14} /> Delete
+              </button>
             )}
           </div>
         </div>

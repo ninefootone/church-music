@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useCallback } from 'react'
 import Link from 'next/link'
-import { useParams } from 'next/navigation'
+import { useParams, useRouter } from 'next/navigation'
 import { format, parseISO } from 'date-fns'
 import { ArrowLeft, Download, ExternalLink, Edit, Plus, Trash2 } from 'lucide-react'
 import { CategoryBadge, KeyBadge } from '@/components/ui/badges'
@@ -15,6 +15,7 @@ import { AddToServiceModal } from '@/components/ui/AddToServiceModal'
 
 export default function SongDetailPage() {
   const { id } = useParams()
+  const router = useRouter()
   const { isAdmin, loading: churchLoading } = useChurch()
   const [song, setSong] = useState<Song | null>(null)
   const [loading, setLoading] = useState(true)
@@ -130,6 +131,17 @@ export default function SongDetailPage() {
             <div className="song-detail-actions">
               <Link href={`/songs/${song.id}/edit`} className="btn btn-sm btn-secondary"><Edit size={14} /> Edit</Link>
               <button onClick={() => setShowAddToService(true)} className="btn btn-sm btn-primary"><Plus size={14} /> Add to service</button>
+              <button
+                onClick={async () => {
+                  if (!confirm('Delete this song? This cannot be undone.')) return
+                  await api.delete(`/api/songs/${song.id}`)
+                  router.push('/songs')
+                }}
+                className="btn btn-sm btn-secondary"
+                style={{ color: '#9a3a3a' }}
+              >
+                <Trash2 size={14} /> Delete
+              </button>
             </div>
           )}
         </div>

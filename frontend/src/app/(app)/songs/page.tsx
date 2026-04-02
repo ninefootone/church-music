@@ -3,11 +3,11 @@
 import { useState, useEffect } from 'react'
 import Link from 'next/link'
 import { format } from 'date-fns'
-import { Search, Plus, ChevronRight } from 'lucide-react'
-import { CategoryBadge, KeyBadge } from '@/components/ui/badges'
+import { CategoryBadge } from '@/components/ui/badges'
 import { CATEGORIES, Category, Song } from '@/types'
 import { useChurch } from '@/context/ChurchContext'
 import api from '@/lib/api'
+import { format, parseISO } from 'date-fns'
 
 export default function SongsPage() {
   const { church, loading: churchLoading, isAdmin } = useChurch()
@@ -82,9 +82,16 @@ export default function SongsPage() {
             <div style={{ flex: 1, minWidth: 0 }}>
               <div className="song-title" style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{song.title}</div>
               <div className="song-meta">
-                <span>{song.author}</span>
-                {song.default_key && <KeyBadge keyOf={song.default_key} />}
-                {song.usage?.last_sung && <span>Last sung {format(new Date(song.usage.last_sung), 'd MMM yyyy')}</span>}
+                {song.first_line 
+                  ? <span style={{ fontStyle: 'italic' }}>{song.first_line}</span>
+                  : <span>{song.author}</span>
+                }
+                {!song.usage?.last_sung && Number(song.usage?.times_planned) > 0 && (
+                  <span>Last sung {format(parseISO(song.usage.last_sung), 'd MMM yyyy')}</span>
+                )}
+                {!song.usage?.last_sung && song.usage?.times_planned > 0 && (
+                  <span>Planned</span>
+                )}
               </div>
             </div>
             <div style={{ display: 'flex', alignItems: 'center', gap: 10, flexShrink: 0 }}>

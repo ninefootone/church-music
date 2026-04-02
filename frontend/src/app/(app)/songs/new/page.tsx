@@ -118,7 +118,7 @@ export default function NewSongPage() {
 
           <div style={{ marginBottom: 'var(--space-md)' }}>
             <label className="label">Tags <span style={{ fontWeight: 400, textTransform: 'none', letterSpacing: 0, fontSize: 13 }}>(comma separated)</span></label>
-            <input className="input" placeholder="Thanksgiving, Cross, New Wine 2025" value={form.tags} onChange={e => setForm(f => ({ ...f, tags: e.target.value }))} />
+            <input className="input" placeholder="God's Faithfulness, Grace, The Cross" value={form.tags} onChange={e => setForm(f => ({ ...f, tags: e.target.value }))} />
           </div>
 
           <div style={{ marginBottom: 'var(--space-md)' }}>

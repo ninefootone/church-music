@@ -3,7 +3,7 @@
 import { useState, useEffect, useRef } from 'react'
 import Link from 'next/link'
 import { format, parseISO } from 'date-fns'
-import { CategoryBadge, KeyBadge } from '@/components/ui/badges'
+import { CategoryBadge } from '@/components/ui/badges'
 import { useChurch } from '@/context/ChurchContext'
 import api from '@/lib/api'
 import { InviteMemberModal } from '@/components/ui/InviteMemberModal'
@@ -119,8 +119,8 @@ export default function DashboardPage() {
                     setMembers(prev => prev.map(m =>
                       m.id === member.id ? { ...m, role: e.target.value } : m
                     ))
-                  } catch (err) {
-                    console.error('Failed to update role:', err)
+                  } catch (err: any) {
+                    alert(err.response?.data?.error || 'Failed to update role')
                   }
                 }}
                 style={{ padding: '4px 8px', border: '1px solid var(--color-border)', borderRadius: 'var(--radius-sm)', fontFamily: 'inherit', fontSize: 'var(--text-sm)', background: 'var(--color-surface)', color: 'var(--color-text-secondary)', cursor: 'pointer' }}
@@ -139,16 +139,7 @@ export default function DashboardPage() {
             onClose={() => setShowInviteModal(false)}
           />
         )}
-      </div>
-
-
-    {showInviteModal && church && (
-      <InviteMemberModal
-        church={church}
-        onClose={() => setShowInviteModal(false)}
-      />
-    )} 
-
+      </div> 
     </div>
   )
 }

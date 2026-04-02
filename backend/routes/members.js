@@ -3,8 +3,7 @@ const router = express.Router();
 const pool = require('../db/pool');
 const { requireAuth, requireMembership, requireAdmin } = require('../middleware/auth');
 
-// GET /members — list church members
-router.get('/', requireAuth, requireMembership, async (req, res, next) => {
+router.get('/', requireAuth, requireMembership, async function(req, res, next) {
   try {
     const result = await pool.query(
       `SELECT m.id, m.role, m.joined_at, u.id AS user_id, u.name, u.email
@@ -20,13 +19,27 @@ router.get('/', requireAuth, requireMembership, async (req, res, next) => {
   }
 });
 
-// PUT /members/:membershipId/role — change role (admin)
-router.put('/:membershipId/role', requireAuth, requireAdmin, async (req, res, next) => {
+router.put('/:membershipId/role', requireAuth, requireAdmin, async function(req, res, next) {
   try {
     const { role } = req.body;
     if (!['admin', 'member', 'revoked'].includes(role)) {
       return res.status(400).json({ error: 'Invalid role' });
     }
+
+    // Prevent removing last admin
+    if (role !== 'admin') {
+      const adminCount = await pool.query(
+        `SELECT COUNT(*) FROM memberships 
+         WHERE church_id = $1 AND role = 'admin' AND id != $2`,
+        [req.churchId, req.params.membershipId]
+      );
+      if (parseInt(adminCount.rows[0].count) === 0) {
+        return res.status(400).json({ 
+          error: 'Cannot remove the last admin. Promote another member to admin first.' 
+        });
+      }
+    }
+
     const result = await pool.query(
       `UPDATE memberships SET role = $1 WHERE id = $2 AND church_id = $3 RETURNING *`,
       [role, req.params.membershipId, req.churchId]
@@ -38,9 +51,25 @@ router.put('/:membershipId/role', requireAuth, requireAdmin, async (req, res, ne
   }
 });
 
-// DELETE /members/:membershipId — remove member (admin)
-router.delete('/:membershipId', requireAuth, requireAdmin, async (req, res, next) => {
+router.delete('/:membershipId', requireAuth, requireAdmin, async function(req, res, next) {
   try {
+    // Check not removing last admin
+    const membership = await pool.query(
+      'SELECT role FROM memberships WHERE id = $1',
+      [req.params.membershipId]
+    );
+    if (membership.rows[0]?.role === 'admin') {
+      const adminCount = await pool.query(
+        `SELECT COUNT(*) FROM memberships 
+         WHERE church_id = $1 AND role = 'admin' AND id != $2`,
+        [req.churchId, req.params.membershipId]
+      );
+      if (parseInt(adminCount.rows[0].count) === 0) {
+        return res.status(400).json({ 
+          error: 'Cannot remove the last admin.' 
+        });
+      }
+    }
     await pool.query(
       `UPDATE memberships SET role = 'revoked' WHERE id = $1 AND church_id = $2`,
       [req.params.membershipId, req.churchId]

@@ -1,26 +1,28 @@
 export type Role = 'admin' | 'member'
-
 export type TemplateStatus = 'pending' | 'approved' | 'rejected'
-
 export type FileType = 'chords' | 'lead' | 'vocal' | 'full_score'
 
 export type Category =
   | 'praise'
-  | 'confession'
   | 'assurance'
+  | 'response'
   | 'communion'
   | 'lament'
-  | 'response'
-  | 'sending'
+  | 'easter'
+  | 'christmas'
+  | 'all_age'
+  | 'other'
 
 export const CATEGORIES: { value: Category; label: string }[] = [
   { value: 'praise',     label: 'Praise' },
-  { value: 'confession', label: 'Confession' },
   { value: 'assurance',  label: 'Assurance' },
+  { value: 'response',   label: 'Response' },
   { value: 'communion',  label: 'Communion' },
   { value: 'lament',     label: 'Lament' },
-  { value: 'response',   label: 'Response' },
-  { value: 'sending',    label: 'Sending' },
+  { value: 'easter',     label: 'Easter' },
+  { value: 'christmas',  label: 'Christmas' },
+  { value: 'all_age',    label: 'All-age' },
+  { value: 'other',      label: 'Other' },
 ]
 
 export interface Church {
@@ -28,6 +30,7 @@ export interface Church {
   name: string
   slug: string
   invite_code: string
+  role: 'admin' | 'member'
   created_at: string
 }
 
@@ -45,7 +48,8 @@ export interface Membership {
   user_id: string
   role: Role
   joined_at: string
-  user?: User
+  name?: string
+  email?: string
 }
 
 export interface SongFile {
@@ -83,8 +87,8 @@ export interface Song {
   }
   recent_services?: {
     id: string
-    date: string
-    key_used: string | null
+    service_date: string
+    key_override: string | null
     service_time: string | null
   }[]
 }
@@ -92,7 +96,7 @@ export interface Song {
 export interface ServiceItem {
   id: string
   service_id: string
-  type: 'song' | 'reading' | 'prayer' | 'sermon' | 'confession' | 'welcome' | 'custom'
+  type: string
   song_id: string | null
   title: string | null
   notes: string | null
