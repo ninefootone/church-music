@@ -2,7 +2,6 @@
 
 import { useState, useEffect } from 'react'
 import Link from 'next/link'
-import { format } from 'date-fns'
 import { CategoryBadge } from '@/components/ui/badges'
 import { CATEGORIES, Category, Song } from '@/types'
 import { useChurch } from '@/context/ChurchContext'

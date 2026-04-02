@@ -38,7 +38,7 @@ export default function NewServicePage() {
         <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-md)' }}>
           <div>
             <label className="label">Date *</label>
-            <input className="input" type="date" ... style={{ maxWidth: '100%' }} />
+            <input className="input" type="date" required value={form.service_date} onChange={e => setForm(f => ({ ...f, service_date: e.target.value }))} style={{ maxWidth: '100%' }} />
           </div>
           <div>
             <label className="label">Time</label>
