@@ -182,13 +182,13 @@
     line-height: 1.5;
   }
 
-  @media (max-width: 768px) {
-    input[type="date"] {
-      padding-left: 8px;
-      padding-right: 8px;
-    }
+  input[type="date"] {
+    max-width: 100%;
+    width: 100%;
+    box-sizing: border-box;
+    padding-left: 8px;
+    padding-right: 8px;
   }
-
   .input:focus {
     border-color: var(--color-brand-400);
     box-shadow: 0 0 0 3px rgba(74,127,165,0.1);
