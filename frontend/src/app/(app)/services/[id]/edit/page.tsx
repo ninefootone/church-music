@@ -3,6 +3,8 @@
 import { useState, useEffect } from 'react'
 import Link from 'next/link'
 import { useParams, useRouter } from 'next/navigation'
+import { useAuth } from '@clerk/nextjs'
+import { setAuthToken } from '@/lib/api'
 import { format, parseISO } from 'date-fns'
 import { ArrowLeft, X, Plus, Music, Search, ChevronDown, ChevronUp, GripVertical } from 'lucide-react'
 import {
@@ -185,6 +187,7 @@ export default function ServiceEditPage() {
   const { id } = useParams()
   const router = useRouter()
   const { loading: churchLoading } = useChurch()
+  const { getToken } = useAuth()
   const [service, setService] = useState<any>(null)
   const [items, setItems] = useState<ServiceItem[]>([])
   const [songs, setSongs] = useState<Song[]>([])
@@ -270,9 +273,11 @@ export default function ServiceEditPage() {
     setItems(prev => prev.map((item, i) => i === idx ? { ...item, expanded: !item.expanded } : item))
 
   const handleSave = async () => {
-    setSaving(true); setError('')
-    try {
-      await api.put(`/api/services/${id}/items`, {
+  setSaving(true); setError('')
+  try {
+    const token = await getToken()
+    setAuthToken(token)
+    await api.put(`/api/services/${id}/items`, {
         items: items.map(item => ({
           type: item.type, song_id: item.song_id || null,
           title: item.title || null, notes: item.notes || null,
