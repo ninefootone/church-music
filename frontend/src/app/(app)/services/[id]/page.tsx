@@ -8,6 +8,7 @@ import { ArrowLeft, Share2, Plus, Music, BookOpen, Mic2, ExternalLink, Trash2 } 
 import { KeyBadge, CategoryBadge } from '@/components/ui/badges'
 import { useChurch } from '@/context/ChurchContext'
 import api from '@/lib/api'
+import { ConfirmModal } from '@/components/ui/ConfirmModal'
 
 const typeIcon = (type: string) => {
   if (type === 'song') return <Music size={14} />
@@ -24,7 +25,8 @@ export default function ServiceDetailPage() {
   const [loading, setLoading] = useState(true)
   const [notFound, setNotFound] = useState(false)
   const [copied, setCopied] = useState(false)
-
+  const [showDeleteService, setShowDeleteService] = useState(false)
+  
   useEffect(() => {
     if (!id || churchLoading) return
     setLoading(true)
@@ -97,11 +99,7 @@ export default function ServiceDetailPage() {
             )}
             {isAdmin && (
               <button
-                onClick={async () => {
-                  if (!confirm('Delete this service? This cannot be undone.')) return
-                  await api.delete(`/api/services/${id}`)
-                  router.push('/services')
-                }}
+                onClick={() => setShowDeleteService(true)}
                 className="btn btn-secondary btn-sm"
                 style={{ color: '#9a3a3a' }}
               >
@@ -149,6 +147,19 @@ export default function ServiceDetailPage() {
           ))
         )}
       </div>
+{showDeleteService && (
+        <ConfirmModal
+          title="Delete service"
+          message="Are you sure you want to delete this service? This cannot be undone."
+          confirmLabel="Delete service"
+          danger
+          onConfirm={async () => {
+            await api.delete(`/api/services/${id}`)
+            router.push('/services')
+          }}
+          onCancel={() => setShowDeleteService(false)}
+        />
+      )}
     </div>
   )
 }

@@ -12,6 +12,7 @@ import { Song } from '@/types'
 import api from '@/lib/api'
 import { useChurch } from '@/context/ChurchContext'
 import { AddToServiceModal } from '@/components/ui/AddToServiceModal'
+import { ConfirmModal } from '@/components/ui/ConfirmModal'
 
 export default function SongDetailPage() {
   const { id } = useParams()
@@ -25,6 +26,8 @@ export default function SongDetailPage() {
   const [downloadingId, setDownloadingId] = useState<string | null>(null)
   const [deletingId, setDeletingId] = useState<string | null>(null)
   const [showAddToService, setShowAddToService] = useState(false)
+  const [showDeleteSong, setShowDeleteSong] = useState(false)
+  const [showDeleteFile, setShowDeleteFile] = useState<string | null>(null)
 
   const fetchSong = useCallback(() => {
     if (!id || churchLoading) return
@@ -55,12 +58,17 @@ export default function SongDetailPage() {
     }
   }
 
-  const handleDelete = async (fileId: string) => {
-    if (!song || !confirm('Delete this file?')) return
-    setDeletingId(fileId)
+  const handleDelete = (fileId: string) => {
+    setShowDeleteFile(fileId)
+  }
+
+  const confirmDeleteFile = async () => {
+    if (!song || !showDeleteFile) return
+    setDeletingId(showDeleteFile)
+    setShowDeleteFile(null)
     try {
-      await api.delete(`/api/uploads/songs/${song.id}/files/${fileId}`)
-      fetchSong() // Refresh to show updated files
+      await api.delete(`/api/uploads/songs/${song.id}/files/${showDeleteFile}`)
+      fetchSong()
     } catch (err) {
       console.error('Delete failed:', err)
     } finally {
@@ -132,11 +140,7 @@ export default function SongDetailPage() {
               <Link href={`/songs/${song.id}/edit`} className="btn btn-sm btn-secondary"><Edit size={14} /> Edit</Link>
               <button onClick={() => setShowAddToService(true)} className="btn btn-sm btn-primary"><Plus size={14} /> Add to service</button>
               <button
-                onClick={async () => {
-                  if (!confirm('Delete this song? This cannot be undone.')) return
-                  await api.delete(`/api/songs/${song.id}`)
-                  router.push('/songs')
-                }}
+                onClick={() => setShowDeleteSong(true)}
                 className="btn btn-sm btn-secondary"
                 style={{ color: '#9a3a3a' }}
               >
@@ -304,6 +308,29 @@ export default function SongDetailPage() {
           </>
         )}
       </div>
+{showDeleteSong && (
+        <ConfirmModal
+          title="Delete song"
+          message="Are you sure you want to delete this song? This cannot be undone."
+          confirmLabel="Delete song"
+          danger
+          onConfirm={async () => {
+            await api.delete(`/api/songs/${song.id}`)
+            router.push('/songs')
+          }}
+          onCancel={() => setShowDeleteSong(false)}
+        />
+      )}
+      {showDeleteFile && (
+        <ConfirmModal
+          title="Delete file"
+          message="Are you sure you want to delete this file?"
+          confirmLabel="Delete file"
+          danger
+          onConfirm={confirmDeleteFile}
+          onCancel={() => setShowDeleteFile(null)}
+        />
+      )}
     </div>
   )
 }
