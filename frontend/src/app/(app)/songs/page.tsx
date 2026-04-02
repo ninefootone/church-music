@@ -2,11 +2,12 @@
 
 import { useState, useEffect } from 'react'
 import Link from 'next/link'
+import { format, parseISO } from 'date-fns'
+import { Search, Plus, ChevronRight } from 'lucide-react'
 import { CategoryBadge } from '@/components/ui/badges'
 import { CATEGORIES, Category, Song } from '@/types'
 import { useChurch } from '@/context/ChurchContext'
 import api from '@/lib/api'
-import { format, parseISO } from 'date-fns'
 
 export default function SongsPage() {
   const { church, loading: churchLoading, isAdmin } = useChurch()
