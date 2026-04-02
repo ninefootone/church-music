@@ -86,12 +86,9 @@ export default function SongsPage() {
                   ? <span style={{ fontStyle: 'italic' }}>{song.first_line}</span>
                   : <span>{song.author}</span>
                 }
-                {song.last_sung
-                  ? <span>Last sung {format(parseISO(song.last_sung as string), 'd MMM yyyy')}</span>
-                  : Number(song.times_planned ?? 0) > 0
-                    ? <span>Planned</span>
-                    : null
-                }
+                {song.usage?.last_sung && (
+                  <span>Last sung {format(parseISO(song.usage.last_sung), 'd MMM yyyy')}</span>
+                )}
               </div>
             </div>
             <div style={{ display: 'flex', alignItems: 'center', gap: 10, flexShrink: 0 }}>
