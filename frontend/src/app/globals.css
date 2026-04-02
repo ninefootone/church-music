@@ -35,12 +35,14 @@
   --color-border-hover:   var(--color-brand-200);
 
   --cat-praise-bg:      #eef3fb; --cat-praise-text:      #3a5fa0;
-  --cat-confession-bg:  #fdf0f0; --cat-confession-text:  #9a3a3a;
   --cat-assurance-bg:   #e8f2ec; --cat-assurance-text:   #3a7a5a;
+  --cat-response-bg:    #e8f5fb; --cat-response-text:    #1a6a8a;
   --cat-communion-bg:   #f5f0fb; --cat-communion-text:   #6a3a9a;
   --cat-lament-bg:      #fdf5e8; --cat-lament-text:      #9a6a20;
-  --cat-response-bg:    #e8f5fb; --cat-response-text:    #1a6a8a;
-  --cat-sending-bg:     #f0f8e8; --cat-sending-text:     #4a7a20;
+  --cat-easter-bg:      #fef9e8; --cat-easter-text:      #92620a;
+  --cat-christmas-bg:   #f0faf0; --cat-christmas-text:   #2a6b3a;
+  --cat-all-age-bg:     #fff0f5; --cat-all-age-text:     #8a2a5a;
+  --cat-other-bg:       #f5f5f5; --cat-other-text:       #555555;
 
   --space-xs:  4px;
   --space-sm:  8px;
@@ -146,12 +148,14 @@
   /* ── Category badges ── */
   .cat-badge      { @apply badge; }
   .cat-praise     { background: var(--cat-praise-bg);     color: var(--cat-praise-text); }
-  .cat-confession { background: var(--cat-confession-bg); color: var(--cat-confession-text); }
   .cat-assurance  { background: var(--cat-assurance-bg);  color: var(--cat-assurance-text); }
+  .cat-response   { background: var(--cat-response-bg);   color: var(--cat-response-text); }
   .cat-communion  { background: var(--cat-communion-bg);  color: var(--cat-communion-text); }
   .cat-lament     { background: var(--cat-lament-bg);     color: var(--cat-lament-text); }
-  .cat-response   { background: var(--cat-response-bg);   color: var(--cat-response-text); }
-  .cat-sending    { background: var(--cat-sending-bg);    color: var(--cat-sending-text); }
+  .cat-easter     { background: var(--cat-easter-bg);     color: var(--cat-easter-text); }
+  .cat-christmas  { background: var(--cat-christmas-bg);  color: var(--cat-christmas-text); }
+  .cat-all-age    { background: var(--cat-all-age-bg);    color: var(--cat-all-age-text); }
+  .cat-other      { background: var(--cat-other-bg);      color: var(--cat-other-text); }
 
   /* ── Tags ── */
   .tag {
