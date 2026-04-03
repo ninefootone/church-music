@@ -81,16 +81,22 @@ export default function SongsPage() {
           <Link key={song.id} href={`/songs/${song.id}`} className="song-row">
             <div style={{ flex: 1, minWidth: 0 }}>
               <div className="song-title" style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{song.title}</div>
-              <div className="song-meta">
+              <div className="song-meta" style={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
                 {song.first_line && (
                   <span style={{ fontStyle: 'italic' }}>{song.first_line}</span>
                 )}
-                {song.last_sung
-                  ? <span>Last sung {format(parseISO(song.last_sung as string), 'd MMM yyyy')}</span>
-                  : song.next_planned
-                    ? <span>Planned {format(parseISO(song.next_planned as string), 'd MMM yyyy')}</span>
-                    : null
-                }
+                <div style={{ display: 'flex', gap: 10 }}>
+                  {song.last_sung && (
+                    <span style={{ fontWeight: 600, fontSize: 'var(--text-sm)' }}>
+                      Last sung {format(parseISO(song.last_sung as string), 'd MMM yyyy')}
+                    </span>
+                  )}
+                  {song.next_planned && (
+                    <span style={{ fontWeight: 600, fontSize: 'var(--text-sm)' }}>
+                      Planned {format(parseISO(song.next_planned as string), 'd MMM yyyy')}
+                    </span>
+                  )}
+                </div>
               </div>
             </div>
             <div style={{ display: 'flex', alignItems: 'center', gap: 10, flexShrink: 0 }}>
