@@ -308,7 +308,7 @@ export default function SongDetailPage() {
             className="btn btn-secondary"
             style={{ color: '#9a3a3a' }}
           >
-            <Trash2 size={14} /> Delete service
+            <Trash2 size={14} /> Delete song
           </button>
         </div>
       )}
