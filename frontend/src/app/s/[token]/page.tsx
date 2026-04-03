@@ -58,12 +58,9 @@ function SongItem({ item, index }: { item: any; index: number }) {
         {typeIcon(item.type)}
 
         <div style={{ flex: 1, minWidth: 0 }}>
-          <p style={{ fontSize: 'var(--text-md)', fontWeight: isSong ? 600 : 400, color: isSong ? 'var(--color-text-primary)' : 'var(--color-text-secondary)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', marginBottom: isSong && item.song_author ? 2 : 0 }}>
+          <p style={{ fontSize: 'var(--text-md)', fontWeight: isSong ? 600 : 400, color: isSong ? 'var(--color-text-primary)' : 'var(--color-text-secondary)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', marginBottom: 0 }}>
             {isSong && item.song_title ? item.song_title : (item.title || item.type)}
           </p>
-          {isSong && item.song_author && (
-            <p style={{ fontSize: 'var(--text-sm)', color: 'var(--color-text-muted)' }}>{item.song_author}</p>
-          )}
           {item.notes && (
             <p style={{ fontSize: 'var(--text-sm)', color: 'var(--color-text-muted)', fontStyle: 'italic', marginTop: 2 }}>{item.notes}</p>
           )}
