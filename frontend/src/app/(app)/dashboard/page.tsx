@@ -52,7 +52,7 @@ export default function DashboardPage() {
                   {song.first_line && (
                     <span className="dash-row-meta" style={{ fontStyle: 'italic' }}>{song.first_line}</span>
                   )}
-                  <div style={{ display: 'flex', column-gap: 20 , row-gap: 0 , flex-wrap: 'wrap' }}>
+                  <div style={{ display: 'flex', columnGap: 20 , rowGap: 0 , flexWrap: 'wrap' }}>
                     {song.last_sung && (
                       <span className="dash-row-meta" style={{ fontWeight: 600, fontSize: 'var(--text-sm)' }}>
                         Last sung {format(parseISO(song.last_sung as string), 'd MMM yyyy')}
