@@ -54,13 +54,13 @@ export default function DashboardPage() {
                   )}
                   <div style={{ display: 'flex', columnGap: 20 , rowGap: 0 , flexWrap: 'wrap' }}>
                     {song.last_sung && (
-                      <span className="dash-row-meta" style={{ fontWeight: 600, fontSize: 'var(--text-sm)' }}>
-                        Last sung {format(parseISO(song.last_sung as string), 'd MMM yyyy')}
+                      <span className="dash-row-meta" style={{ fontWeight: 400, fontSize: 'var(--text-sm)' }}>
+                        <strong style={{ fontWeight: 600 }}>Last sung</strong>{' '}{format(parseISO(song.last_sung as string), 'd MMM yyyy')}
                       </span>
                     )}
                     {song.next_planned && (
-                      <span className="dash-row-meta" style={{ fontWeight: 600, fontSize: 'var(--text-sm)' }}>
-                        Planned {format(parseISO(song.next_planned as string), 'd MMM yyyy')}
+                      <span className="dash-row-meta" style={{ fontWeight: 400, fontSize: 'var(--text-sm)' }}>
+                        <strong style={{ fontWeight: 600 }}>Planned</strong>{' '}{format(parseISO(song.next_planned as string), 'd MMM yyyy')}
                       </span>
                     )}
                   </div>
