@@ -48,17 +48,23 @@ export default function DashboardPage() {
             <Link key={song.id} href={`/songs/${song.id}`} className="dash-row">
               <div style={{ flex: 1, minWidth: 0 }}>
                 <p className="dash-row-title" style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{song.title}</p>
-                <p className="dash-row-meta">
+                <div style={{ display: 'flex', flexDirection: 'column', gap: 2, alignItems: 'flex-start' }}>
                   {song.first_line && (
-                    <span style={{ fontStyle: 'italic' }}>{song.first_line}</span>
+                    <span className="dash-row-meta" style={{ fontStyle: 'italic' }}>{song.first_line}</span>
                   )}
-                  {song.last_sung
-                    ? <span>Last sung {format(parseISO(song.last_sung as string), 'd MMM yyyy')}</span>
-                    : song.next_planned
-                      ? <span>Planned {format(parseISO(song.next_planned as string), 'd MMM yyyy')}</span>
-                      : null
-                  }
-                </p>
+                  <div style={{ display: 'flex', gap: 10 }}>
+                    {song.last_sung && (
+                      <span className="dash-row-meta" style={{ fontWeight: 600, fontSize: 'var(--text-sm)' }}>
+                        Last sung {format(parseISO(song.last_sung as string), 'd MMM yyyy')}
+                      </span>
+                    )}
+                    {song.next_planned && (
+                      <span className="dash-row-meta" style={{ fontWeight: 600, fontSize: 'var(--text-sm)' }}>
+                        Planned {format(parseISO(song.next_planned as string), 'd MMM yyyy')}
+                      </span>
+                    )}
+                  </div>
+                </div>
               </div>
               {song.category && <CategoryBadge category={song.category} />}
             </Link>
