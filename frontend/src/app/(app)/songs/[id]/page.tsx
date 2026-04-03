@@ -304,7 +304,7 @@ export default function SongDetailPage() {
       {isAdmin && (
         <div style={{ marginTop: 'var(--space-md)', display: 'flex', justifyContent: 'flex-end' }}>
           <button
-            onClick={() => setShowDeleteService(true)}
+            onClick={() => setShowDeleteSong(true)}
             className="btn btn-secondary"
             style={{ color: '#9a3a3a' }}
           >
