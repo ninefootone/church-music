@@ -79,9 +79,7 @@ export default function StatsPage() {
                 <div style={{ fontSize: 20, fontWeight: 700, color: 'var(--color-brand-200)', width: 36, textAlign: 'center', flexShrink: 0 }}>{i + 1}</div>
                 <div style={{ flex: 1 }}>
                   <div className="song-title">{song.title}</div>
-                  <div className="song-meta">{song.author}</div>
                 </div>
-                {song.category && <CategoryBadge category={song.category as Category} />}
                 <div style={{ textAlign: 'right', flexShrink: 0 }}>
                   <div className="stat-number" style={{ fontSize: 20 }}>{song.times_sung}</div>
                   <div className="stat-label">times</div>
