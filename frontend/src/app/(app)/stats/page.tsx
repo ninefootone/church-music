@@ -83,7 +83,7 @@ export default function StatsPage() {
                 </div>
                 {song.category && <CategoryBadge category={song.category as Category} />}
                 <div style={{ textAlign: 'right', flexShrink: 0 }}>
-                  <div className="stat-number" style={{ fontSize: 20 }}>{song.count}</div>
+                  <div className="stat-number" style={{ fontSize: 20 }}>{song.times_sung}</div>
                   <div className="stat-label">times</div>
                 </div>
               </div>

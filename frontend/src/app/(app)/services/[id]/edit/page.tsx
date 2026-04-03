@@ -333,7 +333,7 @@ export default function ServiceEditPage() {
           </div>
           {items.length === 0 ? (
             <div className="card" style={{ textAlign: 'center', padding: 'var(--space-xl)' }}>
-              <p className="text-muted">Add songs and items from the panel above</p>
+              <p className="text-muted">Add songs and other items</p>
             </div>
           ) : (
             <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={handleDragEnd}>
