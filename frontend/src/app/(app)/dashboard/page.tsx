@@ -50,7 +50,7 @@ export default function DashboardPage() {
                 <p className="dash-row-title" style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{song.title}</p>
                 <div style={{ display: 'flex', flexDirection: 'column', gap: 2, alignItems: 'flex-start' }}>
                   {song.first_line && (
-                    <span className="dash-row-meta" style={{ fontStyle: 'italic' }}>{song.first_line}</span>
+                    <span className="dash-row-meta" style={{ fontStyle: 'italic' , lineHeight: '1.4em' }}>{song.first_line}</span>
                   )}
                   <div style={{ display: 'flex', columnGap: 20 , rowGap: 0 , flexWrap: 'wrap' }}>
                     {song.last_sung && (
