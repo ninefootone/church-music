@@ -14,7 +14,8 @@ router.get('/', requireAuth, requireMembership, async (req, res, next) => {
         ARRAY_AGG(DISTINCT t.name) FILTER (WHERE t.name IS NOT NULL) AS tags,
         COUNT(DISTINCT ss.id) FILTER (WHERE srv.service_date <= NOW()) AS times_sung,
         COUNT(DISTINCT ss.id) FILTER (WHERE srv.service_date > NOW()) AS times_planned,
-        MAX(srv.service_date) FILTER (WHERE srv.service_date <= NOW()) AS last_sung
+        MAX(srv.service_date) FILTER (WHERE srv.service_date <= NOW()) AS last_sung,
+        MIN(srv.service_date) FILTER (WHERE srv.service_date > NOW()) AS next_planned
       FROM songs s
       LEFT JOIN song_tags st ON st.song_id = s.id
       LEFT JOIN tags t ON t.id = st.tag_id
