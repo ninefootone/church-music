@@ -586,6 +586,7 @@
     font-family: inherit;
     cursor: pointer;
     transition: all var(--transition-fast);
+    text-align:left;
   }
   .download-btn:hover { background: var(--color-brand-50); border-color: var(--color-brand-200); color: var(--color-brand-600); }
   .youtube-link {
@@ -629,6 +630,15 @@
     font-weight: 600;
     text-transform: uppercase;
     letter-spacing: 0.06em;
+  }
+
+  @media (max-width: 480px) {
+  .usage-stats-grid {
+      grid-template-columns: 1fr 1fr !important;
+    }
+    .usage-stats-grid .stat-box:last-child {
+      grid-column: span 2;
+    }
   }
 
   /* ── Services ── */

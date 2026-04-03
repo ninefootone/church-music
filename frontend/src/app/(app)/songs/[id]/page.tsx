@@ -272,7 +272,7 @@ export default function SongDetailPage() {
       {/* Usage */}
       <div className="card">
         <div className="section-label">Usage</div>
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 'var(--space-md)', marginBottom: 'var(--space-md)' }}>
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 'var(--space-md)', marginBottom: 'var(--space-md)' }} className="usage-stats-grid">
           <div className="stat-box">
             <div className="stat-number">{song.usage?.times_sung || 0}</div>
             <div className="stat-label">Times sung</div>
