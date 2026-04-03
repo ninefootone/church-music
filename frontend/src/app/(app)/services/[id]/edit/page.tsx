@@ -114,7 +114,6 @@ function SortableItem({
                 <p className="dash-row-title" style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
                   {item.song_title}
                 </p>
-                <p className="dash-row-meta">{item.song_author}</p>
               </>
             ) : (
               <input
@@ -394,7 +393,6 @@ export default function ServiceEditPage() {
                     >
                       <div style={{ flex: 1, minWidth: 0 }}>
                         <p className="dash-row-title" style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{song.title}</p>
-                        <p className="dash-row-meta">{song.author}</p>
                       </div>
                       <div style={{ display: 'flex', alignItems: 'center', gap: 6, flexShrink: 0 }}>
                         {song.default_key && <KeyBadge keyOf={song.default_key} />}

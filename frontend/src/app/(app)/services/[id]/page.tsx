@@ -123,7 +123,6 @@ export default function ServiceDetailPage() {
                 <p className="dash-row-title">
                   {item.type === 'song' && item.song_title ? item.song_title : (item.title || item.type.charAt(0).toUpperCase() + item.type.slice(1))}
                 </p>
-                {item.type === 'song' && item.song_author && <p className="dash-row-meta">{item.song_author}</p>}
                 {item.notes && <p className="dash-row-meta" style={{ fontStyle: 'italic', marginTop: 2 }}>{item.notes}</p>}
               </div>
               <div style={{ display: 'flex', alignItems: 'center', gap: 8, flexShrink: 0 }}>
