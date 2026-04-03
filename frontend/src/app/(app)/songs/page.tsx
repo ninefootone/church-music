@@ -85,7 +85,7 @@ export default function SongsPage() {
                 {song.first_line && (
                   <span style={{ fontStyle: 'italic' }}>{song.first_line}</span>
                 )}
-                <div style={{ display: 'flex', gap: 10 }}>
+                <div style={{ display: 'flex', columnGap: 20 , rowGap: 0 , flexWrap: 'wrap' }}>
                   {song.last_sung && (
                     <span style={{ fontWeight: 600, fontSize: 'var(--text-sm)' }}>
                       Last sung {format(parseISO(song.last_sung as string), 'd MMM yyyy')}

@@ -466,7 +466,7 @@
   }
   .song-row {
     display: flex;
-    align-items: center;
+    align-items: end;
     justify-content: space-between;
     padding: 14px var(--space-md);
     border-bottom: 1px solid var(--color-border);
