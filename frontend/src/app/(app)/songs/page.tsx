@@ -81,7 +81,7 @@ export default function SongsPage() {
           <Link key={song.id} href={`/songs/${song.id}`} className="song-row">
             <div style={{ flex: 1, minWidth: 0 }}>
               <div className="song-title" style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{song.title}</div>
-              <div className="song-meta" style={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
+              <div className="song-meta" style={{ display: 'flex', flexDirection: 'column', gap: 2, alignItems: 'flex-start' }}>
                 {song.first_line && (
                   <span style={{ fontStyle: 'italic' }}>{song.first_line}</span>
                 )}
