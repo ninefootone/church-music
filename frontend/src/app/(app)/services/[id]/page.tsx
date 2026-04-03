@@ -97,15 +97,6 @@ export default function ServiceDetailPage() {
                 <Plus size={14} /> Edit order
               </Link>
             )}
-            {isAdmin && (
-              <button
-                onClick={() => setShowDeleteService(true)}
-                className="btn btn-secondary btn-sm"
-                style={{ color: '#9a3a3a' }}
-              >
-                <Trash2 size={14} /> Delete
-              </button>
-            )}
           </div>
         </div>
       </div>
@@ -147,7 +138,18 @@ export default function ServiceDetailPage() {
           ))
         )}
       </div>
-{showDeleteService && (
+      {isAdmin && (
+        <div style={{ marginTop: 'var(--space-md)', display: 'flex', justifyContent: 'flex-end' }}>
+          <button
+            onClick={() => setShowDeleteService(true)}
+            className="btn btn-secondary"
+            style={{ color: '#9a3a3a' }}
+          >
+            <Trash2 size={14} /> Delete service
+          </button>
+        </div>
+      )}
+      {showDeleteService && (
         <ConfirmModal
           title="Delete service"
           message="Are you sure you want to delete this service? This cannot be undone."

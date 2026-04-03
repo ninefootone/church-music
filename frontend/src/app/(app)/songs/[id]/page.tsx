@@ -139,13 +139,6 @@ export default function SongDetailPage() {
             <div className="song-detail-actions">
               <Link href={`/songs/${song.id}/edit`} className="btn btn-sm btn-secondary"><Edit size={14} /> Edit</Link>
               <button onClick={() => setShowAddToService(true)} className="btn btn-sm btn-primary"><Plus size={14} /> Add to service</button>
-              <button
-                onClick={() => setShowDeleteSong(true)}
-                className="btn btn-sm btn-secondary"
-                style={{ color: '#9a3a3a' }}
-              >
-                <Trash2 size={14} /> Delete
-              </button>
             </div>
           )}
         </div>
@@ -308,7 +301,18 @@ export default function SongDetailPage() {
           </>
         )}
       </div>
-{showDeleteSong && (
+      {isAdmin && (
+        <div style={{ marginTop: 'var(--space-md)', display: 'flex', justifyContent: 'flex-end' }}>
+          <button
+            onClick={() => setShowDeleteService(true)}
+            className="btn btn-secondary"
+            style={{ color: '#9a3a3a' }}
+          >
+            <Trash2 size={14} /> Delete service
+          </button>
+        </div>
+      )}
+      {showDeleteSong && (
         <ConfirmModal
           title="Delete song"
           message="Are you sure you want to delete this song? This cannot be undone."
