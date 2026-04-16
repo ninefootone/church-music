@@ -103,6 +103,21 @@ const migrate = async () => {
         key_override TEXT,
         duration_mins INTEGER
       );
+
+      ALTER TABLE songs
+        ADD COLUMN IF NOT EXISTS notes TEXT,
+        ADD COLUMN IF NOT EXISTS bible_references TEXT,
+        ADD COLUMN IF NOT EXISTS suggested_arrangement TEXT,
+        ADD COLUMN IF NOT EXISTS ccli_url TEXT;
+
+      CREATE TABLE IF NOT EXISTS song_videos (
+        id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+        song_id UUID NOT NULL REFERENCES songs(id) ON DELETE CASCADE,
+        url TEXT NOT NULL,
+        label TEXT,
+        sort_order INTEGER DEFAULT 0,
+        created_at TIMESTAMPTZ DEFAULT NOW()
+      );
     `);
     console.log('Migration complete');
   } catch (err) {
