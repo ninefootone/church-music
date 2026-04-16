@@ -183,4 +183,22 @@ router.delete('/:id', requireAuth, requireAdmin, async (req, res, next) => {
   }
 });
 
+// POST /songs/:id/videos
+router.post('/:id/videos', requireAuth, requireAdmin, async (req, res, next) => {
+  try {
+    const { url, label, sort_order } = req.body;
+    if (!url) return res.status(400).json({ error: 'url is required' });
+
+    const result = await pool.query(
+      `INSERT INTO song_videos (song_id, url, label, sort_order)
+       VALUES ($1, $2, $3, $4) RETURNING *`,
+      [req.params.id, url, label || null, sort_order || 0]
+    );
+
+    res.status(201).json(result.rows[0]);
+  } catch (err) {
+    next(err);
+  }
+});
+
 module.exports = router;
