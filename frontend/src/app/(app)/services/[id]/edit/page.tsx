@@ -42,6 +42,14 @@ const ITEM_TYPES = [
 
 const KEYS = ['C', 'C#', 'Db', 'D', 'Eb', 'E', 'F', 'F#', 'Gb', 'G', 'Ab', 'A', 'Bb', 'B']
 
+function normaliseKey(key: string | null | undefined): string {
+  if (!key) return ''
+  return key
+    .replace(/♭/g, 'b')
+    .replace(/♯/g, '#')
+    .trim()
+}
+
 interface ServiceItem {
   id: string
   type: string
@@ -224,9 +232,9 @@ export default function ServiceEditPage() {
         song_category: item.song_category,
         title: item.title || '',
         notes: item.notes || '',
-        key_override: item.key_override || '',
+        key_override: normaliseKey(item.key_override) || normaliseKey(item.song_default_key),
         expanded: false,
-      })))
+      }))
       setSongs(songsRes.data)
     }).catch(() => setError('Failed to load service'))
       .finally(() => setLoading(false))
@@ -252,7 +260,7 @@ export default function ServiceEditPage() {
       id: newId(), type: 'song', song_id: song.id,
       song_title: song.title, song_author: song.author,
       song_default_key: song.default_key, song_category: song.category,
-      title: '', notes: '', key_override: song.default_key || '', expanded: false,
+      title: '', notes: '', key_override: normaliseKey(song.default_key), expanded: false,
     }])
     setSongSearch('')
   }
