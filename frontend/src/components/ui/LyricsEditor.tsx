@@ -10,6 +10,24 @@ interface LyricsEditorProps {
   onChange: (value: string) => void
 }
 
+function wpHtmlToTiptap(html: string): string {
+  if (!html) return '<p></p>'
+  return html
+    // Replace <br> and \n with paragraph breaks
+    .replace(/<br\s*\/?>/gi, '</p><p>')
+    .split('\n')
+    .map(line => line.trim())
+    .filter(line => line.length > 0)
+    .map(line => {
+      // If line is already wrapped in a block tag leave it
+      if (line.match(/^<\/?p|^<\/?div|^<\/?h[1-6]/i)) return line
+      return `<p>${line}</p>`
+    })
+    .join('')
+    .replace(/<p><\/p>/g, '<p><br></p>')
+    .replace(/<p>(<\/?(strong|em|b|i)>)*<\/p>/g, '<p><br></p>')
+}
+
 export function LyricsEditor({ value, onChange }: LyricsEditorProps) {
   const editor = useEditor({
     extensions: [
@@ -24,7 +42,7 @@ export function LyricsEditor({ value, onChange }: LyricsEditorProps) {
         code: false,
       }),
     ],
-    content: value || '<p></p>',
+    content: wpHtmlToTiptap(value),
     onUpdate: ({ editor }) => {
       onChange(editor.getHTML())
     },
@@ -50,7 +68,7 @@ export function LyricsEditor({ value, onChange }: LyricsEditorProps) {
     if (!editor) return
     const current = editor.getHTML()
     if (current !== value && value !== undefined) {
-      editor.commands.setContent(value || '<p></p>', { emitUpdate: false })
+      editor.commands.setContent(wpHtmlToTiptap(value), { emitUpdate: false })
     }
   }, [value, editor])
 
