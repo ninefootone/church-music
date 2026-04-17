@@ -194,7 +194,7 @@ export default function ServiceEditPage() {
   const [saving, setSaving] = useState(false)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState('')
-  const [showSongPicker, setShowSongPicker] = useState(false)
+  const [showSongPicker, setShowSongPicker] = useState(true)
 
   // Support both mouse and touch
   const sensors = useSensors(
@@ -254,7 +254,6 @@ export default function ServiceEditPage() {
       song_default_key: song.default_key, song_category: song.category,
       title: '', notes: '', key_override: song.default_key || '', expanded: false,
     }])
-    setShowSongPicker(false)
     setSongSearch('')
   }
 
@@ -358,18 +357,10 @@ export default function ServiceEditPage() {
         <div className="service-edit-sidebar">
           {/* Song picker */}
           <div className="card" style={{ marginBottom: 'var(--space-md)' }}>
-            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: showSongPicker ? 'var(--space-sm)' : 0 }}>
-              <span className="section-label" style={{ marginBottom: 0 }}>Songs</span>
-              <button
-                type="button"
-                onClick={() => { setShowSongPicker(!showSongPicker); setSongSearch('') }}
-                className="btn btn-primary btn-sm"
-              >
-                <Music size={14} /> {showSongPicker ? 'Close' : 'Add song'}
-              </button>
+            <div style={{ marginBottom: 'var(--space-sm)' }}>
+              <span className="section-label">Songs</span>
             </div>
-            {showSongPicker && (
-              <>
+            <>
                 <div style={{ position: 'relative', marginTop: 'var(--space-sm)', marginBottom: 'var(--space-sm)' }}>
                   <Search size={14} style={{ position: 'absolute', left: 12, top: '50%', transform: 'translateY(-50%)', color: 'var(--color-text-muted)', pointerEvents: 'none' }} />
                   <input
@@ -400,9 +391,8 @@ export default function ServiceEditPage() {
                       </div>
                     </button>
                   ))}
-                </div>
-              </>
-            )}
+              </div>
+            </>
           </div>
 
           {/* Other items */}
