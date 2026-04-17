@@ -1,7 +1,7 @@
 const express = require('express');
 const router = express.Router();
 const pool = require('../db/pool');
-const { requireAuth } = require('../middleware/auth');
+const { requireAuth, requireAdmin } = require('../middleware/auth');
 
 const generateInviteCode = () => Math.random().toString(36).substring(2, 8).toUpperCase();
 const generateShortId = () => Math.random().toString(36).substring(2, 6);
