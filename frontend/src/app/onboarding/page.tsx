@@ -4,7 +4,7 @@ import { useState, useEffect } from 'react'
 import { useSearchParams } from 'next/navigation'
 import { useRouter } from 'next/navigation'
 import { useAuth, SignInButton } from '@clerk/nextjs'
-import { Music } from 'lucide-react'
+import { Music, ArrowLeft } from 'lucide-react'
 import api, { setAuthToken } from '@/lib/api'
 
 export default function OnboardingPage() {
@@ -109,8 +109,8 @@ export default function OnboardingPage() {
             </label>
             <input style={inputStyle} required autoFocus placeholder="e.g. Endcliffe Church" value={churchName} onChange={e => setChurchName(e.target.value)} />
             <div style={{ display: 'flex', gap: 10 }}>
-              <button type="button" onClick={() => setMode('choose')} className="btn btn-secondary" style={{ flex: 1 }}>Back</button>
-              <button type="submit" className="btn btn-primary" style={{ flex: 2 }} disabled={loading}>
+              <button type="button" onClick={() => setMode('choose')} className="btn btn-ghost" style={{ display: 'flex', alignItems: 'center', gap: 6 }}><ArrowLeft size={16} /> Back</button>
+              <button type="submit" className="btn btn-primary" style={{ marginLeft: 'auto' }} disabled={loading}>
                 {loading ? 'Creating…' : 'Create church'}
               </button>
             </div>
@@ -137,8 +137,8 @@ export default function OnboardingPage() {
             </label>
             <input style={inputStyle} required autoFocus placeholder="Enter the code from your admin" value={inviteCode} onChange={e => setInviteCode(e.target.value.toUpperCase())} maxLength={8} />
             <div style={{ display: 'flex', gap: 10 }}>
-              <button type="button" onClick={() => setMode('choose')} className="btn btn-secondary" style={{ flex: 1 }}>Back</button>
-              <button type="submit" className="btn btn-primary" style={{ flex: 2 }} disabled={loading}>
+              <button type="button" onClick={() => setMode('choose')} className="btn btn-ghost" style={{ display: 'flex', alignItems: 'center', gap: 6 }}><ArrowLeft size={16} /> Back</button>
+              <button type="submit" className="btn btn-primary" style={{ marginLeft: 'auto' }} disabled={loading}>
                 {loading ? 'Joining…' : 'Join church'}
               </button>
             </div>
