@@ -234,7 +234,7 @@ export default function ServiceEditPage() {
         notes: item.notes || '',
         key_override: normaliseKey(item.key_override) || normaliseKey(item.song_default_key),
         expanded: false,
-      }))
+      })))
       setSongs(songsRes.data)
     }).catch(() => setError('Failed to load service'))
       .finally(() => setLoading(false))
