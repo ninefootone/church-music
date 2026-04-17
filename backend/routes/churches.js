@@ -51,6 +51,39 @@ router.post('/join', requireAuth, async (req, res, next) => {
       [church.rows[0].id, req.user.id, 'member']
     );
 
+    // Notify admin by email
+    try {
+      const { sendBrevoEmail } = require('../utils/email')
+      const adminResult = await pool.query(
+        `SELECT u.email, u.first_name, u.last_name
+         FROM memberships m
+         JOIN users u ON u.id = m.user_id
+         WHERE m.church_id = $1 AND m.role = 'admin'
+         LIMIT 1`,
+        [church.rows[0].id]
+      )
+      if (adminResult.rows.length) {
+        const admin = adminResult.rows[0]
+        const adminName = admin.first_name || 'Admin'
+        const memberResult = await pool.query(
+          'SELECT email, first_name, last_name FROM users WHERE id = $1',
+          [req.user.id]
+        )
+        if (memberResult.rows.length) {
+          const m = memberResult.rows[0]
+          const memberName = [m.first_name, m.last_name].filter(Boolean).join(' ') || m.email
+          await sendBrevoEmail({
+            to: admin.email,
+            toName: adminName,
+            subject: `New member joined ${church.rows[0].name}`,
+            htmlContent: `<p>Hi ${adminName},</p><p><strong>${memberName}</strong> (${m.email}) has just joined <strong>${church.rows[0].name}</strong> on Song Stack.</p><p>You can view and manage your team from your <a href="https://app.songstack.church/dashboard">dashboard</a>.</p><p>— Song Stack</p>`
+          })
+        }
+      }
+    } catch (emailErr) {
+      console.error('Failed to send join notification email:', emailErr)
+    }
+
     res.json(church.rows[0]);
   } catch (err) {
     next(err);

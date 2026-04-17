@@ -1,6 +1,7 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
+import { useSearchParams } from 'next/navigation'
 import { useRouter } from 'next/navigation'
 import { useAuth } from '@clerk/nextjs'
 import { Music } from 'lucide-react'
@@ -9,9 +10,19 @@ import api, { setAuthToken } from '@/lib/api'
 export default function OnboardingPage() {
   const router = useRouter()
   const { getToken } = useAuth()
+  const searchParams = useSearchParams()
   const [mode, setMode] = useState<'choose' | 'create' | 'join'>('choose')
   const [churchName, setChurchName] = useState('')
   const [inviteCode, setInviteCode] = useState('')
+
+  useEffect(() => {
+    const code = searchParams.get('code')
+    if (code) {
+      setInviteCode(code.toUpperCase())
+      setMode('join')
+    }
+  }, [searchParams])
+
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
 

@@ -15,8 +15,8 @@ export function InviteMemberModal({ church, onClose }: InviteMemberModalProps) {
   const [copied, setCopied] = useState(false)
 
   const inviteUrl = typeof window !== 'undefined'
-    ? `${window.location.origin}/onboarding`
-    : 'https://app.songstack.church/onboarding'
+    ? `${window.location.origin}/onboarding?code=${church.invite_code}`
+    : `https://app.songstack.church/onboarding?code=${church.invite_code}`
 
   const copyCode = () => {
     navigator.clipboard.writeText(church.invite_code)
@@ -25,7 +25,7 @@ export function InviteMemberModal({ church, onClose }: InviteMemberModalProps) {
   }
 
   const copyLink = () => {
-    const text = `You have been invited to join ${church.name} on Song Stack.\n\nVisit ${inviteUrl} and enter invite code: ${church.invite_code}`
+    const text = `You've been invited to join ${church.name} on Song Stack.\n\n1. Go to ${inviteUrl}\n2. Sign in or create a free account\n3. Choose "Join an existing church" and enter this code: ${church.invite_code}`
     navigator.clipboard.writeText(text)
     setCopied(true)
     setTimeout(() => setCopied(false), 2000)
@@ -72,7 +72,7 @@ export function InviteMemberModal({ church, onClose }: InviteMemberModalProps) {
         {/* Instructions */}
         <div style={{ background: 'var(--color-brand-50)', border: '1px solid var(--color-brand-100)', borderRadius: 'var(--radius-md)', padding: 'var(--space-md)', marginBottom: 'var(--space-lg)' }}>
           <p style={{ fontSize: 'var(--text-sm)', color: 'var(--color-brand-700)', lineHeight: 1.6 }}>
-            Ask them to visit <strong>app.songstack.church</strong>, create an account, then choose <strong>Join an existing church</strong> and enter this code.
+            Share the invite link below — it will pre-fill the code for them. They just need to sign in or create a free account first.
           </p>
         </div>
 
