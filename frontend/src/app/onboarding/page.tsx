@@ -124,7 +124,7 @@ export default function OnboardingPage() {
               You need an account to join {inviteCode ? 'this church' : 'a church'}. It only takes a moment.
             </p>
             <SignInButton mode="redirect" forceRedirectUrl={redirectUrl}>
-              <button className="btn btn-primary" style={{ width: '100%' }}>Sign in or create an account</button>
+              <button className="btn btn-primary" style={{ width: '100%', textAlign: 'center', justifyContent: 'center' }}>Sign in or create an account</button>
             </SignInButton>
           </div>
         )}

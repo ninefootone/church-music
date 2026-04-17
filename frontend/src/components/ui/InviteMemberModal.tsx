@@ -72,7 +72,7 @@ export function InviteMemberModal({ church, onClose }: InviteMemberModalProps) {
         {/* Instructions */}
         <div style={{ background: 'var(--color-brand-50)', border: '1px solid var(--color-brand-100)', borderRadius: 'var(--radius-md)', padding: 'var(--space-md)', marginBottom: 'var(--space-lg)' }}>
           <p style={{ fontSize: 'var(--text-sm)', color: 'var(--color-brand-700)', lineHeight: 1.6 }}>
-            Share the invite link below — it will pre-fill the code for them. They just need to sign in or create a free account first.
+            Copy the invite message by clicking the button below – it will contain a link for the user to click. They just need to sign-in or create a free account first.
           </p>
         </div>
 

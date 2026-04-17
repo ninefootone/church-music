@@ -55,7 +55,7 @@ router.post('/join', requireAuth, async (req, res, next) => {
     try {
       const { sendBrevoEmail } = require('../utils/email')
       const adminResult = await pool.query(
-        `SELECT u.email, u.first_name, u.last_name
+        `SELECT u.email, u.name
          FROM memberships m
          JOIN users u ON u.id = m.user_id
          WHERE m.church_id = $1 AND m.role = 'admin'
@@ -64,14 +64,14 @@ router.post('/join', requireAuth, async (req, res, next) => {
       )
       if (adminResult.rows.length) {
         const admin = adminResult.rows[0]
-        const adminName = admin.first_name || 'Admin'
+        const adminName = admin.name || 'Admin'
         const memberResult = await pool.query(
-          'SELECT email, first_name, last_name FROM users WHERE id = $1',
+          'SELECT email, name FROM users WHERE id = $1',
           [req.user.id]
         )
         if (memberResult.rows.length) {
           const m = memberResult.rows[0]
-          const memberName = [m.first_name, m.last_name].filter(Boolean).join(' ') || m.email
+          const memberName = m.name || m.email
           await sendBrevoEmail({
             to: admin.email,
             toName: adminName,
