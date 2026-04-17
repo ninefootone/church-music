@@ -44,12 +44,21 @@ router.post('/join', requireAuth, async (req, res, next) => {
       'SELECT * FROM memberships WHERE church_id = $1 AND user_id = $2',
       [church.rows[0].id, req.user.id]
     );
-    if (existing.rows.length > 0) return res.status(400).json({ error: 'You are already a member of this church' });
-
-    await pool.query(
-      'INSERT INTO memberships (church_id, user_id, role) VALUES ($1, $2, $3)',
-      [church.rows[0].id, req.user.id, 'member']
-    );
+    if (existing.rows.length > 0) {
+      if (existing.rows[0].role === 'revoked') {
+        await pool.query(
+          'UPDATE memberships SET role = $1 WHERE church_id = $2 AND user_id = $3',
+          ['member', church.rows[0].id, req.user.id]
+        );
+      } else {
+        return res.status(400).json({ error: 'You are already a member of this church' });
+      }
+    } else {
+      await pool.query(
+        'INSERT INTO memberships (church_id, user_id, role) VALUES ($1, $2, $3)',
+        [church.rows[0].id, req.user.id, 'member']
+      );
+    }
 
     // Notify admin by email
     try {
