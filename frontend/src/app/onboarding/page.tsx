@@ -3,13 +3,13 @@
 import { useState, useEffect } from 'react'
 import { useSearchParams } from 'next/navigation'
 import { useRouter } from 'next/navigation'
-import { useAuth } from '@clerk/nextjs'
+import { useAuth, SignInButton } from '@clerk/nextjs'
 import { Music } from 'lucide-react'
 import api, { setAuthToken } from '@/lib/api'
 
 export default function OnboardingPage() {
   const router = useRouter()
-  const { getToken } = useAuth()
+  const { getToken, isSignedIn, isLoaded } = useAuth()
   const searchParams = useSearchParams()
   const [mode, setMode] = useState<'choose' | 'create' | 'join'>('choose')
   const [churchName, setChurchName] = useState('')
@@ -22,6 +22,8 @@ export default function OnboardingPage() {
       setMode('join')
     }
   }, [searchParams])
+
+  const redirectUrl = typeof window !== 'undefined' ? window.location.href : ''
 
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
@@ -115,7 +117,19 @@ export default function OnboardingPage() {
           </form>
         )}
 
-        {mode === 'join' && (
+        {mode === 'join' && isLoaded && !isSignedIn && (
+          <div style={{ background: 'var(--color-surface)', border: '1px solid var(--color-border)', borderRadius: '14px', padding: '24px', textAlign: 'center' }}>
+            <h2 style={{ fontSize: 18, fontWeight: 600, color: 'var(--color-text-primary)', marginBottom: '8px' }}>Sign in to join</h2>
+            <p style={{ fontSize: 14, color: 'var(--color-text-muted)', marginBottom: '20px' }}>
+              You need an account to join {inviteCode ? 'this church' : 'a church'}. It only takes a moment.
+            </p>
+            <SignInButton mode="redirect" forceRedirectUrl={redirectUrl}>
+              <button className="btn btn-primary" style={{ width: '100%' }}>Sign in or create an account</button>
+            </SignInButton>
+          </div>
+        )}
+
+        {mode === 'join' && isLoaded && isSignedIn && (
           <form onSubmit={handleJoin} style={{ background: 'var(--color-surface)', border: '1px solid var(--color-border)', borderRadius: '14px', padding: '24px' }}>
             <h2 style={{ fontSize: 18, fontWeight: 600, color: 'var(--color-text-primary)', marginBottom: '20px' }}>Join a church</h2>
             <label style={{ display: 'block', fontSize: 12, fontWeight: 600, color: 'var(--color-text-secondary)', marginBottom: 6, textTransform: 'uppercase' as const, letterSpacing: '0.05em' }}>
