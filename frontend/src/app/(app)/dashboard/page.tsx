@@ -124,23 +124,39 @@ export default function DashboardPage() {
               )}
             </div>
             {isAdmin ? (
-              <select
-                value={member.role}
-                onChange={async (e) => {
-                  try {
-                    await api.put(`/api/members/${member.id}/role`, { role: e.target.value })
-                    setMembers(prev => prev.map(m =>
-                      m.id === member.id ? { ...m, role: e.target.value } : m
-                    ))
-                  } catch (err: any) {
-                    alert(err.response?.data?.error || 'Failed to update role')
-                  }
-                }}
-                style={{ padding: '4px 8px', border: '1px solid var(--color-border)', borderRadius: 'var(--radius-sm)', fontFamily: 'inherit', fontSize: 'var(--text-sm)', background: 'var(--color-surface)', color: 'var(--color-text-secondary)', cursor: 'pointer' }}
-              >
-                <option value="member">Member</option>
-                <option value="admin">Admin</option>
-              </select>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                <select
+                  value={member.role}
+                  onChange={async (e) => {
+                    try {
+                      await api.put(`/api/members/${member.id}/role`, { role: e.target.value })
+                      setMembers(prev => prev.map(m =>
+                        m.id === member.id ? { ...m, role: e.target.value } : m
+                      ))
+                    } catch (err: any) {
+                      alert(err.response?.data?.error || 'Failed to update role')
+                    }
+                  }}
+                  style={{ padding: '4px 8px', border: '1px solid var(--color-border)', borderRadius: 'var(--radius-sm)', fontFamily: 'inherit', fontSize: 'var(--text-sm)', background: 'var(--color-surface)', color: 'var(--color-text-secondary)', cursor: 'pointer' }}
+                >
+                  <option value="member">Member</option>
+                  <option value="admin">Admin</option>
+                </select>
+                <button
+                  onClick={async () => {
+                    if (!confirm(`Remove ${member.name || member.email} from ${church?.name}?`)) return
+                    try {
+                      await api.delete(`/api/churches/${church?.id}/members/${member.id}`)
+                      setMembers(prev => prev.filter(m => m.id !== member.id))
+                    } catch (err: any) {
+                      alert(err.response?.data?.error || 'Failed to remove member')
+                    }
+                  }}
+                  style={{ padding: '4px 8px', border: '1px solid var(--color-border)', borderRadius: 'var(--radius-sm)', fontSize: 'var(--text-sm)', background: 'var(--color-surface)', color: 'var(--color-text-muted)', cursor: 'pointer', fontFamily: 'inherit' }}
+                >
+                  Remove
+                </button>
+              </div>
             ) : (
               <p className="member-role" style={{ textTransform: 'capitalize' }}>{member.role}</p>
             )}

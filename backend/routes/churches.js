@@ -106,6 +106,20 @@ router.get('/mine', requireAuth, async (req, res, next) => {
   }
 });
 
+// Remove a member (admin only)
+router.delete('/:churchId/members/:memberId', requireAuth, requireAdmin, async (req, res, next) => {
+  try {
+    const { churchId, memberId } = req.params
+    await pool.query(
+      'UPDATE memberships SET role = $1 WHERE church_id = $2 AND user_id = $3',
+      ['revoked', churchId, memberId]
+    )
+    res.json({ message: 'Member removed' })
+  } catch (err) {
+    next(err)
+  }
+})
+
 // Get church details
 router.get('/:churchId', requireAuth, async (req, res, next) => {
   try {
