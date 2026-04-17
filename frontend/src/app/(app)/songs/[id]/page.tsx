@@ -44,15 +44,18 @@ export default function SongDetailPage() {
   const handleDownload = async (fileId: string, label: string) => {
     if (!song) return
     setDownloadingId(fileId)
+    // Open blank window immediately before async call to satisfy iOS Safari popup policy
+    const newWindow = window.open('', '_blank')
     try {
       const { data } = await api.get(`/api/uploads/songs/${song.id}/files/${fileId}/url`)
-      const a = document.createElement('a')
-      a.href = data.url
-      a.download = label
-      a.target = '_blank'
-      a.click()
+      if (newWindow) {
+        newWindow.location.href = data.url
+      } else {
+        window.location.href = data.url
+      }
     } catch (err) {
       console.error('Download failed:', err)
+      if (newWindow) newWindow.close()
     } finally {
       setDownloadingId(null)
     }
