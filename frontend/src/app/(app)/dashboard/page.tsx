@@ -146,7 +146,7 @@ export default function DashboardPage() {
                   onClick={async () => {
                     if (!confirm(`Remove ${member.name || member.email} from ${church?.name}?`)) return
                     try {
-                      await api.delete(`/api/churches/${church?.id}/members/${member.id}`)
+                      await api.delete(`/api/members/${member.id}`)
                       setMembers(prev => prev.filter(m => m.id !== member.id))
                     } catch (err: any) {
                       alert(err.response?.data?.error || 'Failed to remove member')
