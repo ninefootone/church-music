@@ -18,6 +18,7 @@ export default function NewSongPage() {
   const [form, setForm] = useState({
     title: '', author: '', default_key: '', category: '' as Category | '',
     first_line: '', ccli_number: '', youtube_url: '', lyrics: '', tags: '',
+    notes: '', bible_references: '', suggested_arrangement: '',
   })
 
   const keys = ['C', 'C#', 'Db', 'D', 'Eb', 'E', 'F', 'F#', 'Gb', 'G', 'Ab', 'A', 'Bb', 'B']
@@ -114,6 +115,21 @@ export default function NewSongPage() {
               <label className="label">YouTube URL</label>
               <input className="input" placeholder="https://youtube.com/…" value={form.youtube_url} onChange={e => setForm(f => ({ ...f, youtube_url: e.target.value }))} />
             </div>
+          </div>
+
+          <div style={{ marginBottom: 'var(--space-md)' }}>
+            <label className="label">Suggested arrangement</label>
+            <input className="input" placeholder="e.g. Verse 1, Chorus, Verse 2, Chorus, Bridge, Chorus" value={form.suggested_arrangement} onChange={e => setForm(f => ({ ...f, suggested_arrangement: e.target.value }))} />
+          </div>
+
+          <div style={{ marginBottom: 'var(--space-md)' }}>
+            <label className="label">Bible references</label>
+            <input className="input" placeholder="e.g. Romans 8, Colossians 3:1-4" value={form.bible_references} onChange={e => setForm(f => ({ ...f, bible_references: e.target.value }))} />
+          </div>
+
+          <div style={{ marginBottom: 'var(--space-md)' }}>
+            <label className="label">Notes</label>
+            <textarea className="input" rows={3} placeholder="Performance notes, tips for the band…" value={form.notes} onChange={e => setForm(f => ({ ...f, notes: e.target.value }))} style={{ resize: 'vertical' }} />
           </div>
 
           <div style={{ marginBottom: 'var(--space-md)' }}>

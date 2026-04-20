@@ -16,7 +16,7 @@ export default function EditSongPage() {
   const [loading, setLoading] = useState(false)
   const [fetching, setFetching] = useState(true)
   const [error, setError] = useState('')
-  const [form, setForm] = useState({ title: '', author: '', default_key: '', category: '' as Category | '', first_line: '', ccli_number: '', youtube_url: '', lyrics: '', tags: '' })
+  const [form, setForm] = useState({ title: '', author: '', default_key: '', category: '' as Category | '', first_line: '', ccli_number: '', youtube_url: '', lyrics: '', tags: '', notes: '', bible_references: '', suggested_arrangement: '' })
 
   const keys = ['C', 'C#', 'Db', 'D', 'Eb', 'E', 'F', 'F#', 'Gb', 'G', 'Ab', 'A', 'Bb', 'B']
 
@@ -24,7 +24,7 @@ export default function EditSongPage() {
     if (!id) return
     api.get(`/api/songs/${id}`).then(r => {
       const s: Song = r.data
-      setForm({ title: s.title, author: s.author || '', default_key: s.default_key || '', category: s.category || '', first_line: s.first_line || '', ccli_number: s.ccli_number || '', youtube_url: s.youtube_url || '', lyrics: s.lyrics || '', tags: (s.tags || []).join(', ') })
+      setForm({ title: s.title, author: s.author || '', default_key: s.default_key || '', category: s.category || '', first_line: s.first_line || '', ccli_number: s.ccli_number || '', youtube_url: s.youtube_url || '', lyrics: s.lyrics || '', tags: (s.tags || []).join(', '), notes: s.notes || '', bible_references: s.bible_references || '', suggested_arrangement: s.suggested_arrangement || '' })
     }).catch(() => setError('Failed to load song')).finally(() => setFetching(false))
   }, [id])
 
@@ -78,6 +78,18 @@ export default function EditSongPage() {
           <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 'var(--space-md)', ...mb }}>
             <div><label className="label">CCLI number</label><input className="input" value={form.ccli_number} onChange={e => setForm(f => ({ ...f, ccli_number: e.target.value }))} /></div>
             <div><label className="label">YouTube URL</label><input className="input" value={form.youtube_url} onChange={e => setForm(f => ({ ...f, youtube_url: e.target.value }))} /></div>
+          </div>
+          <div style={mb}>
+            <label className="label">Suggested arrangement</label>
+            <input className="input" placeholder="e.g. Verse 1, Chorus, Verse 2, Chorus, Bridge, Chorus" value={form.suggested_arrangement} onChange={e => setForm(f => ({ ...f, suggested_arrangement: e.target.value }))} />
+          </div>
+          <div style={mb}>
+            <label className="label">Bible references</label>
+            <input className="input" placeholder="e.g. Romans 8, Colossians 3:1-4" value={form.bible_references} onChange={e => setForm(f => ({ ...f, bible_references: e.target.value }))} />
+          </div>
+          <div style={mb}>
+            <label className="label">Notes</label>
+            <textarea className="input" rows={3} placeholder="Performance notes, tips for the band…" value={form.notes} onChange={e => setForm(f => ({ ...f, notes: e.target.value }))} style={{ resize: 'vertical' }} />
           </div>
           <div style={mb}><label className="label">Tags <span className="label-note">(comma separated)</span></label><input className="input" value={form.tags} onChange={e => setForm(f => ({ ...f, tags: e.target.value }))} /></div>
           <div style={mb}>
