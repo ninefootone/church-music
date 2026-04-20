@@ -6,10 +6,12 @@ import { useRouter } from 'next/navigation'
 import { useAuth } from '@clerk/nextjs'
 import { ArrowLeft } from 'lucide-react'
 import api, { setAuthToken } from '@/lib/api'
+import { useChurch } from '@/context/ChurchContext'
 
 export default function NewServicePage() {
   const router = useRouter()
   const { getToken } = useAuth()
+  const { church } = useChurch()
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
   const [form, setForm] = useState({ service_date: '', service_time: '', service_sort_order: 0, title: '' })
