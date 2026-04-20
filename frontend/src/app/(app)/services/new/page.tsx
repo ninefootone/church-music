@@ -12,7 +12,7 @@ export default function NewServicePage() {
   const { getToken } = useAuth()
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
-  const [form, setForm] = useState({ service_date: '', service_time: '', title: '' })
+  const [form, setForm] = useState({ service_date: '', service_time: '', service_sort_order: 0, title: '' })
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -43,6 +43,19 @@ export default function NewServicePage() {
           <div>
             <label className="label">Time</label>
             <input className="input" type="text" placeholder="e.g. 9.15am" value={form.service_time} onChange={e => setForm(f => ({ ...f, service_time: e.target.value }))} />
+            <div style={{ display: 'flex', gap: 6, marginTop: 8 }}>
+              {[{ label: 'Morning', value: 0 }, { label: 'Afternoon', value: 1 }, { label: 'Evening', value: 2 }].map(opt => (
+                <button
+                  key={opt.value}
+                  type="button"
+                  onClick={() => setForm(f => ({ ...f, service_sort_order: opt.value }))}
+                  className={form.service_sort_order === opt.value ? 'btn btn-primary' : 'btn btn-secondary'}
+                  style={{ fontSize: 'var(--text-sm)', padding: '4px 12px' }}
+                >
+                  {opt.label}
+                </button>
+              ))}
+            </div>
           </div>
           <div>
             <label className="label">Title <span style={{ fontWeight: 400, textTransform: 'none', letterSpacing: 0, fontSize: 'var(--text-sm)', color: 'var(--color-text-muted)' }}>(optional)</span></label>
