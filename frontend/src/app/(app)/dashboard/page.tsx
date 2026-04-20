@@ -23,7 +23,7 @@ export default function DashboardPage() {
     Promise.all([
       api.get('/api/songs').then(r => setSongs(r.data.slice(0, 4))),
       // Only fetch upcoming services, ascending so next service is first
-      api.get('/api/services', { params: { upcoming: 'true' } }).then(r => setServices(r.data.slice(0, 3))),
+      api.get('/api/services', { params: { upcoming: 'true' } }).then(r => setServices(r.data.slice(0, 4))),
       api.get('/api/members').then(r => setMembers(r.data)),
     ]).finally(() => setLoading(false))
   }, [church])
