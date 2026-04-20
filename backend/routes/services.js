@@ -147,8 +147,16 @@ router.put('/:id/items', requireAuth, requireMembership, async function(req, res
   }
 });
 
-router.delete('/:id', requireAuth, requireAdmin, async function(req, res, next) {
+router.delete('/:id', requireAuth, requireMembership, async function(req, res, next) {
   try {
+    const existing = await pool.query(
+      'SELECT created_by FROM services WHERE id=$1 AND church_id=$2',
+      [req.params.id, req.churchId]
+    );
+    if (existing.rows.length === 0) return res.status(404).json({ error: 'Not found' });
+    const isAdmin = req.memberRole === 'admin';
+    const isOwner = existing.rows[0].created_by === req.user.clerk_id;
+    if (!isAdmin && !isOwner) return res.status(403).json({ error: 'Not authorised' });
     await pool.query('DELETE FROM services WHERE id = $1 AND church_id = $2', [req.params.id, req.churchId]);
     res.json({ success: true });
   } catch (err) {

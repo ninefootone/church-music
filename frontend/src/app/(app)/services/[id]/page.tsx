@@ -144,7 +144,7 @@ export default function ServiceDetailPage() {
           ))
         )}
       </div>
-      {isAdmin && (
+      {(isAdmin || service.created_by === userId) && (
         <div style={{ marginTop: 'var(--space-md)', display: 'flex', justifyContent: 'flex-end' }}>
           <button
             onClick={() => setShowDeleteService(true)}
