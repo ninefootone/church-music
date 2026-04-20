@@ -25,7 +25,14 @@ export default function DashboardPage() {
       api.get('/api/songs').then(r => setSongs(r.data.slice(0, 4))),
       // Only fetch upcoming services, ascending so next service is first
       api.get('/api/services', { params: { upcoming: 'true' } }).then(r => setServices(r.data.slice(0, 4))),
-      api.get('/api/members').then(r => setMembers(r.data)),
+      api.get('/api/members').then(r => {
+        const sorted = [...r.data].sort((a, b) => {
+          if (a.role === 'admin' && b.role !== 'admin') return -1
+          if (a.role !== 'admin' && b.role === 'admin') return 1
+          return 0
+        })
+        setMembers(sorted)
+      }),
     ]).finally(() => setLoading(false))
   }, [church])
 
