@@ -66,6 +66,11 @@ router.get('/:id', requireAuth, requireMembership, async (req, res, next) => {
       [req.params.id]
     );
 
+    const videos = await pool.query(
+      'SELECT * FROM song_videos WHERE song_id = $1 ORDER BY sort_order',
+      [req.params.id]
+    );
+
     // Usage stats
     const usage = await pool.query(
       `SELECT
@@ -92,6 +97,7 @@ router.get('/:id', requireAuth, requireMembership, async (req, res, next) => {
     res.json({
       ...song.rows[0],
       files: files.rows,
+      videos: videos.rows,
       usage: usage.rows[0],
       recent_services: recentServices.rows,
     });
