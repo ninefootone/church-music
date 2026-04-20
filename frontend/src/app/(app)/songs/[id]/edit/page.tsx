@@ -80,10 +80,6 @@ export default function EditSongPage() {
             <div><label className="label">YouTube URL</label><input className="input" value={form.youtube_url} onChange={e => setForm(f => ({ ...f, youtube_url: e.target.value }))} /></div>
           </div>
           <div style={mb}>
-            <label className="label">Suggested arrangement</label>
-            <input className="input" placeholder="e.g. Verse 1, Chorus, Verse 2, Chorus, Bridge, Chorus" value={form.suggested_arrangement} onChange={e => setForm(f => ({ ...f, suggested_arrangement: e.target.value }))} />
-          </div>
-          <div style={mb}>
             <label className="label">Bible references</label>
             <input className="input" placeholder="e.g. Romans 8, Colossians 3:1-4" value={form.bible_references} onChange={e => setForm(f => ({ ...f, bible_references: e.target.value }))} />
           </div>
@@ -100,6 +96,10 @@ export default function EditSongPage() {
                 Find lyrics on <a href={`https://songselect.ccli.com/songs/${form.ccli_number}`} target="_blank" rel="noopener noreferrer" className="link-brand">SongSelect ↗</a>
               </div>
             )}
+          </div>
+          <div style={mb}>
+            <label className="label">Suggested arrangement</label>
+            <input className="input" placeholder="e.g. Verse 1, Chorus, Verse 2, Chorus, Bridge, Chorus" value={form.suggested_arrangement} onChange={e => setForm(f => ({ ...f, suggested_arrangement: e.target.value }))} />
           </div>
         </form>
       </div>
