@@ -180,12 +180,6 @@ export default function SongDetailPage() {
               <span style={{ fontSize: 'var(--text-sm)', color: 'var(--color-text-secondary)' }}>{song.bible_references}</span>
             </div>
           )}
-          {song.suggested_arrangement && (
-            <div className="meta-row">
-              <span className="meta-label">Arrangement</span>
-              <span style={{ fontSize: 'var(--text-sm)', color: 'var(--color-text-secondary)' }}>{song.suggested_arrangement}</span>
-            </div>
-          )}
           {song.ccli_number && (
             <div className="meta-row">
               <span className="meta-label">CCLI</span>
@@ -235,6 +229,13 @@ export default function SongDetailPage() {
             </p>
           )}
         </div>
+
+        {song.suggested_arrangement && (
+          <div style={{ marginTop: 'var(--space-md)' }}>
+            <span className="section-label" style={{ marginBottom: 4, display: 'block' }}>Arrangement</span>
+            <p style={{ fontSize: 'var(--text-sm)', color: 'var(--color-text-secondary)', margin: 0, lineHeight: 1.6 }}>{song.suggested_arrangement}</p>
+          </div>
+        )}
       </div>
 
       {/* Files */}
