@@ -16,6 +16,7 @@ export default function DashboardPage() {
   const [loading, setLoading] = useState(true)
   const fetchedRef = useRef(false)
   const [showInviteModal, setShowInviteModal] = useState(false)
+  const [manageMember, setManageMember] = useState<any>(null)
   
   useEffect(() => {
     if (!church || fetchedRef.current) return
@@ -112,63 +113,154 @@ export default function DashboardPage() {
             </button>
           )}
         </div>
-        {members.map((member) => (
-          <div key={member.id} className="member-row">
-            <div className="member-avatar">
-              {(member.name || member.email || '?').charAt(0).toUpperCase()}
-            </div>
-            <div style={{ flex: 1, minWidth: 0 }}>
-              <p className="member-name">{member.name || member.email}</p>
-              {member.name && member.email && (
-                <p className="member-role">{member.email}</p>
+
+        <div style={{ display: 'flex', flexWrap: 'wrap', gap: 'var(--space-md)' }}>
+          {members.map((member) => (
+            <div
+              key={member.id}
+              onClick={() => isAdmin && setManageMember(member)}
+              style={{
+                display: 'flex',
+                flexDirection: 'column',
+                alignItems: 'center',
+                gap: 6,
+                width: 80,
+                cursor: isAdmin ? 'pointer' : 'default',
+              }}
+            >
+              <div style={{ position: 'relative' }}>
+                {member.image_url ? (
+                  <img
+                    src={member.image_url}
+                    alt={member.name || member.email}
+                    style={{ width: 52, height: 52, borderRadius: '50%', objectFit: 'cover' }}
+                  />
+                ) : (
+                  <div style={{
+                    width: 52, height: 52, borderRadius: '50%',
+                    background: 'var(--color-border)',
+                    display: 'flex', alignItems: 'center', justifyContent: 'center',
+                    fontSize: 20, fontWeight: 600, color: 'var(--color-text-secondary)',
+                  }}>
+                    {(member.name || member.email || '?').charAt(0).toUpperCase()}
+                  </div>
+                )}
+                {member.role === 'admin' && (
+                  <span style={{
+                    position: 'absolute', bottom: -2, right: -2,
+                    background: 'var(--color-primary, #6366f1)',
+                    color: '#fff', fontSize: 9, fontWeight: 700,
+                    padding: '1px 4px', borderRadius: 4, letterSpacing: '0.03em',
+                    lineHeight: '14px',
+                  }}>A</span>
+                )}
+              </div>
+              <p style={{
+                fontSize: 'var(--text-xs)', textAlign: 'center', lineHeight: '1.3',
+                color: 'var(--color-text)', margin: 0,
+                overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap',
+                width: '100%',
+              }}>
+                {member.name || member.email}
+              </p>
+              {isAdmin && member.email && (
+                <p style={{
+                  fontSize: 10, textAlign: 'center', lineHeight: '1.2',
+                  color: 'var(--color-text-muted)', margin: 0,
+                  overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap',
+                  width: '100%',
+                }}>
+                  {member.email}
+                </p>
               )}
             </div>
-            {isAdmin ? (
-              <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-                <select
-                  value={member.role}
-                  onChange={async (e) => {
-                    try {
-                      await api.put(`/api/members/${member.id}/role`, { role: e.target.value })
-                      setMembers(prev => prev.map(m =>
-                        m.id === member.id ? { ...m, role: e.target.value } : m
-                      ))
-                    } catch (err: any) {
-                      alert(err.response?.data?.error || 'Failed to update role')
-                    }
-                  }}
-                  style={{ padding: '4px 8px', border: '1px solid var(--color-border)', borderRadius: 'var(--radius-sm)', fontFamily: 'inherit', fontSize: 'var(--text-sm)', background: 'var(--color-surface)', color: 'var(--color-text-secondary)', cursor: 'pointer' }}
-                >
-                  <option value="member">Member</option>
-                  <option value="admin">Admin</option>
-                </select>
-                <button
-                  onClick={async () => {
-                    if (!confirm(`Remove ${member.name || member.email} from ${church?.name}?`)) return
-                    try {
-                      await api.delete(`/api/members/${member.id}`)
-                      setMembers(prev => prev.filter(m => m.id !== member.id))
-                    } catch (err: any) {
-                      alert(err.response?.data?.error || 'Failed to remove member')
-                    }
-                  }}
-                  style={{ padding: '4px 8px', border: '1px solid var(--color-border)', borderRadius: 'var(--radius-sm)', fontSize: 'var(--text-sm)', background: 'var(--color-surface)', color: 'var(--color-text-muted)', cursor: 'pointer', fontFamily: 'inherit' }}
-                >
-                  Remove
-                </button>
-              </div>
-            ) : (
-              <p className="member-role" style={{ textTransform: 'capitalize' }}>{member.role}</p>
-            )}
-          </div>
-        ))}
+          ))}
+        </div>
+
         {showInviteModal && church && (
           <InviteMemberModal
             church={church}
             onClose={() => setShowInviteModal(false)}
           />
         )}
-      </div> 
+
+        {manageMember && (
+          <div
+            onClick={() => setManageMember(null)}
+            style={{
+              position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.4)',
+              display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 50,
+            }}
+          >
+            <div
+              onClick={(e) => e.stopPropagation()}
+              style={{
+                background: 'var(--color-surface)', borderRadius: 'var(--radius-md)',
+                padding: 'var(--space-lg)', width: 320, display: 'flex', flexDirection: 'column', gap: 'var(--space-md)',
+              }}
+            >
+              <div style={{ display: 'flex', alignItems: 'center', gap: 'var(--space-md)' }}>
+                {manageMember.image_url ? (
+                  <img src={manageMember.image_url} alt={manageMember.name} style={{ width: 48, height: 48, borderRadius: '50%', objectFit: 'cover' }} />
+                ) : (
+                  <div style={{ width: 48, height: 48, borderRadius: '50%', background: 'var(--color-border)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 18, fontWeight: 600, color: 'var(--color-text-secondary)' }}>
+                    {(manageMember.name || manageMember.email || '?').charAt(0).toUpperCase()}
+                  </div>
+                )}
+                <div>
+                  <p style={{ fontWeight: 600, margin: 0 }}>{manageMember.name || manageMember.email}</p>
+                  {manageMember.name && <p style={{ fontSize: 'var(--text-sm)', color: 'var(--color-text-muted)', margin: 0 }}>{manageMember.email}</p>}
+                </div>
+              </div>
+
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
+                <label style={{ fontSize: 'var(--text-sm)', fontWeight: 500 }}>Access level</label>
+                <select
+                  value={manageMember.role}
+                  onChange={async (e) => {
+                    const newRole = e.target.value
+                    try {
+                      await api.put(`/api/members/${manageMember.id}/role`, { role: newRole })
+                      setMembers(prev => prev.map(m => m.id === manageMember.id ? { ...m, role: newRole } : m))
+                      setManageMember((prev: any) => ({ ...prev, role: newRole }))
+                    } catch (err: any) {
+                      alert(err.response?.data?.error || 'Failed to update role')
+                    }
+                  }}
+                  style={{ padding: '6px 8px', border: '1px solid var(--color-border)', borderRadius: 'var(--radius-sm)', fontFamily: 'inherit', fontSize: 'var(--text-sm)', background: 'var(--color-surface)', color: 'var(--color-text)', cursor: 'pointer' }}
+                >
+                  <option value="member">Member</option>
+                  <option value="admin">Admin</option>
+                </select>
+              </div>
+
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', paddingTop: 'var(--space-sm)', borderTop: '1px solid var(--color-border)' }}>
+                <button
+                  onClick={async () => {
+                    if (!confirm(`Remove ${manageMember.name || manageMember.email} from ${church?.name}?`)) return
+                    try {
+                      await api.delete(`/api/members/${manageMember.id}`)
+                      setMembers(prev => prev.filter(m => m.id !== manageMember.id))
+                      setManageMember(null)
+                    } catch (err: any) {
+                      alert(err.response?.data?.error || 'Failed to remove member')
+                    }
+                  }}
+                  style={{ padding: '6px 12px', border: '1px solid var(--color-border)', borderRadius: 'var(--radius-sm)', fontSize: 'var(--text-sm)', background: 'var(--color-surface)', color: 'var(--color-text-muted)', cursor: 'pointer', fontFamily: 'inherit' }}
+                >
+                  Remove member
+                </button>
+                <button
+                  onClick={() => setManageMember(null)}
+                  className="btn btn-ghost"
+                >
+                  Done
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
+      </div>
     </div>
   )
 }
