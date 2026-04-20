@@ -16,15 +16,14 @@ const requireAuth = async (req, res, next) => {
     const pool = require('../db/pool');
     let user = await pool.query('SELECT * FROM users WHERE clerk_id = $1', [payload.sub]);
 
-    if (user.rows.length === 0) {
-      const clerkUser = await clerkClient.users.getUser(payload.sub);
-      const email = clerkUser.emailAddresses[0]?.emailAddress || '';
-      const name = `${clerkUser.firstName || ''} ${clerkUser.lastName || ''}`.trim();
-      user = await pool.query(
-        'INSERT INTO users (clerk_id, email, name) VALUES ($1, $2, $3) ON CONFLICT (clerk_id) DO UPDATE SET email = $2, name = $3 RETURNING *',
-        [payload.sub, email, name]
-      );
-    }
+    const clerkUser = await clerkClient.users.getUser(payload.sub);
+    const email = clerkUser.emailAddresses[0]?.emailAddress || '';
+    const name = `${clerkUser.firstName || ''} ${clerkUser.lastName || ''}`.trim();
+    const imageUrl = clerkUser.imageUrl || null;
+    user = await pool.query(
+      'INSERT INTO users (clerk_id, email, name, image_url) VALUES ($1, $2, $3, $4) ON CONFLICT (clerk_id) DO UPDATE SET email = $2, name = $3, image_url = $4 RETURNING *',
+      [payload.sub, email, name, imageUrl]
+    );
 
     req.user = user.rows[0];
     next();
