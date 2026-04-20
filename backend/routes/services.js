@@ -21,7 +21,7 @@ router.get('/', requireAuth, requireMembership, async function(req, res, next) {
     if (upcoming === 'true') query += ' AND s.service_date >= CURRENT_DATE';
     if (upcoming === 'false') query += ' AND s.service_date < CURRENT_DATE';
 
-    query += ' GROUP BY s.id ORDER BY s.service_date ' + (upcoming === 'false' ? 'DESC' : 'ASC');
+    query += ' GROUP BY s.id ORDER BY s.service_date ' + (upcoming === 'false' ? 'DESC' : 'ASC') + ', s.service_sort_order ASC, s.service_time ASC';
 
     const result = await pool.query(query, params);
     res.json(result.rows);
@@ -87,12 +87,13 @@ router.post('/', requireAuth, requireMembership, async function(req, res, next) 
     const churchId = req.churchId;
     const service_date = req.body.service_date;
     const service_time = req.body.service_time;
+    const service_sort_order = req.body.service_sort_order ?? 0;
     const title = req.body.title;
     const public_token = uuidv4().split('-')[0];
 
     const service = await pool.query(
-      'INSERT INTO services (church_id, service_date, service_time, title, public_token) VALUES ($1,$2,$3,$4,$5) RETURNING *',
-      [churchId, service_date, service_time, title, public_token]
+      'INSERT INTO services (church_id, service_date, service_time, service_sort_order, title, public_token) VALUES ($1,$2,$3,$4,$5,$6) RETURNING *',
+      [churchId, service_date, service_time, service_sort_order, title, public_token]
     );
     res.status(201).json(service.rows[0]);
   } catch (err) {
@@ -104,10 +105,11 @@ router.put('/:id', requireAuth, requireAdmin, async function(req, res, next) {
   try {
     const service_date = req.body.service_date;
     const service_time = req.body.service_time;
+    const service_sort_order = req.body.service_sort_order ?? 0;
     const title = req.body.title;
     const service = await pool.query(
-      'UPDATE services SET service_date=$1, service_time=$2, title=$3 WHERE id=$4 AND church_id=$5 RETURNING *',
-      [service_date, service_time, title, req.params.id, req.churchId]
+      'UPDATE services SET service_date=$1, service_time=$2, service_sort_order=$3, title=$4 WHERE id=$5 AND church_id=$6 RETURNING *',
+      [service_date, service_time, service_sort_order, title, req.params.id, req.churchId]
     );
     if (service.rows.length === 0) return res.status(404).json({ error: 'Not found' });
     res.json(service.rows[0]);
