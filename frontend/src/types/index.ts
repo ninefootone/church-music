@@ -74,6 +74,16 @@ export interface Song {
   lyrics: string | null
   ccli_number: string | null
   youtube_url: string | null
+  ccli_url: string | null
+  notes: string | null
+  bible_references: string | null
+  suggested_arrangement: string | null
+  videos?: {
+    id: string
+    url: string
+    label: string | null
+    sort_order: number
+  }[]
   is_template: boolean
   template_status: TemplateStatus | null
   contributed_by: string | null

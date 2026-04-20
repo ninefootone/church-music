@@ -174,6 +174,18 @@ export default function SongDetailPage() {
               </div>
             </div>
           )}
+          {song.bible_references && (
+            <div className="meta-row">
+              <span className="meta-label">Bible</span>
+              <span style={{ fontSize: 'var(--text-sm)', color: 'var(--color-text-secondary)' }}>{song.bible_references}</span>
+            </div>
+          )}
+          {song.suggested_arrangement && (
+            <div className="meta-row">
+              <span className="meta-label">Arrangement</span>
+              <span style={{ fontSize: 'var(--text-sm)', color: 'var(--color-text-secondary)' }}>{song.suggested_arrangement}</span>
+            </div>
+          )}
           {song.ccli_number && (
             <div className="meta-row">
               <span className="meta-label">CCLI</span>
@@ -184,6 +196,14 @@ export default function SongDetailPage() {
             </div>
           )}
         </div>
+
+        {/* Notes */}
+        {song.notes && (
+          <div style={{ marginBottom: 'var(--space-md)', padding: '12px 16px', background: 'var(--color-neutral-50)', borderRadius: 'var(--radius-md)', borderLeft: '3px solid var(--color-brand-300)' }}>
+            <span className="section-label" style={{ marginBottom: 6, display: 'block' }}>Notes</span>
+            <p style={{ fontSize: 'var(--text-sm)', color: 'var(--color-text-secondary)', margin: 0, lineHeight: 1.6 }}>{song.notes}</p>
+          </div>
+        )}
 
         {/* Lyrics */}
         <div>
@@ -259,15 +279,26 @@ export default function SongDetailPage() {
           </p>
         )}
 
-        {/* YouTube */}
-        {song.youtube_url && (
+        {/* Videos */}
+        {((song.videos && song.videos.length > 0) || song.youtube_url) && (
           <>
             <div className="divider" />
-            <p className="downloads-group-label">Reference</p>
-            <a href={song.youtube_url} target="_blank" rel="noopener noreferrer" className="youtube-link">
-              <span className="youtube-icon"><span className="youtube-play" /></span>
-              YouTube reference video
-            </a>
+            <p className="downloads-group-label">Reference videos</p>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+              {song.videos && song.videos.length > 0 ? (
+                song.videos.map(v => (
+                  <a key={v.id} href={v.url} target="_blank" rel="noopener noreferrer" className="youtube-link">
+                    <span className="youtube-icon"><span className="youtube-play" /></span>
+                    {v.label || 'YouTube video'}
+                  </a>
+                ))
+              ) : song.youtube_url ? (
+                <a href={song.youtube_url} target="_blank" rel="noopener noreferrer" className="youtube-link">
+                  <span className="youtube-icon"><span className="youtube-play" /></span>
+                  YouTube reference video
+                </a>
+              ) : null}
+            </div>
           </>
         )}
       </div>
