@@ -6,7 +6,7 @@ const { requireAuth, requireMembership, requireAdmin } = require('../middleware/
 router.get('/', requireAuth, requireMembership, async function(req, res, next) {
   try {
     const result = await pool.query(
-      `SELECT m.id, m.role, m.joined_at, u.id AS user_id, u.name, u.email
+      `SELECT m.id, m.role, m.joined_at, u.id AS user_id, u.name, u.email, u.image_url
        FROM memberships m
        JOIN users u ON u.id = m.user_id
        WHERE m.church_id = $1 AND m.role != 'revoked'
