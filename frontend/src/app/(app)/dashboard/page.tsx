@@ -158,7 +158,7 @@ export default function DashboardPage() {
               <p style={{
                 fontSize: 'var(--text-xs)', textAlign: 'center', lineHeight: '1.3',
                 color: 'var(--color-text)', margin: 0,
-                overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap',
+              overflow: 'hidden', display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical',
                 width: '100%',
               }}>
                 {member.name || member.email}
