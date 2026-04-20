@@ -91,11 +91,16 @@ export default function ServiceDetailPage() {
               <ExternalLink size={14} /> Public view
             </a>
 
-            {/* Edit order — admin only */}
+            {/* Edit details / order — admin only */}
             {isAdmin && (
-              <Link href={`/services/${id}/edit`} className="btn btn-primary btn-sm">
-                <Plus size={14} /> Edit order
-              </Link>
+              <>
+                <Link href={`/services/${id}/settings`} className="btn btn-secondary btn-sm">
+                  Edit details
+                </Link>
+                <Link href={`/services/${id}/edit`} className="btn btn-primary btn-sm">
+                  <Plus size={14} /> Edit order
+                </Link>
+              </>
             )}
           </div>
         </div>
