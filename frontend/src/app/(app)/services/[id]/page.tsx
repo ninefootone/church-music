@@ -123,7 +123,7 @@ export default function ServiceDetailPage() {
           </div>
         ) : (
           service.items.map((item: any, i: number) => (
-            <div key={item.id} style={{ display: 'flex', alignItems: 'flex-start', gap: 14, padding: '12px 0', borderBottom: i < service.items.length - 1 ? '1px solid var(--color-border)' : 'none', background: item.type === 'song' ? 'rgba(75, 127, 165, 0.07)' : 'transparent', borderRadius: 6, paddingLeft: 8, paddingRight: 8, marginLeft: -8
+            <div key={item.id} style={{ display: 'flex', alignItems: 'flex-start', gap: 14, padding: '12px 0', borderBottom: i < service.items.length - 1 ? '1px solid var(--color-border)' : 'none', background: item.type === 'song' ? 'rgba(75, 127, 165, 0.05)' : 'transparent', paddingLeft: 8, paddingRight: 8, marginLeft: -8
  }}>
               <div style={{ fontSize: 'var(--text-sm)', color: 'var(--color-text-muted)', width: 24, textAlign: 'center', flexShrink: 0, paddingTop: 2 }}>{i + 1}</div>
               <div style={{ color: 'var(--color-text-muted)', flexShrink: 0, paddingTop: 3 }}>{typeIcon(item.type)}</div>
