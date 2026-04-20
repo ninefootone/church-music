@@ -155,7 +155,7 @@ export default function DashboardPage() {
                 {member.role === 'admin' && (
                   <span style={{
                     position: 'absolute', bottom: -2, right: -2,
-                    background: 'var(--color-primary, #6366f1)',
+                    background: 'var(--color-brand-500)',
                     color: '#fff', fontSize: 9, fontWeight: 700,
                     padding: '1px 4px', borderRadius: 4, letterSpacing: '0.03em',
                     lineHeight: '14px',
