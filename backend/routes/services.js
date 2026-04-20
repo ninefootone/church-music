@@ -93,7 +93,7 @@ router.post('/', requireAuth, requireMembership, async function(req, res, next) 
 
     const service = await pool.query(
       'INSERT INTO services (church_id, service_date, service_time, service_sort_order, title, public_token, created_by) VALUES ($1,$2,$3,$4,$5,$6,$7) RETURNING *',
-      [churchId, service_date, service_time, service_sort_order, title, public_token, req.auth.userId]
+      [churchId, service_date, service_time, service_sort_order, title, public_token, req.user.id]
     );
     res.status(201).json(service.rows[0]);
   } catch (err) {
@@ -109,7 +109,7 @@ router.put('/:id', requireAuth, requireMembership, async function(req, res, next
     );
     if (existing.rows.length === 0) return res.status(404).json({ error: 'Not found' });
     const isAdmin = req.memberRole === 'admin';
-    const isOwner = existing.rows[0].created_by === req.auth.userId;
+    const isOwner = existing.rows[0].created_by === req.user.id;
     if (!isAdmin && !isOwner) return res.status(403).json({ error: 'Not authorised' });
     const service_date = req.body.service_date;
     const service_time = req.body.service_time;
