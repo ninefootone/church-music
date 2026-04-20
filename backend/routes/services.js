@@ -92,8 +92,8 @@ router.post('/', requireAuth, requireMembership, async function(req, res, next) 
     const public_token = uuidv4().split('-')[0];
 
     const service = await pool.query(
-      'INSERT INTO services (church_id, service_date, service_time, service_sort_order, title, public_token) VALUES ($1,$2,$3,$4,$5,$6) RETURNING *',
-      [churchId, service_date, service_time, service_sort_order, title, public_token]
+      'INSERT INTO services (church_id, service_date, service_time, service_sort_order, title, public_token, created_by) VALUES ($1,$2,$3,$4,$5,$6,$7) RETURNING *',
+      [churchId, service_date, service_time, service_sort_order, title, public_token, req.auth.userId]
     );
     res.status(201).json(service.rows[0]);
   } catch (err) {
@@ -101,8 +101,16 @@ router.post('/', requireAuth, requireMembership, async function(req, res, next) 
   }
 });
 
-router.put('/:id', requireAuth, requireAdmin, async function(req, res, next) {
+router.put('/:id', requireAuth, requireMembership, async function(req, res, next) {
   try {
+    const existing = await pool.query(
+      'SELECT created_by FROM services WHERE id=$1 AND church_id=$2',
+      [req.params.id, req.churchId]
+    );
+    if (existing.rows.length === 0) return res.status(404).json({ error: 'Not found' });
+    const isAdmin = req.memberRole === 'admin';
+    const isOwner = existing.rows[0].created_by === req.auth.userId;
+    if (!isAdmin && !isOwner) return res.status(403).json({ error: 'Not authorised' });
     const service_date = req.body.service_date;
     const service_time = req.body.service_time;
     const service_sort_order = req.body.service_sort_order ?? 0;

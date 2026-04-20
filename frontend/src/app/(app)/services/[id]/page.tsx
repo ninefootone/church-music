@@ -6,6 +6,7 @@ import { useParams, useRouter } from 'next/navigation'
 import { format, parseISO } from 'date-fns'
 import { ArrowLeft, Share2, Plus, Music, BookOpen, Mic2, ExternalLink, Trash2 } from 'lucide-react'
 import { KeyBadge, CategoryBadge } from '@/components/ui/badges'
+import { useAuth } from '@clerk/nextjs'
 import { useChurch } from '@/context/ChurchContext'
 import api from '@/lib/api'
 import { ConfirmModal } from '@/components/ui/ConfirmModal'
@@ -20,6 +21,7 @@ const typeIcon = (type: string) => {
 export default function ServiceDetailPage() {
   const { id } = useParams()
   const router = useRouter()
+  const { userId } = useAuth()
   const { isAdmin, loading: churchLoading } = useChurch()
   const [service, setService] = useState<any>(null)
   const [loading, setLoading] = useState(true)
@@ -91,8 +93,8 @@ export default function ServiceDetailPage() {
               <ExternalLink size={14} /> Public view
             </a>
 
-            {/* Edit details / order — admin only */}
-            {isAdmin && (
+            {/* Edit details / order — admin or owner */}
+            {(isAdmin || service.created_by === userId) && (
               <>
                 <Link href={`/services/${id}/settings`} className="btn btn-secondary btn-sm">
                   Edit details
@@ -113,7 +115,7 @@ export default function ServiceDetailPage() {
         {!service.items || service.items.length === 0 ? (
           <div style={{ textAlign: 'center', padding: 'var(--space-xl)' }}>
             <p className="text-muted" style={{ marginBottom: 'var(--space-sm)' }}>No items added yet.</p>
-            {isAdmin && (
+            {(isAdmin || service.created_by === userId) && (
               <Link href={`/services/${id}/edit`} className="btn btn-primary btn-sm">
                 <Plus size={14} /> Build the running order
               </Link>
