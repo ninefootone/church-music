@@ -314,6 +314,9 @@ export default function ServiceEditPage() {
               <span style={{ fontWeight: 400, color: 'var(--color-text-secondary)', fontSize: 'var(--text-xl)' }}> · {service.service_time}</span>
             )}
           </h1>
+          <Link href={`/services/${id}/settings`} style={{ fontSize: 'var(--text-sm)', color: 'var(--color-text-muted)', textDecoration: 'none', marginTop: 4, display: 'inline-block' }}>
+            Edit details ↗
+          </Link>
         </div>
         <div style={{ display: 'flex', gap: 8, flexShrink: 0 }}>
           <Link href={`/services/${id}`} className="btn btn-secondary">Cancel</Link>
