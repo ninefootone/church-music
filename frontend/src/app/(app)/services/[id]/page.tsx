@@ -50,7 +50,6 @@ function SongItem({ item, index }: { item: any; index: number }) {
         <span style={{ fontSize: 'var(--text-sm)', color: 'var(--color-text-muted)', width: 24, textAlign: 'center', flexShrink: 0 }}>
           {index + 1}
         </span>
-        {!isSong && typeIcon(item.type)}
         <div style={{ flex: 1, minWidth: 0 }}>
           <p style={{ fontSize: 'var(--text-md)', fontWeight: isSong ? 600 : 400, color: isSong ? 'var(--color-text-primary)' : 'var(--color-text-secondary)', marginBottom: 0 }}>
             {isSong && item.song_title ? item.song_title : (item.title || item.type.charAt(0).toUpperCase() + item.type.slice(1))}
