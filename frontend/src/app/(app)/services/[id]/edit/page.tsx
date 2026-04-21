@@ -119,7 +119,7 @@ function SortableItem({
           <div style={{ flex: 1, minWidth: 0 }}>
             {item.type === 'song' ? (
               <>
-                <p className="dash-row-title" style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                <p className="dash-row-title">
                   {item.song_title}
                 </p>
               </>
