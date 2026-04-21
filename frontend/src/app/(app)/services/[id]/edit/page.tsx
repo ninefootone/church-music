@@ -203,6 +203,14 @@ export default function ServiceEditPage() {
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState('')
   const [showSongPicker, setShowSongPicker] = useState(true)
+  const [isMobile, setIsMobile] = useState(false)
+
+  useEffect(() => {
+    const check = () => setIsMobile(window.innerWidth <= 940)
+    check()
+    window.addEventListener('resize', check)
+    return () => window.removeEventListener('resize', check)
+  }, [])
 
   // Support both mouse and touch
   const sensors = useSensors(
@@ -333,7 +341,7 @@ export default function ServiceEditPage() {
         {/* Left — running order */}
         <div>
           {/* Label and count on same line, no overlap */}
-          <div style={{ position: 'relative', height: 24, marginBottom: 12, marginTop: 40 }}>
+          <div style={{ position: 'relative', height: 24, marginBottom: 12, marginTop: 25 }}>
             <span style={{ position: 'absolute', left: 0, top: 0, fontSize: 'var(--text-xs)', fontWeight: 700, textTransform: 'uppercase' as const, letterSpacing: '0.08em', color: 'var(--color-text-muted)' }}>
               Running order
             </span>
@@ -384,7 +392,9 @@ export default function ServiceEditPage() {
                   />
                 </div>
                 <div style={{ maxHeight: 300, overflowY: 'auto' }}>
-                  {filteredSongs.length === 0 ? (
+                  {isMobile && !songSearch ? (
+                    <p className="text-muted" style={{ fontSize: 'var(--text-sm)', padding: '8px 0' }}>Type to search songs</p>
+                  ) : filteredSongs.length === 0 ? (
                     <p className="text-muted" style={{ fontSize: 'var(--text-sm)', padding: '8px 0' }}>No songs found</p>
                   ) : filteredSongs.map(song => (
                     <button
