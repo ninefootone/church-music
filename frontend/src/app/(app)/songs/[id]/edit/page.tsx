@@ -89,6 +89,10 @@ export default function EditSongPage() {
           </div>
           <div style={mb}><label className="label">Tags <span className="label-note">(comma separated)</span></label><input className="input" value={form.tags} onChange={e => setForm(f => ({ ...f, tags: e.target.value }))} /></div>
           <div style={mb}>
+            <label className="label">Suggested arrangement</label>
+            <input className="input" placeholder="e.g. Verse 1, Chorus, Verse 2, Chorus, Bridge, Chorus" value={form.suggested_arrangement} onChange={e => setForm(f => ({ ...f, suggested_arrangement: e.target.value }))} />
+          </div>
+          <div style={mb}>
             <label className="label">Lyrics</label>
             <LyricsEditor value={form.lyrics} onChange={v => setForm(f => ({ ...f, lyrics: v }))} />
             {form.ccli_number && (
@@ -96,10 +100,6 @@ export default function EditSongPage() {
                 Find lyrics on <a href={`https://songselect.ccli.com/songs/${form.ccli_number}`} target="_blank" rel="noopener noreferrer" className="link-brand">SongSelect ↗</a>
               </div>
             )}
-          </div>
-          <div style={mb}>
-            <label className="label">Suggested arrangement</label>
-            <input className="input" placeholder="e.g. Verse 1, Chorus, Verse 2, Chorus, Bridge, Chorus" value={form.suggested_arrangement} onChange={e => setForm(f => ({ ...f, suggested_arrangement: e.target.value }))} />
           </div>
         </form>
       </div>

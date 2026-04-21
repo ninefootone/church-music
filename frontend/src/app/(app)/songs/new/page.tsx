@@ -118,11 +118,6 @@ export default function NewSongPage() {
           </div>
 
           <div style={{ marginBottom: 'var(--space-md)' }}>
-            <label className="label">Suggested arrangement</label>
-            <input className="input" placeholder="e.g. Verse 1, Chorus, Verse 2, Chorus, Bridge, Chorus" value={form.suggested_arrangement} onChange={e => setForm(f => ({ ...f, suggested_arrangement: e.target.value }))} />
-          </div>
-
-          <div style={{ marginBottom: 'var(--space-md)' }}>
             <label className="label">Bible references</label>
             <input className="input" placeholder="e.g. Romans 8, Colossians 3:1-4" value={form.bible_references} onChange={e => setForm(f => ({ ...f, bible_references: e.target.value }))} />
           </div>
@@ -135,6 +130,11 @@ export default function NewSongPage() {
           <div style={{ marginBottom: 'var(--space-md)' }}>
             <label className="label">Tags <span style={{ fontWeight: 400, textTransform: 'none', letterSpacing: 0, fontSize: 13 }}>(comma separated)</span></label>
             <input className="input" placeholder="God's Faithfulness, Grace, The Cross" value={form.tags} onChange={e => setForm(f => ({ ...f, tags: e.target.value }))} />
+          </div>
+
+          <div style={{ marginBottom: 'var(--space-md)' }}>
+            <label className="label">Suggested arrangement</label>
+            <input className="input" placeholder="e.g. Verse 1, Chorus, Verse 2, Chorus, Bridge, Chorus" value={form.suggested_arrangement} onChange={e => setForm(f => ({ ...f, suggested_arrangement: e.target.value }))} />
           </div>
 
           <div style={{ marginBottom: 'var(--space-md)' }}>
