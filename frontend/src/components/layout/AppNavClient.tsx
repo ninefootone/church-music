@@ -31,7 +31,7 @@ export function AppNavClient() {
         <div className="app-nav-inner">
           <div className="app-nav-left">
             <Link href="/dashboard" className="app-nav-brand" onClick={closeMenu}>
-              <img src="/logo-icon.svg" alt="Song Stack" style={{ height: 28, width: 28 }} />
+              <img src="/logo-icon.svg" alt="Song Stack" style={{ height: 28, width: 28, borderRadius: 4 }} />
               {churchName}
             </Link>
             <span className="app-nav-sep">·</span>
