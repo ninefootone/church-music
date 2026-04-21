@@ -162,8 +162,7 @@ export default function PublicServicePage() {
     <div style={{ minHeight: '100vh', background: 'var(--color-bg)' }}>
       <nav style={{ background: 'var(--color-surface)', borderBottom: '1px solid var(--color-border)', boxShadow: 'var(--shadow-sm)', padding: '0 var(--space-lg)', height: 58, display: 'flex', alignItems: 'center' }}>
         <div style={{ maxWidth: 'var(--width-app)', margin: '0 auto', width: '100%', display: 'flex', alignItems: 'center', gap: 8 }}>
-          <Music size={18} style={{ color: 'var(--color-brand-500)' }} />
-          <span style={{ fontSize: 17, fontWeight: 700, color: 'var(--color-text-primary)', letterSpacing: '-0.01em' }}>Song Stack</span>
+          <img src="/logo.svg" alt="Song Stack" style={{ height: 22, borderRadius: 4 }} />
           <span style={{ fontSize: 'var(--text-sm)', color: 'var(--color-text-muted)', marginLeft: 4 }}>View only</span>
         </div>
       </nav>

@@ -21,9 +21,10 @@ export default async function HomePage() {
 
       <main style={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', textAlign: 'center', padding: '48px 24px' }}>
         <div style={{ maxWidth: 640 }}>
-          <img src="/logo-strap.svg" alt="Song Stack" style={{ height: 48, marginBottom: 32 }} />
-          <h1 style={{ fontSize: 52, fontWeight: 700, color: 'var(--color-text-primary)', letterSpacing: '-0.03em', lineHeight: 1.1, marginBottom: 20 }}>
-            Your church&apos;s<br />song library
+          <img src="/logo-strap.svg" alt="Song Stack" style={{ height: 64, marginBottom: 32, display: 'block', marginLeft: 'auto', marginRight: 'auto' }} />
+          <h1 style={{ position: 'absolute', width: 1, height: 1, padding: 0, margin: -1, overflow: 'hidden', clip: 'rect(0,0,0,0)', whiteSpace: 'nowrap', border: 0 }}>
+            Your church&apos;s song library
+          </h1>
           </h1>
           <p style={{ fontSize: 20, color: 'var(--color-text-secondary)', lineHeight: 1.6, marginBottom: 36 }}>
             Manage your worship songs, plan services, and share chord charts &mdash; all in one place, for your whole team.
