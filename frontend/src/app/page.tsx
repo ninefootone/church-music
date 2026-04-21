@@ -25,7 +25,6 @@ export default async function HomePage() {
           <h1 style={{ position: 'absolute', width: 1, height: 1, padding: 0, margin: -1, overflow: 'hidden', clip: 'rect(0,0,0,0)', whiteSpace: 'nowrap', border: 0 }}>
             Your church&apos;s song library
           </h1>
-          </h1>
           <p style={{ fontSize: 20, color: 'var(--color-text-secondary)', lineHeight: 1.6, marginBottom: 36 }}>
             Manage your worship songs, plan services, and share chord charts &mdash; all in one place, for your whole team.
           </p>
