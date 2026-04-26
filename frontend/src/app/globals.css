@@ -383,6 +383,7 @@
 
 @media (max-width: 480px) {
   .badge-upcoming, .badge-today, .badge-past { font-size: 10px; padding: 2px 7px; }
+  .landing-nav-actions { display: none; }
 }
 
   /* ── Footer ── */
