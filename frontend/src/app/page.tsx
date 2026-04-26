@@ -13,7 +13,7 @@ export default async function HomePage() {
         <div style={{ display: 'flex', alignItems: 'center', gap: 8, fontSize: 18, fontWeight: 700, color: 'var(--color-text-primary)' }}>
           <img src="/logo.svg" alt="Song Stack" style={{ height: 24, borderRadius: 4 }} />
         </div>
-        <div style={{ display: 'flex', gap: 12 }} className="landing-nav-actions">
+        <div style={{ display: 'flex', gap: 12, flexShrink: 0 }} className="landing-nav-actions">
           <Link href="/sign-in" style={{ fontSize: 15, fontWeight: 500, color: 'var(--color-text-secondary)', textDecoration: 'none', padding: '6px 12px' }}>Sign in</Link>
           <Link href="/sign-up" className="btn btn-primary">Get started</Link>
         </div>
@@ -26,7 +26,7 @@ export default async function HomePage() {
             Your church&apos;s song library
           </h1>
           <p style={{ fontSize: 20, color: 'var(--color-text-secondary)', lineHeight: 1.6, marginBottom: 36 }}>
-            Manage your worship songs, plan services, and share chord charts &mdash; all in one place, for your whole team.
+            Manage your worship songs, plan services, and share chord charts &ndash; all in one place, for your whole team.
           </p>
           <div style={{ display: 'flex', gap: 12, justifyContent: 'center', flexWrap: 'wrap' }}>
             <Link href="/sign-up" className="btn btn-primary" style={{ padding: '11px 28px', fontSize: 16 }}>Get started free</Link>
