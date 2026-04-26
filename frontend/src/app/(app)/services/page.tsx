@@ -24,9 +24,7 @@ export default function ServicesPage() {
   useEffect(() => {
     if (!church || churchLoading) return
     Promise.all([
-      // Upcoming: ASC so next service is first
       api.get('/api/services', { params: { upcoming: 'true' } }),
-      // Past: DESC so most recent past service is first
       api.get('/api/services', { params: { upcoming: 'false' } }),
     ]).then(([upRes, pastRes]) => {
       setUpcoming(upRes.data)
@@ -45,7 +43,11 @@ export default function ServicesPage() {
     return d.getFullYear() === today.getFullYear() && d.getMonth() === today.getMonth() && d.getDate() === today.getDate()
   }
 
-  const ServiceCard = ({ service, isPast }: { service: Service; isPast?: boolean }) => (    <Link href={`/services/${service.id}`} className={`service-card ${isPast ? 'is-past' : ''}`}>
+  const todayServices = upcoming.filter(s => isToday(s.service_date))
+  const futureServices = upcoming.filter(s => !isToday(s.service_date))
+
+  const ServiceCard = ({ service, badge }: { service: Service; badge: 'today' | 'upcoming' | 'past' }) => (
+    <Link href={`/services/${service.id}`} className={`service-card ${badge === 'past' ? 'is-past' : ''}`}>
       <div style={{ flex: 1, minWidth: 0 }}>
         <p className="service-date">
           {format(parseISO(service.service_date), 'd MMMM yyyy')}
@@ -56,13 +58,15 @@ export default function ServicesPage() {
         {service.title && <p className="dash-row-meta">{service.title}</p>}
       </div>
       <div style={{ display: 'flex', alignItems: 'center', gap: 10, flexShrink: 0 }}>
-        <span className={`badge ${isPast ? 'badge-past' : isToday(service.service_date) ? 'badge-today' : 'badge-upcoming'}`}>
-          {isPast ? 'PAST' : isToday(service.service_date) ? 'TODAY' : 'UPCOMING'}
+        <span className={`badge badge-${badge}`}>
+          {badge === 'today' ? 'TODAY' : badge === 'upcoming' ? 'UPCOMING' : 'PAST'}
         </span>
         <ChevronRight size={18} style={{ color: 'var(--color-text-muted)' }} />
       </div>
     </Link>
   )
+
+  const hasAny = upcoming.length > 0 || past.length > 0
 
   return (
     <div>
@@ -75,30 +79,38 @@ export default function ServicesPage() {
         )}
       </div>
 
-      {upcoming.length === 0 && past.length === 0 ? (
+      {!hasAny ? (
         <div className="card" style={{ textAlign: 'center', padding: 'var(--space-xl)' }}>
           <p className="text-muted" style={{ marginBottom: 'var(--space-sm)' }}>No services yet.</p>
           {isAdmin && <Link href="/services/new" className="link">Plan your first service</Link>}
         </div>
       ) : (
         <>
-          {/* Upcoming — next service first */}
-          {upcoming.length > 0 ? (
+          {/* Today */}
+          {todayServices.length > 0 && (
             <>
-              <div className="section-label">Upcoming</div>
-              {upcoming.map(s => <ServiceCard key={s.id} service={s} />)}
+              <div className="section-label">Today</div>
+              {todayServices.map(s => <ServiceCard key={s.id} service={s} badge="today" />)}
             </>
-          ) : (
+          )}
+
+          {/* Upcoming */}
+          {futureServices.length > 0 ? (
+            <>
+              <div className="section-label" style={{ marginTop: todayServices.length > 0 ? 'var(--space-lg)' : 0 }}>Upcoming</div>
+              {futureServices.map(s => <ServiceCard key={s.id} service={s} badge="upcoming" />)}
+            </>
+          ) : todayServices.length === 0 && (
             <div className="card" style={{ marginBottom: 'var(--space-md)', padding: 'var(--space-md) var(--space-lg)' }}>
               <p className="text-muted">No upcoming services. {isAdmin && <Link href="/services/new" className="link">Add one</Link>}</p>
             </div>
           )}
 
-          {/* Past — most recent first */}
+          {/* Past */}
           {past.length > 0 && (
             <>
               <div className="section-label" style={{ marginTop: 'var(--space-lg)' }}>Past</div>
-              {past.map(s => <ServiceCard key={s.id} service={s} isPast />)}
+              {past.map(s => <ServiceCard key={s.id} service={s} badge="past" />)}
             </>
           )}
         </>

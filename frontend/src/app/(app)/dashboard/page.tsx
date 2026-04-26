@@ -36,6 +36,12 @@ export default function DashboardPage() {
     ]).finally(() => setLoading(false))
   }, [church])
 
+  const isToday = (dateStr: string) => {
+    const today = new Date()
+    const d = parseISO(dateStr)
+    return d.getFullYear() === today.getFullYear() && d.getMonth() === today.getMonth() && d.getDate() === today.getDate()
+  }
+
   if (churchLoading || (loading && !songs.length)) return (
     <p className="text-muted" style={{ padding: 'var(--space-xl)' }}>Loading…</p>
   )
@@ -85,7 +91,7 @@ export default function DashboardPage() {
         {/* Services — upcoming only */}
         <div className="card">
           <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 'var(--space-md)' }}>
-            <span className="section-label" style={{ marginBottom: 0 }}>Upcoming services</span>
+            <span className="section-label" style={{ marginBottom: 0 }}>Services</span>
             {church && <Link href="/services/new" className="btn btn-ghost">Add new +</Link>}
           </div>
           {services.length === 0 ? (
@@ -100,7 +106,9 @@ export default function DashboardPage() {
                   </p>
                   {service.title && <p className="dash-row-meta">{service.title}</p>}
                 </div>
-                <span className="badge badge-upcoming">UPCOMING</span>
+                <span className={`badge ${isToday(service.service_date) ? 'badge-today' : 'badge-upcoming'}`}>
+                  {isToday(service.service_date) ? 'TODAY' : 'UPCOMING'}
+                </span>
               </Link>
             )
           })}
