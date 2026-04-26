@@ -118,8 +118,8 @@ const migrate = async () => {
         sort_order INTEGER DEFAULT 0,
         created_at TIMESTAMPTZ DEFAULT NOW()
       );
-    `);
-    CREATE TABLE IF NOT EXISTS ccli_lookup (
+
+      CREATE TABLE IF NOT EXISTS ccli_lookup (
         id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
         ccli_number TEXT NOT NULL,
         title TEXT NOT NULL,
