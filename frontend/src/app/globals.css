@@ -643,6 +643,10 @@
 
 } /* end @layer components */
 
+@media (max-width: 480px) {
+  .landing-nav-actions { display: none; }
+}
+
 /* ============================================================
    NAVIGATION
 ============================================================ */
@@ -848,7 +852,6 @@ textarea {
 
 @media (max-width: 480px) {
   .badge-upcoming, .badge-today, .badge-past { font-size: 10px; padding: 2px 7px; }
-  .landing-nav-actions { display: none; }
   .usage-stats-grid { grid-template-columns: 1fr 1fr !important; }
   .usage-stats-grid .stat-box:last-child { grid-column: span 2; }
 }
