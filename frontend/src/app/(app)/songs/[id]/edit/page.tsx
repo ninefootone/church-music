@@ -6,7 +6,6 @@ import { useParams, useRouter } from 'next/navigation'
 import { useAuth } from '@clerk/nextjs'
 import { ArrowLeft } from 'lucide-react'
 import { CATEGORIES, Category, Song } from '@/types'
-import CcliAutocomplete from '@/components/CcliAutocomplete'
 import api, { setAuthToken } from '@/lib/api'
 import { LyricsEditor } from '@/components/ui/LyricsEditor'
 
@@ -57,15 +56,7 @@ export default function EditSongPage() {
       {error && <div className="error-banner">{error}</div>}
       <div className="card">
         <form id="song-edit-form" onSubmit={handleSubmit}>
-          <div style={mb}><label className="label">Song title *</label>
-            <CcliAutocomplete
-              titleValue={form.title}
-              ccliValue={form.ccli_number}
-              onTitleChange={val => setForm(f => ({ ...f, title: val }))}
-              onCcliChange={val => setForm(f => ({ ...f, ccli_number: val }))}
-              onAuthorChange={val => setForm(f => ({ ...f, author: f.author || val }))}
-            />
-          </div>
+          <div style={mb}><label className="label">Song title *</label><input className="input" required value={form.title} onChange={e => setForm(f => ({ ...f, title: e.target.value }))} /></div>
           <div style={mb}><label className="label">Author(s)</label><input className="input" value={form.author} onChange={e => setForm(f => ({ ...f, author: e.target.value }))} /></div>
           <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 'var(--space-md)', ...mb }}>
             <div>
