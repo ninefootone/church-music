@@ -8,29 +8,29 @@ export default async function HomePage() {
   if (userId) redirect('/dashboard')
 
   return (
-    <div style={{ minHeight: '100vh', background: 'var(--color-bg)', display: 'flex', flexDirection: 'column' }}>
-      <nav style={{ background: 'var(--color-surface)', borderBottom: '1px solid var(--color-border)', padding: '0 var(--space-lg)', height: 58, display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-        <div style={{ display: 'flex', alignItems: 'center', gap: 8, fontSize: 18, fontWeight: 700, color: 'var(--color-text-primary)' }}>
-          <img src="/logo.svg" alt="Song Stack" style={{ height: 24, borderRadius: 4 }} />
+    <div className="landing-page">
+      <nav className="landing-nav">
+        <div className="landing-nav-brand">
+          <img src="/logo.svg" alt="Song Stack" className="landing-nav-logo" />
         </div>
-        <div style={{ display: 'flex', gap: 12, flexShrink: 0 }} className="landing-nav-actions">
-          <Link href="/sign-in" style={{ fontSize: 15, fontWeight: 500, color: 'var(--color-text-secondary)', textDecoration: 'none', padding: '6px 12px' }}>Sign in</Link>
+        <div className="landing-nav-actions">
+          <Link href="/sign-in" className="landing-nav-link">Sign in</Link>
           <Link href="/sign-up" className="btn btn-primary">Get started</Link>
         </div>
       </nav>
 
-      <main style={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', textAlign: 'center', padding: '48px 24px' }}>
-        <div style={{ maxWidth: 640 }}>
-          <img src="/logo-strap.svg" alt="Song Stack" style={{ height: 64, marginBottom: 32, display: 'block', marginLeft: 'auto', marginRight: 'auto' }} />
-          <h1 style={{ position: 'absolute', width: 1, height: 1, padding: 0, margin: -1, overflow: 'hidden', clip: 'rect(0,0,0,0)', whiteSpace: 'nowrap', border: 0 }}>
+      <main className="landing-hero">
+        <div className="landing-hero-inner">
+          <img src="/logo-strap.svg" alt="Song Stack" className="landing-hero-logo" />
+          <h1 className="sr-only">
             Your church&apos;s song library
           </h1>
-          <p style={{ fontSize: 20, color: 'var(--color-text-secondary)', lineHeight: 1.6, marginBottom: 36 }}>
+          <p className="landing-hero-text">
             Manage your worship songs, plan services, and share chord charts &ndash; all in one place, for your whole team.
           </p>
-          <div style={{ display: 'flex', gap: 12, justifyContent: 'center', flexWrap: 'wrap' }}>
-            <Link href="/sign-up" className="btn btn-primary" style={{ padding: '11px 28px', fontSize: 16 }}>Get started free</Link>
-            <Link href="/sign-in" className="btn btn-secondary" style={{ padding: '11px 28px', fontSize: 16 }}>Sign in</Link>
+          <div className="landing-hero-actions">
+            <Link href="/sign-up" className="btn btn-primary landing-cta-btn">Get started free</Link>
+            <Link href="/sign-in" className="btn btn-secondary landing-cta-btn">Sign in</Link>
           </div>
         </div>
       </main>
