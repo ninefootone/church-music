@@ -119,6 +119,20 @@ const migrate = async () => {
         created_at TIMESTAMPTZ DEFAULT NOW()
       );
     `);
+    CREATE TABLE IF NOT EXISTS ccli_lookup (
+        id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+        ccli_number TEXT NOT NULL,
+        title TEXT NOT NULL,
+        author TEXT,
+        first_line TEXT,
+        default_key TEXT,
+        source_church_id UUID REFERENCES churches(id) ON DELETE SET NULL,
+        confirmed_count INTEGER DEFAULT 1,
+        created_at TIMESTAMPTZ DEFAULT NOW(),
+        updated_at TIMESTAMPTZ DEFAULT NOW(),
+        UNIQUE(ccli_number)
+      );
+    `);
     console.log('Migration complete');
   } catch (err) {
     console.error('Migration failed:', err);
