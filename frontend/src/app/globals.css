@@ -144,6 +144,7 @@
     line-height: 1.4;
   }
   .badge-upcoming { background: var(--color-accent-light); color: var(--color-accent-dark); }
+  .badge-today    { background: var(--color-brand-100);    color: var(--color-brand-700); }
   .badge-past     { background: var(--color-neutral-100);  color: var(--color-neutral-400); }
 
   /* ── Category badges ── */
@@ -381,7 +382,7 @@
 }
 
 @media (max-width: 480px) {
-  .badge-upcoming, .badge-past { font-size: 10px; padding: 2px 7px; }
+  .badge-upcoming, .badge-today, .badge-past { font-size: 10px; padding: 2px 7px; }
 }
 
   /* ── Footer ── */
@@ -748,7 +749,7 @@
 }
 
 @media (max-width: 480px) {
-  .badge-upcoming, .badge-past { font-size: 10px; padding: 2px 7px; }
+  .badge-upcoming, .badge-today, .badge-past { font-size: 10px; padding: 2px 7px; }
 }
 
 .song-detail-header {

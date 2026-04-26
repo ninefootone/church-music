@@ -39,8 +39,13 @@ export default function ServicesPage() {
     <p className="text-muted" style={{ padding: 'var(--space-xl)' }}>Loading…</p>
   )
 
-  const ServiceCard = ({ service, isPast }: { service: Service; isPast?: boolean }) => (
-    <Link href={`/services/${service.id}`} className={`service-card ${isPast ? 'is-past' : ''}`}>
+  const isToday = (dateStr: string) => {
+    const today = new Date()
+    const d = parseISO(dateStr)
+    return d.getFullYear() === today.getFullYear() && d.getMonth() === today.getMonth() && d.getDate() === today.getDate()
+  }
+
+  const ServiceCard = ({ service, isPast }: { service: Service; isPast?: boolean }) => (    <Link href={`/services/${service.id}`} className={`service-card ${isPast ? 'is-past' : ''}`}>
       <div style={{ flex: 1, minWidth: 0 }}>
         <p className="service-date">
           {format(parseISO(service.service_date), 'd MMMM yyyy')}
@@ -51,8 +56,8 @@ export default function ServicesPage() {
         {service.title && <p className="dash-row-meta">{service.title}</p>}
       </div>
       <div style={{ display: 'flex', alignItems: 'center', gap: 10, flexShrink: 0 }}>
-        <span className={`badge ${isPast ? 'badge-past' : 'badge-upcoming'}`}>
-          {isPast ? 'PAST' : 'UPCOMING'}
+        <span className={`badge ${isPast ? 'badge-past' : isToday(service.service_date) ? 'badge-today' : 'badge-upcoming'}`}>
+          {isPast ? 'PAST' : isToday(service.service_date) ? 'TODAY' : 'UPCOMING'}
         </span>
         <ChevronRight size={18} style={{ color: 'var(--color-text-muted)' }} />
       </div>
