@@ -87,6 +87,24 @@ export default function SongDetailPage() {
     </div>
   )
 
+  function renderArrangement(value: string) {
+    if (!value) return null
+    try {
+      const parsed = JSON.parse(value)
+      if (Array.isArray(parsed)) {
+        return (
+          <div className="arrangement-pills">
+            {parsed.map((label: string, i: number) => (
+              <span key={i} className="arrangement-pill">{label}</span>
+            ))}
+          </div>
+        )
+      }
+    } catch {}
+    // Legacy plain text fallback
+    return <p style={{ fontSize: 'var(--text-sm)', color: 'var(--color-text-secondary)', margin: 0, lineHeight: 1.6 }}>{value}</p>
+  }
+
   const mainFiles = (song.files || []).filter(f => f.key_of === song.default_key || !f.key_of)
   const otherFiles = (song.files || []).filter(f => f.key_of && f.key_of !== song.default_key)
 
@@ -233,7 +251,7 @@ export default function SongDetailPage() {
         {song.suggested_arrangement && (
           <div style={{ marginTop: 'var(--space-md)' }}>
             <span className="section-label" style={{ marginBottom: 4, display: 'block' }}>Arrangement</span>
-            <p style={{ fontSize: 'var(--text-sm)', color: 'var(--color-text-secondary)', margin: 0, lineHeight: 1.6 }}>{song.suggested_arrangement}</p>
+            {renderArrangement(song.suggested_arrangement)}
           </div>
         )}
       </div>

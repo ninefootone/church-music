@@ -9,6 +9,7 @@ import { CATEGORIES, Category, Song } from '@/types'
 import CcliAutocomplete from '@/components/CcliAutocomplete'
 import api, { setAuthToken } from '@/lib/api'
 import { LyricsEditor } from '@/components/ui/LyricsEditor'
+import { ArrangementBuilder } from '@/components/ui/ArrangementBuilder'
 
 export default function EditSongPage() {
   const { id } = useParams()
@@ -101,7 +102,10 @@ export default function EditSongPage() {
           <div style={mb}><label className="label">Tags <span className="label-note">(comma separated)</span></label><input className="input" value={form.tags} onChange={e => setForm(f => ({ ...f, tags: e.target.value }))} /></div>
           <div style={mb}>
             <label className="label">Suggested arrangement</label>
-            <input className="input" placeholder="e.g. Verse 1, Chorus, Verse 2, Chorus, Bridge, Chorus" value={form.suggested_arrangement} onChange={e => setForm(f => ({ ...f, suggested_arrangement: e.target.value }))} />
+            <ArrangementBuilder
+              value={form.suggested_arrangement}
+              onChange={val => setForm(f => ({ ...f, suggested_arrangement: val }))}
+            />
           </div>
           <div style={mb}>
             <label className="label">Lyrics</label>
