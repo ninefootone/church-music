@@ -14,6 +14,8 @@ const FILE_TYPES = [
 
 const KEYS = ['C', 'C#', 'Db', 'D', 'Eb', 'E', 'F', 'F#', 'Gb', 'G', 'Ab', 'A', 'Bb', 'B']
 
+const normaliseKey = (k: string | null | undefined) => k ? k.replace(/♯/g, '#').replace(/♭/g, 'b') : ''
+
 interface FileRowProps {
   file: any
   songId: string
@@ -30,13 +32,13 @@ export function FileRow({ file, songId, defaultKey, isAdmin, downloadingId, dele
   const [editing, setEditing] = useState(false)
   const [editType, setEditType] = useState(file.file_type || 'chords')
   const [editLabel, setEditLabel] = useState(file.label || '')
-  const [editKey, setEditKey] = useState(file.key_of || defaultKey || '')
+  const [editKey, setEditKey] = useState(normaliseKey(file.key_of) || normaliseKey(defaultKey) || '')
   const [saving, setSaving] = useState(false)
 
   const openEdit = () => {
     setEditType(file.file_type || 'chords')
     setEditLabel(file.label || '')
-    setEditKey(file.key_of || '')
+    setEditKey(normaliseKey(file.key_of) || normaliseKey(defaultKey) || '')
     setEditing(true)
   }
 
