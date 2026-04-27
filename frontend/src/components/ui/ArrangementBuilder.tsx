@@ -237,6 +237,10 @@ export function ArrangementBuilder({ value, onChange }: Props) {
       {items.length === 0 && (
         <p className="arrangement-empty">Add elements above to build the arrangement.</p>
       )}
+
+      {items.length > 0 && (
+        <p className="arrangement-hint">Click an item to rename it. Drag to reorder — best done on desktop.</p>
+      )}
     </div>
   )
 }
