@@ -7,7 +7,7 @@ interface LyricsDisplayProps {
 
 // Detects whether lyrics are stored as HTML or plain text with ** markers
 function isHTML(str: string) {
-  return str.trim().startsWith('<')
+  return /<[a-z][\s\S]*>/i.test(str.trim())
 }
 
 // Convert legacy ** and _ markers to HTML
@@ -23,10 +23,25 @@ function markersToHTML(text: string) {
     .join('')
 }
 
+// Normalise HTML from WordPress:
+// - bare \n newlines inside or between block elements become <br> tags
+// - ensures consistent line breaks regardless of how WP exported them
+function normaliseHTML(html: string): string {
+  // Replace literal \n newlines that are NOT inside an existing tag
+  // with <br> so browsers render them as line breaks
+  return html
+    // Collapse Windows-style line endings
+    .replace(/\r\n/g, '\n')
+    // Convert runs of blank lines (paragraph breaks) to a spacer
+    .replace(/\n{2,}/g, '\n<br>\n')
+    // Convert remaining single newlines to <br>
+    .replace(/\n/g, '<br>')
+}
+
 export function LyricsDisplay({ lyrics, className }: LyricsDisplayProps) {
   if (!lyrics) return null
 
-  const html = isHTML(lyrics) ? lyrics : markersToHTML(lyrics)
+  const html = isHTML(lyrics) ? normaliseHTML(lyrics) : markersToHTML(lyrics)
 
   return (
     <div
