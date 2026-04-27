@@ -18,7 +18,6 @@ function parseArrangement(value: string): { items: Item[]; isLegacy: boolean } {
       }
     }
   } catch {}
-  // Plain text — legacy format
   return { items: [], isLegacy: true }
 }
 
@@ -27,7 +26,6 @@ function buildCountedLabel(base: string, existing: Item[]): string {
     i => i.label === base || i.label.match(new RegExp(`^${base} \\d+$`))
   )
   if (matches.length === 0) return base
-  // First addition of a countable element — rename existing bare instance if present
   return `${base} ${matches.length + 1}`
 }
 
@@ -49,8 +47,14 @@ export function ArrangementBuilder({ value, onChange }: Props) {
   const [items, setItems] = useState<Item[]>(initialItems)
   const [showLegacyPrompt, setShowLegacyPrompt] = useState(isLegacy)
   const [editingId, setEditingId] = useState<string | null>(null)
+
+  // Drag (mouse) refs
   const dragItem = useRef<number | null>(null)
   const dragOver = useRef<number | null>(null)
+
+  // Touch refs
+  const touchItem = useRef<number | null>(null)
+  const touchListRef = useRef<HTMLDivElement | null>(null)
 
   const emit = (next: Item[]) => {
     onChange(JSON.stringify(next.map(i => i.label)))
@@ -58,7 +62,6 @@ export function ArrangementBuilder({ value, onChange }: Props) {
 
   const addElement = (base: string) => {
     const label = nextLabel(base, items)
-    // Only auto-rename for Verse: if adding "Verse 2", rename bare "Verse" to "Verse 1" first
     let updated = [...items]
     if (base === 'Verse' && items.some(i => i.label === 'Verse')) {
       updated = updated.map(i => i.label === 'Verse' ? { ...i, label: 'Verse 1' } : i)
@@ -80,12 +83,12 @@ export function ArrangementBuilder({ value, onChange }: Props) {
     emit(next)
   }
 
+  // ── Mouse drag handlers ───────────────────────────────────────
   const handleDragStart = (index: number) => {
     dragItem.current = index
   }
 
   const handleDragEnter = (index: number) => {
-    dragOver.current = index
     if (dragItem.current === null || dragItem.current === index) return
     const next = [...items]
     const [moved] = next.splice(dragItem.current, 1)
@@ -100,8 +103,41 @@ export function ArrangementBuilder({ value, onChange }: Props) {
     dragOver.current = null
   }
 
+  // ── Touch drag handlers ───────────────────────────────────────
+  const handleTouchStart = (index: number) => {
+    touchItem.current = index
+  }
+
+  const handleTouchMove = (e: React.TouchEvent) => {
+    if (touchItem.current === null) return
+    e.preventDefault()
+    const touch = e.touches[0]
+    const list = touchListRef.current
+    if (!list) return
+    const children = Array.from(list.children) as HTMLElement[]
+    for (let i = 0; i < children.length; i++) {
+      const rect = children[i].getBoundingClientRect()
+      if (touch.clientX >= rect.left && touch.clientX <= rect.right &&
+          touch.clientY >= rect.top && touch.clientY <= rect.bottom) {
+        if (i !== touchItem.current) {
+          const next = [...items]
+          const [moved] = next.splice(touchItem.current, 1)
+          next.splice(i, 0, moved)
+          touchItem.current = i
+          setItems(next)
+          emit(next)
+        }
+        break
+      }
+    }
+  }
+
+  const handleTouchEnd = () => {
+    touchItem.current = null
+  }
+
+  // ── Legacy prompt ─────────────────────────────────────────────
   const convertLegacy = () => {
-    // Parse the comma-separated string into items
     const parts = value.split(',').map(s => s.trim()).filter(Boolean)
     const converted = parts.map(label => ({ id: uid(), label }))
     setItems(converted)
@@ -135,7 +171,6 @@ export function ArrangementBuilder({ value, onChange }: Props) {
 
   return (
     <div className="arrangement-builder">
-      {/* Preset buttons */}
       <div className="arrangement-presets">
         {PRESET_ELEMENTS.map(el => (
           <button
@@ -149,9 +184,13 @@ export function ArrangementBuilder({ value, onChange }: Props) {
         ))}
       </div>
 
-      {/* Drag list */}
       {items.length > 0 && (
-        <div className="arrangement-list">
+        <div
+          className="arrangement-list"
+          ref={touchListRef}
+          onTouchMove={handleTouchMove}
+          onTouchEnd={handleTouchEnd}
+        >
           {items.map((item, index) => (
             <div
               key={item.id}
@@ -161,6 +200,7 @@ export function ArrangementBuilder({ value, onChange }: Props) {
               onDragEnter={() => handleDragEnter(index)}
               onDragEnd={handleDragEnd}
               onDragOver={e => e.preventDefault()}
+              onTouchStart={() => handleTouchStart(index)}
             >
               <span className="arrangement-grip"><GripVertical size={14} /></span>
               {editingId === item.id ? (
