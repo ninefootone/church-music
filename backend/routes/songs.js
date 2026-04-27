@@ -135,6 +135,16 @@ router.post('/', requireAuth, requireAdmin, async (req, res, next) => {
       }
     }
 
+    if (ccli_number) {
+      await pool.query(`
+        INSERT INTO ccli_lookup (ccli_number, title, author, first_line, default_key, source_church_id)
+        VALUES ($1, $2, $3, $4, $5, $6)
+        ON CONFLICT (ccli_number) DO UPDATE SET
+          confirmed_count = ccli_lookup.confirmed_count + 1,
+          updated_at = NOW()
+      `, [ccli_number, title, author, first_line, default_key, churchId]);
+    }
+
     res.status(201).json(song.rows[0]);
   } catch (err) {
     next(err);
@@ -174,12 +184,23 @@ router.put('/:id', requireAuth, requireAdmin, async (req, res, next) => {
       }
     }
 
+    if (ccli_number) {
+      await pool.query(`
+        INSERT INTO ccli_lookup (ccli_number, title, author, first_line, default_key, source_church_id)
+        VALUES ($1, $2, $3, $4, $5, $6)
+        ON CONFLICT (ccli_number) DO UPDATE SET
+          confirmed_count = ccli_lookup.confirmed_count + 1,
+          updated_at = NOW()
+      `, [ccli_number, title, author, first_line, default_key, churchId]);
+    }
+
     res.json(song.rows[0]);
   } catch (err) {
     next(err);
   }
 });
 
+// DELETE /songs/:id (admin)
 // DELETE /songs/:id (admin)
 router.delete('/:id', requireAuth, requireAdmin, async (req, res, next) => {
   try {
