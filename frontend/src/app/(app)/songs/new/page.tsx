@@ -9,6 +9,7 @@ import { ArrowLeft } from 'lucide-react'
 import { CATEGORIES, Category } from '@/types'
 import api, { setAuthToken } from '@/lib/api'
 import { LyricsEditor } from '@/components/ui/LyricsEditor'
+import { ArrangementBuilder } from '@/components/ui/ArrangementBuilder'
 
 export default function NewSongPage() {
   const router = useRouter()
@@ -164,7 +165,10 @@ export default function NewSongPage() {
 
           <div style={{ marginBottom: 'var(--space-md)' }}>
             <label className="label">Suggested arrangement</label>
-            <input className="input" placeholder="e.g. Verse 1, Chorus, Verse 2, Chorus, Bridge, Chorus" value={form.suggested_arrangement} onChange={e => setForm(f => ({ ...f, suggested_arrangement: e.target.value }))} />
+            <ArrangementBuilder
+              value={form.suggested_arrangement}
+              onChange={val => setForm(f => ({ ...f, suggested_arrangement: val }))}
+            />
           </div>
 
           <div style={{ marginBottom: 'var(--space-md)' }}>
