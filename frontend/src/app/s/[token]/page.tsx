@@ -68,7 +68,7 @@ function SongItem({ item, index }: { item: any; index: number }) {
 
         <div style={{ display: 'flex', alignItems: 'center', gap: 8, flexShrink: 0 }}>
           {isSong && (item.key_override || item.song_default_key) && (
-            <span className="badge-key">{item.key_override || item.song_default_key}</span>
+            <span className="badge-key">{(item.key_override || item.song_default_key || '').replace(/♯/g, '#').replace(/♭/g, 'b')}</span>
           )}
           {isSong && item.song_youtube_url && (
             <a
@@ -108,7 +108,7 @@ function SongItem({ item, index }: { item: any; index: number }) {
                     <FileText size={14} />
                     {file.label}
                     {file.key_of && (
-                      <span className="badge-key" style={{ marginLeft: 2 }}>{file.key_of}</span>
+                      <span className="badge-key" style={{ marginLeft: 2 }}>{file.key_of.replace(/♯/g, '#').replace(/♭/g, 'b')}</span>
                     )}
                     <ExternalLink size={12} style={{ opacity: 0.5 }} />
                   </a>

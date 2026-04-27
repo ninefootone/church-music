@@ -22,5 +22,6 @@ export function CategoryBadge({ category }: { category: Category }) {
 }
 
 export function KeyBadge({ keyOf }: { keyOf: string }) {
-  return <span className="badge-key">{keyOf}</span>
+  const normalised = keyOf.replace(/♯/g, '#').replace(/♭/g, 'b')
+  return <span className="badge-key">{normalised}</span>
 }
