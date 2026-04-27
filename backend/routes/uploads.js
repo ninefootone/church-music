@@ -111,6 +111,22 @@ router.get('/public/songs/:songId/files', async function(req, res, next) {
   }
 });
 
+router.patch('/songs/:songId/files/:fileId', requireAuth, requireAdmin, async function(req, res, next) {
+  try {
+    const { file_type, label, key_of } = req.body;
+    const result = await pool.query(
+      'UPDATE song_files SET file_type = COALESCE($1, file_type), label = COALESCE($2, label), key_of = $3 WHERE id = $4 AND song_id = $5 RETURNING *',
+      [file_type, label, key_of || null, req.params.fileId, req.params.songId]
+    );
+    if (result.rows.length === 0) {
+      return res.status(404).json({ error: 'File not found' });
+    }
+    res.json(result.rows[0]);
+  } catch (err) {
+    next(err);
+  }
+});
+
 router.delete('/songs/:songId/files/:fileId', requireAuth, requireAdmin, async function(req, res, next) {
   try {
     const file = await pool.query(
