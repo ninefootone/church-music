@@ -11,6 +11,7 @@ const memberRoutes = require('./routes/members');
 const uploadRoutes = require('./routes/uploads');
 const statsRoutes = require('./routes/stats');
 const templateRoutes = require('./routes/templates');
+const ccliRoutes = require('./routes/ccli');
 
 const app = express();
 
@@ -30,6 +31,7 @@ app.use('/api/members', memberRoutes);
 app.use('/api/uploads', uploadRoutes);
 app.use('/api/stats', statsRoutes);
 app.use('/api/templates', templateRoutes);
+app.use('/api/ccli', ccliRoutes);
 
 app.use((err, req, res, next) => {
   console.error(err.stack);
