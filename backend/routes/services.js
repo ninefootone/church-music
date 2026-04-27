@@ -147,6 +147,48 @@ router.put('/:id/items', requireAuth, requireMembership, async function(req, res
   }
 });
 
+router.get('/:id/musicians', requireAuth, requireMembership, async function(req, res, next) {
+  try {
+    const result = await pool.query(
+      `SELECT sm.id, sm.name, sm.role, sm.user_id, sm.created_at
+       FROM service_musicians sm
+       WHERE sm.service_id = $1
+       ORDER BY sm.created_at ASC`,
+      [req.params.id]
+    );
+    res.json(result.rows);
+  } catch (err) {
+    next(err);
+  }
+});
+
+router.post('/:id/musicians', requireAuth, requireMembership, async function(req, res, next) {
+  try {
+    const { name, role, user_id } = req.body;
+    if (!name || !role) return res.status(400).json({ error: 'name and role are required' });
+    const result = await pool.query(
+      `INSERT INTO service_musicians (service_id, user_id, name, role)
+       VALUES ($1, $2, $3, $4) RETURNING *`,
+      [req.params.id, user_id || null, name, role]
+    );
+    res.status(201).json(result.rows[0]);
+  } catch (err) {
+    next(err);
+  }
+});
+
+router.delete('/:id/musicians/:musicianId', requireAuth, requireMembership, async function(req, res, next) {
+  try {
+    await pool.query(
+      `DELETE FROM service_musicians WHERE id = $1 AND service_id = $2`,
+      [req.params.musicianId, req.params.id]
+    );
+    res.json({ success: true });
+  } catch (err) {
+    next(err);
+  }
+});
+
 router.delete('/:id', requireAuth, requireMembership, async function(req, res, next) {
   try {
     const existing = await pool.query(
