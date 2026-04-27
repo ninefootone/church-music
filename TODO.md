@@ -7,7 +7,6 @@
 
 ### Features
 - [ ] Custom arrangement per service — when adding a song, allow a custom arrangement for that specific service
-- [ ] Add musicians to service — autocomplete from church members, plus ability to add non-signed-up guests
 - [ ] Tag autocomplete — show most-used tags as suggestions, plus ability to add your own
 - [ ] Members can delete only their own services (permission scoping)
 - [ ] Song ordering on songs page — sort by most/least sung
@@ -52,3 +51,4 @@ static inline `style={{...}}` props to named classes in `globals.css`.
 - [x] PWA setup (waiting on icon asset)
 - [x] Edit file label after upload (show filename alongside label for reference)
 - [x] Upload multiple files at once with ability to edit all labels before saving
+- [x] Add musicians to service — autocomplete from church members, plus ability to add non-signed-up guests
