@@ -108,12 +108,20 @@ export default function SongDetailPage() {
   const mainFiles = (song.files || []).filter(f => f.key_of === song.default_key || !f.key_of)
   const otherFiles = (song.files || []).filter(f => f.key_of && f.key_of !== song.default_key)
 
-  const FileRow = ({ file }: { file: any }) => {
+    const FileRow = ({ file }: { file: any }) => {
     const [editing, setEditing] = useState(false)
-    const [editType, setEditType] = useState(file.file_type || 'chords')
-    const [editLabel, setEditLabel] = useState(file.label || '')
-    const [editKey, setEditKey] = useState(file.key_of || '')
+    const [editType, setEditType] = useState('chords')
+    const [editLabel, setEditLabel] = useState('')
+    const [editKey, setEditKey] = useState('')
     const [saving, setSaving] = useState(false)
+
+    const openEdit = () => {
+      setEditType(file.file_type || 'chords')
+      setEditLabel(file.label || '')
+      setEditKey(file.key_of || '')
+      setEditing(true)
+    }
+
 
     const FILE_TYPES = [
       { value: 'chords',     label: 'Chord chart' },
@@ -192,7 +200,7 @@ export default function SongDetailPage() {
         {isAdmin && (
           <>
             <button
-              onClick={() => setEditing(true)}
+              onClick={openEdit}
               style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'var(--color-text-muted)', padding: 4, display: 'flex' }}
               title="Edit file details"
             >
