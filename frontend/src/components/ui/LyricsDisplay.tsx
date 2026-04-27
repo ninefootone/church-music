@@ -27,14 +27,10 @@ function markersToHTML(text: string) {
 // - bare \n newlines inside or between block elements become <br> tags
 // - ensures consistent line breaks regardless of how WP exported them
 function normaliseHTML(html: string): string {
-  // Replace literal \n newlines that are NOT inside an existing tag
-  // with <br> so browsers render them as line breaks
   return html
-    // Collapse Windows-style line endings
     .replace(/\r\n/g, '\n')
-    // Convert runs of blank lines (paragraph breaks) to a spacer
-    .replace(/\n{2,}/g, '\n<br>\n')
-    // Convert remaining single newlines to <br>
+    .replace(/<\/(p|div|h[1-6])>\s*\n+\s*<(p|div|h[1-6])/gi, '</$1>\n<$2')
+    .replace(/\n{2,}/g, '<br>')
     .replace(/\n/g, '<br>')
 }
 
