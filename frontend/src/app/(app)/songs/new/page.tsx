@@ -171,16 +171,7 @@ export default function NewSongPage() {
             <label className="label">Lyrics</label>
             <LyricsEditor value={form.lyrics} onChange={v => setForm(f => ({ ...f, lyrics: v }))} />
             <div style={{ marginTop: 6, fontSize: 13, color: 'var(--color-text-muted)' }}>
-              <a>
-              Find lyrics on{' '}
-              
-                href={form.ccli_number ? `https://songselect.ccli.com/songs/${form.ccli_number}` : 'https://songselect.ccli.com'}
-                target="_blank"
-                rel="noopener noreferrer"
-                style={{ color: 'var(--color-brand-500)' }}
-              >
-                SongSelect {'\u2197'}
-              </a>
+              Find lyrics on <a href={form.ccli_number ? `https://songselect.ccli.com/songs/${form.ccli_number}` : 'https://songselect.ccli.com'} target="_blank" rel="noopener noreferrer" style={{ color: 'var(--color-brand-500)' }}>SongSelect ↗</a>
               {form.ccli_number && <span style={{ color: 'var(--color-text-muted)' }}> — CCLI {form.ccli_number}</span>}
             </div>
           </div>
