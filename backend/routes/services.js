@@ -165,6 +165,7 @@ router.put('/:id/items', requireAuth, requireMembership, async function(req, res
 router.post('/:id/musicians', requireAuth, requireMembership, async function(req, res, next) {
   try {
     const { name, role, user_id } = req.body;
+    console.log('[musicians POST] body:', req.body, 'serviceId:', req.params.id);
     if (!name || !role) return res.status(400).json({ error: 'name and role are required' });
     const result = await pool.query(
       `INSERT INTO service_musicians (service_id, user_id, name, role)
@@ -173,6 +174,7 @@ router.post('/:id/musicians', requireAuth, requireMembership, async function(req
     );
     res.status(201).json(result.rows[0]);
   } catch (err) {
+    console.error('[musicians POST] error:', err.message, err.stack);
     next(err);
   }
 });
