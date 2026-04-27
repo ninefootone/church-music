@@ -109,11 +109,13 @@ export default function EditSongPage() {
           </div>
           <div style={mb}>
             <label className="label">Lyrics</label>
+            {form.ccli_number && (
+              <div className="text-hint" style={{ marginBottom: 8 }}>
+                Find lyrics on <a href={`https://songselect.ccli.com/songs/${form.ccli_number}`} target="_blank" rel="noopener noreferrer" className="link-brand">SongSelect ↗</a>
+                <span style={{ color: 'var(--color-text-muted)' }}> — CCLI {form.ccli_number}</span>
+              </div>
+            )}
             <LyricsEditor value={form.lyrics} onChange={v => setForm(f => ({ ...f, lyrics: v }))} />
-            <div className="text-hint" style={{ marginTop: 6 }}>
-              Find lyrics on <a href={form.ccli_number ? `https://songselect.ccli.com/songs/${form.ccli_number}` : 'https://songselect.ccli.com'} target="_blank" rel="noopener noreferrer" className="link-brand">SongSelect ↗</a>
-              {form.ccli_number && <span style={{ color: 'var(--color-text-muted)' }}> — CCLI {form.ccli_number}</span>}
-            </div>
           </div>
         </form>
       </div>
