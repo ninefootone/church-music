@@ -30,7 +30,7 @@ export function FileRow({ file, songId, defaultKey, isAdmin, downloadingId, dele
   const [editing, setEditing] = useState(false)
   const [editType, setEditType] = useState(file.file_type || 'chords')
   const [editLabel, setEditLabel] = useState(file.label || '')
-  const [editKey, setEditKey] = useState(file.key_of || '')
+  const [editKey, setEditKey] = useState(file.key_of || defaultKey || '')
   const [saving, setSaving] = useState(false)
 
   const openEdit = () => {
