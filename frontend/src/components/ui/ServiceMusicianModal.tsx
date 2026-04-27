@@ -4,7 +4,7 @@ import { useState, useEffect } from 'react'
 import { X, UserPlus } from 'lucide-react'
 import api from '@/lib/api'
 
-const PRESET_ROLES = ['Vocals', 'Keys', 'Guitar', 'Bass', 'Drums', 'Acoustic', 'Violin', 'Sound', 'Presenting', 'Preaching', 'Reading', 'Prayer']
+const PRESET_ROLES = ['Vocals', 'Keys', 'Guitar', 'Bass', 'Drums', 'Other']
 
 interface Member {
   id: string
@@ -142,7 +142,7 @@ export function ServiceMusicianModal({ serviceId, onAdd, onClose }: Props) {
                 onClick={() => toggleRole(r)}
                 style={{
                   padding: '6px 14px',
-                  borderRadius: 'var(--radius-full)',
+                  borderRadius: 'var(--radius-sm)',
                   border: '1px solid',
                   borderColor: selectedRoles.includes(r) ? 'var(--color-brand-600)' : 'var(--color-border)',
                   background: selectedRoles.includes(r) ? 'var(--color-brand-600)' : 'var(--color-surface)',
@@ -159,7 +159,7 @@ export function ServiceMusicianModal({ serviceId, onAdd, onClose }: Props) {
               onClick={() => setShowCustom(v => !v)}
               style={{
                 padding: '6px 14px',
-                borderRadius: 'var(--radius-full)',
+                borderRadius: 'var(--radius-sm)',
                 border: '1px solid',
                 borderColor: showCustom ? 'var(--color-brand-600)' : 'var(--color-border)',
                 background: showCustom ? 'var(--color-brand-600)' : 'var(--color-surface)',

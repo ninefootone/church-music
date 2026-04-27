@@ -243,7 +243,7 @@ export default function ServiceDetailPage() {
                 return acc
               }, {} as Record<string, { name: string; user_id: string | null; roles: string[]; ids: string[] }>)
             ).map(group => (
-              <div key={group.ids[0]} style={{ display: 'inline-flex', alignItems: 'center', gap: 6, padding: '6px 12px', background: 'var(--color-neutral-50)', border: '1px solid var(--color-border)', borderRadius: 'var(--radius-full)', fontSize: 'var(--text-sm)' }}>
+              <div key={group.ids[0]} style={{ display: 'inline-flex', alignItems: 'center', gap: 6, padding: '6px 12px', background: 'var(--color-neutral-50)', border: '1px solid var(--color-border)', borderRadius: 'var(--radius-sm)', fontSize: 'var(--text-sm)' }}>
                 <span style={{ fontWeight: 600, color: 'var(--color-text-primary)' }}>{group.name}</span>
                 <span style={{ color: 'var(--color-text-muted)' }}>{group.roles.join(', ')}</span>
                 {(isAdmin || service.created_by === userId) && (
