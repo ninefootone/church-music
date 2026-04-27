@@ -50,29 +50,6 @@ export function LyricsEditor({ value, onChange }: LyricsEditorProps) {
       attributes: {
         class: 'lyrics-editor-content',
       },
-      transformPastedHTML(html) {
-        // Strip all HTML tags to plain text, preserving line breaks
-        const tmp = document.createElement('div')
-        tmp.innerHTML = html
-        // Replace block elements with newlines before extracting text
-        tmp.querySelectorAll('p, br, div, li').forEach(el => {
-          el.after(document.createTextNode('\n'))
-        })
-        const text = tmp.textContent || ''
-        // Re-use the plain text transform
-        return text
-          .split('\n')
-          .map(line => line.trim())
-          .map(line => `<p>${line || '<br>'}</p>`)
-          .join('')
-      },
-      transformPastedText(text) {
-        // Convert plain text paste to HTML preserving line breaks
-        return text
-          .split('\n')
-          .map(line => `<p>${line || '<br>'}</p>`)
-          .join('')
-      },
     },
   })
 
@@ -124,8 +101,20 @@ export function LyricsEditor({ value, onChange }: LyricsEditorProps) {
     </button>
   )
 
+  const handlePaste = (e: React.ClipboardEvent) => {
+    const text = e.clipboardData.getData('text/plain')
+    if (!text) return
+    e.preventDefault()
+    const html = text
+      .split('\n')
+      .map(line => line.trim())
+      .map(line => `<p>${line || '<br>'}</p>`)
+      .join('')
+    editor.commands.insertContent(html)
+  }
+
   return (
-    <div style={{ border: '1px solid var(--color-border)', borderRadius: 'var(--radius-md)', overflow: 'hidden', background: 'var(--color-surface)' }}>
+    <div onPaste={handlePaste} style={{ border: '1px solid var(--color-border)', borderRadius: 'var(--radius-md)', overflow: 'hidden', background: 'var(--color-surface)' }}>
       <div style={{ display: 'flex', gap: 4, padding: '8px 12px', borderBottom: '1px solid var(--color-border)', background: 'var(--color-neutral-50)' }}>
         <ToolbarButton
           onClick={() => editor.chain().focus().toggleBold().run()}
