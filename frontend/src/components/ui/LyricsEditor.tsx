@@ -51,7 +51,20 @@ export function LyricsEditor({ value, onChange }: LyricsEditorProps) {
         class: 'lyrics-editor-content',
       },
       transformPastedHTML(html) {
-        return html
+        // Strip all HTML tags to plain text, preserving line breaks
+        const tmp = document.createElement('div')
+        tmp.innerHTML = html
+        // Replace block elements with newlines before extracting text
+        tmp.querySelectorAll('p, br, div, li').forEach(el => {
+          el.after(document.createTextNode('\n'))
+        })
+        const text = tmp.textContent || ''
+        // Re-use the plain text transform
+        return text
+          .split('\n')
+          .map(line => line.trim())
+          .map(line => `<p>${line || '<br>'}</p>`)
+          .join('')
       },
       transformPastedText(text) {
         // Convert plain text paste to HTML preserving line breaks
