@@ -30,6 +30,21 @@ router.get('/', requireAuth, requireMembership, async function(req, res, next) {
   }
 });
 
+router.get('/:id/musicians', requireAuth, requireMembership, async function(req, res, next) {
+  try {
+    const result = await pool.query(
+      `SELECT sm.id, sm.name, sm.role, sm.user_id, sm.created_at
+       FROM service_musicians sm
+       WHERE sm.service_id = $1
+       ORDER BY sm.created_at ASC`,
+      [req.params.id]
+    );
+    res.json(result.rows);
+  } catch (err) {
+    next(err);
+  }
+});
+
 router.get('/:id', requireAuth, requireMembership, async function(req, res, next) {
   try {
     const churchId = req.churchId;
@@ -142,21 +157,6 @@ router.put('/:id/items', requireAuth, requireMembership, async function(req, res
     }
 
     res.json({ success: true });
-  } catch (err) {
-    next(err);
-  }
-});
-
-router.get('/:id/musicians', requireAuth, requireMembership, async function(req, res, next) {
-  try {
-    const result = await pool.query(
-      `SELECT sm.id, sm.name, sm.role, sm.user_id, sm.created_at
-       FROM service_musicians sm
-       WHERE sm.service_id = $1
-       ORDER BY sm.created_at ASC`,
-      [req.params.id]
-    );
-    res.json(result.rows);
   } catch (err) {
     next(err);
   }

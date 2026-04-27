@@ -293,7 +293,7 @@ export default function ServiceDetailPage() {
       {showMusicianModal && (
         <ServiceMusicianModal
           serviceId={id as string}
-          onAdd={musician => setMusicians(prev => [...prev, musician])}
+          onAdd={musicians => setMusicians(prev => [...prev, ...musicians])}
           onClose={() => setShowMusicianModal(false)}
         />
       )}
