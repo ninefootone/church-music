@@ -5,6 +5,10 @@
 
 ## Backlog
 
+### SongSelect & copyright
+- [ ] Move (or duplicate) "Find lyrics on SongSelect" link to a more prominent position when adding/editing a song — duplicate it if CCLI autocomplete has been used
+- [ ] Add a copyright notice when adding songs explaining restrictions on storing lyrics/music — with a per-user "never show again" option
+
 ### File management
 - [ ] Edit file label after upload (show filename alongside label for reference)
 - [ ] Upload multiple files at once with ability to edit all labels before saving
