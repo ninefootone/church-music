@@ -118,7 +118,7 @@ export default function EditSongPage() {
                 rel="noopener noreferrer"
                 className="link-brand"
               >
-                SongSelect ↗
+                SongSelect &#8599;
               </a>
               {form.ccli_number && <span style={{ color: 'var(--color-text-muted)' }}> — CCLI {form.ccli_number}</span>}
             </div>

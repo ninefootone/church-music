@@ -16,6 +16,15 @@ export default function NewSongPage() {
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
   const [templateSearch, setTemplateSearch] = useState<null | { id: string; title: string; author: string; ccli: string }>(null)
+  const [copyrightDismissed, setCopyrightDismissed] = useState(() => {
+    if (typeof window === 'undefined') return false
+    return localStorage.getItem('songstack_copyright_notice_dismissed') === 'true'
+  })
+
+  const dismissCopyright = () => {
+    localStorage.setItem('songstack_copyright_notice_dismissed', 'true')
+    setCopyrightDismissed(true)
+  }
   const [form, setForm] = useState({
     title: '', author: '', default_key: '', category: '' as Category | '',
     first_line: '', ccli_number: '', youtube_url: '', lyrics: '', tags: '',
@@ -64,6 +73,18 @@ export default function NewSongPage() {
       <Link href="/songs" className="back-link"><ArrowLeft size={14} /> Back to songs</Link>
       <h1 className="page-title" style={{ marginBottom: 'var(--space-lg)' }}>Add new song</h1>
       {error && <div className="error-box">{error}</div>}
+
+      {!copyrightDismissed && (
+        <div className="copyright-notice">
+          <div className="copyright-notice__body">
+            <strong>A note on copyright</strong>
+            <p>Song Stack is a planning tool. Storing complete lyrics or sheet music is only permitted if your church holds a valid <a href="https://uk.ccli.com/copyright-licences/" target="_blank" rel="noopener noreferrer" className="link-brand">CCLI Copyright Licence</a>. Music files (scores/lead sheets) require a separate <a href="https://uk.ccli.com/music-reproduction-licences/" target="_blank" rel="noopener noreferrer" className="link-brand">Music Reproduction Licence</a>. If in doubt, link to SongSelect instead of storing lyrics here.</p>
+          </div>
+          <button type="button" className="copyright-notice__dismiss" onClick={dismissCopyright}>
+            Don't show again
+          </button>
+        </div>
+      )}
 
       <div className="card">
         <form id="song-new-form" onSubmit={handleSubmit}>
@@ -149,11 +170,18 @@ export default function NewSongPage() {
           <div style={{ marginBottom: 'var(--space-md)' }}>
             <label className="label">Lyrics</label>
             <LyricsEditor value={form.lyrics} onChange={v => setForm(f => ({ ...f, lyrics: v }))} />
-            {form.ccli_number && (
-              <div style={{ marginTop: 6, fontSize: 13, color: 'var(--color-text-muted)' }}>
-                Find lyrics on <a href={`https://songselect.ccli.com/songs/${form.ccli_number}`} target="_blank" rel="noopener noreferrer" style={{ color: 'var(--color-brand-500)' }}>SongSelect ↗</a>
-              </div>
-            )}
+            <div style={{ marginTop: 6, fontSize: 13, color: 'var(--color-text-muted)' }}>
+              Find lyrics on{' '}
+              
+                href={form.ccli_number ? `https://songselect.ccli.com/songs/${form.ccli_number}` : 'https://songselect.ccli.com'}
+                target="_blank"
+                rel="noopener noreferrer"
+                style={{ color: 'var(--color-brand-500)' }}
+              >
+                SongSelect &#8599;
+              </a>
+              {form.ccli_number && <span style={{ color: 'var(--color-text-muted)' }}> — CCLI {form.ccli_number}</span>}
+            </div>
           </div>
         </form>
       </div>
