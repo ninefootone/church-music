@@ -606,6 +606,52 @@
     color: var(--color-brand-600);
   }
 
+  /* ── Copyright notice ── */
+  .copyright-notice {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: var(--space-md);
+    background: var(--color-brand-50);
+    border: 1px solid var(--color-brand-200);
+    border-radius: var(--radius-md);
+    padding: 14px 16px;
+    margin-bottom: var(--space-md);
+  }
+  .copyright-notice__body {
+    flex: 1;
+    font-size: var(--text-sm);
+    line-height: 1.6;
+    color: var(--color-brand-700);
+  }
+  .copyright-notice__body strong {
+    display: block;
+    margin-bottom: 4px;
+    font-weight: 600;
+  }
+  .copyright-notice__body p {
+    margin: 0;
+    color: var(--color-brand-600);
+  }
+  .copyright-notice__dismiss {
+    flex-shrink: 0;
+    align-self: flex-start;
+    font-size: 12px;
+    font-weight: 500;
+    color: var(--color-brand-600);
+    background: white;
+    border: 1px solid var(--color-brand-200);
+    border-radius: var(--radius-sm);
+    padding: 4px 10px;
+    cursor: pointer;
+    white-space: nowrap;
+    line-height: 1.5;
+  }
+  .copyright-notice__dismiss:hover {
+    background: var(--color-brand-100);
+    border-color: var(--color-brand-400);
+  }
+
   /* ── Error box ── */
   .error-box {
     background: #fdf0f0;
