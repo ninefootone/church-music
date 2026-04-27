@@ -67,7 +67,7 @@ router.post('/songs/:songId', requireAuth, requireAdmin, upload.single('file'), 
   }
 });
 
-router.get('/songs/:songId/files/:fileId/url', requireAuth, requireAdmin, async function(req, res, next) {
+router.get('/songs/:songId/files/:fileId/url', requireAuth, async function(req, res, next) {
   try {
     const file = await pool.query(
       'SELECT * FROM song_files WHERE id = $1 AND song_id = $2',
