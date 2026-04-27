@@ -1,6 +1,8 @@
 'use client'
 
 import { useState, useRef, useEffect } from 'react'
+import { useAuth } from '@clerk/nextjs'
+import { api, setAuthToken } from '@/lib/api'
 
 type CcliEntry = {
   ccli_number: string
@@ -44,6 +46,8 @@ export default function CcliAutocomplete({
     return () => document.removeEventListener('mousedown', handleClickOutside)
   }, [])
 
+  const { getToken } = useAuth()
+
   function handleTitleInput(value: string) {
     onTitleChange(value)
     if (debounceRef.current) clearTimeout(debounceRef.current)
@@ -54,11 +58,9 @@ export default function CcliAutocomplete({
     }
     debounceRef.current = setTimeout(async () => {
       try {
-        const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/ccli?q=${encodeURIComponent(value)}`, {
-          headers: { 'Content-Type': 'application/json' },
-          credentials: 'include',
-        })
-        const data = await res.json()
+        const token = await getToken()
+        setAuthToken(token)
+        const { data } = await api.get(`/api/ccli?q=${encodeURIComponent(value)}`)
         setSuggestions(data)
         setOpen(data.length > 0)
       } catch {
