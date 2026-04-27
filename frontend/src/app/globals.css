@@ -609,9 +609,8 @@
   /* ── Copyright notice ── */
   .copyright-notice {
     display: flex;
-    align-items: flex-start;
-    justify-content: space-between;
-    gap: var(--space-md);
+    flex-direction: column;
+    gap: var(--space-sm);
     background: var(--color-brand-50);
     border: 1px solid var(--color-brand-200);
     border-radius: var(--radius-md);
@@ -634,7 +633,6 @@
     color: var(--color-brand-600);
   }
   .copyright-notice__dismiss {
-    flex-shrink: 0;
     align-self: flex-start;
     font-size: 12px;
     font-weight: 500;
