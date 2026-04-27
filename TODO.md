@@ -5,6 +5,10 @@
 
 ## Backlog
 
+### File management
+- [ ] Edit file label after upload (show filename alongside label for reference)
+- [ ] Upload multiple files at once with ability to edit all labels before saving
+
 ### Features
 - [ ] Custom arrangement per service — when adding a song, allow a custom arrangement for that specific service
 - [ ] Add musicians to service — autocomplete from church members, plus ability to add non-signed-up guests
