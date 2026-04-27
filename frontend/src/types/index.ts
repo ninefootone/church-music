@@ -117,6 +117,15 @@ export interface ServiceItem {
   song?: Song
 }
 
+export interface ServiceMusician {
+  id: string
+  service_id?: string
+  user_id: string | null
+  name: string
+  role: string
+  created_at?: string
+}
+
 export interface Service {
   id: string
   church_id: string
