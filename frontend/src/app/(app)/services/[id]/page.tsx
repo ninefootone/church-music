@@ -234,15 +234,23 @@ export default function ServiceDetailPage() {
           </p>
         ) : (
           <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8 }}>
-            {musicians.map(m => (
-              <div key={m.id} style={{ display: 'inline-flex', alignItems: 'center', gap: 6, padding: '6px 12px', background: 'var(--color-neutral-50)', border: '1px solid var(--color-border)', borderRadius: 'var(--radius-full)', fontSize: 'var(--text-sm)' }}>
-                <span style={{ fontWeight: 600, color: 'var(--color-text-primary)' }}>{m.name}</span>
-                <span style={{ color: 'var(--color-text-muted)' }}>{m.role}</span>
+            {Object.values(
+              musicians.reduce((acc, m) => {
+                const key = m.user_id || m.name
+                if (!acc[key]) acc[key] = { name: m.name, user_id: m.user_id, roles: [], ids: [] }
+                acc[key].roles.push(m.role)
+                acc[key].ids.push(m.id)
+                return acc
+              }, {} as Record<string, { name: string; user_id: string | null; roles: string[]; ids: string[] }>)
+            ).map(group => (
+              <div key={group.ids[0]} style={{ display: 'inline-flex', alignItems: 'center', gap: 6, padding: '6px 12px', background: 'var(--color-neutral-50)', border: '1px solid var(--color-border)', borderRadius: 'var(--radius-full)', fontSize: 'var(--text-sm)' }}>
+                <span style={{ fontWeight: 600, color: 'var(--color-text-primary)' }}>{group.name}</span>
+                <span style={{ color: 'var(--color-text-muted)' }}>{group.roles.join(', ')}</span>
                 {(isAdmin || service.created_by === userId) && (
                   <button
                     onClick={async () => {
-                      await api.delete(`/api/services/${id}/musicians/${m.id}`)
-                      setMusicians(prev => prev.filter(x => x.id !== m.id))
+                      await Promise.all(group.ids.map(rid => api.delete(`/api/services/${id}/musicians/${rid}`)))
+                      setMusicians(prev => prev.filter(m => !group.ids.includes(m.id)))
                     }}
                     style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'var(--color-text-muted)', padding: 0, display: 'flex', alignItems: 'center', marginLeft: 2 }}
                   >
