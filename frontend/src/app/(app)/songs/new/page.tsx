@@ -3,6 +3,7 @@
 import { useState } from 'react'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
+import CcliAutocomplete from '@/components/CcliAutocomplete'
 import { useAuth } from '@clerk/nextjs'
 import { ArrowLeft } from 'lucide-react'
 import { CATEGORIES, Category } from '@/types'
@@ -68,7 +69,15 @@ export default function NewSongPage() {
         <form id="song-new-form" onSubmit={handleSubmit}>
           <div style={{ marginBottom: 'var(--space-md)' }}>
             <label className="label">Song title *</label>
-            <input className="input" placeholder="Start typing to search the shared library…" value={form.title} onChange={e => handleTitleChange(e.target.value)} />
+            <CcliAutocomplete
+              titleValue={form.title}
+              ccliValue={form.ccli_number}
+              onTitleChange={val => handleTitleChange(val)}
+              onCcliChange={val => setForm(f => ({ ...f, ccli_number: val }))}
+              onAuthorChange={val => setForm(f => ({ ...f, author: f.author || val }))}
+              onFirstLineChange={val => setForm(f => ({ ...f, first_line: f.first_line || val }))}
+              onDefaultKeyChange={val => setForm(f => ({ ...f, default_key: f.default_key || val }))}
+            />
             {templateSearch && (
               <div style={{ marginTop: 10, padding: 'var(--space-md)', background: 'var(--color-brand-50)', border: '1px solid var(--color-brand-200)', borderRadius: 'var(--radius-md)' }}>
                 <div style={{ fontSize: 14, fontWeight: 600, color: 'var(--color-brand-700)', marginBottom: 4 }}>Found in shared library</div>
