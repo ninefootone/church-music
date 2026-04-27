@@ -175,8 +175,8 @@ export function ArrangementBuilder({ value, onChange }: Props) {
               ) : (
                 <span
                   className="arrangement-item-label"
-                  onDoubleClick={() => setEditingId(item.id)}
-                  title="Double-click to rename"
+                  onClick={() => setEditingId(item.id)}
+                  title="Click to rename"
                 >
                   {item.label}
                 </span>
