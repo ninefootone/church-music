@@ -31,11 +31,9 @@ function buildCountedLabel(base: string, existing: Item[]): string {
   return `${base} ${matches.length + 1}`
 }
 
-const UNCOUNTED = new Set(['Intro', 'Pre-Chorus', 'Instrumental', 'Ending', 'Tag'])
-
 function nextLabel(base: string, existing: Item[]): string {
-  if (UNCOUNTED.has(base)) return base
-  return buildCountedLabel(base, existing)
+  if (base === 'Verse') return buildCountedLabel(base, existing)
+  return base
 }
 
 let idCounter = 0
@@ -60,10 +58,10 @@ export function ArrangementBuilder({ value, onChange }: Props) {
 
   const addElement = (base: string) => {
     const label = nextLabel(base, items)
-    // If adding e.g. "Verse 2", rename bare "Verse" to "Verse 1" first
+    // Only auto-rename for Verse: if adding "Verse 2", rename bare "Verse" to "Verse 1" first
     let updated = [...items]
-    if (!UNCOUNTED.has(base) && items.some(i => i.label === base)) {
-      updated = updated.map(i => i.label === base ? { ...i, label: `${base} 1` } : i)
+    if (base === 'Verse' && items.some(i => i.label === 'Verse')) {
+      updated = updated.map(i => i.label === 'Verse' ? { ...i, label: 'Verse 1' } : i)
     }
     const newItems = [...updated, { id: uid(), label }]
     setItems(newItems)
