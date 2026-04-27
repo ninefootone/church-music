@@ -111,7 +111,8 @@ export default function EditSongPage() {
             <label className="label">Lyrics</label>
             <LyricsEditor value={form.lyrics} onChange={v => setForm(f => ({ ...f, lyrics: v }))} />
             <div className="text-hint" style={{ marginTop: 6 }}>
-              Find lyrics on{' '}
+              <a>
+                Find lyrics on{' '}
               
                 href={form.ccli_number ? `https://songselect.ccli.com/songs/${form.ccli_number}` : 'https://songselect.ccli.com'}
                 target="_blank"
