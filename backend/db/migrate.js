@@ -119,6 +119,15 @@ const migrate = async () => {
         created_at TIMESTAMPTZ DEFAULT NOW()
       );
 
+      CREATE TABLE IF NOT EXISTS service_musicians (
+        id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+        service_id UUID NOT NULL REFERENCES services(id) ON DELETE CASCADE,
+        user_id UUID REFERENCES users(id) ON DELETE SET NULL,
+        name TEXT NOT NULL,
+        role TEXT NOT NULL,
+        created_at TIMESTAMPTZ DEFAULT NOW()
+      );
+
       CREATE TABLE IF NOT EXISTS ccli_lookup (
         id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
         ccli_number TEXT NOT NULL,
