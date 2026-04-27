@@ -833,6 +833,7 @@
   line-height: 1.8;
 }
 .lyrics-editor-content strong { font-weight: 700; }
+.lyrics-editor-content p:has(> strong:only-child) { margin-top: 0.8em; }
 .lyrics-editor-content em     { font-style: italic; }
 
 .lyrics-text p {
@@ -843,6 +844,7 @@
   color: var(--color-text-secondary);
 }
 .lyrics-text strong { font-weight: 700; color: var(--color-text-primary); }
+.lyrics-text p:has(> strong:only-child) { margin-top: 0.8em; }
 .lyrics-text em     { font-style: italic; }
 
 /* ============================================================
