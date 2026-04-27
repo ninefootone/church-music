@@ -2,7 +2,7 @@
 
 import { useState, useRef, useEffect } from 'react'
 import { useAuth } from '@clerk/nextjs'
-import { api, setAuthToken } from '@/lib/api'
+import api, { setAuthToken } from '@/lib/api'
 
 type CcliEntry = {
   ccli_number: string
