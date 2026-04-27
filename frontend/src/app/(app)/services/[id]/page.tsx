@@ -4,12 +4,14 @@ import { useState, useEffect } from 'react'
 import Link from 'next/link'
 import { useParams, useRouter } from 'next/navigation'
 import { format, parseISO } from 'date-fns'
-import { ArrowLeft, Share2, Plus, Music, BookOpen, Mic2, Trash2, ChevronDown, ChevronUp, FileText, ExternalLink } from 'lucide-react'
+import { ArrowLeft, Share2, Plus, Music, BookOpen, Mic2, Trash2, ChevronDown, ChevronUp, FileText, ExternalLink, X } from 'lucide-react'
 import { KeyBadge, CategoryBadge } from '@/components/ui/badges'
 import { useAuth } from '@clerk/nextjs'
 import { useChurch } from '@/context/ChurchContext'
 import api from '@/lib/api'
 import { ConfirmModal } from '@/components/ui/ConfirmModal'
+import { ServiceMusicianModal } from '@/components/ui/ServiceMusicianModal'
+import type { ServiceMusician } from '@/types'
 
 interface SongFile {
   id: string
@@ -132,6 +134,8 @@ export default function ServiceDetailPage() {
   const [notFound, setNotFound] = useState(false)
   const [copied, setCopied] = useState(false)
   const [showDeleteService, setShowDeleteService] = useState(false)
+  const [musicians, setMusicians] = useState<ServiceMusician[]>([])
+  const [showMusicianModal, setShowMusicianModal] = useState(false)
   
   useEffect(() => {
     if (!id || churchLoading) return
@@ -140,6 +144,9 @@ export default function ServiceDetailPage() {
       .then(r => setService(r.data))
       .catch(() => setNotFound(true))
       .finally(() => setLoading(false))
+    api.get(`/api/services/${id}/musicians`)
+      .then(r => setMusicians(r.data))
+      .catch(() => {})
   }, [id, churchLoading])
 
   const handleShare = async () => {
@@ -206,6 +213,48 @@ export default function ServiceDetailPage() {
         </div>
       </div>
 
+      {/* Musicians */}
+      <div className="card" style={{ marginBottom: 'var(--space-md)' }}>
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 'var(--space-sm)' }}>
+          <div className="section-label" style={{ marginBottom: 0 }}>Musicians</div>
+          {(isAdmin || service.created_by === userId) && (
+            <button
+              onClick={() => setShowMusicianModal(true)}
+              className="btn btn-secondary btn-sm"
+              style={{ fontSize: 'var(--text-xs)', padding: '5px 10px' }}
+            >
+              <Plus size={13} /> Add
+            </button>
+          )}
+        </div>
+
+        {musicians.length === 0 ? (
+          <p style={{ fontSize: 'var(--text-sm)', color: 'var(--color-text-muted)', fontStyle: 'italic' }}>
+            No musicians added yet.
+          </p>
+        ) : (
+          <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8 }}>
+            {musicians.map(m => (
+              <div key={m.id} style={{ display: 'inline-flex', alignItems: 'center', gap: 6, padding: '6px 12px', background: 'var(--color-neutral-50)', border: '1px solid var(--color-border)', borderRadius: 'var(--radius-full)', fontSize: 'var(--text-sm)' }}>
+                <span style={{ fontWeight: 600, color: 'var(--color-text-primary)' }}>{m.name}</span>
+                <span style={{ color: 'var(--color-text-muted)' }}>{m.role}</span>
+                {(isAdmin || service.created_by === userId) && (
+                  <button
+                    onClick={async () => {
+                      await api.delete(`/api/services/${id}/musicians/${m.id}`)
+                      setMusicians(prev => prev.filter(x => x.id !== m.id))
+                    }}
+                    style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'var(--color-text-muted)', padding: 0, display: 'flex', alignItems: 'center', marginLeft: 2 }}
+                  >
+                    <X size={13} />
+                  </button>
+                )}
+              </div>
+            ))}
+          </div>
+        )}
+      </div>
+
       {/* Running order */}
       <div className="card">
         <div className="section-label">Running order</div>
@@ -240,6 +289,13 @@ export default function ServiceDetailPage() {
             <Trash2 size={14} /> Delete service
           </button>
         </div>
+      )}
+      {showMusicianModal && (
+        <ServiceMusicianModal
+          serviceId={id as string}
+          onAdd={musician => setMusicians(prev => [...prev, musician])}
+          onClose={() => setShowMusicianModal(false)}
+        />
       )}
       {showDeleteService && (
         <ConfirmModal
