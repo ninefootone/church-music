@@ -140,6 +140,21 @@ router.get('/:churchId', requireAuth, async (req, res, next) => {
   }
 });
 
+// Update church settings (admin only)
+router.patch('/:churchId', requireAuth, requireAdmin, async (req, res, next) => {
+  try {
+    const { name, ccli_number } = req.body;
+    const church = await pool.query(
+      'UPDATE churches SET name = COALESCE($1, name), ccli_number = $2 WHERE id = $3 RETURNING *',
+      [name || null, ccli_number || null, req.params.churchId]
+    );
+    if (church.rows.length === 0) return res.status(404).json({ error: 'Not found' });
+    res.json(church.rows[0]);
+  } catch (err) {
+    next(err);
+  }
+});
+
 // Regenerate invite code (admin only)
 router.post('/:churchId/regenerate-invite', requireAuth, async (req, res, next) => {
   try {
