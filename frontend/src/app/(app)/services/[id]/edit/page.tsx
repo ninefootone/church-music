@@ -294,7 +294,7 @@ export default function ServiceEditPage() {
   const addItem = (type: string, label: string) => {
     setItems(prev => [...prev, {
       id: newId(), type, song_id: null,
-      title: label, notes: '', key_override: '', expanded: false,
+      title: label, notes: '', key_override: '', custom_arrangement: '', expanded: false,
     }])
   }
 
