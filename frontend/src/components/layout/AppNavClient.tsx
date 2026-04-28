@@ -90,7 +90,7 @@ export function AppNavClient() {
           <div className="app-nav-mobile">
             {/* User info */}
             {user && (
-              <div style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '16px var(--space-lg)', borderBottom: '1px solid var(--color-border)', marginBottom: 'var(--space-xs)' }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '16px var(--space-lg)', borderBottom: '1px solid var(--color-border)', marginBottom: 'var(--space-xs)', overflow: 'hidden' }}>
                 {user.imageUrl ? (
                   <img src={user.imageUrl} alt="" style={{ width: 40, height: 40, borderRadius: '50%', objectFit: 'cover', flexShrink: 0 }} />
                 ) : (
