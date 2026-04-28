@@ -10,6 +10,7 @@ type CcliEntry = {
   author: string
   first_line: string
   default_key: string
+  in_library: boolean
 }
 
 type Props = {
@@ -118,7 +119,20 @@ export default function CcliAutocomplete({
               onMouseEnter={e => (e.currentTarget.style.background = 'var(--color-surface-hover, rgba(0,0,0,0.05))')}
               onMouseLeave={e => (e.currentTarget.style.background = 'transparent')}
             >
-              <div style={{ fontWeight: 500, fontSize: '0.9rem' }}>{entry.title}</div>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                <span style={{ fontWeight: 500, fontSize: '0.9rem' }}>{entry.title}</span>
+                {entry.in_library && (
+                  <span style={{
+                    fontSize: '0.65rem',
+                    background: 'var(--color-brand-100, #e0f2fe)',
+                    color: 'var(--color-brand-700, #0369a1)',
+                    borderRadius: '999px',
+                    padding: '0.1rem 0.45rem',
+                    fontWeight: 600,
+                    letterSpacing: '0.02em',
+                  }}>In library</span>
+                )}
+              </div>
               <div style={{ fontSize: '0.75rem', color: 'var(--color-text-muted)', marginTop: '0.1rem' }}>
                 {entry.author} · CCLI {entry.ccli_number}
                 {entry.default_key && ` · Key of ${entry.default_key}`}
