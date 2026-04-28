@@ -965,11 +965,11 @@ textarea {
   .service-detail-header { flex-direction: column; gap: var(--space-sm); }
   .service-detail-actions {
     width: 100%;
-    display: grid;
-    grid-template-columns: auto 1fr 1fr;
+    display: flex;
+    flex-wrap: wrap;
     gap: 8px;
   }
-  .service-detail-actions .btn-primary { grid-column: span 1; }
+  .service-detail-actions .btn-primary { width: auto; }
 
   .service-edit-grid,
   .service-edit-grid * { max-width: 100%; box-sizing: border-box; }
