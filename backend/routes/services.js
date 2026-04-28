@@ -55,7 +55,9 @@ router.get('/:id', requireAuth, requireMembership, async function(req, res, next
     if (service.rows.length === 0) return res.status(404).json({ error: 'Service not found' });
 
     const items = await pool.query(
-      `SELECT si.*, s.title AS song_title, s.author AS song_author,
+      `SELECT si.id, si.type, si.title, si.notes, si.key_override, si.position,
+        si.custom_arrangement,
+        s.id AS song_id, s.title AS song_title, s.author AS song_author,
         s.default_key AS song_default_key, s.category AS song_category,
         s.ccli_number AS song_ccli_number,
         s.suggested_arrangement AS song_suggested_arrangement
@@ -153,8 +155,8 @@ router.put('/:id/items', requireAuth, requireMembership, async function(req, res
     for (let i = 0; i < items.length; i++) {
       const item = items[i];
       await pool.query(
-        'INSERT INTO service_items (service_id, type, song_id, title, notes, key_override, position) VALUES ($1,$2,$3,$4,$5,$6,$7)',
-        [serviceId, item.type, item.song_id || null, item.title || null, item.notes || null, item.key_override || null, i]
+        'INSERT INTO service_items (service_id, type, song_id, title, notes, key_override, position, custom_arrangement) VALUES ($1,$2,$3,$4,$5,$6,$7,$8)',
+        [serviceId, item.type, item.song_id || null, item.title || null, item.notes || null, item.key_override || null, i, item.custom_arrangement || null]
       );
     }
 
