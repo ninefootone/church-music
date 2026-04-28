@@ -13,6 +13,7 @@ export default function OnboardingPage() {
   const searchParams = useSearchParams()
   const [mode, setMode] = useState<'choose' | 'create' | 'join'>('choose')
   const [churchName, setChurchName] = useState('')
+  const [ccliNumber, setCcliNumber] = useState('')
   const [inviteCode, setInviteCode] = useState('')
 
   useEffect(() => {
@@ -40,7 +41,7 @@ export default function OnboardingPage() {
     setError('')
     try {
       const client = await getAuthenticatedApi()
-      await client.post('/api/churches', { name: churchName })
+      await client.post('/api/churches', { name: churchName, ccli_number: ccliNumber || undefined })
       router.push('/dashboard')
     } catch (err: any) {
       setError(err.response?.data?.error || 'Failed to create church. Please try again.')
@@ -108,6 +109,13 @@ export default function OnboardingPage() {
               Church name
             </label>
             <input style={inputStyle} required autoFocus placeholder="e.g. Endcliffe Church" value={churchName} onChange={e => setChurchName(e.target.value)} />
+            <label style={{ display: 'block', fontSize: 12, fontWeight: 600, color: 'var(--color-text-secondary)', marginBottom: 6, textTransform: 'uppercase' as const, letterSpacing: '0.05em' }}>
+              CCLI Licence Number <span style={{ fontWeight: 400, textTransform: 'none', letterSpacing: 0 }}>(optional)</span>
+            </label>
+            <input style={inputStyle} placeholder="e.g. 123456" value={ccliNumber} onChange={e => setCcliNumber(e.target.value)} />
+            <p style={{ fontSize: 12, color: 'var(--color-text-muted)', marginTop: -12, marginBottom: 16 }}>
+              Your CCLI licence number allows Song Stack to include it in usage reports. Don't have one? <a href="https://uk.ccli.com" target="_blank" rel="noopener noreferrer" style={{ color: 'var(--color-brand-500)' }}>Get licensed at ccli.com</a>
+            </p>
             <div style={{ display: 'flex', gap: 10 }}>
               <button type="button" onClick={() => setMode('choose')} className="btn btn-ghost" style={{ display: 'flex', alignItems: 'center', gap: 6 }}><ArrowLeft size={16} /> Back</button>
               <button type="submit" className="btn btn-primary" style={{ marginLeft: 'auto' }} disabled={loading}>
