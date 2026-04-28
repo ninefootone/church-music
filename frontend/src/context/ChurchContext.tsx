@@ -10,6 +10,7 @@ interface Church {
   name: string
   slug: string
   invite_code: string
+  ccli_number: string | null
   role: 'admin' | 'member'
 }
 
