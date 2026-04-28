@@ -121,6 +121,26 @@ function SongItem({ item, index }: { item: any; index: number }) {
             </p>
           )}
 
+          {item.song_suggested_arrangement && (() => {
+            try {
+              const parts: string[] = JSON.parse(item.song_suggested_arrangement)
+              if (Array.isArray(parts)) return (
+                <div style={{ marginTop: 10 }}>
+                  <p style={{ fontSize: 'var(--text-xs)', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.07em', color: 'var(--color-text-muted)', marginBottom: 6 }}>Arrangement</p>
+                  <div style={{ display: 'flex', flexWrap: 'wrap', gap: 4 }}>
+                    {parts.map((label: string, i: number) => (
+                      <span key={i} className="arrangement-pill arrangement-pill-sm">{label}</span>
+                    ))}
+                  </div>
+                </div>
+              )
+            } catch {}
+            return (
+              <p style={{ fontSize: 'var(--text-xs)', color: 'var(--color-text-muted)', marginTop: 10 }}>
+                {item.song_suggested_arrangement}
+              </p>
+            )
+          })()}
           {item.song_ccli_number && (
             <p style={{ fontSize: 'var(--text-xs)', color: 'var(--color-text-muted)', marginTop: 10 }}>
               CCLI {item.song_ccli_number}
