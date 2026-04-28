@@ -102,7 +102,7 @@ export function AppNavClient() {
                   <p style={{ fontSize: 'var(--text-base)', fontWeight: 600, color: 'var(--color-text-primary)', lineHeight: 1.3 }}>
                     {user.firstName ? `${user.firstName} ${user.lastName || ''}`.trim() : 'Account'}
                   </p>
-                  <p style={{ fontSize: 'var(--text-sm)', color: 'var(--color-text-muted)' }}>
+                  <p style={{ fontSize: 'var(--text-sm)', color: 'var(--color-text-muted)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', maxWidth: '200px' }}>
                     {user.emailAddresses[0]?.emailAddress}
                   </p>
                 </div>
