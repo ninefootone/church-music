@@ -50,21 +50,63 @@ export function AppNavClient() {
           </div>
 
           <div className="app-nav-right">
-            {/* Desktop: show Clerk UserButton */}
+            {/* Desktop: avatar + dropdown */}
             <div className="app-nav-user-desktop" style={{ position: 'relative' }}>
               {user && (
-                <button
-                  onClick={() => setMenuOpen(!menuOpen)}
-                  style={{ background: 'none', border: 'none', cursor: 'pointer', padding: 0, display: 'flex', alignItems: 'center', gap: 8 }}
-                >
-                  {user.imageUrl ? (
-                    <img src={user.imageUrl} alt="" style={{ width: 32, height: 32, borderRadius: '50%', objectFit: 'cover' }} />
-                  ) : (
-                    <div style={{ width: 32, height: 32, borderRadius: '50%', background: 'var(--color-brand-100)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 13, fontWeight: 700, color: 'var(--color-brand-700)' }}>
-                      {(user.firstName || user.emailAddresses[0]?.emailAddress || '?').charAt(0).toUpperCase()}
+                <>
+                  <button
+                    onClick={() => setMenuOpen(!menuOpen)}
+                    style={{ background: 'none', border: 'none', cursor: 'pointer', padding: 0, display: 'flex', alignItems: 'center', gap: 8 }}
+                  >
+                    {user.imageUrl ? (
+                      <img src={user.imageUrl} alt="" style={{ width: 32, height: 32, borderRadius: '50%', objectFit: 'cover' }} />
+                    ) : (
+                      <div style={{ width: 32, height: 32, borderRadius: '50%', background: 'var(--color-brand-100)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 13, fontWeight: 700, color: 'var(--color-brand-700)' }}>
+                        {(user.firstName || user.emailAddresses[0]?.emailAddress || '?').charAt(0).toUpperCase()}
+                      </div>
+                    )}
+                  </button>
+                  {menuOpen && (
+                    <div style={{ position: 'absolute', top: 'calc(100% + 10px)', right: 0, width: 280, background: 'var(--color-surface)', border: '1px solid var(--color-border)', borderRadius: 'var(--radius-lg)', boxShadow: 'var(--shadow-md)', zIndex: 99, paddingBottom: 'var(--space-sm)' }}>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '16px var(--space-lg)', borderBottom: '1px solid var(--color-border)', marginBottom: 'var(--space-xs)', overflow: 'hidden' }}>
+                        {user.imageUrl ? (
+                          <img src={user.imageUrl} alt="" style={{ width: 40, height: 40, borderRadius: '50%', objectFit: 'cover', flexShrink: 0 }} />
+                        ) : (
+                          <div style={{ width: 40, height: 40, borderRadius: '50%', background: 'var(--color-brand-100)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 16, fontWeight: 700, color: 'var(--color-brand-700)', flexShrink: 0 }}>
+                            {(user.firstName || user.emailAddresses[0]?.emailAddress || '?').charAt(0).toUpperCase()}
+                          </div>
+                        )}
+                        <div style={{ minWidth: 0, flex: 1 }}>
+                          <p style={{ fontSize: 'var(--text-base)', fontWeight: 600, color: 'var(--color-text-primary)', lineHeight: 1.3, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                            {user.firstName ? `${user.firstName} ${user.lastName || ''}`.trim() : 'Account'}
+                          </p>
+                          <p style={{ fontSize: 'var(--text-sm)', color: 'var(--color-text-muted)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                            {user.emailAddresses[0]?.emailAddress}
+                          </p>
+                        </div>
+                      </div>
+                      {navLinks.map(link => (
+                        <Link
+                          key={link.href}
+                          href={link.href}
+                          className={`app-nav-mobile-link ${isActive(link.href) ? 'is-active' : ''}`}
+                          onClick={closeMenu}
+                        >
+                          {link.label}
+                        </Link>
+                      ))}
+                      <div style={{ borderTop: '1px solid var(--color-border)', marginTop: 'var(--space-xs)', padding: 'var(--space-sm) 0' }}>
+                        <button
+                          onClick={() => signOut({ redirectUrl: '/' })}
+                          className="app-nav-mobile-link"
+                          style={{ width: '100%', textAlign: 'left', background: 'none', border: 'none', cursor: 'pointer', fontFamily: 'inherit', display: 'flex', alignItems: 'center', gap: 10, color: 'var(--color-text-secondary)' }}
+                        >
+                          <LogOut size={16} /> Sign out
+                        </button>
+                      </div>
                     </div>
                   )}
-                </button>
+                </>
               )}
             </div>
             {/* Mobile: hamburger */}
