@@ -84,7 +84,8 @@ router.get('/public/:token', async function(req, res, next) {
       `SELECT si.type, si.title, si.notes, si.key_override, si.position,
         s.id AS song_id, s.title AS song_title, s.author AS song_author,
         s.default_key AS song_default_key, s.youtube_url AS song_youtube_url,
-        s.ccli_number AS song_ccli_number
+        s.ccli_number AS song_ccli_number,
+        s.suggested_arrangement AS song_suggested_arrangement
        FROM service_items si
        LEFT JOIN songs s ON s.id = si.song_id
        WHERE si.service_id = $1
