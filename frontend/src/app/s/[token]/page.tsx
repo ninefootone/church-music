@@ -135,14 +135,21 @@ function SongItem({ item, index }: { item: any; index: number }) {
 export default function PublicServicePage() {
   const { token } = useParams()
   const [service, setService] = useState<any>(null)
+  const [musicians, setMusicians] = useState<any[]>([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState('')
 
   useEffect(() => {
     if (!token) return
     axios.get(`${API}/api/services/public/${token}`)
-      .then(r => setService(r.data))
-      .catch(() => setError('Service not found'))
+      .then(r => {
+        setService(r.data)
+        return axios.get(`${API}/api/services/${r.data.id}/musicians`)
+      })
+      .then(r => setMusicians(r.data))
+      .catch((err) => {
+        if (!service) setError('Service not found')
+      })
       .finally(() => setLoading(false))
   }, [token])
 
@@ -179,6 +186,19 @@ export default function PublicServicePage() {
             <p style={{ fontSize: 'var(--text-md)', color: 'var(--color-text-muted)', marginTop: 2 }}>{service.title}</p>
           )}
         </div>
+
+        {musicians.length > 0 && (
+          <p style={{ fontSize: 'var(--text-sm)', color: 'var(--color-text-secondary)', marginBottom: 'var(--space-lg)' }}>
+            {Object.values(
+              musicians.reduce((acc: any, m: any) => {
+                const key = m.user_id || m.name
+                if (!acc[key]) acc[key] = { name: m.name, roles: [] }
+                acc[key].roles.push(m.role)
+                return acc
+              }, {})
+            ).map((g: any) => `${g.name} (${g.roles.join(', ')})`).join(' · ')}
+          </p>
+        )}
 
         {(!service.items || service.items.length === 0) ? (
           <p className="text-muted">No items in this service yet.</p>

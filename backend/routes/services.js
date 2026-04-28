@@ -30,7 +30,7 @@ router.get('/', requireAuth, requireMembership, async function(req, res, next) {
   }
 });
 
-router.get('/:id/musicians', requireAuth, requireMembership, async function(req, res, next) {
+router.get('/:id/musicians', async function(req, res, next) {
   try {
     const result = await pool.query(
       `SELECT sm.id, sm.name, sm.role, sm.user_id, sm.created_at
