@@ -98,11 +98,11 @@ export function AppNavClient() {
                     {(user.firstName || user.emailAddresses[0]?.emailAddress || '?').charAt(0).toUpperCase()}
                   </div>
                 )}
-                <div>
-                  <p style={{ fontSize: 'var(--text-base)', fontWeight: 600, color: 'var(--color-text-primary)', lineHeight: 1.3 }}>
+                <div style={{ minWidth: 0, flex: 1 }}>
+                  <p style={{ fontSize: 'var(--text-base)', fontWeight: 600, color: 'var(--color-text-primary)', lineHeight: 1.3, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
                     {user.firstName ? `${user.firstName} ${user.lastName || ''}`.trim() : 'Account'}
                   </p>
-                  <p style={{ fontSize: 'var(--text-sm)', color: 'var(--color-text-muted)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', maxWidth: '200px' }}>
+                  <p style={{ fontSize: 'var(--text-sm)', color: 'var(--color-text-muted)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
                     {user.emailAddresses[0]?.emailAddress}
                   </p>
                 </div>
