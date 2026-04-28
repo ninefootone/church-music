@@ -57,7 +57,8 @@ router.get('/:id', requireAuth, requireMembership, async function(req, res, next
     const items = await pool.query(
       `SELECT si.*, s.title AS song_title, s.author AS song_author,
         s.default_key AS song_default_key, s.category AS song_category,
-        s.ccli_number AS song_ccli_number
+        s.ccli_number AS song_ccli_number,
+        s.suggested_arrangement AS song_suggested_arrangement
        FROM service_items si
        LEFT JOIN songs s ON s.id = si.song_id
        WHERE si.service_id = $1
