@@ -128,8 +128,9 @@ export function AppNavClient() {
           <div
             onClick={closeMenu}
             style={{ position: 'fixed', inset: 0, zIndex: 98, background: 'rgba(0,0,0,0.2)' }}
+            className="hide-desktop"
           />
-          <div className="app-nav-mobile">
+          <div className="app-nav-mobile hide-desktop">
             {/* User info */}
             {user && (
               <div style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '16px var(--space-lg)', borderBottom: '1px solid var(--color-border)', marginBottom: 'var(--space-xs)', overflow: 'hidden' }}>
