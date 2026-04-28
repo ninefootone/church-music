@@ -12,6 +12,7 @@ const navLinks = [
   { href: '/songs',     label: 'Songs' },
   { href: '/services',  label: 'Services' },
   { href: '/stats',     label: 'Stats' },
+  { href: '/settings',  label: 'Settings' },
 ]
 
 export function AppNavClient() {
