@@ -1129,6 +1129,11 @@ textarea {
   border-radius: 999px;
 }
 
+.arrangement-pill-sm {
+  font-size: var(--text-xs, 0.75rem);
+  padding: 2px 8px;
+}
+
 .arrangement-hint {
   font-size: var(--text-xs, 0.75rem);
   color: var(--color-text-muted);
