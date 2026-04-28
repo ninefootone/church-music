@@ -84,6 +84,7 @@ router.get('/public/:token', async function(req, res, next) {
 
     const items = await pool.query(
       `SELECT si.type, si.title, si.notes, si.key_override, si.position,
+        si.custom_arrangement,
         s.id AS song_id, s.title AS song_title, s.author AS song_author,
         s.default_key AS song_default_key, s.youtube_url AS song_youtube_url,
         s.ccli_number AS song_ccli_number,

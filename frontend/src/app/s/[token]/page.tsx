@@ -121,9 +121,10 @@ function SongItem({ item, index }: { item: any; index: number }) {
             </p>
           )}
 
-          {item.song_suggested_arrangement && (() => {
+          {(item.custom_arrangement || item.song_suggested_arrangement) && (() => {
+            const raw = item.custom_arrangement || item.song_suggested_arrangement
             try {
-              const parts: string[] = JSON.parse(item.song_suggested_arrangement)
+              const parts: string[] = JSON.parse(raw)
               if (Array.isArray(parts)) return (
                 <div style={{ marginTop: 10 }}>
                   <p style={{ fontSize: 'var(--text-xs)', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.07em', color: 'var(--color-text-muted)', marginBottom: 6 }}>Arrangement</p>
@@ -137,7 +138,7 @@ function SongItem({ item, index }: { item: any; index: number }) {
             } catch {}
             return (
               <p style={{ fontSize: 'var(--text-xs)', color: 'var(--color-text-muted)', marginTop: 10 }}>
-                {item.song_suggested_arrangement}
+                {raw}
               </p>
             )
           })()}
