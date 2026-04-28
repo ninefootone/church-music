@@ -6,7 +6,6 @@
 ## Backlog
 
 ### Features
-- [ ] Custom arrangement per service — when adding a song, allow a custom arrangement for that specific service
 - [ ] Tag autocomplete — show most-used tags as suggestions, plus ability to add your own
 - [ ] Members can delete only their own services (permission scoping)
 - [ ] Song ordering on songs page — sort by most/least sung
@@ -14,7 +13,10 @@
 - [ ] Show next planned date on individual song page
 - [ ] Keyboard navigation on public share view
 - [ ] Settings page
+- [ ] Automated backups — periodic PostgreSQL dump stored in Cloudflare R2, just in case
+- [ ] 'Share all data' flag on songs — master library account only; marks a song as fully shareable so all fields and files are copied across to other churches via the shared library/template system
 - [ ] Configurable "services" terminology per church
+- [ ] Account deletion — settings page option for users to delete their own account (Clerk backend API + DB cleanup)
 
 ### Inline style refactor
 Work through each file, one at a time, using VSCode/Cursor prompt to move all
@@ -52,3 +54,4 @@ static inline `style={{...}}` props to named classes in `globals.css`.
 - [x] Edit file label after upload (show filename alongside label for reference)
 - [x] Upload multiple files at once with ability to edit all labels before saving
 - [x] Add musicians to service — autocomplete from church members, plus ability to add non-signed-up guests
+- [x] Custom arrangement per service — when adding a song, allow a custom arrangement for that specific service
