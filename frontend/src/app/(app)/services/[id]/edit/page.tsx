@@ -27,6 +27,7 @@ import { CSS } from '@dnd-kit/utilities'
 import { KeyBadge, CategoryBadge } from '@/components/ui/badges'
 import { useChurch } from '@/context/ChurchContext'
 import api from '@/lib/api'
+import { ArrangementBuilder } from '@/components/ui/ArrangementBuilder'
 
 const ITEM_TYPES = [
   { type: 'welcome',      label: 'Welcome' },
@@ -58,9 +59,11 @@ interface ServiceItem {
   song_author?: string
   song_default_key?: string
   song_category?: string
+  song_suggested_arrangement?: string
   title: string
   notes: string
   key_override: string
+  custom_arrangement: string
   expanded: boolean
 }
 
@@ -173,16 +176,27 @@ function SortableItem({
           </button>
         </div>
 
-        {/* Notes */}
+        {/* Notes + arrangement */}
         {item.expanded && (
-          <div style={{ padding: '0 var(--space-md) var(--space-sm) 56px', borderTop: '1px solid var(--color-border)' }}>
+          <div style={{ padding: '0 var(--space-md) var(--space-sm) var(--space-md)', borderTop: '1px solid var(--color-border)' }}>
             <input
               className="input"
               value={item.notes}
               onChange={e => onUpdate({ notes: e.target.value })}
               placeholder="Notes (e.g. Capo 2, acoustic intro…)"
-              style={{ marginTop: 10, fontSize: 'var(--text-sm)', padding: '7px 12px' }}
+              style={{ marginTop: 10, marginBottom: 12, fontSize: 'var(--text-sm)', padding: '7px 12px' }}
             />
+            {item.type === 'song' && (
+              <div>
+                <p style={{ fontSize: 'var(--text-xs)', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.07em', color: 'var(--color-text-muted)', marginBottom: 8 }}>
+                  Arrangement for this service
+                </p>
+                <ArrangementBuilder
+                  value={item.custom_arrangement || item.song_suggested_arrangement || ''}
+                  onChange={val => onUpdate({ custom_arrangement: val })}
+                />
+              </div>
+            )}
           </div>
         )}
       </div>
@@ -241,6 +255,8 @@ export default function ServiceEditPage() {
         title: item.title || '',
         notes: item.notes || '',
         key_override: normaliseKey(item.key_override) || normaliseKey(item.song_default_key),
+        custom_arrangement: item.custom_arrangement || '',
+        song_suggested_arrangement: item.song_suggested_arrangement || '',
         expanded: false,
       })))
       setSongs(songsRes.data)
@@ -268,7 +284,9 @@ export default function ServiceEditPage() {
       id: newId(), type: 'song', song_id: song.id,
       song_title: song.title, song_author: song.author,
       song_default_key: song.default_key, song_category: song.category,
-      title: '', notes: '', key_override: normaliseKey(song.default_key), expanded: false,
+      song_suggested_arrangement: (song as any).suggested_arrangement || '',
+      title: '', notes: '', key_override: normaliseKey(song.default_key),
+      custom_arrangement: '', expanded: false,
     }])
     setSongSearch('')
   }
@@ -296,6 +314,7 @@ export default function ServiceEditPage() {
           type: item.type, song_id: item.song_id || null,
           title: item.title || null, notes: item.notes || null,
           key_override: item.key_override || null,
+          custom_arrangement: item.custom_arrangement || null,
         }))
       })
       router.push(`/services/${id}`)
