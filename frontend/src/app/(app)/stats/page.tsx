@@ -26,13 +26,40 @@ export default function StatsPage() {
     try {
       const { data } = await api.get('/api/stats/ccli-export', { params: { period } })
       if (!data || data.length === 0) { alert('No CCLI data to export for this period.'); return }
-      const rows = [['CCLI Number', 'Title', 'Author', 'Times Used', 'Last Used']]
-      data.forEach((s: any) => rows.push([s.ccli_number || '', s.title, s.author || '', s.times_used, s.last_used ? format(parseISO(s.last_used), 'dd/MM/yyyy') : '']))
-      const csv = rows.map((r: any) => r.map((v: any) => `"${v}"`).join(',')).join('\n')
-      const blob = new Blob([csv], { type: 'text/csv' })
+
+      const churchName = church?.name || 'Unknown Church'
+      const ccliNumber = church?.ccli_number || 'Not set'
+      const exportDate = format(new Date(), 'dd/MM/yyyy')
+      const periodLabel = period === 365 ? '1 year' : `${period} days`
+
+      const header = [
+        [`Church: ${churchName}`],
+        [`CCLI Licence Number: ${ccliNumber}`],
+        [`Export date: ${exportDate}`],
+        [`Reporting period: Last ${periodLabel}`],
+        [],
+        ['CCLI Song Number', 'Song Title', 'Author', 'Times Used', 'Last Used'],
+      ]
+
+      const rows = data.map((s: any) => [
+        s.ccli_number || '',
+        s.title,
+        s.author || '',
+        s.times_used,
+        s.last_used ? format(parseISO(s.last_used), 'dd/MM/yyyy') : '',
+      ])
+
+      const allRows = [...header, ...rows]
+      const csv = allRows.map((r: any) => r.map((v: any) => `"${String(v).replace(/"/g, '""')}"`).join(',')).join('\n')
+
+      const filename = church?.ccli_number
+        ? `CCLI-${church.ccli_number}-report-${format(new Date(), 'yyyy-MM-dd')}.csv`
+        : `ccli-report-${format(new Date(), 'yyyy-MM-dd')}.csv`
+
+      const blob = new Blob(['\uFEFF' + csv], { type: 'text/csv;charset=utf-8;' })
       const url = URL.createObjectURL(blob)
       const a = document.createElement('a')
-      a.href = url; a.download = `ccli-report-${period}days.csv`; a.click()
+      a.href = url; a.download = filename; a.click()
       URL.revokeObjectURL(url)
     } catch (err) { console.error('Export failed:', err) }
   }
