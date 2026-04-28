@@ -9,7 +9,7 @@ const generateShortId = () => Math.random().toString(36).substring(2, 6);
 // Create a church
 router.post('/', requireAuth, async (req, res, next) => {
   try {
-    const { name } = req.body;
+    const { name, ccli_number } = req.body;
     if (!name) return res.status(400).json({ error: 'Church name required' });
 
     // Append short random ID to slug to avoid collisions
@@ -18,8 +18,8 @@ router.post('/', requireAuth, async (req, res, next) => {
     const invite_code = generateInviteCode();
 
     const church = await pool.query(
-      'INSERT INTO churches (name, slug, invite_code, created_by) VALUES ($1, $2, $3, $4) RETURNING *',
-      [name, slug, invite_code, req.user.id]
+      'INSERT INTO churches (name, slug, invite_code, created_by, ccli_number) VALUES ($1, $2, $3, $4, $5) RETURNING *',
+      [name, slug, invite_code, req.user.id, ccli_number || null]
     );
 
     await pool.query(
