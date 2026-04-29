@@ -12,7 +12,7 @@ const FILE_TYPES = [
   { value: 'full_score', label: 'Full score' },
 ]
 
-const KEYS = ['C', 'C#', 'Db', 'D', 'Eb', 'E', 'F', 'F#', 'Gb', 'G', 'Ab', 'A', 'Bb', 'B']
+const KEYS = ['C', 'C#', 'Db', 'D', 'Eb', 'E', 'F', 'F#', 'Gb', 'G', 'Ab', 'A', 'Bb', 'B', 'Cm', 'C#m', 'Dm', 'Ebm', 'Em', 'Fm', 'F#m', 'Gm', 'Abm', 'Am', 'Bbm', 'Bm']
 
 const normaliseKey = (k: string | null | undefined) => k ? k.replace(/♯/g, '#').replace(/♭/g, 'b') : ''
 

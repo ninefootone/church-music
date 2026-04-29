@@ -32,7 +32,7 @@ export default function NewSongPage() {
     notes: '', bible_references: '', suggested_arrangement: '',
   })
 
-  const keys = ['C', 'C#', 'Db', 'D', 'Eb', 'E', 'F', 'F#', 'Gb', 'G', 'Ab', 'A', 'Bb', 'B']
+  const keys = ['C', 'C#', 'Db', 'D', 'Eb', 'E', 'F', 'F#', 'Gb', 'G', 'Ab', 'A', 'Bb', 'B', 'Cm', 'C#m', 'Dm', 'Ebm', 'Em', 'Fm', 'F#m', 'Gm', 'Abm', 'Am', 'Bbm', 'Bm']
 
   const handleTitleChange = async (val: string) => {
     setForm(f => ({ ...f, title: val }))

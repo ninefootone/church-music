@@ -20,7 +20,7 @@ export default function EditSongPage() {
   const [error, setError] = useState('')
   const [form, setForm] = useState({ title: '', author: '', default_key: '', category: '' as Category | '', first_line: '', ccli_number: '', youtube_url: '', lyrics: '', tags: '', notes: '', bible_references: '', suggested_arrangement: '' })
 
-  const keys = ['C', 'C#', 'Db', 'D', 'Eb', 'E', 'F', 'F#', 'Gb', 'G', 'Ab', 'A', 'Bb', 'B']
+  const keys = ['C', 'C#', 'Db', 'D', 'Eb', 'E', 'F', 'F#', 'Gb', 'G', 'Ab', 'A', 'Bb', 'B', 'Cm', 'C#m', 'Dm', 'Ebm', 'Em', 'Fm', 'F#m', 'Gm', 'Abm', 'Am', 'Bbm', 'Bm']
 
   useEffect(() => {
     if (!id) return
