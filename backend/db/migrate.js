@@ -128,6 +128,9 @@ const migrate = async () => {
         created_at TIMESTAMPTZ DEFAULT NOW()
       );
 
+      ALTER TABLE churches
+        ADD COLUMN IF NOT EXISTS is_curator BOOLEAN DEFAULT FALSE;
+
       CREATE TABLE IF NOT EXISTS ccli_lookup (
         id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
         ccli_number TEXT NOT NULL,
