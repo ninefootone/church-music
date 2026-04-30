@@ -10,7 +10,7 @@ router.get('/search', requireAuth, async (req, res, next) => {
     if (!q || q.length < 2) return res.json([]);
 
     const result = await pool.query(
-      `SELECT id, title, author, default_key, category, first_line, ccli_number,
+      `SELECT s.id, s.title, s.author, s.default_key, s.category, s.first_line, s.ccli_number,
         ARRAY_AGG(DISTINCT t.name) FILTER (WHERE t.name IS NOT NULL) AS tags
        FROM songs s
        LEFT JOIN song_tags st ON st.song_id = s.id
