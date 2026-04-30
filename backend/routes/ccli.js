@@ -18,6 +18,7 @@ router.get('/', requireAuth, requireMembership, async (req, res, next) => {
         cl.author,
         cl.first_line,
         cl.default_key,
+        cl.category,
         EXISTS (
           SELECT 1 FROM songs s
           WHERE s.church_id = $2
@@ -40,6 +41,7 @@ router.get('/', requireAuth, requireMembership, async (req, res, next) => {
         author,
         first_line,
         default_key,
+        category,
         TRUE AS in_library
       FROM songs
       WHERE church_id = $1

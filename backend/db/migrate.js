@@ -138,6 +138,7 @@ const migrate = async () => {
         author TEXT,
         first_line TEXT,
         default_key TEXT,
+        category TEXT,
         source_church_id UUID REFERENCES churches(id) ON DELETE SET NULL,
         confirmed_count INTEGER DEFAULT 1,
         created_at TIMESTAMPTZ DEFAULT NOW(),

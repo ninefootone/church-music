@@ -10,6 +10,7 @@ type CcliEntry = {
   author: string
   first_line: string
   default_key: string
+  category: string
   in_library: boolean
 }
 
@@ -21,6 +22,7 @@ type Props = {
   onAuthorChange?: (author: string) => void
   onFirstLineChange?: (firstLine: string) => void
   onDefaultKeyChange?: (key: string) => void
+  onCategoryChange?: (category: string) => void
 }
 
 export default function CcliAutocomplete({
@@ -31,6 +33,7 @@ export default function CcliAutocomplete({
   onAuthorChange,
   onFirstLineChange,
   onDefaultKeyChange,
+  onCategoryChange,
 }: Props) {
   const [suggestions, setSuggestions] = useState<CcliEntry[]>([])
   const [open, setOpen] = useState(false)
@@ -77,6 +80,7 @@ export default function CcliAutocomplete({
     if (onAuthorChange && entry.author) onAuthorChange(entry.author)
     if (onFirstLineChange && entry.first_line) onFirstLineChange(entry.first_line)
     if (onDefaultKeyChange && entry.default_key) onDefaultKeyChange(entry.default_key)
+    if (onCategoryChange && entry.category) onCategoryChange(entry.category)
     setSuggestions([])
     setOpen(false)
   }

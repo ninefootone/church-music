@@ -99,6 +99,7 @@ export default function NewSongPage() {
               onAuthorChange={val => setForm(f => ({ ...f, author: f.author || val }))}
               onFirstLineChange={val => setForm(f => ({ ...f, first_line: f.first_line || val }))}
               onDefaultKeyChange={val => setForm(f => ({ ...f, default_key: f.default_key || val }))}
+              onCategoryChange={val => setForm(f => ({ ...f, category: f.category || val }))}
             />
             {templateSearch && (
               <div style={{ marginTop: 10, padding: 'var(--space-md)', background: 'var(--color-brand-50)', border: '1px solid var(--color-brand-200)', borderRadius: 'var(--radius-md)' }}>
