@@ -10,7 +10,8 @@ router.get('/', requireAuth, requireMembership, async (req, res, next) => {
     const { churchId } = req;
     if (!q || q.length < 2) return res.json([]);
 
-    const { rows } = await pool.query(`
+    // Songs from curator churches
+    const { rows: curatorRows } = await pool.query(`
       SELECT
         cl.ccli_number,
         cl.title,
@@ -30,7 +31,28 @@ router.get('/', requireAuth, requireMembership, async (req, res, next) => {
       LIMIT 6
     `, [`%${q}%`, churchId]);
 
-    res.json(rows);
+    // Songs in the user's own library not already in curator results
+    const curatorCcliNumbers = curatorRows.map(r => r.ccli_number);
+    const { rows: libraryRows } = await pool.query(`
+      SELECT
+        ccli_number,
+        title,
+        author,
+        first_line,
+        default_key,
+        TRUE AS in_library
+      FROM songs
+      WHERE church_id = $1
+        AND title ILIKE $2
+        AND (ccli_number IS NULL OR ccli_number != ALL($3))
+      ORDER BY title ASC
+      LIMIT 6
+    `, [churchId, `%${q}%`, curatorCcliNumbers]);
+
+    // Merge, curator results first
+    const combined = [...curatorRows, ...libraryRows].slice(0, 6);
+
+    res.json(combined);
   } catch (err) {
     next(err);
   }
