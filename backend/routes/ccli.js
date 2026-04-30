@@ -23,7 +23,9 @@ router.get('/', requireAuth, requireMembership, async (req, res, next) => {
             AND s.ccli_number = cl.ccli_number
         ) AS in_library
       FROM ccli_lookup cl
+      INNER JOIN churches c ON c.id = cl.source_church_id
       WHERE cl.title ILIKE $1
+        AND c.is_curator = TRUE
       ORDER BY cl.confirmed_count DESC, cl.title ASC
       LIMIT 6
     `, [`%${q}%`, churchId]);
