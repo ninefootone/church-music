@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 import CcliAutocomplete from '@/components/CcliAutocomplete'
@@ -17,10 +17,11 @@ export default function NewSongPage() {
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
   const [templateSearch, setTemplateSearch] = useState<null | { id: string; title: string; author: string; ccli: string }>(null)
-  const [copyrightDismissed, setCopyrightDismissed] = useState(() => {
-    if (typeof window === 'undefined') return false
-    return localStorage.getItem('songstack_copyright_notice_dismissed') === 'true'
-  })
+  const [copyrightDismissed, setCopyrightDismissed] = useState(false)
+
+  useEffect(() => {
+    setCopyrightDismissed(localStorage.getItem('songstack_copyright_notice_dismissed') === 'true')
+  }, [])
 
   const dismissCopyright = () => {
     localStorage.setItem('songstack_copyright_notice_dismissed', 'true')
