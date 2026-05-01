@@ -1,0 +1,279 @@
+'use client'
+
+import { useState, useEffect } from 'react'
+import Link from 'next/link'
+import { useParams } from 'next/navigation'
+import { format, parseISO } from 'date-fns'
+import { ArrowLeft, FileText, Loader2, Music } from 'lucide-react'
+import api from '@/lib/api'
+
+interface SongFile {
+  id: string
+  label: string
+  file_type: string
+  key_of: string | null
+  url: string
+}
+
+interface SongItem {
+  id: string
+  type: string
+  song_id: string | null
+  song_title: string | null
+  key_override: string | null
+  song_default_key: string | null
+}
+
+const FILE_TYPE_ORDER: Record<string, number> = {
+  vocal: 0,
+  lead: 1,
+  chords: 2,
+  full_score: 3,
+}
+
+function sortFiles(files: SongFile[]): SongFile[] {
+  return [...files].sort((a, b) => {
+    const aOrder = FILE_TYPE_ORDER[a.file_type] ?? 99
+    const bOrder = FILE_TYPE_ORDER[b.file_type] ?? 99
+    return aOrder - bOrder
+  })
+}
+
+export default function SetModePage() {
+  const { id } = useParams()
+
+  const [service, setService] = useState<any>(null)
+  const [filesMap, setFilesMap] = useState<Record<string, SongFile[]>>({})
+  const [selected, setSelected] = useState<Record<string, Set<string>>>({})
+  const [loading, setLoading] = useState(true)
+  const [merging, setMerging] = useState(false)
+  const [error, setError] = useState<string | null>(null)
+
+  useEffect(() => {
+    if (!id) return
+    api.get(`/api/services/${id}`)
+      .then(async r => {
+        const svc = r.data
+        setService(svc)
+
+        const songItems: SongItem[] = (svc.items || []).filter(
+          (item: SongItem) => item.type === 'song' && item.song_id
+        )
+
+        const results = await Promise.allSettled(
+          songItems.map((item: SongItem) =>
+            api.get(`/api/uploads/public/songs/${item.song_id}/files`)
+              .then(res => ({ songId: item.song_id!, files: res.data as SongFile[] }))
+          )
+        )
+
+        const newFilesMap: Record<string, SongFile[]> = {}
+        const newSelected: Record<string, Set<string>> = {}
+
+        results.forEach(result => {
+          if (result.status === 'fulfilled') {
+            const { songId, files } = result.value
+            const pdfs = sortFiles(files)
+            newFilesMap[songId] = pdfs
+            newSelected[songId] = new Set(pdfs.map(f => f.id))
+          }
+        })
+
+        setFilesMap(newFilesMap)
+        setSelected(newSelected)
+      })
+      .catch(() => setError('Could not load service.'))
+      .finally(() => setLoading(false))
+  }, [id])
+
+  const toggleFile = (songId: string, fileId: string) => {
+    setSelected(prev => {
+      const next = new Set(prev[songId] || [])
+      if (next.has(fileId)) {
+        next.delete(fileId)
+      } else {
+        next.add(fileId)
+      }
+      return { ...prev, [songId]: next }
+    })
+  }
+
+  const selectedCount = Object.values(selected).reduce((sum, set) => sum + set.size, 0)
+
+  const handleOpenSet = async () => {
+    setMerging(true)
+    setError(null)
+    try {
+      const songItems: SongItem[] = (service.items || []).filter(
+        (item: SongItem) => item.type === 'song' && item.song_id
+      )
+
+      const urlsToMerge: string[] = []
+      for (const item of songItems) {
+        const songId = item.song_id!
+        const files = filesMap[songId] || []
+        const selectedIds = selected[songId] || new Set()
+        const chosenFiles = files.filter(f => selectedIds.has(f.id))
+        chosenFiles.forEach(f => urlsToMerge.push(f.url))
+      }
+
+      if (urlsToMerge.length === 0) {
+        setError('No files selected.')
+        setMerging(false)
+        return
+      }
+
+      const { PDFDocument } = await import('pdf-lib')
+
+      const merged = await PDFDocument.create()
+
+      for (const url of urlsToMerge) {
+        try {
+          const response = await fetch(url)
+          if (!response.ok) throw new Error(`Failed to fetch ${url}`)
+          const bytes = await response.arrayBuffer()
+          const doc = await PDFDocument.load(bytes)
+          const pages = await merged.copyPages(doc, doc.getPageIndices())
+          pages.forEach(page => merged.addPage(page))
+        } catch (fetchErr) {
+          console.warn('Skipping file due to fetch error:', fetchErr)
+        }
+      }
+
+      const mergedBytes = await merged.save()
+      const blob = new Blob([mergedBytes], { type: 'application/pdf' })
+      const blobUrl = URL.createObjectURL(blob)
+      window.open(blobUrl, '_blank')
+    } catch (err) {
+      console.error(err)
+      setError('Something went wrong merging the PDFs. Please try again.')
+    } finally {
+      setMerging(false)
+    }
+  }
+
+  if (loading) return (
+    <div style={{ padding: 'var(--space-xl)', display: 'flex', alignItems: 'center', gap: 8, color: 'var(--color-text-muted)' }}>
+      <Loader2 size={16} className="spin" /> Loading…
+    </div>
+  )
+
+  if (!service) return (
+    <div style={{ padding: 'var(--space-xl)' }}>
+      <p className="text-muted" style={{ marginBottom: 'var(--space-md)' }}>Service not found.</p>
+      <Link href="/services" className="back-link"><ArrowLeft size={14} /> Back to services</Link>
+    </div>
+  )
+
+  const songItems: SongItem[] = (service.items || []).filter(
+    (item: SongItem) => item.type === 'song' && item.song_id
+  )
+
+  return (
+    <div>
+      <Link href={`/services/${id}`} className="back-link">
+        <ArrowLeft size={14} /> Back to service
+      </Link>
+
+      <div className="card" style={{ marginBottom: 'var(--space-md)' }}>
+        <h1 style={{ fontSize: 'var(--text-xl)', fontWeight: 700, color: 'var(--color-text-primary)', marginBottom: 4 }}>
+          Set mode
+        </h1>
+        <p style={{ fontSize: 'var(--text-md)', color: 'var(--color-text-secondary)' }}>
+          {format(parseISO(service.service_date), 'd MMMM yyyy')}
+          {service.service_time && ` · ${service.service_time}`}
+          {service.title && ` · ${service.title}`}
+        </p>
+        <p style={{ fontSize: 'var(--text-sm)', color: 'var(--color-text-muted)', marginTop: 8 }}>
+          Choose which files to include for each song, then open as a single PDF.
+        </p>
+      </div>
+
+      {songItems.length === 0 ? (
+        <div className="card">
+          <p style={{ fontSize: 'var(--text-sm)', color: 'var(--color-text-muted)', fontStyle: 'italic' }}>
+            No songs in this service.
+          </p>
+        </div>
+      ) : (
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-sm)', marginBottom: 'var(--space-lg)' }}>
+          {songItems.map((item, index) => {
+            const files = filesMap[item.song_id!] || []
+            const selectedIds = selected[item.song_id!] || new Set()
+
+            return (
+              <div key={item.id} className="card" style={{ padding: 'var(--space-md)' }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: files.length > 0 ? 'var(--space-sm)' : 0 }}>
+                  <span style={{ fontSize: 'var(--text-sm)', color: 'var(--color-text-muted)', width: 20, flexShrink: 0 }}>
+                    {index + 1}
+                  </span>
+                  <Music size={14} style={{ color: 'var(--color-text-muted)', flexShrink: 0 }} />
+                  <span style={{ fontSize: 'var(--text-md)', fontWeight: 600, color: 'var(--color-text-primary)', flex: 1, minWidth: 0 }}>
+                    {item.song_title}
+                  </span>
+                  {(item.key_override || item.song_default_key) && (
+                    <span className="badge-key" style={{ flexShrink: 0 }}>
+                      {item.key_override || item.song_default_key}
+                    </span>
+                  )}
+                </div>
+
+                {files.length === 0 ? (
+                  <p style={{ fontSize: 'var(--text-sm)', color: 'var(--color-text-muted)', fontStyle: 'italic', paddingLeft: 30 }}>
+                    No files uploaded
+                  </p>
+                ) : (
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: 6, paddingLeft: 30 }}>
+                    {files.map(file => (
+                      <label
+                        key={file.id}
+                        style={{ display: 'flex', alignItems: 'center', gap: 10, cursor: 'pointer', padding: '6px 10px', borderRadius: 'var(--radius-sm)', background: selectedIds.has(file.id) ? 'var(--color-brand-50, #eff6ff)' : 'var(--color-neutral-50)', border: `1px solid ${selectedIds.has(file.id) ? 'var(--color-brand-200, #bfdbfe)' : 'var(--color-border)'}`, transition: 'all var(--transition-fast)' }}
+                      >
+                        <input
+                          type="checkbox"
+                          checked={selectedIds.has(file.id)}
+                          onChange={() => toggleFile(item.song_id!, file.id)}
+                          style={{ width: 16, height: 16, accentColor: 'var(--color-brand-600)', flexShrink: 0 }}
+                        />
+                        <FileText size={13} style={{ color: 'var(--color-text-muted)', flexShrink: 0 }} />
+                        <span style={{ fontSize: 'var(--text-sm)', fontWeight: 500, color: 'var(--color-text-primary)', flex: 1 }}>
+                          {file.label}
+                        </span>
+                        {file.key_of && (
+                          <span className="badge-key" style={{ fontSize: 'var(--text-xs)' }}>{file.key_of}</span>
+                        )}
+                      </label>
+                    ))}
+                  </div>
+                )}
+              </div>
+            )
+          })}
+        </div>
+      )}
+
+      {error && (
+        <p style={{ fontSize: 'var(--text-sm)', color: 'var(--color-danger)', marginBottom: 'var(--space-md)' }}>
+          {error}
+        </p>
+      )}
+
+      <div style={{ display: 'flex', justifyContent: 'flex-end', gap: 8 }}>
+        <Link href={`/services/${id}`} className="btn btn-secondary">
+          Cancel
+        </Link>
+        <button
+          className="btn btn-primary"
+          onClick={handleOpenSet}
+          disabled={merging || selectedCount === 0}
+        >
+          {merging ? (
+            <><Loader2 size={15} className="spin" /> Merging…</>
+          ) : (
+            `Open set (${selectedCount} ${selectedCount === 1 ? 'file' : 'files'})`
+          )}
+        </button>
+      </div>
+    </div>
+  )
+}

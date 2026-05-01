@@ -4,7 +4,7 @@ import { useState, useEffect } from 'react'
 import Link from 'next/link'
 import { useParams, useRouter } from 'next/navigation'
 import { format, parseISO } from 'date-fns'
-import { ArrowLeft, Share2, Plus, Music, BookOpen, Mic2, Trash2, ChevronDown, ChevronUp, FileText, ExternalLink, X } from 'lucide-react'
+import { ArrowLeft, Share2, Plus, Music, BookOpen, Mic2, Trash2, ChevronDown, ChevronUp, FileText, ExternalLink, X, PlayCircle } from 'lucide-react'
 import { KeyBadge, CategoryBadge } from '@/components/ui/badges'
 import { useAuth } from '@clerk/nextjs'
 import { useChurch } from '@/context/ChurchContext'
@@ -225,6 +225,17 @@ export default function ServiceDetailPage() {
               <Share2 size={14} />
               <span>{copied ? 'Copied!' : 'Share'}</span>
             </button>
+
+            {/* Set mode */}
+            <Link
+              href={`/services/${id}/set`}
+              className="btn btn-secondary"
+              style={{ padding: '7px 10px', fontSize: 'var(--text-xs)', gap: 4 }}
+              title="Open set mode"
+            >
+              <PlayCircle size={14} />
+              <span>Set mode</span>
+            </Link>
 
             {/* Edit — admin or owner */}
             {(isAdmin || service.created_by === userId) && (
