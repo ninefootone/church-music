@@ -141,7 +141,7 @@ export default function SetModePage() {
       }
 
       const mergedBytes = await merged.save()
-      const blob = new Blob([mergedBytes], { type: 'application/pdf' })
+      const blob = new Blob([mergedBytes.buffer as ArrayBuffer], { type: 'application/pdf' })
       const blobUrl = URL.createObjectURL(blob)
       window.open(blobUrl, '_blank')
     } catch (err) {
