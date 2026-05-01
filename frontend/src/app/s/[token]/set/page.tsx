@@ -185,8 +185,7 @@ export default function PublicSetModePage() {
       <main style={{ maxWidth: 'var(--width-app)', margin: '0 auto', padding: 'var(--space-xl) var(--space-lg)' }}>
         
           href={`/s/${token}`}
-          style={{ display: 'inline-flex', alignItems: 'center', gap: 6, fontSize: 'var(--text-sm)', color: 'var(--color-text-muted)', textDecoration: 'none', marginBottom: 'var(--space-lg)' }}
-        >
+          style={{ display: 'inline-flex', alignItems: 'center', gap: 6, fontSize: 'var(--text-sm)', color: 'var(--color-text-muted)', textDecoration: 'none', marginBottom: 'var(--space-lg)' }}>
           <ArrowLeft size={14} /> Back to service
         </a>
 
