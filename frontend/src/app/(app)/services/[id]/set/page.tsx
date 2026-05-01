@@ -80,7 +80,7 @@ export default function SetModePage() {
             const songKey = songItem?.key_override || songItem?.song_default_key || null
             const pdfs = sortFiles(files, songKey)
             newFilesMap[songId] = pdfs
-            newSelected[songId] = new Set(pdfs.map(f => f.id))
+            newSelected[songId] = new Set()
           }
         })
 
