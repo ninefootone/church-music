@@ -6,6 +6,10 @@
 ## Backlog
 
 ### Features
+- [ ] Clerk major version upgrade — currently on v5.7.5, latest is v7.x; check migration guides for v5→v6 and v6→v7 before updating; test all auth flows (sign in, sign up, onboarding redirect) on a preview branch first
+- [ ] Retire a song — soft-delete: add a `retired` boolean flag to songs, hide retired songs from the main library and service song-picker by default, but keep them in the DB; include a "Show retired songs" toggle on the songs page and a "Retire / Restore" button on the song detail page
+- [ ] Service email — send a HTML-formatted email with the full service outline (song titles, arrangements, musicians) and links to any attached PDFs; triggered from the service detail page; recipients could be the church members or a custom address list
+- [ ] Super-admin dashboard at `/admin` — route only accessible to a hardcoded Clerk user ID (Jon's account); shows platform-wide stats: number of churches, total songs, total services, total users, storage used; no church-level data exposed
 - [ ] Tag autocomplete — show most-used tags as suggestions, plus ability to add your own
 - [ ] Members can delete only their own services (permission scoping)
 - [ ] Song ordering on songs page — sort by most/least sung
