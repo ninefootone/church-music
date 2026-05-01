@@ -184,7 +184,9 @@ export default function PublicSetModePage() {
 
       <main style={{ maxWidth: 'var(--width-app)', margin: '0 auto', padding: 'var(--space-xl) var(--space-lg)' }}>
         
-          href={`/s/${token}`}
+          <a href={`/s/${token}`} style={{ display: 'inline-flex', alignItems: 'center', gap: 6, fontSize: 'var(--text-sm)', color: 'var(--color-text-muted)', textDecoration: 'none', marginBottom: 'var(--space-lg)' }}>
+          <ArrowLeft size={14} /> Back to service
+        </a>href={`/s/${token}`}
           style={{ display: 'inline-flex', alignItems: 'center', gap: 6, fontSize: 'var(--text-sm)', color: 'var(--color-text-muted)', textDecoration: 'none', marginBottom: 'var(--space-lg)' }}>
           <ArrowLeft size={14} /> Back to service
         </a>
@@ -274,9 +276,7 @@ export default function PublicSetModePage() {
 
         <div style={{ display: 'flex', justifyContent: 'flex-end', gap: 8 }}>
           
-            href={`/s/${token}`}
-            style={{ display: 'inline-flex', alignItems: 'center', padding: '8px 16px', background: 'var(--color-neutral-100)', border: '1px solid var(--color-border)', borderRadius: 'var(--radius-sm)', fontSize: 'var(--text-sm)', fontWeight: 500, color: 'var(--color-text-secondary)', textDecoration: 'none' }}
-          >
+            <a href={`/s/${token}`} style={{ display: 'inline-flex', alignItems: 'center', padding: '8px 16px', background: 'var(--color-neutral-100)', border: '1px solid var(--color-border)', borderRadius: 'var(--radius-sm)', fontSize: 'var(--text-sm)', fontWeight: 500, color: 'var(--color-text-secondary)', textDecoration: 'none' }}>
             Cancel
           </a>
           <button

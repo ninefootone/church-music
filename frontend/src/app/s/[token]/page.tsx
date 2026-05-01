@@ -207,9 +207,7 @@ export default function PublicServicePage() {
             <p style={{ fontSize: 'var(--text-md)', color: 'var(--color-text-muted)', marginTop: 2 }}>{service.title}</p>
           )}
           <div style={{ marginTop: 'var(--space-md)' }}>
-            
-              href={`/s/${token}/set`}
-              style={{ display: 'inline-flex', alignItems: 'center', gap: 6, padding: '8px 14px', background: 'var(--color-brand-600)', color: 'white', borderRadius: 'var(--radius-sm)', fontSize: 'var(--text-sm)', fontWeight: 600, textDecoration: 'none' }}>
+            <a href={`/s/${token}/set`} style={{ display: 'inline-flex', alignItems: 'center', gap: 6, padding: '8px 14px', background: 'var(--color-brand-600)', color: 'white', borderRadius: 'var(--radius-sm)', fontSize: 'var(--text-sm)', fontWeight: 600, textDecoration: 'none' }}>
               <PlayCircle size={15} />
               Set mode
             </a>
