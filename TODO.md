@@ -16,6 +16,7 @@
 - [ ] Admin role change confirmation modal — replace alert() with ConfirmModal
 - [ ] Show next planned date on individual song page
 - [ ] Keyboard navigation on public share view
+- [ ] Set mode embedded PDF viewer — replace the current "open in new tab" approach with an in-page viewer using react-pdf; full-screen, paginated left-to-right, keyboard and bluetooth foot pedal navigation (Page Up/Down, arrow keys); works in browser on iPad and desktop
 - [ ] Settings page
 - [ ] Automated backups — periodic PostgreSQL dump stored in Cloudflare R2, just in case
 - [ ] 'Share all data' flag on songs — master library account only; marks a song as fully shareable so all fields and files are copied across to other churches via the shared library/template system

@@ -3,7 +3,7 @@
 import { useParams } from 'next/navigation'
 import { useEffect, useState } from 'react'
 import { format, parseISO } from 'date-fns'
-import { Music, BookOpen, Mic2, ChevronDown, ChevronUp, FileText, ExternalLink } from 'lucide-react'
+import { Music, BookOpen, Mic2, ChevronDown, ChevronUp, FileText, ExternalLink, PlayCircle } from 'lucide-react'
 import axios from 'axios'
 
 const API = process.env.NEXT_PUBLIC_API_URL
@@ -206,6 +206,15 @@ export default function PublicServicePage() {
           {service.title && (
             <p style={{ fontSize: 'var(--text-md)', color: 'var(--color-text-muted)', marginTop: 2 }}>{service.title}</p>
           )}
+          <div style={{ marginTop: 'var(--space-md)' }}>
+            
+              href={`/s/${token}/set`}
+              style={{ display: 'inline-flex', alignItems: 'center', gap: 6, padding: '8px 14px', background: 'var(--color-brand-600)', color: 'white', borderRadius: 'var(--radius-sm)', fontSize: 'var(--text-sm)', fontWeight: 600, textDecoration: 'none' }}
+            >
+              <PlayCircle size={15} />
+              Set mode
+            </a>
+          </div>
         </div>
 
         {musicians.length > 0 && (

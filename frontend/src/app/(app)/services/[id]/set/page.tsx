@@ -31,8 +31,11 @@ const FILE_TYPE_ORDER: Record<string, number> = {
   full_score: 3,
 }
 
-function sortFiles(files: SongFile[]): SongFile[] {
+function sortFiles(files: SongFile[], songKey?: string | null): SongFile[] {
   return [...files].sort((a, b) => {
+    const aAlt = songKey && a.key_of && a.key_of !== songKey ? 1 : 0
+    const bAlt = songKey && b.key_of && b.key_of !== songKey ? 1 : 0
+    if (aAlt !== bAlt) return aAlt - bAlt
     const aOrder = FILE_TYPE_ORDER[a.file_type] ?? 99
     const bOrder = FILE_TYPE_ORDER[b.file_type] ?? 99
     return aOrder - bOrder
@@ -73,7 +76,9 @@ export default function SetModePage() {
         results.forEach(result => {
           if (result.status === 'fulfilled') {
             const { songId, files } = result.value
-            const pdfs = sortFiles(files)
+            const songItem = songItems.find(s => s.song_id === songId)
+            const songKey = songItem?.key_override || songItem?.song_default_key || null
+            const pdfs = sortFiles(files, songKey)
             newFilesMap[songId] = pdfs
             newSelected[songId] = new Set(pdfs.map(f => f.id))
           }
