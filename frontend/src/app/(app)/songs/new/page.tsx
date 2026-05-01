@@ -187,11 +187,13 @@ export default function NewSongPage() {
       </div>
       <div className="song-form-footer-spacer" />
       <div className="song-form-footer">
-        <Link href="/songs" className="btn btn-secondary">Cancel</Link>
-        <p style={{ fontSize: 'var(--text-sm)', color: 'var(--color-text-muted)', flex: 1, textAlign: 'center' }}>You can add files after saving</p>
-        <button type="submit" form="song-new-form" className="btn btn-primary" disabled={loading}>
-          {loading ? 'Saving...' : 'Save song'}
-        </button>
+        <p style={{ fontSize: 'var(--text-sm)', color: 'var(--color-text-muted)', margin: 0 }}>You can add files after saving</p>
+        <div style={{ display: 'flex', gap: 8 }}>
+          <Link href="/songs" className="btn btn-secondary">Cancel</Link>
+          <button type="submit" form="song-new-form" className="btn btn-primary" disabled={loading}>
+            {loading ? 'Saving...' : 'Save song'}
+          </button>
+        </div>
       </div>
     </div>
   )
