@@ -149,7 +149,7 @@ export function FileUploadModal({ songId, defaultKey, onClose, onUploaded }: Fil
             <input
               ref={inputRef}
               type="file"
-              accept=".pdf,image/*"
+              accept=".pdf"
               multiple
               onChange={handleFilesChange}
               style={{ display: 'none' }}
@@ -159,7 +159,7 @@ export function FileUploadModal({ songId, defaultKey, onClose, onUploaded }: Fil
               Click to choose files
             </p>
             <p style={{ fontSize: 'var(--text-sm)', color: 'var(--color-text-muted)' }}>
-              PDF or image · max 20MB each · multiple files supported
+              PDF only · max 20MB each · multiple files supported
             </p>
           </div>
 
