@@ -11,6 +11,7 @@
 - [ ] Service email — send a HTML-formatted email with the full service outline (song titles, arrangements, musicians) and links to any attached PDFs; triggered from the service detail page; recipients could be the church members or a custom address list
 - [ ] Super-admin dashboard at `/admin` — route only accessible to a hardcoded Clerk user ID (Jon's account); shows platform-wide stats: number of churches, total songs, total services, total users, storage used; no church-level data exposed
 - [ ] Tag autocomplete — show most-used tags as suggestions, plus ability to add your own
+- [ ] Consolidate tags — review remaining ~108 tags after initial cleanup; merge duplicates/overlaps (e.g. King/Kingship, Saviour/Redeemer, Declaration/Proclamation, Eternal Life/Eternal); aim for a clean controlled vocabulary of ~60–70 tags
 - [ ] Members can delete only their own services (permission scoping)
 - [ ] Song ordering on songs page — sort by most/least sung
 - [ ] Admin role change confirmation modal — replace alert() with ConfirmModal
