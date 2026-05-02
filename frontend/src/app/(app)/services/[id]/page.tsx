@@ -46,7 +46,7 @@ function SongItem({ item, index }: { item: any; index: number }) {
   return (
     <div style={{ background: 'var(--color-surface)', border: '1px solid var(--color-border)', borderRadius: 'var(--radius-md)', overflow: 'hidden', marginBottom: 8 }}>
       <div
-        style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '14px var(--space-md)', cursor: isSong ? 'pointer' : 'default' }}
+        className="service-item-row" style={{ cursor: isSong ? 'pointer' : 'default' }}
         onClick={isSong ? handleExpand : undefined}
       >
         <span style={{ fontSize: 'var(--text-sm)', color: 'var(--color-text-muted)', width: 24, textAlign: 'center', flexShrink: 0 }}>
@@ -60,7 +60,7 @@ function SongItem({ item, index }: { item: any; index: number }) {
             <p style={{ fontSize: 'var(--text-sm)', color: 'var(--color-text-muted)', fontStyle: 'italic', marginTop: 2 }}>{item.notes}</p>
           )}
         </div>
-        <div style={{ display: 'flex', alignItems: 'center', gap: 8, flexShrink: 0 }}>
+        <div className="service-item-pills">
           {isSong && (item.key_override || item.song_default_key) && (
             <KeyBadge keyOf={item.key_override || item.song_default_key} />
           )}

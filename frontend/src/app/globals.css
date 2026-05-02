@@ -1136,6 +1136,32 @@ textarea {
   border-radius: 999px;
 }
 
+.service-item-row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 14px var(--space-md);
+}
+
+.service-item-pills {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-shrink: 0;
+}
+
+@media (max-width: 480px) {
+  .service-item-row {
+    flex-wrap: wrap;
+  }
+
+  .service-item-pills {
+    width: 100%;
+    padding-left: 36px; /* aligns under the title, past the number */
+    margin-top: -4px;
+  }
+}
+
 .arrangement-pill-sm {
   font-size: var(--text-xs, 0.75rem);
   padding: 2px 8px;
