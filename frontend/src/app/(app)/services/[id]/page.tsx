@@ -60,19 +60,19 @@ function SongItem({ item, index }: { item: any; index: number }) {
             <p style={{ fontSize: 'var(--text-sm)', color: 'var(--color-text-muted)', fontStyle: 'italic', marginTop: 2 }}>{item.notes}</p>
           )}
         </div>
-        <div className="service-item-pills">
-          {isSong && (item.key_override || item.song_default_key) && (
-            <KeyBadge keyOf={item.key_override || item.song_default_key} />
-          )}
-          {isSong && item.song_category && (
-            <CategoryBadge category={item.song_category} />
-          )}
-          {isSong && (
+        {isSong && (
+          <div className="service-item-pills">
+            {(item.key_override || item.song_default_key) && (
+              <KeyBadge keyOf={item.key_override || item.song_default_key} />
+            )}
+            {item.song_category && (
+              <CategoryBadge category={item.song_category} />
+            )}
             <span style={{ color: 'var(--color-text-muted)', display: 'flex' }}>
               {expanded ? <ChevronUp size={18} /> : <ChevronDown size={18} />}
             </span>
-          )}
-        </div>
+          </div>
+        )}
       </div>
 
       {isSong && expanded && (
