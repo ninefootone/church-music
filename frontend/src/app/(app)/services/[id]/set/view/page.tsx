@@ -38,6 +38,7 @@ export default function SetViewerPage() {
   const [currentPage, setCurrentPage] = useState(0)
   const [pageCounts, setPageCounts] = useState<Record<number, number>>({})
   const [containerSize, setContainerSize] = useState<{ width: number; height: number } | null>(null)
+  const [chordProContents, setChordProContents] = useState<ChordProContent[]>([])
   const [isFullscreen, setIsFullscreen] = useState(false)
   const canFullscreen = typeof document !== 'undefined' && !!document.fullscreenEnabled && !window.matchMedia('(display-mode: standalone)').matches
 
