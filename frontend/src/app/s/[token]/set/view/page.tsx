@@ -161,11 +161,13 @@ export default function PublicSetViewerPage() {
         }
 
         const container = document.createElement('div')
-        container.style.cssText = `position:absolute;visibility:hidden;width:${containerSize.width - 64}px;font-family:monospace;font-size:15px;line-height:1.6;`
+        const cw = containerSize?.width ?? 800
+        const ch = containerSize?.height ?? 1000
+        container.style.cssText = `position:absolute;visibility:hidden;width:${cw - 64}px;font-family:monospace;font-size:15px;line-height:1.6;`
         container.innerHTML = content.html
         document.body.appendChild(container)
 
-        const pageHeight = containerSize.height - 32
+        const pageHeight = ch - 32
         const paragraphs = Array.from(container.querySelectorAll('.paragraph'))
         const chordProPages: string[] = []
         let currentHtml = ''
