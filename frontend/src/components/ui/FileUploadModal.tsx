@@ -10,6 +10,7 @@ const FILE_TYPES = [
   { value: 'vocal',      label: 'Vocal sheet' },
   { value: 'full_score', label: 'Full score' },
   { value: 'chordpro',   label: 'ChordPro' },
+  { value: 'other',      label: 'Other' },
 ]
 
 const KEYS = ['C', 'C#', 'Db', 'D', 'Eb', 'E', 'F', 'F#', 'Gb', 'G', 'Ab', 'A', 'Bb', 'B']
