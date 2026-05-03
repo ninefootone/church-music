@@ -13,9 +13,13 @@
 .chordpro-render .comment { color: var(--color-text-muted); font-style: italic; margin-bottom: 6px; }
 .chordpro-render .section-label { color: var(--color-text-muted); font-style: italic; margin-bottom: 8px; font-size: 0.9em; }
 
-/* Set viewer fullscreen */
-:fullscreen { background: #1a1a1a; }
-:fullscreen .set-viewer-inner { height: 100vh; }
+/* Set viewer — hide app chrome */
+body.set-viewer-active .app-nav,
+body.set-viewer-active nav,
+body.set-viewer-active footer,
+body.set-viewer-active .app-footer { display: none !important; }
+body.set-viewer-active .app-main-content { max-width: 100% !important; padding: 0 !important; margin: 0 !important; }
+body.set-viewer-active { overflow: hidden; }
 
 @keyframes spin {
   from { transform: rotate(0deg); }
