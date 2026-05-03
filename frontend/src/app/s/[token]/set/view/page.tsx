@@ -99,9 +99,50 @@ export default function PublicSetViewerPage() {
 
   useEffect(() => {
     const raw = sessionStorage.getItem('setViewerFiles')
-    if (!raw) { router.push(`/s/${token}/set`); return }
+    if (!raw) { router.push(`/services/${id}/set`); return }
     const parsed: SetFile[] = JSON.parse(raw)
     setFiles(parsed)
+
+    const fetchChordPro = async () => {
+      const { default: ChordSheetJS } = await import('chordsheetjs')
+      const contents: ChordProContent[] = []
+
+      for (let i = 0; i < parsed.length; i++) {
+        const file = parsed[i]
+        if (file.file_type !== 'chordpro') continue
+        try {
+          const response = await fetch(file.url)
+          const text = await response.text()
+          const parser = new ChordSheetJS.ChordProParser()
+          const song = parser.parse(text)
+
+          let rendered = song
+          if (file.songKey) {
+            const CHROMATIC = ['C', 'C#', 'D', 'D#', 'E', 'F', 'F#', 'G', 'G#', 'A', 'A#', 'B']
+            const normalize = (k: string) => k.replace('Db','C#').replace('Eb','D#').replace('Gb','F#').replace('Ab','G#').replace('Bb','A#')
+            const originalKey = song.metadata?.get('key') as string | undefined
+            if (originalKey) {
+              const fromIdx = CHROMATIC.indexOf(normalize(originalKey))
+              const toIdx = CHROMATIC.indexOf(normalize(file.songKey))
+              if (fromIdx !== -1 && toIdx !== -1) {
+                let semitones = toIdx - fromIdx
+                if (semitones < 0) semitones += 12
+                if (semitones !== 0) rendered = song.transpose(semitones)
+              }
+            }
+          }
+
+          const formatter = new ChordSheetJS.HtmlDivFormatter()
+          const html = formatter.format(rendered)
+          contents.push({ fileIndex: i, html })
+        } catch (err) {
+          console.warn('Failed to load ChordPro file', err)
+        }
+      }
+      setChordProContents(contents)
+    }
+
+    fetchChordPro()
   }, [token, router])
 
   useEffect(() => {
