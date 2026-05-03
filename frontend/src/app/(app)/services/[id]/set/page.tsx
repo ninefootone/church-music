@@ -4,7 +4,8 @@ import { useState, useEffect } from 'react'
 import Link from 'next/link'
 import { useParams } from 'next/navigation'
 import { format, parseISO } from 'date-fns'
-import { ArrowLeft, FileText, Loader2, Music, Code } from 'lucide-react'
+import { ArrowLeft, FileText, Loader2, Music, Code, Play } from 'lucide-react'
+import { useRouter } from 'next/navigation'
 import api from '@/lib/api'
 
 interface SongFile {
@@ -50,6 +51,7 @@ export default function SetModePage() {
   const [selected, setSelected] = useState<Record<string, Set<string>>>({})
   const [loading, setLoading] = useState(true)
   const [merging, setMerging] = useState(false)
+  const router = useRouter()
   const [error, setError] = useState<string | null>(null)
 
   useEffect(() => {
@@ -105,69 +107,37 @@ export default function SetModePage() {
 
   const selectedCount = Object.values(selected).reduce((sum, set) => sum + set.size, 0)
 
-  const handleOpenSet = async () => {
-    setMerging(true)
-    setError(null)
-    try {
-      const songItems: SongItem[] = (service.items || []).filter(
-        (item: SongItem) => item.type === 'song' && item.song_id
-      )
+  const handleOpenSet = () => {
+    const songItems: SongItem[] = (service.items || []).filter(
+      (item: SongItem) => item.type === 'song' && item.song_id
+    )
 
-      const urlsToMerge: string[] = []
-      let chordProCount = 0
-      for (const item of songItems) {
-        const songId = item.song_id!
-        const files = filesMap[songId] || []
-        const selectedIds = selected[songId] || new Set()
-        const chosenFiles = files.filter(f => selectedIds.has(f.id))
-        chosenFiles.forEach(f => {
-          if (f.file_type === 'chordpro') {
-            chordProCount++
-          } else {
-            urlsToMerge.push(f.url)
-          }
+    const setFiles: { url: string; label: string; file_type: string; songTitle: string; songKey: string | null }[] = []
+
+    for (const item of songItems) {
+      const songId = item.song_id!
+      const files = filesMap[songId] || []
+      const selectedIds = selected[songId] || new Set()
+      const songKey = item.key_override || item.song_default_key || null
+      const chosenFiles = files.filter(f => selectedIds.has(f.id))
+      chosenFiles.forEach(f => {
+        setFiles.push({
+          url: f.url,
+          label: f.label,
+          file_type: f.file_type,
+          songTitle: item.song_title || '',
+          songKey,
         })
-      }
-
-      if (chordProCount > 0 && urlsToMerge.length === 0) {
-        setError('ChordPro files cannot yet be merged into the PDF set. The embedded viewer is coming soon.')
-        setMerging(false)
-        return
-      }
-
-      if (urlsToMerge.length === 0) {
-        setError('No files selected.')
-        setMerging(false)
-        return
-      }
-
-      const { PDFDocument } = await import('pdf-lib')
-
-      const merged = await PDFDocument.create()
-
-      for (const url of urlsToMerge) {
-        try {
-          const response = await fetch(url)
-          if (!response.ok) throw new Error(`Failed to fetch ${url}`)
-          const bytes = await response.arrayBuffer()
-          const doc = await PDFDocument.load(bytes)
-          const pages = await merged.copyPages(doc, doc.getPageIndices())
-          pages.forEach(page => merged.addPage(page))
-        } catch (fetchErr) {
-          console.warn('Skipping file due to fetch error:', fetchErr)
-        }
-      }
-
-      const mergedBytes = await merged.save()
-      const blob = new Blob([mergedBytes.buffer as ArrayBuffer], { type: 'application/pdf' })
-      const blobUrl = URL.createObjectURL(blob)
-      window.open(blobUrl, '_blank')
-    } catch (err) {
-      console.error(err)
-      setError('Something went wrong merging the PDFs. Please try again.')
-    } finally {
-      setMerging(false)
+      })
     }
+
+    if (setFiles.length === 0) {
+      setError('No files selected.')
+      return
+    }
+
+    sessionStorage.setItem('setViewerFiles', JSON.stringify(setFiles))
+    router.push(`/services/${id}/set/view`)
   }
 
   if (loading) return (
@@ -203,7 +173,7 @@ export default function SetModePage() {
           {service.title && ` · ${service.title}`}
         </p>
         <p style={{ fontSize: 'var(--text-sm)', color: 'var(--color-text-muted)', marginTop: 8 }}>
-          Choose which files to include for each song, then open as a single PDF. ChordPro files will be supported in the embedded viewer coming soon.
+          Choose which files to include for each song, then open in the set viewer.
         </p>
       </div>
 
@@ -286,13 +256,11 @@ export default function SetModePage() {
         <button
           className="btn btn-primary"
           onClick={handleOpenSet}
-          disabled={merging || selectedCount === 0}
+          disabled={selectedCount === 0}
+          style={{ display: 'inline-flex', alignItems: 'center', gap: 6 }}
         >
-          {merging ? (
-            <><Loader2 size={15} className="spin" /> Merging…</>
-          ) : (
-            `Open set (${selectedCount} ${selectedCount === 1 ? 'file' : 'files'})`
-          )}
+          <Play size={14} />
+          {`Open set (${selectedCount} ${selectedCount === 1 ? 'file' : 'files'})`}
         </button>
       </div>
     </div>
