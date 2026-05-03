@@ -128,7 +128,7 @@ export default function SetViewerPage() {
   }, [currentPage, goTo, id, router])
 
   if (!ready || pages.length === 0) return (
-    <div style={{ minHeight: '100vh', background: '#000', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#fff' }}>
+    <div style={{ minHeight: '100vh', background: '#fff', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#333' }}>
       Loading set…
     </div>
   )
@@ -137,7 +137,8 @@ export default function SetViewerPage() {
 
   return (
     <div
-      style={{ minHeight: '100vh', background: '#1a1a1a', display: 'flex', flexDirection: 'column', cursor: controlsVisible ? 'default' : 'none' }}
+      <div
+      style={{ minHeight: '100vh', background: '#fff', display: 'flex', flexDirection: 'column', cursor: controlsVisible ? 'default' : 'none' }}
       onClick={showControls}
       onTouchStart={e => { touchStartX.current = e.touches[0].clientX }}
       onTouchEnd={e => {
