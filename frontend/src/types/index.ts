@@ -1,6 +1,6 @@
 export type Role = 'admin' | 'member'
 export type TemplateStatus = 'pending' | 'approved' | 'rejected'
-export type FileType = 'chords' | 'lead' | 'vocal' | 'full_score'
+export type FileType = 'chords' | 'lead' | 'vocal' | 'full_score' | 'chordpro' | 'other'
 
 export type Category =
   | 'praise'
