@@ -148,18 +148,59 @@ export default function SetViewerPage() {
   // Build page list once we know page counts for all PDF files
   useEffect(() => {
     if (files.length === 0) return
-    // Build initial page list immediately with 1 page per file
-    // Pages will expand as PDFs report their actual page counts
+    if (!containerSize) return
+
     const newPages: ViewerPage[] = []
+
     files.forEach((file, fileIndex) => {
-      const count = pageCounts[fileIndex] || 1
-      for (let p = 0; p < count; p++) {
-        newPages.push({ fileIndex, pageIndex: p, totalPages: count, file })
+      if (file.file_type === 'chordpro') {
+        const content = chordProContents.find(c => c.fileIndex === fileIndex)
+        if (!content) {
+          newPages.push({ fileIndex, pageIndex: 0, totalPages: 1, file, chordProHtml: '' })
+          return
+        }
+
+        const container = document.createElement('div')
+        container.style.cssText = `position:absolute;visibility:hidden;width:${containerSize.width - 64}px;font-family:monospace;font-size:15px;line-height:1.6;`
+        container.innerHTML = content.html
+        document.body.appendChild(container)
+
+        const pageHeight = containerSize.height - 32
+        const paragraphs = Array.from(container.querySelectorAll('.paragraph'))
+        const chordProPages: string[] = []
+        let currentHtml = ''
+        let currentHeight = 0
+
+        paragraphs.forEach(para => {
+          const h = (para as HTMLElement).offsetHeight + 24
+          if (currentHeight + h > pageHeight && currentHtml) {
+            chordProPages.push(currentHtml)
+            currentHtml = (para as HTMLElement).outerHTML
+            currentHeight = h
+          } else {
+            currentHtml += (para as HTMLElement).outerHTML
+            currentHeight += h
+          }
+        })
+        if (currentHtml) chordProPages.push(currentHtml)
+
+        document.body.removeChild(container)
+
+        const total = chordProPages.length || 1
+        chordProPages.forEach((html, p) => {
+          newPages.push({ fileIndex, pageIndex: p, totalPages: total, file, chordProHtml: html })
+        })
+      } else {
+        const count = pageCounts[fileIndex] || 1
+        for (let p = 0; p < count; p++) {
+          newPages.push({ fileIndex, pageIndex: p, totalPages: count, file })
+        }
       }
     })
+
     setPages(newPages)
     setReady(true)
-  }, [files, pageCounts])
+  }, [files, pageCounts, chordProContents, containerSize])
 
   const goTo = useCallback((n: number) => {
     setCurrentPage(Math.max(0, Math.min(n, pages.length - 1)))
