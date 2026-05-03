@@ -20,6 +20,7 @@
 - [ ] Set mode embedded PDF viewer — replace the current "open in new tab" approach with an in-page viewer using react-pdf; full-screen, paginated left-to-right, keyboard and bluetooth foot pedal navigation (Page Up/Down, arrow keys); works in browser on iPad and desktop
 - [ ] ChordPro support — allow .cho/.chordpro file uploads alongside PDF; render in-browser using chordsheetjs with live transposition key selector (eliminating need for multiple per-key PDF uploads); integrate into set mode as rendered HTML pages alongside PDF files
 - [ ] ChordPro set viewer pagination — proper two-phase render: render full content off-screen to measure real paragraph heights, then split into screen-sized pages for left/right foot pedal navigation
+- [ ] ChordPro key override in set picker — allow per-file key selection in the set picker, overriding the song's default key; show capo suggestion (e.g. "Capo 3 = G shapes") when transposing; useful for guitar players who prefer open chord shapes
 - [ ] Print/download merged PDF — from the set picker, a "Download PDF" button that merges selected PDF files into a single downloadable PDF using pdf-lib (as previously built); useful for printing a full service's worth of music
 - [ ] ChordPro inline editing — "Edit" button in the viewer toolbar opens a textarea with raw ChordPro text; save writes updated content back to R2 via a new PUT endpoint; admin only
 - [ ] Settings page
