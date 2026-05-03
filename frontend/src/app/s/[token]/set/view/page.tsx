@@ -2,7 +2,7 @@
 
 import { useEffect, useState, useCallback, useRef } from 'react'
 import { useParams, useRouter } from 'next/navigation'
-import { ChevronLeft, ChevronRight, X, ZoomIn, ZoomOut, Maximize, Minimize } from 'lucide-react'
+import { ChevronLeft, ChevronRight, X, Maximize, Minimize } from 'lucide-react'
 import { Document, Page, pdfjs } from 'react-pdf'
 import 'react-pdf/dist/Page/AnnotationLayer.css'
 import 'react-pdf/dist/Page/TextLayer.css'
@@ -31,7 +31,7 @@ export default function PublicSetViewerPage() {
   const [pages, setPages] = useState<ViewerPage[]>([])
   const [currentPage, setCurrentPage] = useState(0)
   const [pageCounts, setPageCounts] = useState<Record<number, number>>({})
-  const [scale, setScale] = useState(1)
+  const [containerSize, setContainerSize] = useState<{ width: number; height: number } | null>(null)
   const [isFullscreen, setIsFullscreen] = useState(false)
   const canFullscreen = typeof document !== 'undefined' && !!document.fullscreenEnabled && !window.matchMedia('(display-mode: standalone)').matches
 
@@ -49,16 +49,25 @@ export default function PublicSetViewerPage() {
     return () => document.removeEventListener('fullscreenchange', handler)
   }, [])
 
+  const containerNodeRef = useRef<HTMLDivElement | null>(null)
   const containerRef = useCallback((node: HTMLDivElement | null) => {
+    containerNodeRef.current = node
     if (node) {
-      const h = node.clientHeight
-      const w = node.clientWidth
-      // A4 page is 842x595pt — fit to screen with some padding
-      const scaleByHeight = (h - 32) / 842
-      const scaleByWidth = (w - 96) / 595
-      setScale(Math.min(scaleByHeight, scaleByWidth))
+      const updateSize = () => setContainerSize({ width: node.clientWidth, height: node.clientHeight })
+      updateSize()
+      const ro = new ResizeObserver(updateSize)
+      ro.observe(node)
     }
   }, [])
+
+  useEffect(() => {
+    const node = containerNodeRef.current
+    if (!node) return
+    const timer = setTimeout(() => {
+      setContainerSize({ width: node.clientWidth, height: node.clientHeight })
+    }, 350)
+    return () => clearTimeout(timer)
+  }, [controlsVisible])
   const [ready, setReady] = useState(false)
   const [controlsVisible, setControlsVisible] = useState(true)
   const hideTimer = useRef<ReturnType<typeof setTimeout> | null>(null)
@@ -185,7 +194,7 @@ export default function PublicSetViewerPage() {
           >
             <Page
               pageNumber={current.pageIndex + 1}
-              scale={scale}
+              width={containerSize ? Math.min(containerSize.width - 16, (containerSize.height - 16) * 0.707) : undefined}
               renderTextLayer={false}
               renderAnnotationLayer={false}
             />
