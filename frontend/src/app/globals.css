@@ -13,6 +13,10 @@
 .chordpro-render .comment { color: var(--color-text-muted); font-style: italic; margin-bottom: 6px; }
 .chordpro-render .section-label { color: var(--color-text-muted); font-style: italic; margin-bottom: 8px; font-size: 0.9em; }
 
+/* Set viewer fullscreen */
+:fullscreen { background: #1a1a1a; }
+:fullscreen .set-viewer-inner { height: 100vh; }
+
 @keyframes spin {
   from { transform: rotate(0deg); }
   to { transform: rotate(360deg); }

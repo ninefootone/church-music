@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useState, useCallback } from 'react'
+import { useEffect, useState, useCallback, useRef } from 'react'
 import { useParams, useRouter } from 'next/navigation'
 import { ChevronLeft, ChevronRight, X, ZoomIn, ZoomOut, Maximize, Minimize } from 'lucide-react'
 import { Document, Page, pdfjs } from 'react-pdf'
@@ -34,9 +34,16 @@ export default function PublicSetViewerPage() {
   const [scale, setScale] = useState(1)
   const [isFullscreen, setIsFullscreen] = useState(false)
 
+  const viewerRef = useCallback((node: HTMLDivElement | null) => {
+    if (node) viewerDivRef.current = node
+  }, [])
+  const viewerDivRef = useRef<HTMLDivElement | null>(null)
+
   const toggleFullscreen = useCallback(() => {
+    const el = viewerDivRef.current
+    if (!el) return
     if (!document.fullscreenElement) {
-      document.documentElement.requestFullscreen().catch(() => {})
+      el.requestFullscreen().catch(() => {})
     } else {
       document.exitFullscreen().catch(() => {})
     }
@@ -47,6 +54,8 @@ export default function PublicSetViewerPage() {
     document.addEventListener('fullscreenchange', handler)
     return () => document.removeEventListener('fullscreenchange', handler)
   }, [])
+
+  const isPWA = typeof window !== 'undefined' && window.matchMedia('(display-mode: standalone)').matches
   const containerRef = useCallback((node: HTMLDivElement | null) => {
     if (node) {
       const h = node.clientHeight
@@ -104,7 +113,7 @@ export default function PublicSetViewerPage() {
   const current = pages[currentPage]
 
   return (
-    <div style={{ minHeight: '100vh', background: '#1a1a1a', display: 'flex', flexDirection: 'column' }}>
+    <div ref={viewerRef} style={{ minHeight: '100vh', background: '#1a1a1a', display: 'flex', flexDirection: 'column' }}>
       {/* Toolbar */}
       <div style={{ background: '#111', borderBottom: '1px solid #333', padding: '8px 16px', display: 'flex', alignItems: 'center', gap: 12, flexShrink: 0 }}>
         <button onClick={() => router.push(`/s/${token}/set`)} style={{ background: 'none', border: 'none', color: '#aaa', cursor: 'pointer', display: 'flex', padding: 4 }}>
@@ -124,7 +133,7 @@ export default function PublicSetViewerPage() {
           <button onClick={() => setScale(s => Math.min(3, s + 0.1))} style={{ background: 'none', border: '1px solid #444', borderRadius: 4, color: '#aaa', cursor: 'pointer', padding: '4px 8px', display: 'flex' }}><ZoomIn size={14} /></button>
         </div>
         <span style={{ color: '#666', fontSize: 12, flexShrink: 0 }}>{currentPage + 1} / {pages.length}</span>
-        {typeof document !== 'undefined' && 'fullscreenEnabled' in document && (
+        {(isPWA || (typeof document !== 'undefined' && 'fullscreenEnabled' in document)) && (
           <button onClick={toggleFullscreen} style={{ background: 'none', border: '1px solid #444', borderRadius: 4, color: '#aaa', cursor: 'pointer', padding: '4px 8px', display: 'flex' }}>
             {isFullscreen ? <Minimize size={14} /> : <Maximize size={14} />}
           </button>
