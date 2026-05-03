@@ -73,7 +73,8 @@ export default function NewSongPage() {
   return (
     <div style={{ maxWidth: 'var(--width-app)', margin: '0 auto' }}>
       <Link href="/songs" className="back-link"><ArrowLeft size={14} /> Back to songs</Link>
-      <h1 className="page-title" style={{ marginBottom: 'var(--space-lg)' }}>Add new song</h1>
+      <h1 className="page-title" style={{ marginBottom: 'var(--space-sm)' }}>Add new song</h1>
+      <p style={{ fontWeight: 700, color: 'var(--color-text-secondary)', marginBottom: 'var(--space-lg)' }}>Add the song details below and click 'Save song'. Then you'll be able to upload files.</p>
       {error && <div className="error-box">{error}</div>}
 
       {!copyrightDismissed && (
@@ -187,7 +188,6 @@ export default function NewSongPage() {
       </div>
       <div className="song-form-footer-spacer" />
       <div className="song-form-footer">
-        <p style={{ fontSize: 'var(--text-sm)', color: 'var(--color-text-muted)', margin: 0 }}>You can add files after saving</p>
         <div style={{ display: 'flex', gap: 8 }}>
           <Link href="/songs" className="btn btn-secondary">Cancel</Link>
           <button type="submit" form="song-new-form" className="btn btn-primary" disabled={loading}>
