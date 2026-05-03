@@ -26,12 +26,6 @@ export function ChordProViewer({ content, originalKey, songKey, label, onClose }
         const song = parser.parse(content)
 
         const formatter = new ChordSheetJS.HtmlDivFormatter()
-        if (!document.getElementById('chordsheetjs-css')) {
-          const style = document.createElement('style')
-          style.id = 'chordsheetjs-css'
-          style.textContent = ChordSheetJS.HtmlDivFormatter.cssString('.chordpro-render')
-          document.head.appendChild(style)
-        }
         if (selectedKey && (originalKey || songKey)) {
           const fromKey = originalKey || songKey || 'C'
           if (selectedKey !== fromKey) {
