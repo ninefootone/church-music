@@ -3,7 +3,7 @@
 import { useState, useEffect } from 'react'
 import { useParams } from 'next/navigation'
 import { format, parseISO } from 'date-fns'
-import { ArrowLeft, FileText, Music, Code, Play } from 'lucide-react'
+import { ArrowLeft, FileText, Loader2, Music, Code, Play } from 'lucide-react'
 import { useRouter } from 'next/navigation'
 import axios from 'axios'
 
