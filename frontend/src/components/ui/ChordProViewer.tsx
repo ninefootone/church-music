@@ -25,19 +25,25 @@ export function ChordProViewer({ content, originalKey, songKey, label, onClose }
         const parser = new ChordSheetJS.ChordProParser()
         const song = parser.parse(content)
 
+        const formatter = new ChordSheetJS.HtmlDivFormatter()
+
         if (selectedKey && (originalKey || songKey)) {
           const fromKey = originalKey || songKey || 'C'
           if (selectedKey !== fromKey) {
-            const semitones = ChordSheetJS.Chord.parse(selectedKey)!.compare(ChordSheetJS.Chord.parse(fromKey)!)
-            const transposer = new ChordSheetJS.Transposer(song)
-            const transposed = transposer.transposeUp(semitones).song
-            const formatter = new ChordSheetJS.HtmlDivFormatter()
-            setRendered(formatter.format(transposed))
-            return
+            const CHROMATIC = ['C', 'C#', 'D', 'D#', 'E', 'F', 'F#', 'G', 'G#', 'A', 'A#', 'B']
+            const normalize = (k: string) => k.replace('Db','C#').replace('Eb','D#').replace('Gb','F#').replace('Ab','G#').replace('Bb','A#')
+            const fromIdx = CHROMATIC.indexOf(normalize(fromKey))
+            const toIdx = CHROMATIC.indexOf(normalize(selectedKey))
+            if (fromIdx !== -1 && toIdx !== -1) {
+              let semitones = toIdx - fromIdx
+              if (semitones < 0) semitones += 12
+              const transposed = song.transpose(semitones)
+              setRendered(formatter.format(transposed))
+              return
+            }
           }
         }
 
-        const formatter = new ChordSheetJS.HtmlDivFormatter()
         setRendered(formatter.format(song))
       } catch (err) {
         console.error('ChordPro render error:', err)
