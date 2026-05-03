@@ -269,22 +269,31 @@ export default function PublicSetViewerPage() {
           <ChevronLeft size={24} />
         </button>
 
-        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-          <Document
-            file={current.file.url}
-            onLoadSuccess={({ numPages }) => {
-              setPageCounts(prev => ({ ...prev, [current.fileIndex]: numPages }))
-            }}
-            loading={<div style={{ color: '#888', padding: 40 }}>Loading…</div>}
-          >
-            <Page
-              pageNumber={current.pageIndex + 1}
-              width={containerSize ? Math.min(containerSize.width - 16, (containerSize.height - 16) * 0.707) : undefined}
-              renderTextLayer={false}
-              renderAnnotationLayer={false}
-            />
-          </Document>
-        </div>
+        {/* Page content */}
+        {current.file.file_type === 'chordpro' ? (
+          <div
+            className="chordpro-render"
+            style={{ width: containerSize ? containerSize.width - 64 : '100%', height: containerSize ? containerSize.height - 32 : '100%', overflow: 'hidden', padding: '16px 24px', background: '#fff', borderRadius: 4 }}
+            dangerouslySetInnerHTML={{ __html: current.chordProHtml || '' }}
+          />
+        ) : (
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+            <Document
+              file={current.file.url}
+              onLoadSuccess={({ numPages }) => {
+                setPageCounts(prev => ({ ...prev, [current.fileIndex]: numPages }))
+              }}
+              loading={<div style={{ color: '#888', padding: 40 }}>Loading…</div>}
+            >
+              <Page
+                pageNumber={current.pageIndex + 1}
+                width={containerSize ? Math.min(containerSize.width - 16, (containerSize.height - 16) * 0.707) : undefined}
+                renderTextLayer={false}
+                renderAnnotationLayer={false}
+              />
+            </Document>
+          </div>
+        )}
 
         <button
           onClick={e => { e.stopPropagation(); goTo(currentPage + 1) }}
