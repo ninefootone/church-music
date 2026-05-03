@@ -2,7 +2,7 @@
 
 import { useEffect, useState, useCallback } from 'react'
 import { useParams, useRouter } from 'next/navigation'
-import { ChevronLeft, ChevronRight, X, ZoomIn, ZoomOut } from 'lucide-react'
+import { ChevronLeft, ChevronRight, X, ZoomIn, ZoomOut, Maximize, Minimize } from 'lucide-react'
 import { Document, Page, pdfjs } from 'react-pdf'
 import 'react-pdf/dist/Page/AnnotationLayer.css'
 import 'react-pdf/dist/Page/TextLayer.css'
@@ -32,6 +32,22 @@ export default function PublicSetViewerPage() {
   const [currentPage, setCurrentPage] = useState(0)
   const [pageCounts, setPageCounts] = useState<Record<number, number>>({})
   const [scale, setScale] = useState(1)
+  const [isFullscreen, setIsFullscreen] = useState(false)
+  const canFullscreen = typeof document !== 'undefined' && !!document.fullscreenEnabled && !window.matchMedia('(display-mode: standalone)').matches
+
+  const toggleFullscreen = useCallback(() => {
+    if (!document.fullscreenElement) {
+      document.documentElement.requestFullscreen().catch(() => {})
+    } else {
+      document.exitFullscreen().catch(() => {})
+    }
+  }, [])
+
+  useEffect(() => {
+    const handler = () => setIsFullscreen(!!document.fullscreenElement)
+    document.addEventListener('fullscreenchange', handler)
+    return () => document.removeEventListener('fullscreenchange', handler)
+  }, [])
 
   const containerRef = useCallback((node: HTMLDivElement | null) => {
     if (node) {
@@ -115,6 +131,11 @@ export default function PublicSetViewerPage() {
           <button onClick={() => setScale(s => Math.min(3, s + 0.1))} style={{ background: 'none', border: '1px solid #444', borderRadius: 4, color: '#aaa', cursor: 'pointer', padding: '4px 8px', display: 'flex' }}><ZoomIn size={14} /></button>
         </div>
         <span style={{ color: '#666', fontSize: 12, flexShrink: 0 }}>{currentPage + 1} / {pages.length}</span>
+        {canFullscreen && (
+          <button onClick={toggleFullscreen} style={{ background: 'none', border: '1px solid #444', borderRadius: 4, color: '#aaa', cursor: 'pointer', padding: '4px 8px', display: 'flex' }}>
+            {isFullscreen ? <Minimize size={14} /> : <Maximize size={14} />}
+          </button>
+        )}
       </div>
 
       {/* Page display */}

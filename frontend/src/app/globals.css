@@ -13,6 +13,11 @@
 .chordpro-render .comment { color: var(--color-text-muted); font-style: italic; margin-bottom: 6px; }
 .chordpro-render .section-label { color: var(--color-text-muted); font-style: italic; margin-bottom: 8px; font-size: 0.9em; }
 
+/* Set viewer — hide PDF canvas surrounds */
+body.set-viewer-active .react-pdf__Page { background: transparent !important; box-shadow: none !important; }
+body.set-viewer-active .react-pdf__Page canvas { display: block; }
+body.set-viewer-active .react-pdf__Document { background: transparent !important; }
+
 /* Set viewer — hide app chrome */
 body.set-viewer-active .app-nav,
 body.set-viewer-active nav,
