@@ -99,7 +99,7 @@ export default function PublicSetViewerPage() {
 
   useEffect(() => {
     const raw = sessionStorage.getItem('setViewerFiles')
-    if (!raw) { router.push(`/services/${id}/set`); return }
+    if (!raw) { router.push(`/s/${token}/set`); return }
     const parsed: SetFile[] = JSON.parse(raw)
     setFiles(parsed)
 
