@@ -168,7 +168,7 @@ export function SetViewerPage() {
     const hasChordPro = files.some(f => f.file_type === 'chordpro')
     const hasChordProContent = chordProContents.length > 0
     if (hasChordPro && !hasChordProContent) return
-    if (hasChordPro && !containerSize) return
+    // Don't block on containerSize — use defaults if not yet measured
 
     const newPages: ViewerPage[] = []
 
