@@ -3,13 +3,14 @@
 @tailwind utilities;
 
 /* ChordPro renderer */
-.chordpro-render .chord-sheet { font-family: monospace; line-height: 2; }
-.chordpro-render .row { display: flex; flex-wrap: wrap; gap: 0 16px; margin-bottom: 4px; }
-.chordpro-render .chord { color: var(--color-brand-600); font-weight: 700; display: block; }
-.chordpro-render .lyrics { color: var(--color-text-primary); display: block; }
-.chordpro-render .paragraph { margin-bottom: 20px; }
-.chordpro-render .comment { color: var(--color-text-muted); font-style: italic; margin-bottom: 8px; font-size: 0.9em; }
-.chordpro-render .chorus .paragraph { border-left: 3px solid var(--color-brand-300); padding-left: 12px; }
+.chordpro-render { font-family: monospace; }
+.chordpro-render .paragraph { margin-bottom: 24px; }
+.chordpro-render .row { display: flex; flex-wrap: wrap; align-items: flex-end; margin-bottom: 2px; }
+.chordpro-render .column { display: inline-flex; flex-direction: column; margin-right: 2px; }
+.chordpro-render .chord { color: var(--color-brand-600); font-weight: 700; line-height: 1.4; min-width: 1ch; }
+.chordpro-render .lyrics { line-height: 1.6; white-space: pre; }
+.chordpro-render .comment { color: var(--color-text-muted); font-style: italic; margin-bottom: 6px; }
+.chordpro-render .section-label { color: var(--color-text-muted); font-style: italic; margin-bottom: 8px; font-size: 0.9em; }
 
 @keyframes spin {
   from { transform: rotate(0deg); }
