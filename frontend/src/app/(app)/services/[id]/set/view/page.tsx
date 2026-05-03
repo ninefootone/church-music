@@ -104,6 +104,7 @@ export default function SetViewerPage() {
     setFiles(parsed)
 
     const fetchChordPro = async () => {
+      if (typeof window === 'undefined') return
       const { default: ChordSheetJS } = await import('chordsheetjs')
       const contents: ChordProContent[] = []
 
@@ -161,6 +162,7 @@ export default function SetViewerPage() {
           return
         }
 
+        if (typeof document === 'undefined') return
         const container = document.createElement('div')
         const cw = containerSize?.width ?? 800
         const ch = containerSize?.height ?? 1000
