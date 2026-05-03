@@ -45,6 +45,7 @@ export default function SongDetailPage() {
   useEffect(() => { fetchSong() }, [fetchSong])
 
   const handleViewChordPro = async (fileId: string, label: string, key: string | null) => {
+    if (!song) return
     try {
       const { data } = await api.get(`/api/uploads/songs/${song.id}/files/${fileId}/url`)
       const response = await fetch(data.url)
