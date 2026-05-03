@@ -120,19 +120,25 @@ export function SetViewerPage() {
           const song = parser.parse(text)
 
           let rendered = song
-          if (file.songKey) {
-            const CHROMATIC = ['C', 'C#', 'D', 'D#', 'E', 'F', 'F#', 'G', 'G#', 'A', 'A#', 'B']
-            const normalize = (k: string) => k.replace('Db','C#').replace('Eb','D#').replace('Gb','F#').replace('Ab','G#').replace('Bb','A#')
-            const originalKey = song.metadata?.get('key') as string | undefined
-            if (originalKey) {
-              const fromIdx = CHROMATIC.indexOf(normalize(originalKey))
-              const toIdx = CHROMATIC.indexOf(normalize(file.songKey))
-              if (fromIdx !== -1 && toIdx !== -1) {
-                let semitones = toIdx - fromIdx
-                if (semitones < 0) semitones += 12
-                if (semitones !== 0) rendered = song.transpose(semitones)
+          try {
+            if (file.songKey) {
+              const CHROMATIC = ['C', 'C#', 'D', 'D#', 'E', 'F', 'F#', 'G', 'G#', 'A', 'A#', 'B']
+              const normalize = (k: string) => k.replace('Db','C#').replace('Eb','D#').replace('Gb','F#').replace('Ab','G#').replace('Bb','A#')
+              const rawKey = song.metadata?.get('key')
+              const originalKey = Array.isArray(rawKey) ? rawKey[0] : rawKey
+              if (originalKey && typeof originalKey === 'string') {
+                const fromIdx = CHROMATIC.indexOf(normalize(originalKey))
+                const toIdx = CHROMATIC.indexOf(normalize(file.songKey))
+                if (fromIdx !== -1 && toIdx !== -1) {
+                  let semitones = toIdx - fromIdx
+                  if (semitones < 0) semitones += 12
+                  if (semitones !== 0) rendered = song.transpose(semitones)
+                }
               }
             }
+          } catch (transposeErr) {
+            console.warn('Transposition failed, using original key', transposeErr)
+            rendered = song
           }
 
           const formatter = new ChordSheetJS.HtmlDivFormatter()
