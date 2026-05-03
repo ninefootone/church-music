@@ -22,6 +22,7 @@
 - [ ] ChordPro set viewer pagination — proper two-phase render: render full content off-screen to measure real paragraph heights, then split into screen-sized pages for left/right foot pedal navigation
 - [ ] ChordPro key override in set picker — allow per-file key selection in the set picker, overriding the song's default key; show capo suggestion (e.g. "Capo 3 = G shapes") when transposing; useful for guitar players who prefer open chord shapes
 - [ ] Print/download merged PDF — from the set picker, a "Download PDF" button that merges selected PDF files into a single downloadable PDF using pdf-lib (as previously built); useful for printing a full service's worth of music
+- [ ] Single file viewer — route at /songs/[id]/view/[fileId] that opens a single PDF or ChordPro file in the full set viewer (same component, single file); accessible from the song page for rehearsal use; supports swipe/keyboard navigation and auto-hide controls
 - [ ] ChordPro inline editing — "Edit" button in the viewer toolbar opens a textarea with raw ChordPro text; save writes updated content back to R2 via a new PUT endpoint; admin only
 - [ ] Settings page
 - [ ] Automated backups — periodic PostgreSQL dump stored in Cloudflare R2, just in case
