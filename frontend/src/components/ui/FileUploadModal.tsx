@@ -9,6 +9,7 @@ const FILE_TYPES = [
   { value: 'lead',       label: 'Lead sheet' },
   { value: 'vocal',      label: 'Vocal sheet' },
   { value: 'full_score', label: 'Full score' },
+  { value: 'chordpro',   label: 'ChordPro' },
 ]
 
 const KEYS = ['C', 'C#', 'Db', 'D', 'Eb', 'E', 'F', 'F#', 'Gb', 'G', 'Ab', 'A', 'Bb', 'B']
@@ -149,7 +150,7 @@ export function FileUploadModal({ songId, defaultKey, onClose, onUploaded }: Fil
             <input
               ref={inputRef}
               type="file"
-              accept=".pdf"
+              accept=".pdf,.cho,.chordpro"
               multiple
               onChange={handleFilesChange}
               style={{ display: 'none' }}
@@ -159,7 +160,7 @@ export function FileUploadModal({ songId, defaultKey, onClose, onUploaded }: Fil
               Click to choose files
             </p>
             <p style={{ fontSize: 'var(--text-sm)', color: 'var(--color-text-muted)' }}>
-              PDF only · max 20MB each · multiple files supported
+              PDF or ChordPro · max 20MB each · multiple files supported
             </p>
           </div>
 

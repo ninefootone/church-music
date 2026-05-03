@@ -25,11 +25,13 @@ const upload = multer({
   storage: multer.memoryStorage(),
   limits: { fileSize: 20 * 1024 * 1024 },
   fileFilter: function(req, file, cb) {
-    const allowed = ['application/pdf', 'image/png', 'image/jpeg'];
-    if (allowed.includes(file.mimetype)) {
+    const allowed = ['application/pdf', 'text/plain', 'application/octet-stream'];
+    const ext = file.originalname.split('.').pop()?.toLowerCase();
+    const allowedExt = ['pdf', 'cho', 'chordpro'];
+    if (allowed.includes(file.mimetype) && allowedExt.includes(ext || '')) {
       cb(null, true);
     } else {
-      cb(new Error('Only PDF and image files are allowed'));
+      cb(new Error('Only PDF and ChordPro files are allowed'));
     }
   },
 });
