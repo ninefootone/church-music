@@ -167,12 +167,14 @@ export function PublicSetViewerPage() {
 
     files.forEach((file, fileIndex) => {
       if (file.file_type === 'chordpro') {
+        console.log('Building ChordPro pages for file', fileIndex, 'containerSize:', containerSize)
         const content = chordProContents.find(c => c.fileIndex === fileIndex)
         if (!content) {
           newPages.push({ fileIndex, pageIndex: 0, totalPages: 1, file, chordProHtml: '' })
           return
         }
 
+        try {
         if (typeof document === 'undefined') return
         const container = document.createElement('div')
         const cw = containerSize?.width ?? 800
@@ -206,6 +208,10 @@ export function PublicSetViewerPage() {
         chordProPages.forEach((html, p) => {
           newPages.push({ fileIndex, pageIndex: p, totalPages: total, file, chordProHtml: html })
         })
+        } catch (buildErr) {
+          console.error('Error building ChordPro pages:', buildErr)
+          newPages.push({ fileIndex, pageIndex: 0, totalPages: 1, file, chordProHtml: content.html })
+        }
       } else {
         const count = pageCounts[fileIndex] || 1
         for (let p = 0; p < count; p++) {
