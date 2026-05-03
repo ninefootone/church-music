@@ -60,6 +60,9 @@ export default function SetViewerPage() {
     }
   }, [])
 
+  const [ready, setReady] = useState(false)
+  const [controlsVisible, setControlsVisible] = useState(true)
+
   useEffect(() => {
     const node = containerNodeRef.current
     if (!node) return
@@ -68,8 +71,6 @@ export default function SetViewerPage() {
     }, 350)
     return () => clearTimeout(timer)
   }, [controlsVisible])
-  const [ready, setReady] = useState(false)
-  const [controlsVisible, setControlsVisible] = useState(true)
   const hideTimer = useRef<ReturnType<typeof setTimeout> | null>(null)
   const touchStartX = useRef<number | null>(null)
 
