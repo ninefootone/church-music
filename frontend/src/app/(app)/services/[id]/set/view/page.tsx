@@ -137,7 +137,6 @@ export default function SetViewerPage() {
 
   return (
     <div
-      <div
       style={{ minHeight: '100vh', background: '#fff', display: 'flex', flexDirection: 'column', cursor: controlsVisible ? 'default' : 'none' }}
       onClick={showControls}
       onTouchStart={e => { touchStartX.current = e.touches[0].clientX }}
