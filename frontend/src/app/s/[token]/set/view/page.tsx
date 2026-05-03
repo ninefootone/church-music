@@ -68,7 +68,7 @@ export default function PublicSetViewerPage() {
     if (!node) return
     const timer = setTimeout(() => {
       setContainerSize({ width: node.clientWidth, height: node.clientHeight })
-    }, 350)
+    }, 450)
     return () => clearTimeout(timer)
   }, [controlsVisible])
   const hideTimer = useRef<ReturnType<typeof setTimeout> | null>(null)
@@ -150,7 +150,7 @@ export default function PublicSetViewerPage() {
       }}
     >
       {/* Toolbar */}
-      <div style={{ background: '#111', borderBottom: '1px solid #333', padding: '8px 16px', display: 'flex', alignItems: 'center', gap: 12, flexShrink: 0, transition: 'opacity 0.3s, max-height 0.3s', opacity: controlsVisible ? 1 : 0, maxHeight: controlsVisible ? 60 : 0, overflow: 'hidden', pointerEvents: controlsVisible ? 'auto' : 'none' }}>
+      <div style={{ background: '#111', borderBottom: '1px solid #333', padding: '8px 16px', display: 'flex', alignItems: 'center', gap: 12, flexShrink: 0, transition: 'opacity 0.4s, max-height 0.4s, padding 0.4s', opacity: controlsVisible ? 1 : 0, maxHeight: controlsVisible ? 60 : 0, paddingTop: controlsVisible ? 8 : 0, paddingBottom: controlsVisible ? 8 : 0, overflow: 'hidden', pointerEvents: controlsVisible ? 'auto' : 'none' }}>
         <button onClick={() => router.push(`/s/${token}/set`)} style={{ background: 'none', border: 'none', color: '#aaa', cursor: 'pointer', display: 'flex', padding: 4 }}>
           <X size={20} />
         </button>
