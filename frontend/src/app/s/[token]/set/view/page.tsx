@@ -43,13 +43,8 @@ export default function PublicSetViewerPage() {
 
   useEffect(() => {
     if (files.length === 0) return
-    const pdfFiles = files.filter(f => f.file_type !== 'chordpro')
-    const allCountsKnown = pdfFiles.every((_, i) => {
-      const fileIdx = files.indexOf(pdfFiles[i])
-      return pageCounts[fileIdx] !== undefined
-    })
-    if (!allCountsKnown && pdfFiles.length > 0) return
-
+    // Build initial page list immediately with 1 page per file
+    // Pages will expand as PDFs report their actual page counts
     const newPages: ViewerPage[] = []
     files.forEach((file, fileIndex) => {
       const count = pageCounts[fileIndex] || 1
