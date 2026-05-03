@@ -4,7 +4,7 @@ import { useState, useEffect } from 'react'
 import Link from 'next/link'
 import { useParams } from 'next/navigation'
 import { format, parseISO } from 'date-fns'
-import { ArrowLeft, FileText, Loader2, Music } from 'lucide-react'
+import { ArrowLeft, FileText, Loader2, Music, Code } from 'lucide-react'
 import api from '@/lib/api'
 
 interface SongFile {
@@ -114,12 +114,25 @@ export default function SetModePage() {
       )
 
       const urlsToMerge: string[] = []
+      let chordProCount = 0
       for (const item of songItems) {
         const songId = item.song_id!
         const files = filesMap[songId] || []
         const selectedIds = selected[songId] || new Set()
         const chosenFiles = files.filter(f => selectedIds.has(f.id))
-        chosenFiles.forEach(f => urlsToMerge.push(f.url))
+        chosenFiles.forEach(f => {
+          if (f.file_type === 'chordpro') {
+            chordProCount++
+          } else {
+            urlsToMerge.push(f.url)
+          }
+        })
+      }
+
+      if (chordProCount > 0 && urlsToMerge.length === 0) {
+        setError('ChordPro files cannot yet be merged into the PDF set. The embedded viewer is coming soon.')
+        setMerging(false)
+        return
       }
 
       if (urlsToMerge.length === 0) {
@@ -190,7 +203,7 @@ export default function SetModePage() {
           {service.title && ` · ${service.title}`}
         </p>
         <p style={{ fontSize: 'var(--text-sm)', color: 'var(--color-text-muted)', marginTop: 8 }}>
-          Choose which files to include for each song, then open as a single PDF.
+          Choose which files to include for each song, then open as a single PDF. ChordPro files will be supported in the embedded viewer coming soon.
         </p>
       </div>
 
@@ -240,7 +253,10 @@ export default function SetModePage() {
                           onChange={() => toggleFile(item.song_id!, file.id)}
                           style={{ width: 16, height: 16, accentColor: 'var(--color-brand-600)', flexShrink: 0 }}
                         />
-                        <FileText size={13} style={{ color: 'var(--color-text-muted)', flexShrink: 0 }} />
+                        {file.file_type === 'chordpro'
+                          ? <Code size={13} style={{ color: 'var(--color-brand-500)', flexShrink: 0 }} />
+                          : <FileText size={13} style={{ color: 'var(--color-text-muted)', flexShrink: 0 }} />
+                        }
                         <span style={{ fontSize: 'var(--text-sm)', fontWeight: 500, color: 'var(--color-text-primary)', flex: 1 }}>
                           {file.label}
                         </span>
