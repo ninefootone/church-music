@@ -166,6 +166,8 @@ export function SetViewerPage() {
   useEffect(() => {
     if (files.length === 0) return
     const hasChordPro = files.some(f => f.file_type === 'chordpro')
+    const hasChordProContent = chordProContents.length > 0
+    if (hasChordPro && !hasChordProContent) return
     if (hasChordPro && !containerSize) return
 
     const newPages: ViewerPage[] = []
