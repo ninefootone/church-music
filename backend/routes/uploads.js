@@ -27,7 +27,7 @@ const upload = multer({
   fileFilter: function(req, file, cb) {
     const allowed = ['application/pdf', 'text/plain', 'application/octet-stream'];
     const ext = file.originalname.split('.').pop()?.toLowerCase();
-    const allowedExt = ['pdf', 'cho', 'chordpro'];
+    const allowedExt = ['pdf', 'cho', 'chordpro', 'txt'];
     if (allowed.includes(file.mimetype) && allowedExt.includes(ext || '')) {
       cb(null, true);
     } else {

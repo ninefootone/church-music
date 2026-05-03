@@ -150,7 +150,7 @@ export function FileUploadModal({ songId, defaultKey, onClose, onUploaded }: Fil
             <input
               ref={inputRef}
               type="file"
-              accept=".pdf,.cho,.chordpro"
+              accept=".pdf,.cho,.chordpro,.txt"
               multiple
               onChange={handleFilesChange}
               style={{ display: 'none' }}
