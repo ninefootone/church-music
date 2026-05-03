@@ -181,47 +181,8 @@ export function SetViewerPage() {
           return
         }
 
-        try {
-        console.log('Creating measurement container...')
-        if (typeof document === 'undefined') { console.log('document undefined!'); return }
-        const container = document.createElement('div')
-        console.log('Container created, appending to body...')
-        const cw = containerSize?.width ?? 800
-        const ch = containerSize?.height ?? 1000
-        container.style.cssText = `position:absolute;visibility:hidden;width:${cw - 64}px;font-family:monospace;font-size:15px;line-height:1.6;`
-        container.innerHTML = content.html
-        document.body.appendChild(container)
-
-        const pageHeight = ch - 32
-        const paragraphs = Array.from(container.querySelectorAll('.paragraph'))
-        const chordProPages: string[] = []
-        let currentHtml = ''
-        let currentHeight = 0
-
-        paragraphs.forEach(para => {
-          const h = (para as HTMLElement).offsetHeight + 24
-          if (currentHeight + h > pageHeight && currentHtml) {
-            chordProPages.push(currentHtml)
-            currentHtml = (para as HTMLElement).outerHTML
-            currentHeight = h
-          } else {
-            currentHtml += (para as HTMLElement).outerHTML
-            currentHeight += h
-          }
-        })
-        if (currentHtml) chordProPages.push(currentHtml)
-
-        document.body.removeChild(container)
-        console.log('Measurement done, pages:', chordProPages.length)
-
-        const total = chordProPages.length || 1
-        chordProPages.forEach((html, p) => {
-          newPages.push({ fileIndex, pageIndex: p, totalPages: total, file, chordProHtml: html })
-        })
-        } catch (buildErr) {
-          console.error('Error building ChordPro pages:', buildErr)
-          newPages.push({ fileIndex, pageIndex: 0, totalPages: 1, file, chordProHtml: content.html })
-        }
+        // Render entire ChordPro file as a single scrollable page
+        newPages.push({ fileIndex, pageIndex: 0, totalPages: 1, file, chordProHtml: content.html })
       } else {
         const count = pageCounts[fileIndex] || 1
         for (let p = 0; p < count; p++) {
