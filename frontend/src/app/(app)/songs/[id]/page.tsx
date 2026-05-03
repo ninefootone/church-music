@@ -6,6 +6,7 @@ import { useParams, useRouter } from 'next/navigation'
 import { format, parseISO } from 'date-fns'
 import { ArrowLeft, Download, ExternalLink, Edit, Plus, Trash2 } from 'lucide-react'
 import { FileRow } from '@/components/ui/FileRow'
+import { ChordProViewer } from '@/components/ui/ChordProViewer'
 import { CategoryBadge, KeyBadge } from '@/components/ui/badges'
 import { LyricsDisplay } from '@/components/ui/LyricsDisplay'
 import { FileUploadModal } from '@/components/ui/FileUploadModal'
@@ -24,6 +25,7 @@ export default function SongDetailPage() {
   const [notFound, setNotFound] = useState(false)
   const [showFullLyrics, setShowFullLyrics] = useState(false)
   const [showUploadModal, setShowUploadModal] = useState(false)
+  const [chordProFile, setChordProFile] = useState<{ content: string; label: string; key: string | null } | null>(null)
   const [downloadingId, setDownloadingId] = useState<string | null>(null)
   const [deletingId, setDeletingId] = useState<string | null>(null)
   const [showAddToService, setShowAddToService] = useState(false)
@@ -41,6 +43,17 @@ export default function SongDetailPage() {
   }, [id, churchLoading])
 
   useEffect(() => { fetchSong() }, [fetchSong])
+
+  const handleViewChordPro = async (fileId: string, label: string, key: string | null) => {
+    try {
+      const { data } = await api.get(`/api/uploads/songs/${song.id}/files/${fileId}/url`)
+      const response = await fetch(data.url)
+      const text = await response.text()
+      setChordProFile({ content: text, label, key })
+    } catch (err) {
+      console.error('Failed to load ChordPro file', err)
+    }
+  }
 
   const handleDownload = async (fileId: string, label: string) => {
     if (!song) return
@@ -111,6 +124,16 @@ export default function SongDetailPage() {
 
   return (
     <div style={{ maxWidth: 'var(--width-app)', margin: '0 auto' }}>
+      {chordProFile && (
+        <ChordProViewer
+          content={chordProFile.content}
+          originalKey={chordProFile.key}
+          songKey={song.default_key}
+          label={chordProFile.label}
+          onClose={() => setChordProFile(null)}
+        />
+      )}
+
       {showUploadModal && (
         <FileUploadModal
           songId={song.id}
@@ -252,7 +275,10 @@ export default function SongDetailPage() {
                   Main key{song.default_key && <> — <KeyBadge keyOf={song.default_key} /></>}
                 </p>
                 <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8 }}>
-                  {mainFiles.map(f => <FileRow key={f.id} file={f} songId={song.id} defaultKey={song.default_key} isAdmin={isAdmin} downloadingId={downloadingId} deletingId={deletingId} onDownload={handleDownload} onDelete={handleDelete} onSaved={fetchSong} />)}
+                  {mainFiles.map(f => f.file_type === 'chordpro'
+                    ? <button key={f.id} onClick={() => handleViewChordPro(f.id, f.label, f.key_of)} className="btn btn-secondary btn-sm">{f.label}</button>
+                    : <FileRow key={f.id} file={f} songId={song.id} defaultKey={song.default_key} isAdmin={isAdmin} downloadingId={downloadingId} deletingId={deletingId} onDownload={handleDownload} onDelete={handleDelete} onSaved={fetchSong} />
+                  )}
                 </div>
               </div>
             )}
@@ -262,7 +288,10 @@ export default function SongDetailPage() {
                 <div>
                   <p className="downloads-group-label">Other keys</p>
                   <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8 }}>
-                    {otherFiles.map(f => <FileRow key={f.id} file={f} songId={song.id} defaultKey={song.default_key} isAdmin={isAdmin} downloadingId={downloadingId} deletingId={deletingId} onDownload={handleDownload} onDelete={handleDelete} onSaved={fetchSong} />)}
+                    {otherFiles.map(f => f.file_type === 'chordpro'
+                      ? <button key={f.id} onClick={() => handleViewChordPro(f.id, f.label, f.key_of)} className="btn btn-secondary btn-sm">{f.label}</button>
+                      : <FileRow key={f.id} file={f} songId={song.id} defaultKey={song.default_key} isAdmin={isAdmin} downloadingId={downloadingId} deletingId={deletingId} onDownload={handleDownload} onDelete={handleDelete} onSaved={fetchSong} />
+                    )}
                   </div>
                 </div>
               </>

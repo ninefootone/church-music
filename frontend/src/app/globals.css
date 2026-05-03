@@ -2,6 +2,15 @@
 @tailwind components;
 @tailwind utilities;
 
+/* ChordPro renderer */
+.chordpro-render .chord-sheet { font-family: monospace; line-height: 2; }
+.chordpro-render .row { display: flex; flex-wrap: wrap; gap: 0 16px; margin-bottom: 4px; }
+.chordpro-render .chord { color: var(--color-brand-600); font-weight: 700; display: block; }
+.chordpro-render .lyrics { color: var(--color-text-primary); display: block; }
+.chordpro-render .paragraph { margin-bottom: 20px; }
+.chordpro-render .comment { color: var(--color-text-muted); font-style: italic; margin-bottom: 8px; font-size: 0.9em; }
+.chordpro-render .chorus .paragraph { border-left: 3px solid var(--color-brand-300); padding-left: 12px; }
+
 @keyframes spin {
   from { transform: rotate(0deg); }
   to { transform: rotate(360deg); }
