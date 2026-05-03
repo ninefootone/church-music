@@ -22,6 +22,12 @@ interface ViewerPage {
   pageIndex: number
   totalPages: number
   file: SetFile
+  chordProHtml?: string
+}
+
+interface ChordProContent {
+  fileIndex: number
+  html: string
 }
 
 export default function SetViewerPage() {
