@@ -32,6 +32,16 @@ export default function SetViewerPage() {
   const [currentPage, setCurrentPage] = useState(0)
   const [pageCounts, setPageCounts] = useState<Record<number, number>>({})
   const [scale, setScale] = useState(1)
+  const containerRef = useCallback((node: HTMLDivElement | null) => {
+    if (node) {
+      const h = node.clientHeight
+      const w = node.clientWidth
+      // A4 page is 842x595pt — fit to screen with some padding
+      const scaleByHeight = (h - 32) / 842
+      const scaleByWidth = (w - 96) / 595
+      setScale(Math.min(scaleByHeight, scaleByWidth))
+    }
+  }, [])
   const [ready, setReady] = useState(false)
 
   useEffect(() => {
@@ -103,7 +113,7 @@ export default function SetViewerPage() {
       </div>
 
       {/* Page display */}
-      <div style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', overflow: 'hidden', position: 'relative' }}>
+      <div ref={containerRef} style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', overflow: 'hidden', position: 'relative' }}>
         {/* Prev */}
         <button
           onClick={() => goTo(currentPage - 1)}
@@ -114,7 +124,7 @@ export default function SetViewerPage() {
         </button>
 
         {/* PDF page */}
-        <div style={{ overflow: 'auto', maxHeight: 'calc(100vh - 80px)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
           <Document
             file={current.file.url}
             onLoadSuccess={({ numPages }) => {
