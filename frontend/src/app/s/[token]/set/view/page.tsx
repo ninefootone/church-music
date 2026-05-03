@@ -147,7 +147,8 @@ export default function PublicSetViewerPage() {
 
   useEffect(() => {
     if (files.length === 0) return
-    if (!containerSize) return
+    const hasChordPro = files.some(f => f.file_type === 'chordpro')
+    if (hasChordPro && !containerSize) return
 
     const newPages: ViewerPage[] = []
 
@@ -197,8 +198,10 @@ export default function PublicSetViewerPage() {
       }
     })
 
-    setPages(newPages)
-    setReady(true)
+    if (newPages.length > 0) {
+      setPages(newPages)
+      setReady(true)
+    }
   }, [files, pageCounts, chordProContents, containerSize])
 
   const goTo = useCallback((n: number) => {
