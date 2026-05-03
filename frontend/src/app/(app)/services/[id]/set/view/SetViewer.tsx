@@ -119,8 +119,10 @@ export function SetViewerPage() {
           console.log('Fetch status:', response.status)
           const text = await response.text()
           console.log('ChordPro content length:', text.length, 'first 100 chars:', text.substring(0, 100))
+          console.log('About to parse...')
           const parser = new ChordSheetJS.ChordProParser()
           const song = parser.parse(text)
+          console.log('Parsed successfully, about to format...')
 
           let rendered = song
           try {
@@ -144,8 +146,10 @@ export function SetViewerPage() {
             rendered = song
           }
 
+          console.log('About to format...')
           const formatter = new ChordSheetJS.HtmlDivFormatter()
           const html = formatter.format(rendered)
+          console.log('Formatted successfully, html length:', html.length)
           contents.push({ fileIndex: i, html })
         } catch (err) {
           console.error('Failed to load ChordPro file at index', i, ':', err)
