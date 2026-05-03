@@ -114,8 +114,11 @@ export function PublicSetViewerPage() {
         const file = parsed[i]
         if (file.file_type !== 'chordpro') continue
         try {
+          console.log('Fetching ChordPro file:', file.url)
           const response = await fetch(file.url)
+          console.log('Fetch status:', response.status)
           const text = await response.text()
+          console.log('ChordPro content length:', text.length, 'first 100 chars:', text.substring(0, 100))
           const parser = new ChordSheetJS.ChordProParser()
           const song = parser.parse(text)
 
@@ -145,7 +148,8 @@ export function PublicSetViewerPage() {
           const html = formatter.format(rendered)
           contents.push({ fileIndex: i, html })
         } catch (err) {
-          console.warn('Failed to load ChordPro file', err)
+          console.error('Failed to load ChordPro file at index', i, ':', err)
+          console.error('File details:', JSON.stringify(file))
         }
       }
       setChordProContents(contents)
