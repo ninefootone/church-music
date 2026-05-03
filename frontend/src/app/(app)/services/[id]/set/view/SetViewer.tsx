@@ -162,8 +162,8 @@ export function SetViewerPage() {
     fetchChordPro()
   }, [id, router])
 
-  // Build page list once we know page counts for all PDF files
   useEffect(() => {
+    console.log('Page build effect running. files:', files.length, 'chordProContents:', chordProContents.length, 'containerSize:', containerSize)
     if (files.length === 0) return
     const hasChordPro = files.some(f => f.file_type === 'chordpro')
     const hasChordProContent = chordProContents.length > 0
