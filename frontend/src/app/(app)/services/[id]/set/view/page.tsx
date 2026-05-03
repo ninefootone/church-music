@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useState, useCallback } from 'react'
+import { useEffect, useState, useCallback, useRef } from 'react'
 import { useParams, useRouter } from 'next/navigation'
 import { ChevronLeft, ChevronRight, X, ZoomIn, ZoomOut, Maximize, Minimize } from 'lucide-react'
 import { Document, Page, pdfjs } from 'react-pdf'
@@ -60,6 +60,20 @@ export default function SetViewerPage() {
     }
   }, [])
   const [ready, setReady] = useState(false)
+  const [controlsVisible, setControlsVisible] = useState(true)
+  const hideTimer = useRef<ReturnType<typeof setTimeout> | null>(null)
+  const touchStartX = useRef<number | null>(null)
+
+  const showControls = useCallback(() => {
+    setControlsVisible(true)
+    if (hideTimer.current) clearTimeout(hideTimer.current)
+    hideTimer.current = setTimeout(() => setControlsVisible(false), 2500)
+  }, [])
+
+  useEffect(() => {
+    showControls()
+    return () => { if (hideTimer.current) clearTimeout(hideTimer.current) }
+  }, [showControls])
 
   useEffect(() => {
     document.body.classList.add('set-viewer-active')
@@ -112,9 +126,22 @@ export default function SetViewerPage() {
   const current = pages[currentPage]
 
   return (
-    <div style={{ minHeight: '100vh', background: '#1a1a1a', display: 'flex', flexDirection: 'column' }}>
+    <div
+      style={{ minHeight: '100vh', background: '#1a1a1a', display: 'flex', flexDirection: 'column', cursor: controlsVisible ? 'default' : 'none' }}
+      onClick={showControls}
+      onTouchStart={e => { touchStartX.current = e.touches[0].clientX }}
+      onTouchEnd={e => {
+        if (touchStartX.current === null) return
+        const diff = touchStartX.current - e.changedTouches[0].clientX
+        if (Math.abs(diff) > 50) {
+          if (diff > 0) goTo(currentPage + 1)
+          else goTo(currentPage - 1)
+        }
+        touchStartX.current = null
+      }}
+    >
       {/* Toolbar */}
-      <div style={{ background: '#111', borderBottom: '1px solid #333', padding: '8px 16px', display: 'flex', alignItems: 'center', gap: 12, flexShrink: 0 }}>
+      <div style={{ background: '#111', borderBottom: '1px solid #333', padding: '8px 16px', display: 'flex', alignItems: 'center', gap: 12, flexShrink: 0, transition: 'opacity 0.3s', opacity: controlsVisible ? 1 : 0, pointerEvents: controlsVisible ? 'auto' : 'none' }}>
         <button onClick={() => router.push(`/services/${id}/set`)} style={{ background: 'none', border: 'none', color: '#aaa', cursor: 'pointer', display: 'flex', padding: 4 }}>
           <X size={20} />
         </button>
@@ -143,9 +170,9 @@ export default function SetViewerPage() {
       <div ref={containerRef} style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', overflow: 'hidden', position: 'relative' }}>
         {/* Prev */}
         <button
-          onClick={() => goTo(currentPage - 1)}
+          onClick={e => { e.stopPropagation(); goTo(currentPage - 1) }}
           disabled={currentPage === 0}
-          style={{ position: 'absolute', left: 8, zIndex: 10, background: 'rgba(255,255,255,0.1)', border: 'none', borderRadius: '50%', width: 44, height: 44, display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: currentPage === 0 ? 'not-allowed' : 'pointer', opacity: currentPage === 0 ? 0.3 : 1, color: '#fff' }}
+          style={{ position: 'absolute', left: 8, zIndex: 10, background: 'rgba(255,255,255,0.1)', border: 'none', borderRadius: '50%', width: 44, height: 44, display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: currentPage === 0 ? 'not-allowed' : 'pointer', color: '#fff', transition: 'opacity 0.3s', opacity: controlsVisible ? (currentPage === 0 ? 0.3 : 1) : 0, pointerEvents: controlsVisible ? 'auto' : 'none' }}
         >
           <ChevronLeft size={24} />
         </button>
@@ -170,9 +197,9 @@ export default function SetViewerPage() {
 
         {/* Next */}
         <button
-          onClick={() => goTo(currentPage + 1)}
+          onClick={e => { e.stopPropagation(); goTo(currentPage + 1) }}
           disabled={currentPage === pages.length - 1}
-          style={{ position: 'absolute', right: 8, zIndex: 10, background: 'rgba(255,255,255,0.1)', border: 'none', borderRadius: '50%', width: 44, height: 44, display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: currentPage === pages.length - 1 ? 'not-allowed' : 'pointer', opacity: currentPage === pages.length - 1 ? 0.3 : 1, color: '#fff' }}
+          style={{ position: 'absolute', right: 8, zIndex: 10, background: 'rgba(255,255,255,0.1)', border: 'none', borderRadius: '50%', width: 44, height: 44, display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: currentPage === pages.length - 1 ? 'not-allowed' : 'pointer', color: '#fff', transition: 'opacity 0.3s', opacity: controlsVisible ? (currentPage === pages.length - 1 ? 0.3 : 1) : 0, pointerEvents: controlsVisible ? 'auto' : 'none' }}
         >
           <ChevronRight size={24} />
         </button>
