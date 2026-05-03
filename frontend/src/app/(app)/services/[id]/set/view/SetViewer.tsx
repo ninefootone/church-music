@@ -172,7 +172,7 @@ export function SetViewerPage() {
 
     files.forEach((file, fileIndex) => {
       if (file.file_type === 'chordpro') {
-        console.log('Building ChordPro pages for file', fileIndex, 'containerSize:', containerSize)
+        console.log('Building ChordPro pages for file', fileIndex, 'containerSize:', containerSize, 'content found:', !!chordProContents.find(c => c.fileIndex === fileIndex))
         const content = chordProContents.find(c => c.fileIndex === fileIndex)
         if (!content) {
           newPages.push({ fileIndex, pageIndex: 0, totalPages: 1, file, chordProHtml: '' })
@@ -180,8 +180,10 @@ export function SetViewerPage() {
         }
 
         try {
-        if (typeof document === 'undefined') return
+        console.log('Creating measurement container...')
+        if (typeof document === 'undefined') { console.log('document undefined!'); return }
         const container = document.createElement('div')
+        console.log('Container created, appending to body...')
         const cw = containerSize?.width ?? 800
         const ch = containerSize?.height ?? 1000
         container.style.cssText = `position:absolute;visibility:hidden;width:${cw - 64}px;font-family:monospace;font-size:15px;line-height:1.6;`
@@ -208,6 +210,7 @@ export function SetViewerPage() {
         if (currentHtml) chordProPages.push(currentHtml)
 
         document.body.removeChild(container)
+        console.log('Measurement done, pages:', chordProPages.length)
 
         const total = chordProPages.length || 1
         chordProPages.forEach((html, p) => {
