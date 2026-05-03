@@ -270,7 +270,7 @@ export function PublicSetViewerPage() {
         {current.file.file_type === 'chordpro' ? (
           <div
             className="chordpro-render"
-            style={{ width: containerSize ? containerSize.width - 64 : '100%', height: containerSize ? containerSize.height - 32 : '100%', overflow: 'hidden', padding: '16px 24px', background: '#fff', borderRadius: 4 }}
+            style={{ width: containerSize ? containerSize.width - 64 : '100%', height: containerSize ? containerSize.height - 32 : '100%', overflow: 'auto', padding: '16px 24px', background: '#fff', borderRadius: 4 }}
             dangerouslySetInnerHTML={{ __html: current.chordProHtml || '' }}
           />
         ) : (
