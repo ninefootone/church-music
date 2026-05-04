@@ -85,11 +85,9 @@ export default function PublicSetModePage() {
             const pdfs = sortFiles(files, songKey)
             newFilesMap[songId] = pdfs
             newSelected[songId] = new Set()
-            // Pre-populate ChordPro key overrides with song key
-            const itemKey = item.key_override || item.song_default_key || null
             pdfs.forEach(f => {
-              if (f.file_type === 'chordpro' && itemKey) {
-                setChordProKeys(prev => ({ ...prev, [f.id]: itemKey }))
+              if (f.file_type === 'chordpro' && songKey) {
+                setChordProKeys(prev => ({ ...prev, [f.id]: songKey }))
               }
             })
           }
