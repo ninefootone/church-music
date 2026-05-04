@@ -154,7 +154,7 @@ export default function PublicSetModePage() {
     })
     sessionStorage.setItem(`setSelections-${token}`, JSON.stringify(selectionsToSave))
     sessionStorage.setItem('setViewerFiles', JSON.stringify(setFiles))
-    router.push(`/services/${token}/set/view`)
+    router.push(`/s/${token}/set/view`)
   }
 
   if (loading) return (
