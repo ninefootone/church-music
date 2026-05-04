@@ -147,7 +147,12 @@ export function PublicSetViewerPage() {
 
   useEffect(() => {
     const raw = sessionStorage.getItem('setViewerFiles')
-    if (!raw) { router.push(`/s/${token}/set`); return }
+    if (!raw) { 
+      console.log('No sessionStorage, token is:', token)
+      router.push(`/s/${token}/set`)
+      return 
+    }
+    console.log('sessionStorage found, files:', JSON.parse(raw).length)
     const parsed: SetFile[] = JSON.parse(raw)
     setFiles(parsed)
 
