@@ -86,8 +86,8 @@ export default function SongsPage() {
                   <span style={{ fontStyle: 'italic' , lineHeight: '1.4em' }}>{song.first_line}</span>
                 )}
                 <div className="song-row-badges-mobile">
-                  {song.category && <CategoryBadge category={song.category} />}
                   {song.default_key && <KeyBadge keyOf={song.default_key} />}
+                  {song.category && <CategoryBadge category={song.category} />}
                 </div>
                 <div style={{ display: 'flex', columnGap: 20 , rowGap: 0 , flexWrap: 'wrap' }}>
                   {song.last_sung && (
@@ -104,8 +104,8 @@ export default function SongsPage() {
               </div>
             </div>
             <div className="song-row-badges-desktop" style={{ gap: 10 }}>
-              {song.category && <CategoryBadge category={song.category} />}
               {song.default_key && <KeyBadge keyOf={song.default_key} />}
+              {song.category && <CategoryBadge category={song.category} />}
               <ChevronRight size={18} style={{ color: 'var(--color-text-muted)' }} />
             </div>
           </Link>
