@@ -7,6 +7,7 @@ import { CategoryBadge, KeyBadge } from '@/components/ui/badges'
 import { useChurch } from '@/context/ChurchContext'
 import api from '@/lib/api'
 import { InviteMemberModal } from '@/components/ui/InviteMemberModal'
+import { ConfirmModal } from '@/components/ui/ConfirmModal'
 
 export default function DashboardPage() {
   const { church, loading: churchLoading, isAdmin } = useChurch()
@@ -17,6 +18,7 @@ export default function DashboardPage() {
   const fetchedRef = useRef(false)
   const [showInviteModal, setShowInviteModal] = useState(false)
   const [manageMember, setManageMember] = useState<any>(null)
+  const [showRemoveConfirm, setShowRemoveConfirm] = useState(false)
   
   useEffect(() => {
     if (!church || fetchedRef.current) return
@@ -192,6 +194,26 @@ export default function DashboardPage() {
           ))}
         </div>
 
+        {showRemoveConfirm && manageMember && (
+          <ConfirmModal
+            title="Remove member"
+            message={`Remove ${manageMember.name || manageMember.email} from ${church?.name}? They will lose access immediately.`}
+            confirmLabel="Remove"
+            danger
+            onConfirm={async () => {
+              try {
+                await api.delete(`/api/members/${manageMember.id}`)
+                setMembers(prev => prev.filter(m => m.id !== manageMember.id))
+                setManageMember(null)
+              } catch (err: any) {
+                alert(err.response?.data?.error || 'Failed to remove member')
+              } finally {
+                setShowRemoveConfirm(false)
+              }
+            }}
+            onCancel={() => setShowRemoveConfirm(false)}
+          />
+        )}
         {showInviteModal && church && (
           <InviteMemberModal
             church={church}
@@ -251,16 +273,7 @@ export default function DashboardPage() {
 
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', paddingTop: 'var(--space-sm)', borderTop: '1px solid var(--color-border)' }}>
                 <button
-                  onClick={async () => {
-                    if (!confirm(`Remove ${manageMember.name || manageMember.email} from ${church?.name}?`)) return
-                    try {
-                      await api.delete(`/api/members/${manageMember.id}`)
-                      setMembers(prev => prev.filter(m => m.id !== manageMember.id))
-                      setManageMember(null)
-                    } catch (err: any) {
-                      alert(err.response?.data?.error || 'Failed to remove member')
-                    }
-                  }}
+                  onClick={() => setShowRemoveConfirm(true)}
                   style={{ padding: '6px 12px', border: '1px solid var(--color-border)', borderRadius: 'var(--radius-sm)', fontSize: 'var(--text-sm)', background: 'var(--color-surface)', color: 'var(--color-text-muted)', cursor: 'pointer', fontFamily: 'inherit' }}
                 >
                   Remove member
