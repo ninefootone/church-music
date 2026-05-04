@@ -3,6 +3,18 @@ const router = express.Router();
 const pool = require('../db/pool');
 const { requireAuth, requireMembership, requireAdmin } = require('../middleware/auth');
 
+// GET /songs/tags/all — all distinct tag names across all churches (for autocomplete)
+router.get('/tags/all', requireAuth, async (req, res, next) => {
+  try {
+    const result = await pool.query(
+      `SELECT DISTINCT name FROM tags ORDER BY name ASC`
+    );
+    res.json(result.rows.map(r => r.name));
+  } catch (err) {
+    next(err);
+  }
+});
+
 // GET /songs — list church songs
 router.get('/', requireAuth, requireMembership, async (req, res, next) => {
   try {
