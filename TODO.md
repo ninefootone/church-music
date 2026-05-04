@@ -1,36 +1,42 @@
 # Song Stack — TODO
 
-## In progress
-- [ ] Remove inline styles across all frontend files (see below)
-
 ## Backlog
 
-### Features
+### Features – General
+
+- [ ] Remove inline styles across all frontend files (see below)
 - [ ] Clerk major version upgrade — currently on v5.7.5, latest is v7.x; check migration guides for v5→v6 and v6→v7 before updating; test all auth flows (sign in, sign up, onboarding redirect) on a preview branch first
-- [ ] Retire a song — soft-delete: add a `retired` boolean flag to songs, hide retired songs from the main library and service song-picker by default, but keep them in the DB; include a "Show retired songs" toggle on the songs page and a "Retire / Restore" button on the song detail page
-- [ ] Service email — send a HTML-formatted email with the full service outline (song titles, arrangements, musicians) and links to any attached PDFs; triggered from the service detail page; recipients could be the church members or a custom address list
-- [ ] Super-admin dashboard at `/admin` — route only accessible to a hardcoded Clerk user ID (Jon's account); shows platform-wide stats: number of churches, total songs, total services, total users, storage used; no church-level data exposed
-- [ ] Tag autocomplete — show most-used tags as suggestions, plus ability to add your own
-- [ ] Consolidate tags — review remaining ~108 tags after initial cleanup; merge duplicates/overlaps (e.g. King/Kingship, Saviour/Redeemer, Declaration/Proclamation, Eternal Life/Eternal); aim for a clean controlled vocabulary of ~60–70 tags
-- [ ] Members can delete only their own services (permission scoping)
-- [ ] Song ordering on songs page — sort by most/least sung
-- [ ] Admin role change confirmation modal — replace alert() with ConfirmModal
-- [ ] Show next planned date on individual song page
-- [ ] Keyboard navigation on public share view
-- [ ] Set mode embedded PDF viewer — replace the current "open in new tab" approach with an in-page viewer using react-pdf; full-screen, paginated left-to-right, keyboard and bluetooth foot pedal navigation (Page Up/Down, arrow keys); works in browser on iPad and desktop
-- [ ] ChordPro support — allow .cho/.chordpro file uploads alongside PDF; render in-browser using chordsheetjs with live transposition key selector (eliminating need for multiple per-key PDF uploads); integrate into set mode as rendered HTML pages alongside PDF files
-- [ ] ChordPro set viewer pagination — proper two-phase render: render full content off-screen to measure real paragraph heights, then split into screen-sized pages for left/right foot pedal navigation
-- [ ] ChordPro key override in set picker — allow per-file key selection in the set picker, overriding the song's default key; show capo suggestion (e.g. "Capo 3 = G shapes") when transposing; useful for guitar players who prefer open chord shapes
-- [ ] Print/download merged PDF — from the set picker, a "Download PDF" button that merges selected PDF files into a single downloadable PDF using pdf-lib (as previously built); useful for printing a full service's worth of music
+platform-wide stats: number of churches, total songs, total plans, total users, storage used; no church-level data exposed
+
+### Features – Print/View
+- [ ] Print/download merged PDF — from the set picker, a "Download PDF" button that merges selected PDF files into a single downloadable PDF using pdf-lib (as previously built); useful for printing a full plan's worth of music
 - [ ] Single file viewer — route at /songs/[id]/view/[fileId] that opens a single PDF or ChordPro file in the full set viewer (same component, single file); accessible from the song page for rehearsal use; supports swipe/keyboard navigation and auto-hide controls
-- [ ] ChordPro inline editing — "Edit" button in the viewer toolbar opens a textarea with raw ChordPro text; save writes updated content back to R2 via a new PUT endpoint; admin only
-- [ ] Settings page
-- [ ] Automated backups — periodic PostgreSQL dump stored in Cloudflare R2, just in case
+
+### Features – Songs
+- [ ] Tag autocomplete — show most-used tags as suggestions, plus ability to add your own
+– [ ] Show default key on song lists – enter for all songs in master library
+- [ ] Consolidate tags — review remaining ~108 tags after initial cleanup; merge duplicates/overlaps (e.g. King/Kingship, Saviour/Redeemer, Declaration/Proclamation, Eternal Life/Eternal); aim for a clean controlled vocabulary of ~60–70 tags
 - [ ] 'Share all data' flag on songs — master library account only; marks a song as fully shareable so all fields and files are copied across to other churches via the shared library/template system
+- [ ] Retire a song — soft-delete: add a `retired` boolean flag to songs, hide retired songs from the main library and plan song-picker by default, but keep them in the DB; include a "Show retired songs" toggle on the songs page and a "Retire / Restore" button on the song detail page
+- [ ] ChordPro inline editing — "Edit" button in the viewer toolbar opens a textarea with raw ChordPro text; save writes updated content back to R2 via a new PUT endpoint; admin only
+
+### Features – Admin
+- [ ] Automated backups — periodic PostgreSQL dump stored in Cloudflare R2, just in case
+- [ ] Members can delete only their own plans (permission scoping)
+- [ ] Plan email — send a HTML-formatted email with the full plan outline (song titles, arrangements, musicians) and links to any attached PDFs; triggered from the plan detail page; recipients could be the church members or a custom address list
+- [ ] Super-admin dashboard at `/admin` — route only accessible to a hardcoded Clerk user ID (Jon's account); shows 
+- [ ] Settings page
+- [ ] Account deletion — settings page option for users to delete their own account (Clerk backend API + DB cleanup)
+
+### Features – Stats
+- [ ] Song ordering on songs page — sort by most/least sung
+- [ ] Show next planned date on individual song page
+
+### Features – Discover
+– [ ] Add artwork to 'Discover' songs
 - [ ] Discover area — `/discover` route visible to all logged-in churches; searches/browses only songs from the master library account that have `share_all_data` enabled; completely separate from a church's own song list; results show title, tags, key, CCLI info, arrangement preview, and an "Add to my library" button that deep-copies the song (and optionally its shared files) into the church's own DB; paginated with full-text search and tag/theme filtering
 - [ ] Master library curation workflow — the master library account gets an extra "Discover visibility" toggle per song (wraps the `share_all_data` flag); curator(s) can add a short "curator note" (e.g. "Great contemporary anthem, works well acoustic") stored in a new `curator_note` column on `songs`; this note shows in Discover results but not in the church's own library after import
 - [ ] "New in Discover" dashboard highlight — once Discover exists, show a small "New songs added" card on the dashboard for churches that haven't seen the latest additions; track last-seen timestamp per church so the highlight clears after they visit `/discover`; lays groundwork for future community/social features
-- [ ] Configurable "services" terminology per church
 - [ ] Account deletion — settings page option for users to delete their own account (Clerk backend API + DB cleanup)
 
 ### Inline style refactor
@@ -43,13 +49,13 @@ static inline `style={{...}}` props to named classes in `globals.css`.
 - [ ] `src/app/(app)/songs/[id]/page.tsx`
 - [ ] `src/app/(app)/songs/[id]/edit/page.tsx`
 - [ ] `src/app/(app)/songs/new/page.tsx`
-- [ ] `src/app/(app)/services/page.tsx`
-- [ ] `src/app/(app)/services/[id]/page.tsx`
-- [ ] `src/app/(app)/services/[id]/edit/page.tsx`
-- [ ] `src/app/(app)/services/new/page.tsx`
+- [ ] `src/app/(app)/plans/page.tsx`
+- [ ] `src/app/(app)/plans/[id]/page.tsx`
+- [ ] `src/app/(app)/plans/[id]/edit/page.tsx`
+- [ ] `src/app/(app)/plans/new/page.tsx`
 - [ ] `src/app/(app)/stats/page.tsx`
 - [ ] `src/app/(app)/layout.tsx`
-- [ ] `src/components/ui/AddToServiceModal.tsx`
+- [ ] `src/components/ui/AddToPlanModal.tsx`
 - [ ] `src/components/ui/FileUploadModal.tsx`
 - [ ] `src/components/ui/InviteMemberModal.tsx`
 - [ ] `src/components/ui/ConfirmModal.tsx`
@@ -58,8 +64,8 @@ static inline `style={{...}}` props to named classes in `globals.css`.
 ## Done
 - [x] WordPress song import (139 songs, 502 files)
 - [x] New song fields — notes, bible_references, suggested_arrangement, ccli_url, song_videos
-- [x] Today badge on services list and dashboard
-- [x] Today section on services page
+- [x] Today badge on plans list and dashboard
+- [x] Today section on plans page
 - [x] Fix landing page mobile header duplication
 - [x] Clean up globals.css — remove duplicates, fix structure
 - [x] Move (or duplicate) "Find lyrics on SongSelect" link to a more prominent position when adding/editing a song — duplicate it if CCLI autocomplete has been used
@@ -68,5 +74,10 @@ static inline `style={{...}}` props to named classes in `globals.css`.
 - [x] PWA setup (waiting on icon asset)
 - [x] Edit file label after upload (show filename alongside label for reference)
 - [x] Upload multiple files at once with ability to edit all labels before saving
-- [x] Add musicians to service — autocomplete from church members, plus ability to add non-signed-up guests
-- [x] Custom arrangement per service — when adding a song, allow a custom arrangement for that specific service
+- [x] Add musicians to plan — autocomplete from church members, plus ability to add non-signed-up guests
+- [x] Custom arrangement per plan — when adding a song, allow a custom arrangement for that specific plan
+- [x] ChordPro support — allow .cho/.chordpro file uploads alongside PDF; render in-browser using chordsheetjs with live transposition key selector (eliminating need for multiple per-key PDF uploads); integrate into set mode as rendered HTML pages alongside PDF files
+- [x] ChordPro set viewer pagination — proper two-phase render: render full content off-screen to measure real paragraph heights, then split into screen-sized pages for left/right foot pedal navigation
+- [x] ChordPro key override in set picker — allow per-file key selection in the set picker, overriding the song's default key; show capo suggestion (e.g. "Capo 3 = G shapes") when transposing; useful for guitar players who prefer open chord shapes
+- [x] Keyboard navigation on public share view
+- [x] Admin role change confirmation modal — replace alert() with ConfirmModal
