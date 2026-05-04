@@ -41,6 +41,8 @@ export function SetViewerPage() {
   const [pageCounts, setPageCounts] = useState<Record<number, number>>({})
   const [containerSize, setContainerSize] = useState<{ width: number; height: number } | null>(null)
   const [chordProContents, setChordProContents] = useState<ChordProContent[]>([])
+  const [measuringIndex, setMeasuringIndex] = useState<number | null>(null)
+  const measureDivRef = useRef<HTMLDivElement | null>(null)
   const [isFullscreen, setIsFullscreen] = useState(false)
   const canFullscreen = typeof document !== 'undefined' && !!document.fullscreenEnabled && !window.matchMedia('(display-mode: standalone)').matches
 
@@ -162,40 +164,80 @@ export function SetViewerPage() {
     fetchChordPro()
   }, [id, router])
 
+  // Phase 1: when chordPro content arrives, trigger measurement of first unmeasured file
   useEffect(() => {
-    console.log('Page build effect running. files:', files.length, 'chordProContents:', chordProContents.length, 'containerSize:', containerSize)
     if (files.length === 0) return
     const hasChordPro = files.some(f => f.file_type === 'chordpro')
-    const hasChordProContent = chordProContents.length > 0
-    if (hasChordPro && !hasChordProContent) return
-    // Don't block on containerSize — use defaults if not yet measured
-
-    const newPages: ViewerPage[] = []
-
-    files.forEach((file, fileIndex) => {
-      if (file.file_type === 'chordpro') {
-        console.log('Building ChordPro pages for file', fileIndex, 'containerSize:', containerSize, 'content found:', !!chordProContents.find(c => c.fileIndex === fileIndex))
-        const content = chordProContents.find(c => c.fileIndex === fileIndex)
-        if (!content) {
-          newPages.push({ fileIndex, pageIndex: 0, totalPages: 1, file, chordProHtml: '' })
-          return
-        }
-
-        // Render entire ChordPro file as a single scrollable page
-        newPages.push({ fileIndex, pageIndex: 0, totalPages: 1, file, chordProHtml: content.html })
-      } else {
+    if (!hasChordPro) {
+      // No ChordPro — build pages immediately from PDFs
+      const newPages: ViewerPage[] = []
+      files.forEach((file, fileIndex) => {
         const count = pageCounts[fileIndex] || 1
         for (let p = 0; p < count; p++) {
           newPages.push({ fileIndex, pageIndex: p, totalPages: count, file })
         }
-      }
-    })
-
-    if (newPages.length > 0) {
-      setPages(newPages)
-      setReady(true)
+      })
+      if (newPages.length > 0) { setPages(newPages); setReady(true) }
+      return
     }
-  }, [files, pageCounts, chordProContents, containerSize])
+    const hasChordProContent = chordProContents.length > 0
+    if (!hasChordProContent) return
+    // Trigger measurement of first ChordPro file
+    const firstChordPro = files.findIndex(f => f.file_type === 'chordpro')
+    if (firstChordPro !== -1) setMeasuringIndex(firstChordPro)
+  }, [files, chordProContents, pageCounts])
+
+  // Phase 2: after measurement div renders, measure and paginate
+  useEffect(() => {
+    if (measuringIndex === null) return
+    const div = measureDivRef.current
+    if (!div) return
+
+    requestAnimationFrame(() => {
+      const pageHeight = (containerSize?.height ?? window.innerHeight) - 32
+      const pageWidth = (containerSize?.width ?? window.innerWidth) - 64
+      const paragraphs = Array.from(div.querySelectorAll('.paragraph'))
+      const chordProPages: string[] = []
+      let currentHtml = ''
+      let currentHeight = 0
+
+      paragraphs.forEach(para => {
+        const h = (para as HTMLElement).offsetHeight + 24
+        if (currentHeight + h > pageHeight && currentHtml) {
+          chordProPages.push(currentHtml)
+          currentHtml = (para as HTMLElement).outerHTML
+          currentHeight = h
+        } else {
+          currentHtml += (para as HTMLElement).outerHTML
+          currentHeight += h
+        }
+      })
+      if (currentHtml) chordProPages.push(currentHtml)
+
+      const file = files[measuringIndex]
+      const total = chordProPages.length || 1
+      const newPages: ViewerPage[] = []
+
+      // Add all non-ChordPro pages first, in file order
+      files.forEach((f, fileIndex) => {
+        if (f.file_type === 'chordpro') {
+          if (fileIndex === measuringIndex) {
+            chordProPages.forEach((html, p) => {
+              newPages.push({ fileIndex, pageIndex: p, totalPages: total, file: f, chordProHtml: html })
+            })
+          }
+        } else {
+          const count = pageCounts[fileIndex] || 1
+          for (let p = 0; p < count; p++) {
+            newPages.push({ fileIndex, pageIndex: p, totalPages: count, file: f })
+          }
+        }
+      })
+
+      setMeasuringIndex(null)
+      if (newPages.length > 0) { setPages(newPages); setReady(true) }
+    })
+  }, [measuringIndex, measureDivRef.current, containerSize, files, pageCounts])
 
   const goTo = useCallback((n: number) => {
     setCurrentPage(Math.max(0, Math.min(n, pages.length - 1)))
@@ -234,6 +276,16 @@ export function SetViewerPage() {
         touchStartX.current = null
       }}
     >
+      {/* Off-screen measurement div for ChordPro pagination */}
+      {measuringIndex !== null && chordProContents.find(c => c.fileIndex === measuringIndex) && (
+        <div
+          ref={measureDivRef}
+          className="chordpro-render"
+          style={{ position: 'absolute', left: -9999, top: 0, width: (containerSize?.width ?? window.innerWidth) - 64, fontFamily: 'monospace', fontSize: 15, lineHeight: 1.6, pointerEvents: 'none' }}
+          dangerouslySetInnerHTML={{ __html: chordProContents.find(c => c.fileIndex === measuringIndex)!.html }}
+        />
+      )}
+
       {/* Toolbar */}
       <div style={{ background: '#111', borderBottom: '1px solid #333', padding: '8px 16px', display: 'flex', alignItems: 'center', gap: 12, flexShrink: 0, transition: 'opacity 0.3s, max-height 0.3s', opacity: controlsVisible ? 1 : 0, maxHeight: controlsVisible ? 60 : 0, overflow: 'hidden', pointerEvents: controlsVisible ? 'auto' : 'none' }}>
         <button onClick={() => router.push(`/services/${id}/set`)} style={{ background: 'none', border: 'none', color: '#aaa', cursor: 'pointer', display: 'flex', padding: 4 }}>
