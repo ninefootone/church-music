@@ -95,7 +95,7 @@ export default function DashboardPage() {
             {church && <Link href="/plans/new" className="btn btn-ghost">Add new +</Link>}
           </div>
           {plans.length === 0 ? (
-            <p className="text-muted">No upcoming plans. <Link href="/plans/new" className="link">Plan one</Link></p>
+            <p className="text-muted">No upcoming plans. <Link href="/plans/new" className="link">Add one +</Link></p>
           ) : plans.map((plan) => {
             const date = parseISO(plan.plan_date)
             return (
