@@ -320,8 +320,22 @@ export function PublicSetViewerPage() {
             <Document
               file={current.file.url}
               onLoadSuccess={({ numPages }) => {
-                setPageCounts(prev => ({ ...prev, [current.fileIndex]: numPages }))
-              }}
+              setPageCounts(prev => {
+                const updated = { ...prev, [current.fileIndex]: numPages }
+                // Rebuild pages for this file if it has more than 1 page
+                if (numPages > 1) {
+                  setPages(prevPages => {
+                    const otherPages = prevPages.filter(p => p.fileIndex !== current.fileIndex)
+                    const newFilePages: ViewerPage[] = []
+                    for (let p = 0; p < numPages; p++) {
+                      newFilePages.push({ fileIndex: current.fileIndex, pageIndex: p, totalPages: numPages, file: current.file })
+                    }
+                    return [...otherPages, ...newFilePages].sort((a, b) => a.fileIndex - b.fileIndex || a.pageIndex - b.pageIndex)
+                  })
+                }
+                return updated
+              })
+            }}
               loading={<div style={{ color: '#888', padding: 40 }}>Loading…</div>}
             >
               <Page
