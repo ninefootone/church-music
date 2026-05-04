@@ -239,13 +239,23 @@ export function PublicSetViewerPage() {
     return () => window.removeEventListener('keydown', handler)
   }, [currentPage, goTo, token, router])
 
+  const current = pages[currentPage]
+
   if (!ready || pages.length === 0) return (
-    <div style={{ minHeight: '100vh', background: '#fff', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#333' }}>
-      Loading set…
+    <div style={{ minHeight: '100vh', background: '#fff', display: 'flex', flexDirection: 'column' }}>
+      {measuringIndex !== null && chordProContents.find(c => c.fileIndex === measuringIndex) && (
+        <div
+          ref={measureDivRef}
+          className="chordpro-render"
+          style={{ position: 'absolute', left: -9999, top: 0, width: (containerSize?.width ?? window.innerWidth) - 64, fontFamily: 'monospace', fontSize: 15, lineHeight: 1.6, pointerEvents: 'none' }}
+          dangerouslySetInnerHTML={{ __html: chordProContents.find(c => c.fileIndex === measuringIndex)!.html }}
+        />
+      )}
+      <div style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#333' }}>
+        Loading set…
+      </div>
     </div>
   )
-
-  const current = pages[currentPage]
 
   return (
     <div
@@ -262,16 +272,6 @@ export function PublicSetViewerPage() {
         touchStartX.current = null
       }}
     >
-      {/* Off-screen measurement div for ChordPro pagination */}
-      {measuringIndex !== null && chordProContents.find(c => c.fileIndex === measuringIndex) && (
-        <div
-          ref={measureDivRef}
-          className="chordpro-render"
-          style={{ position: 'absolute', left: -9999, top: 0, width: (containerSize?.width ?? window.innerWidth) - 64, fontFamily: 'monospace', fontSize: 15, lineHeight: 1.6, pointerEvents: 'none' }}
-          dangerouslySetInnerHTML={{ __html: chordProContents.find(c => c.fileIndex === measuringIndex)!.html }}
-        />
-      )}
-
       {/* Toolbar */}
       <div style={{ background: '#111', borderBottom: '1px solid #333', padding: '8px 16px', display: 'flex', alignItems: 'center', gap: 12, flexShrink: 0, transition: 'opacity 0.3s, max-height 0.3s', opacity: controlsVisible ? 1 : 0, maxHeight: controlsVisible ? 60 : 0, overflow: 'hidden', pointerEvents: controlsVisible ? 'auto' : 'none' }}>
         <button onClick={() => router.push(`/s/${token}/set`)} style={{ background: 'none', border: 'none', color: '#aaa', cursor: 'pointer', display: 'flex', padding: 4 }}>
