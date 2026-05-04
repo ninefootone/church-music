@@ -10,6 +10,7 @@ import CcliAutocomplete from '@/components/CcliAutocomplete'
 import api, { setAuthToken } from '@/lib/api'
 import { LyricsEditor } from '@/components/ui/LyricsEditor'
 import { ArrangementBuilder } from '@/components/ui/ArrangementBuilder'
+import TagInput from '@/components/ui/TagInput'
 
 export default function EditSongPage() {
   const { id } = useParams()
@@ -100,7 +101,7 @@ export default function EditSongPage() {
             <label className="label">Notes</label>
             <textarea className="input" rows={3} placeholder="Performance notes, tips for the band…" value={form.notes} onChange={e => setForm(f => ({ ...f, notes: e.target.value }))} style={{ resize: 'vertical' }} />
           </div>
-          <div style={mb}><label className="label">Tags <span className="label-note">(comma separated)</span></label><input className="input" value={form.tags} onChange={e => setForm(f => ({ ...f, tags: e.target.value }))} /></div>
+          <div style={mb}><label className="label">Tags <span className="label-note">(comma separated)</span></label><TagInput value={form.tags} onChange={v => setForm(f => ({ ...f, tags: v }))} /></div>
           <div style={mb}>
             <label className="label">Suggested arrangement</label>
             <ArrangementBuilder
