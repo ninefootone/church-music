@@ -127,8 +127,8 @@ export default function TagInput({ value, onChange }: TagInputProps) {
             top: '100%',
             left: 0,
             right: 0,
-            background: 'var(--card)',
-            border: '1px solid var(--border)',
+            background: 'var(--color-surface)',
+            border: '1px solid var(--color-border)',
             borderRadius: '6px',
             marginTop: '4px',
             zIndex: 50,
@@ -144,8 +144,8 @@ export default function TagInput({ value, onChange }: TagInputProps) {
                 padding: '8px 12px',
                 cursor: 'pointer',
                 fontSize: '0.875rem',
-                background: i === activeIndex ? 'var(--accent)' : 'transparent',
-                color: i === activeIndex ? 'var(--accent-foreground)' : 'var(--foreground)',
+                background: i === activeIndex ? 'var(--color-brand-100)' : 'transparent',
+                color: 'var(--color-text-primary)',
               }}
             >
               {tag}
