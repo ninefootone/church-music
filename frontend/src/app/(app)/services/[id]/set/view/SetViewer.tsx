@@ -46,7 +46,7 @@ export function SetViewerPage() {
     if (!div || measuringIndex === null) return
 
     requestAnimationFrame(() => {
-      const pageHeight = (containerSize?.height ?? window.innerHeight) - 32
+      const pageHeight = (containerSize?.height ?? window.innerHeight) - 80
       const paragraphs = Array.from(div.querySelectorAll('.paragraph'))
       const chordProPages: string[] = []
       let currentHtml = ''
