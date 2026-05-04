@@ -26,6 +26,8 @@ interface SongItem {
   song_default_key: string | null
 }
 
+const KEYS = ['C', 'C#', 'Db', 'D', 'Eb', 'E', 'F', 'F#', 'Gb', 'G', 'Ab', 'A', 'Bb', 'B']
+
 const FILE_TYPE_ORDER: Record<string, number> = {
   vocal: 0,
   lead: 1,
@@ -50,6 +52,7 @@ export default function PublicSetModePage() {
   const [plan, setPlan] = useState<any>(null)
   const [filesMap, setFilesMap] = useState<Record<string, SongFile[]>>({})
   const [selected, setSelected] = useState<Record<string, Set<string>>>({})
+  const [chordProKeys, setChordProKeys] = useState<Record<string, string>>({})
   const [loading, setLoading] = useState(true)
   const router = useRouter()
   const [error, setError] = useState<string | null>(null)
@@ -82,6 +85,13 @@ export default function PublicSetModePage() {
             const pdfs = sortFiles(files, songKey)
             newFilesMap[songId] = pdfs
             newSelected[songId] = new Set()
+            // Pre-populate ChordPro key overrides with song key
+            const songKey = item.key_override || item.song_default_key || null
+            pdfs.forEach(f => {
+              if (f.file_type === 'chordpro' && songKey) {
+                setChordProKeys(prev => ({ ...prev, [f.id]: songKey }))
+              }
+            })
           }
         })
 
@@ -99,6 +109,8 @@ export default function PublicSetModePage() {
         } else {
           setSelected(newSelected)
         }
+        const savedKeys = sessionStorage.getItem(`setChordProKeys-${token}`)
+        if (savedKeys) setChordProKeys(JSON.parse(savedKeys))
       })
       .catch(() => setError('Could not load plan.'))
       .finally(() => setLoading(false))
@@ -137,7 +149,7 @@ export default function PublicSetModePage() {
           label: f.label,
           file_type: f.file_type,
           songTitle: item.song_title || '',
-          songKey,
+          songKey: f.file_type === 'chordpro' ? (chordProKeys[f.id] || songKey) : songKey,
         })
       })
     }
@@ -153,6 +165,7 @@ export default function PublicSetModePage() {
       selectionsToSave[songId] = Array.from(fileIds)
     })
     sessionStorage.setItem(`setSelections-${token}`, JSON.stringify(selectionsToSave))
+    sessionStorage.setItem(`setChordProKeys-${token}`, JSON.stringify(chordProKeys))
     sessionStorage.setItem('setViewerFiles', JSON.stringify(setFiles))
     router.push(`/s/${token}/set/view`)
   }
@@ -253,6 +266,17 @@ export default function PublicSetModePage() {
                         <span style={{ fontSize: 'var(--text-sm)', fontWeight: 500, color: 'var(--color-text-primary)', flex: 1 }}>
                           {file.label}
                         </span>
+                        {file.file_type === 'chordpro' && selectedIds.has(file.id) && (
+                          <select
+                            value={chordProKeys[file.id] || ''}
+                            onChange={e => setChordProKeys(prev => ({ ...prev, [file.id]: e.target.value }))}
+                            onClick={e => e.stopPropagation()}
+                            style={{ fontSize: 'var(--text-xs)', padding: '2px 4px', borderRadius: 'var(--radius-sm)', border: '1px solid var(--color-border)', background: 'var(--color-surface)', color: 'var(--color-text-primary)', flexShrink: 0 }}
+                          >
+                            <option value="">No transpose</option>
+                            {KEYS.map(k => <option key={k} value={k}>{k}</option>)}
+                          </select>
+                        )}
                           {file.key_of && (
                             <span className="badge-key" style={{ fontSize: 'var(--text-xs)' }}>
                               {file.key_of.replace(/♯/g, '#').replace(/♭/g, 'b')}
