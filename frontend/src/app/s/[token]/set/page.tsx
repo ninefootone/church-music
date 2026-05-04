@@ -86,7 +86,19 @@ export default function PublicSetModePage() {
         })
 
         setFilesMap(newFilesMap)
-        setSelected(newSelected)
+
+        // Restore saved selections if available
+        const savedSelections = sessionStorage.getItem(`setSelections-${token}`)
+        if (savedSelections) {
+          const parsed = JSON.parse(savedSelections) as Record<string, string[]>
+          const restored: Record<string, Set<string>> = {}
+          Object.entries(parsed).forEach(([songId, fileIds]) => {
+            restored[songId] = new Set(fileIds)
+          })
+          setSelected(restored)
+        } else {
+          setSelected(newSelected)
+        }
       })
       .catch(() => setError('Could not load service.'))
       .finally(() => setLoading(false))
@@ -135,8 +147,14 @@ export default function PublicSetModePage() {
       return
     }
 
+    // Save selections for restoration when returning
+    const selectionsToSave: Record<string, string[]> = {}
+    Object.entries(selected).forEach(([songId, fileIds]) => {
+      selectionsToSave[songId] = Array.from(fileIds)
+    })
+    sessionStorage.setItem(`setSelections-${token}`, JSON.stringify(selectionsToSave))
     sessionStorage.setItem('setViewerFiles', JSON.stringify(setFiles))
-    router.push(`/s/${token}/set/view`)
+    router.push(`/services/${token}/set/view`)
   }
 
   if (loading) return (
