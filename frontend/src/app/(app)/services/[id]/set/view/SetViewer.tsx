@@ -42,7 +42,51 @@ export function SetViewerPage() {
   const [containerSize, setContainerSize] = useState<{ width: number; height: number } | null>(null)
   const [chordProContents, setChordProContents] = useState<ChordProContent[]>([])
   const [measuringIndex, setMeasuringIndex] = useState<number | null>(null)
-  const measureDivRef = useRef<HTMLDivElement | null>(null)
+  const measureDivRef = useCallback((div: HTMLDivElement | null) => {
+    if (!div || measuringIndex === null) return
+
+    requestAnimationFrame(() => {
+      const pageHeight = (containerSize?.height ?? window.innerHeight) - 32
+      const paragraphs = Array.from(div.querySelectorAll('.paragraph'))
+      const chordProPages: string[] = []
+      let currentHtml = ''
+      let currentHeight = 0
+
+      paragraphs.forEach(para => {
+        const h = (para as HTMLElement).offsetHeight + 24
+        if (currentHeight + h > pageHeight && currentHtml) {
+          chordProPages.push(currentHtml)
+          currentHtml = (para as HTMLElement).outerHTML
+          currentHeight = h
+        } else {
+          currentHtml += (para as HTMLElement).outerHTML
+          currentHeight += h
+        }
+      })
+      if (currentHtml) chordProPages.push(currentHtml)
+
+      const total = chordProPages.length || 1
+      const newPages: ViewerPage[] = []
+
+      files.forEach((f, fileIndex) => {
+        if (f.file_type === 'chordpro') {
+          if (fileIndex === measuringIndex) {
+            chordProPages.forEach((html, p) => {
+              newPages.push({ fileIndex, pageIndex: p, totalPages: total, file: f, chordProHtml: html })
+            })
+          }
+        } else {
+          const count = pageCounts[fileIndex] || 1
+          for (let p = 0; p < count; p++) {
+            newPages.push({ fileIndex, pageIndex: p, totalPages: count, file: f })
+          }
+        }
+      })
+
+      setMeasuringIndex(null)
+      if (newPages.length > 0) { setPages(newPages); setReady(true) }
+    })
+  }, [measuringIndex, containerSize, files, pageCounts])
   const [isFullscreen, setIsFullscreen] = useState(false)
   const canFullscreen = typeof document !== 'undefined' && !!document.fullscreenEnabled && !window.matchMedia('(display-mode: standalone)').matches
 
@@ -187,59 +231,6 @@ export function SetViewerPage() {
     console.log('Phase 1: firstChordPro index:', firstChordPro)
     if (firstChordPro !== -1) setMeasuringIndex(firstChordPro)
   }, [files, chordProContents, pageCounts])
-
-  // Phase 2: after measurement div renders, measure and paginate
-  useEffect(() => {
-    console.log('Phase 2 running. measuringIndex:', measuringIndex, 'div:', measureDivRef.current)
-    if (measuringIndex === null) return
-    const div = measureDivRef.current
-    if (!div) { console.log('Phase 2: no div ref, aborting'); return }
-
-    requestAnimationFrame(() => {
-      const pageHeight = (containerSize?.height ?? window.innerHeight) - 32
-      const pageWidth = (containerSize?.width ?? window.innerWidth) - 64
-      const paragraphs = Array.from(div.querySelectorAll('.paragraph'))
-      const chordProPages: string[] = []
-      let currentHtml = ''
-      let currentHeight = 0
-
-      paragraphs.forEach(para => {
-        const h = (para as HTMLElement).offsetHeight + 24
-        if (currentHeight + h > pageHeight && currentHtml) {
-          chordProPages.push(currentHtml)
-          currentHtml = (para as HTMLElement).outerHTML
-          currentHeight = h
-        } else {
-          currentHtml += (para as HTMLElement).outerHTML
-          currentHeight += h
-        }
-      })
-      if (currentHtml) chordProPages.push(currentHtml)
-
-      const file = files[measuringIndex]
-      const total = chordProPages.length || 1
-      const newPages: ViewerPage[] = []
-
-      // Add all non-ChordPro pages first, in file order
-      files.forEach((f, fileIndex) => {
-        if (f.file_type === 'chordpro') {
-          if (fileIndex === measuringIndex) {
-            chordProPages.forEach((html, p) => {
-              newPages.push({ fileIndex, pageIndex: p, totalPages: total, file: f, chordProHtml: html })
-            })
-          }
-        } else {
-          const count = pageCounts[fileIndex] || 1
-          for (let p = 0; p < count; p++) {
-            newPages.push({ fileIndex, pageIndex: p, totalPages: count, file: f })
-          }
-        }
-      })
-
-      setMeasuringIndex(null)
-      if (newPages.length > 0) { setPages(newPages); setReady(true) }
-    })
-  }, [measuringIndex, measureDivRef.current, containerSize, files, pageCounts])
 
   const goTo = useCallback((n: number) => {
     setCurrentPage(Math.max(0, Math.min(n, pages.length - 1)))
