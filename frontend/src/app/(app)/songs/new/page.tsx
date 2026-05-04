@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 import CcliAutocomplete from '@/components/CcliAutocomplete'
+import TagInput from '@/components/ui/TagInput'
 import { useAuth } from '@clerk/nextjs'
 import { ArrowLeft } from 'lucide-react'
 import { CATEGORIES, Category } from '@/types'
@@ -163,7 +164,7 @@ export default function NewSongPage() {
 
           <div style={{ marginBottom: 'var(--space-md)' }}>
             <label className="label">Tags <span style={{ fontWeight: 400, textTransform: 'none', letterSpacing: 0, fontSize: 13 }}>(comma separated)</span></label>
-            <input className="input" placeholder="God's Faithfulness, Grace, The Cross" value={form.tags} onChange={e => setForm(f => ({ ...f, tags: e.target.value }))} />
+            <TagInput value={form.tags} onChange={v => setForm(f => ({ ...f, tags: v }))} />
           </div>
 
           <div style={{ marginBottom: 'var(--space-md)' }}>
