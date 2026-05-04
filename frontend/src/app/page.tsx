@@ -26,7 +26,7 @@ export default async function HomePage() {
             Your church&apos;s song library
           </h1>
           <p className="landing-hero-text">
-            Manage your worship songs, plan services, and share chord charts &ndash; all in one place, for your whole team.
+            Manage your worship songs, build plans, and share chord charts &ndash; all in one place, for your whole team.
           </p>
           <div className="landing-hero-actions">
             <Link href="/sign-up" className="btn btn-primary landing-cta-btn">Get started free</Link>

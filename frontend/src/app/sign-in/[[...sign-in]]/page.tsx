@@ -8,7 +8,7 @@ export default function SignInPage() {
           <img src="/logo.svg" alt="Song Stack" style={{ height: 32 }} />
         </div>
         <div style={{ fontSize: 15, color: 'var(--color-text-muted)' }}>
-          Song library and service planning for churches
+          Song library and worship plan management for churches
         </div>
       </div>
       <SignIn />

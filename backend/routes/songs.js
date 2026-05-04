@@ -12,15 +12,15 @@ router.get('/', requireAuth, requireMembership, async (req, res, next) => {
     let query = `
       SELECT s.*,
         ARRAY_AGG(DISTINCT t.name) FILTER (WHERE t.name IS NOT NULL) AS tags,
-        COUNT(DISTINCT ss.id) FILTER (WHERE srv.service_date <= NOW()) AS times_sung,
-        COUNT(DISTINCT ss.id) FILTER (WHERE srv.service_date > NOW()) AS times_planned,
-        MAX(srv.service_date) FILTER (WHERE srv.service_date <= NOW()) AS last_sung,
-        MIN(srv.service_date) FILTER (WHERE srv.service_date > NOW()) AS next_planned
+        COUNT(DISTINCT ss.id) FILTER (WHERE srv.plan_date <= NOW()) AS times_sung,
+        COUNT(DISTINCT ss.id) FILTER (WHERE srv.plan_date > NOW()) AS times_planned,
+        MAX(srv.plan_date) FILTER (WHERE srv.plan_date <= NOW()) AS last_sung,
+        MIN(srv.plan_date) FILTER (WHERE srv.plan_date > NOW()) AS next_planned
       FROM songs s
       LEFT JOIN song_tags st ON st.song_id = s.id
       LEFT JOIN tags t ON t.id = st.tag_id
-      LEFT JOIN service_items ss ON ss.song_id = s.id
-      LEFT JOIN services srv ON srv.id = ss.service_id AND srv.church_id = $1
+      LEFT JOIN plan_items ss ON ss.song_id = s.id
+      LEFT JOIN plans srv ON srv.id = ss.plan_id AND srv.church_id = $1
       WHERE s.church_id = $1
     `;
     const params = [churchId];
@@ -74,23 +74,23 @@ router.get('/:id', requireAuth, requireMembership, async (req, res, next) => {
     // Usage stats
     const usage = await pool.query(
       `SELECT
-        COUNT(*) FILTER (WHERE srv.service_date <= NOW()) AS times_sung,
-        COUNT(*) FILTER (WHERE srv.service_date > NOW()) AS times_planned,
-        MAX(srv.service_date) FILTER (WHERE srv.service_date <= NOW()) AS last_sung,
-        MIN(srv.service_date) FILTER (WHERE srv.service_date > NOW()) AS next_planned
-       FROM service_items si
-       JOIN services srv ON srv.id = si.service_id
+        COUNT(*) FILTER (WHERE srv.plan_date <= NOW()) AS times_sung,
+        COUNT(*) FILTER (WHERE srv.plan_date > NOW()) AS times_planned,
+        MAX(srv.plan_date) FILTER (WHERE srv.plan_date <= NOW()) AS last_sung,
+        MIN(srv.plan_date) FILTER (WHERE srv.plan_date > NOW()) AS next_planned
+       FROM plan_items si
+       JOIN plans srv ON srv.id = si.plan_id
        WHERE si.song_id = $1 AND srv.church_id = $2`,
       [req.params.id, churchId]
     );
 
-    // Recent services
-    const recentServices = await pool.query(
-      `SELECT srv.id, srv.service_date, srv.service_time, si.key_override
-       FROM service_items si
-       JOIN services srv ON srv.id = si.service_id
-       WHERE si.song_id = $1 AND srv.church_id = $2 AND srv.service_date <= NOW()
-       ORDER BY srv.service_date DESC LIMIT 10`,
+    // Recent plans
+    const recentPlans = await pool.query(
+      `SELECT srv.id, srv.plan_date, srv.plan_time, si.key_override
+       FROM plan_items si
+       JOIN plans srv ON srv.id = si.plan_id
+       WHERE si.song_id = $1 AND srv.church_id = $2 AND srv.plan_date <= NOW()
+       ORDER BY srv.plan_date DESC LIMIT 10`,
       [req.params.id, churchId]
     );
 
@@ -99,7 +99,7 @@ router.get('/:id', requireAuth, requireMembership, async (req, res, next) => {
       files: files.rows,
       videos: videos.rows,
       usage: usage.rows[0],
-      recent_services: recentServices.rows,
+      recent_plans: recentPlans.rows,
     });
   } catch (err) {
     next(err);

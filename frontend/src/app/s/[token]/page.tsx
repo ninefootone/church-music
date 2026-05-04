@@ -153,23 +153,23 @@ function SongItem({ item, index }: { item: any; index: number }) {
   )
 }
 
-export default function PublicServicePage() {
+export default function PublicPlanPage() {
   const { token } = useParams()
-  const [service, setService] = useState<any>(null)
+  const [plan, setPlan] = useState<any>(null)
   const [musicians, setMusicians] = useState<any[]>([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState('')
 
   useEffect(() => {
     if (!token) return
-    axios.get(`${API}/api/services/public/${token}`)
+    axios.get(`${API}/api/plans/public/${token}`)
       .then(r => {
-        setService(r.data)
-        return axios.get(`${API}/api/services/${r.data.id}/musicians`)
+        setPlan(r.data)
+        return axios.get(`${API}/api/plans/${r.data.id}/musicians`)
       })
       .then(r => setMusicians(r.data))
       .catch((err) => {
-        if (!service) setError('Service not found')
+        if (!plan) setError('Plan not found')
       })
       .finally(() => setLoading(false))
   }, [token])
@@ -180,9 +180,9 @@ export default function PublicServicePage() {
     </div>
   )
 
-  if (error || !service) return (
+  if (error || !plan) return (
     <div style={{ minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', background: 'var(--color-bg)' }}>
-      <p className="text-muted">Service not found.</p>
+      <p className="text-muted">Plan not found.</p>
     </div>
   )
 
@@ -198,13 +198,13 @@ export default function PublicServicePage() {
       <main style={{ maxWidth: 'var(--width-app)', margin: '0 auto', padding: 'var(--space-xl) var(--space-lg)' }}>
         <div style={{ marginBottom: 'var(--space-xl)' }}>
           <h1 className="page-title" style={{ marginBottom: 4 }}>
-            {format(parseISO(service.service_date), 'd MMMM yyyy')}
+            {format(parseISO(plan.plan_date), 'd MMMM yyyy')}
           </h1>
-          {service.service_time && (
-            <p style={{ fontSize: 'var(--text-md)', color: 'var(--color-text-secondary)' }}>{service.service_time}</p>
+          {plan.plan_time && (
+            <p style={{ fontSize: 'var(--text-md)', color: 'var(--color-text-secondary)' }}>{plan.plan_time}</p>
           )}
-          {service.title && (
-            <p style={{ fontSize: 'var(--text-md)', color: 'var(--color-text-muted)', marginTop: 2 }}>{service.title}</p>
+          {plan.title && (
+            <p style={{ fontSize: 'var(--text-md)', color: 'var(--color-text-muted)', marginTop: 2 }}>{plan.title}</p>
           )}
           <div style={{ marginTop: 'var(--space-md)' }}>
             <a href={`/s/${token}/set`} style={{ display: 'inline-flex', alignItems: 'center', gap: 6, padding: '8px 14px', background: 'var(--color-brand-600)', color: 'white', borderRadius: 'var(--radius-sm)', fontSize: 'var(--text-sm)', fontWeight: 600, textDecoration: 'none' }}>
@@ -227,14 +227,14 @@ export default function PublicServicePage() {
           </p>
         )}
 
-        {(!service.items || service.items.length === 0) ? (
-          <p className="text-muted">No items in this service yet.</p>
+        {(!plan.items || plan.items.length === 0) ? (
+          <p className="text-muted">No items in this plan yet.</p>
         ) : (
           <>
             <p style={{ fontSize: 'var(--text-sm)', color: 'var(--color-text-muted)', marginBottom: 'var(--space-md)' }}>
               Tap a song to view sheet music
             </p>
-            {service.items.map((item: any, i: number) => (
+            {plan.items.map((item: any, i: number) => (
               <SongItem key={i} item={item} index={i} />
             ))}
           </>

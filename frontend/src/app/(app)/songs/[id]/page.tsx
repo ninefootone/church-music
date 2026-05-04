@@ -13,7 +13,7 @@ import { FileUploadModal } from '@/components/ui/FileUploadModal'
 import { Song } from '@/types'
 import api from '@/lib/api'
 import { useChurch } from '@/context/ChurchContext'
-import { AddToServiceModal } from '@/components/ui/AddToServiceModal'
+import { AddToPlanModal } from '@/components/ui/AddToPlanModal'
 import { ConfirmModal } from '@/components/ui/ConfirmModal'
 
 export default function SongDetailPage() {
@@ -28,7 +28,7 @@ export default function SongDetailPage() {
   const [chordProFile, setChordProFile] = useState<{ content: string; label: string; key: string | null } | null>(null)
   const [downloadingId, setDownloadingId] = useState<string | null>(null)
   const [deletingId, setDeletingId] = useState<string | null>(null)
-  const [showAddToService, setShowAddToService] = useState(false)
+  const [showAddToPlan, setShowAddToPlan] = useState(false)
   const [showDeleteSong, setShowDeleteSong] = useState(false)
   const [showDeleteFile, setShowDeleteFile] = useState<string | null>(null)
 
@@ -144,10 +144,10 @@ export default function SongDetailPage() {
         />
       )}
 
-      {showAddToService && song && (
-        <AddToServiceModal
+      {showAddToPlan && song && (
+        <AddToPlanModal
           song={song}
-          onClose={() => setShowAddToService(false)}
+          onClose={() => setShowAddToPlan(false)}
         />
       )}
 
@@ -160,7 +160,7 @@ export default function SongDetailPage() {
           {isAdmin && (
             <div className="song-detail-actions">
               <Link href={`/songs/${song.id}/edit`} className="btn btn-sm btn-secondary"><Edit size={14} /> Edit</Link>
-              <button onClick={() => setShowAddToService(true)} className="btn btn-sm btn-primary"><Plus size={14} /> Add to service</button>
+              <button onClick={() => setShowAddToPlan(true)} className="btn btn-sm btn-primary"><Plus size={14} /> Add to plan</button>
             </div>
           )}
         </div>
@@ -346,16 +346,16 @@ export default function SongDetailPage() {
             <div className="stat-label">Last sung</div>
           </div>
         </div>
-        {song.recent_services && song.recent_services.length > 0 && (
+        {song.recent_plans && song.recent_plans.length > 0 && (
           <>
-            <p className="downloads-group-label">Recent services</p>
-            {song.recent_services.map((s: any, i: number) => (
-              <Link key={s.id} href={`/services/${s.id}`} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '8px 0', borderBottom: i < song.recent_services!.length - 1 ? '1px solid var(--color-border)' : 'none', textDecoration: 'none' }}>
+            <p className="downloads-group-label">Recent plans</p>
+            {song.recent_plans.map((s: any, i: number) => (
+              <Link key={s.id} href={`/plans/${s.id}`} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '8px 0', borderBottom: i < song.recent_plans!.length - 1 ? '1px solid var(--color-border)' : 'none', textDecoration: 'none' }}>
                 <span style={{ fontSize: 'var(--text-base)', color: 'var(--color-text-secondary)' }}>
-                  {s.service_date ? format(parseISO(s.service_date), 'd MMMM yyyy') : ''}
+                  {s.plan_date ? format(parseISO(s.plan_date), 'd MMMM yyyy') : ''}
                 </span>
                 {s.key_override && <KeyBadge keyOf={s.key_override} />}
-                <span className="text-muted" style={{ fontSize: 'var(--text-sm)' }}>{s.service_time}</span>
+                <span className="text-muted" style={{ fontSize: 'var(--text-sm)' }}>{s.plan_time}</span>
               </Link>
             ))}
           </>

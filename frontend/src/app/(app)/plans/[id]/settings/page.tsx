@@ -8,7 +8,7 @@ import { ArrowLeft } from 'lucide-react'
 import { useChurch } from '@/context/ChurchContext'
 import api, { setAuthToken } from '@/lib/api'
 
-export default function ServiceSettingsPage() {
+export default function PlanSettingsPage() {
   const { id } = useParams()
   const router = useRouter()
   const { getToken } = useAuth()
@@ -16,32 +16,32 @@ export default function ServiceSettingsPage() {
   const [loading, setLoading] = useState(true)
   const [saving, setSaving] = useState(false)
   const [error, setError] = useState('')
-  const [form, setForm] = useState({ service_date: '', service_time: '', service_sort_order: 0, title: '' })
+  const [form, setForm] = useState({ plan_date: '', plan_time: '', plan_sort_order: 0, title: '' })
 
   useEffect(() => {
     if (!id || churchLoading) return
-    api.get(`/api/services/${id}`)
+    api.get(`/api/plans/${id}`)
       .then(r => {
         const s = r.data
         setForm({
-          service_date: s.service_date?.slice(0, 10) ?? '',
-          service_time: s.service_time ?? '',
-          service_sort_order: s.service_sort_order ?? 0,
+          plan_date: s.plan_date?.slice(0, 10) ?? '',
+          plan_time: s.plan_time ?? '',
+          plan_sort_order: s.plan_sort_order ?? 0,
           title: s.title ?? '',
         })
       })
-      .catch(() => setError('Failed to load service'))
+      .catch(() => setError('Failed to load plan'))
       .finally(() => setLoading(false))
   }, [id, churchLoading])
 
   const handleSave = async () => {
-    if (!form.service_date) { setError('Date is required'); return }
+    if (!form.plan_date) { setError('Date is required'); return }
     setSaving(true); setError('')
     try {
       const token = await getToken()
       setAuthToken(token)
-      await api.put(`/api/services/${id}`, form)
-      router.push(`/services/${id}`)
+      await api.put(`/api/plans/${id}`, form)
+      router.push(`/plans/${id}`)
     } catch (err: any) {
       setError(err.response?.data?.error || 'Failed to save')
       setSaving(false)
@@ -52,25 +52,25 @@ export default function ServiceSettingsPage() {
 
   return (
     <div>
-      <Link href={`/services/${id}`} className="back-link"><ArrowLeft size={14} /> Back to service</Link>
-      <h1 className="page-title" style={{ marginBottom: 'var(--space-lg)' }}>Edit service details</h1>
+      <Link href={`/plans/${id}`} className="back-link"><ArrowLeft size={14} /> Back to plan</Link>
+      <h1 className="page-title" style={{ marginBottom: 'var(--space-lg)' }}>Edit plan details</h1>
       {error && <div className="error-box">{error}</div>}
       <div className="card">
         <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-md)' }}>
           <div>
             <label className="label">Date *</label>
-            <input className="input" type="date" required value={form.service_date} onChange={e => setForm(f => ({ ...f, service_date: e.target.value }))} style={{ maxWidth: '100%' }} />
+            <input className="input" type="date" required value={form.plan_date} onChange={e => setForm(f => ({ ...f, plan_date: e.target.value }))} style={{ maxWidth: '100%' }} />
           </div>
           <div>
             <label className="label">Time</label>
-            <input className="input" type="text" placeholder="e.g. 9.15am" value={form.service_time} onChange={e => setForm(f => ({ ...f, service_time: e.target.value }))} />
+            <input className="input" type="text" placeholder="e.g. 9.15am" value={form.plan_time} onChange={e => setForm(f => ({ ...f, plan_time: e.target.value }))} />
             <div style={{ display: 'flex', gap: 6, marginTop: 8 }}>
               {[{ label: 'Morning', value: 0 }, { label: 'Afternoon', value: 1 }, { label: 'Evening', value: 2 }].map(opt => (
                 <button
                   key={opt.value}
                   type="button"
-                  onClick={() => setForm(f => ({ ...f, service_sort_order: opt.value }))}
-                  className={form.service_sort_order === opt.value ? 'btn btn-primary' : 'btn btn-secondary'}
+                  onClick={() => setForm(f => ({ ...f, plan_sort_order: opt.value }))}
+                  className={form.plan_sort_order === opt.value ? 'btn btn-primary' : 'btn btn-secondary'}
                   style={{ fontSize: 'var(--text-sm)', padding: '4px 12px' }}
                 >
                   {opt.label}
@@ -83,7 +83,7 @@ export default function ServiceSettingsPage() {
             <input className="input" placeholder="e.g. Easter Sunday" value={form.title} onChange={e => setForm(f => ({ ...f, title: e.target.value }))} />
           </div>
           <div style={{ display: 'flex', gap: 8, justifyContent: 'flex-end', paddingTop: 'var(--space-sm)' }}>
-            <Link href={`/services/${id}`} className="btn btn-secondary">Cancel</Link>
+            <Link href={`/plans/${id}`} className="btn btn-secondary">Cancel</Link>
             <button className="btn btn-primary" onClick={handleSave} disabled={saving}>{saving ? 'Saving…' : 'Save changes'}</button>
           </div>
         </div>

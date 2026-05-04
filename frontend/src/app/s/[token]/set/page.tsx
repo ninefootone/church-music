@@ -47,7 +47,7 @@ function sortFiles(files: SongFile[], songKey?: string | null): SongFile[] {
 export default function PublicSetModePage() {
   const { token } = useParams()
 
-  const [service, setService] = useState<any>(null)
+  const [plan, setPlan] = useState<any>(null)
   const [filesMap, setFilesMap] = useState<Record<string, SongFile[]>>({})
   const [selected, setSelected] = useState<Record<string, Set<string>>>({})
   const [loading, setLoading] = useState(true)
@@ -56,10 +56,10 @@ export default function PublicSetModePage() {
 
   useEffect(() => {
     if (!token) return
-    axios.get(`${API}/api/services/public/${token}`)
+    axios.get(`${API}/api/plans/public/${token}`)
       .then(async r => {
         const svc = r.data
-        setService(svc)
+        setPlan(svc)
 
         const songItems: SongItem[] = (svc.items || []).filter(
           (item: SongItem) => item.type === 'song' && item.song_id
@@ -100,7 +100,7 @@ export default function PublicSetModePage() {
           setSelected(newSelected)
         }
       })
-      .catch(() => setError('Could not load service.'))
+      .catch(() => setError('Could not load plan.'))
       .finally(() => setLoading(false))
   }, [token])
 
@@ -119,7 +119,7 @@ export default function PublicSetModePage() {
   const selectedCount = Object.values(selected).reduce((sum, set) => sum + set.size, 0)
 
   const handleOpenSet = () => {
-    const songItems: SongItem[] = (service.items || []).filter(
+    const songItems: SongItem[] = (plan.items || []).filter(
       (item: SongItem) => item.type === 'song' && item.song_id
     )
 
@@ -163,13 +163,13 @@ export default function PublicSetModePage() {
     </div>
   )
 
-  if (!service) return (
+  if (!plan) return (
     <div style={{ minHeight: '100vh', background: 'var(--color-bg)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-      <p className="text-muted">Service not found.</p>
+      <p className="text-muted">Plan not found.</p>
     </div>
   )
 
-  const songItems: SongItem[] = (service.items || []).filter(
+  const songItems: SongItem[] = (plan.items || []).filter(
     (item: SongItem) => item.type === 'song' && item.song_id
   )
 
@@ -185,7 +185,7 @@ export default function PublicSetModePage() {
       <main style={{ maxWidth: 'var(--width-app)', margin: '0 auto', padding: 'var(--space-xl) var(--space-lg)' }}>
         
           <a href={`/s/${token}`} style={{ display: 'inline-flex', alignItems: 'center', gap: 6, fontSize: 'var(--text-sm)', color: 'var(--color-text-muted)', textDecoration: 'none', marginBottom: 'var(--space-lg)' }}>
-          <ArrowLeft size={14} /> Back to service
+          <ArrowLeft size={14} /> Back to plan
         </a>
 
         <div style={{ marginBottom: 'var(--space-lg)' }}>
@@ -193,9 +193,9 @@ export default function PublicSetModePage() {
             Set mode
           </h1>
           <p style={{ fontSize: 'var(--text-md)', color: 'var(--color-text-secondary)' }}>
-            {format(parseISO(service.service_date), 'd MMMM yyyy')}
-            {service.service_time && ` · ${service.service_time}`}
-            {service.title && ` · ${service.title}`}
+            {format(parseISO(plan.plan_date), 'd MMMM yyyy')}
+            {plan.plan_time && ` · ${plan.plan_time}`}
+            {plan.title && ` · ${plan.title}`}
           </p>
           <p style={{ fontSize: 'var(--text-sm)', color: 'var(--color-text-muted)', marginTop: 8 }}>
             Choose which files to include for each song, then open in the set viewer.
@@ -204,7 +204,7 @@ export default function PublicSetModePage() {
 
         {songItems.length === 0 ? (
           <p style={{ fontSize: 'var(--text-sm)', color: 'var(--color-text-muted)', fontStyle: 'italic' }}>
-            No songs in this service.
+            No songs in this plan.
           </p>
         ) : (
           <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-sm)', marginBottom: 'var(--space-lg)' }}>

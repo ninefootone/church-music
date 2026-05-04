@@ -10,7 +10,7 @@ import { useChurch } from '@/context/ChurchContext'
 const navLinks = [
   { href: '/dashboard', label: 'Home' },
   { href: '/songs',     label: 'Songs' },
-  { href: '/services',  label: 'Services' },
+  { href: '/plans',     label: 'Plans' },
   { href: '/stats',     label: 'Stats' },
   { href: '/settings',  label: 'Settings' },
 ]

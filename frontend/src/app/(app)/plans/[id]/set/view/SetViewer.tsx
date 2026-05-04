@@ -147,7 +147,7 @@ export function SetViewerPage() {
 
   useEffect(() => {
     const raw = sessionStorage.getItem('setViewerFiles')
-    if (!raw) { router.push(`/services/${id}/set`); return }
+    if (!raw) { router.push(`/plans/${id}/set`); return }
     const parsed: SetFile[] = JSON.parse(raw)
     setFiles(parsed)
 
@@ -240,7 +240,7 @@ export function SetViewerPage() {
     const handler = (e: KeyboardEvent) => {
       if (e.key === 'ArrowRight' || e.key === 'PageDown' || e.key === 'ArrowDown') goTo(currentPage + 1)
       if (e.key === 'ArrowLeft' || e.key === 'PageUp' || e.key === 'ArrowUp') goTo(currentPage - 1)
-      if (e.key === 'Escape') router.push(`/services/${id}/set`)
+      if (e.key === 'Escape') router.push(`/plans/${id}/set`)
     }
     window.addEventListener('keydown', handler)
     return () => window.removeEventListener('keydown', handler)
@@ -281,7 +281,7 @@ export function SetViewerPage() {
     >
       {/* Toolbar */}
       <div style={{ background: '#111', borderBottom: '1px solid #333', padding: '8px 16px', display: 'flex', alignItems: 'center', gap: 12, flexShrink: 0, transition: 'opacity 0.3s, max-height 0.3s', opacity: controlsVisible ? 1 : 0, maxHeight: controlsVisible ? 60 : 0, overflow: 'hidden', pointerEvents: controlsVisible ? 'auto' : 'none' }}>
-        <button onClick={() => router.push(`/services/${id}/set`)} style={{ background: 'none', border: 'none', color: '#aaa', cursor: 'pointer', display: 'flex', padding: 4 }}>
+        <button onClick={() => router.push(`/plans/${id}/set`)} style={{ background: 'none', border: 'none', color: '#aaa', cursor: 'pointer', display: 'flex', padding: 4 }}>
           <X size={20} />
         </button>
         <div style={{ flex: 1, minWidth: 0 }}>

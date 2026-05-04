@@ -84,7 +84,7 @@ export function InviteMemberModal({ church, onClose }: InviteMemberModalProps) {
             </div>
             <div>
               <p style={{ fontSize: 'var(--text-base)', fontWeight: 600, color: 'var(--color-text-primary)', marginBottom: 2 }}>Members</p>
-              <p style={{ fontSize: 'var(--text-sm)', color: 'var(--color-text-muted)' }}>Can view songs, add services and build running orders</p>
+              <p style={{ fontSize: 'var(--text-sm)', color: 'var(--color-text-muted)' }}>Can view songs, add plans and build running orders</p>
             </div>
           </div>
           <div style={{ display: 'flex', alignItems: 'flex-start', gap: 12 }}>

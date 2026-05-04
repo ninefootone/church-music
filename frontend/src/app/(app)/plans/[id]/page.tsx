@@ -10,8 +10,8 @@ import { useAuth } from '@clerk/nextjs'
 import { useChurch } from '@/context/ChurchContext'
 import api from '@/lib/api'
 import { ConfirmModal } from '@/components/ui/ConfirmModal'
-import { ServiceMusicianModal } from '@/components/ui/ServiceMusicianModal'
-import type { ServiceMusician } from '@/types'
+import { PlanMusicianModal } from '@/components/ui/PlanMusicianModal'
+import type { PlanMusician } from '@/types'
 
 interface SongFile {
   id: string
@@ -46,7 +46,7 @@ function SongItem({ item, index }: { item: any; index: number }) {
   return (
     <div style={{ background: 'var(--color-surface)', border: '1px solid var(--color-border)', borderRadius: 'var(--radius-md)', overflow: 'hidden', marginBottom: 8 }}>
       <div
-        className="service-item-row" style={{ cursor: isSong ? 'pointer' : 'default' }}
+        className="plan-item-row" style={{ cursor: isSong ? 'pointer' : 'default' }}
         onClick={isSong ? handleExpand : undefined}
       >
         <span style={{ fontSize: 'var(--text-sm)', color: 'var(--color-text-muted)', width: 24, textAlign: 'center', flexShrink: 0 }}>
@@ -61,7 +61,7 @@ function SongItem({ item, index }: { item: any; index: number }) {
           )}
         </div>
         {isSong && (
-          <div className="service-item-pills">
+          <div className="plan-item-pills">
             {(item.key_override || item.song_default_key) && (
               <KeyBadge keyOf={item.key_override || item.song_default_key} />
             )}
@@ -147,37 +147,37 @@ const typeIcon = (type: string) => {
   return null
 }
 
-export default function ServiceDetailPage() {
+export default function PlanDetailPage() {
   const { id } = useParams()
   const router = useRouter()
   const { userId } = useAuth()
   const { isAdmin, loading: churchLoading } = useChurch()
-  const [service, setService] = useState<any>(null)
+  const [plan, setPlan] = useState<any>(null)
   const [loading, setLoading] = useState(true)
   const [notFound, setNotFound] = useState(false)
   const [copied, setCopied] = useState(false)
-  const [showDeleteService, setShowDeleteService] = useState(false)
-  const [musicians, setMusicians] = useState<ServiceMusician[]>([])
+  const [showDeletePlan, setShowDeletePlan] = useState(false)
+  const [musicians, setMusicians] = useState<PlanMusician[]>([])
   const [showMusicianModal, setShowMusicianModal] = useState(false)
-  
+
   useEffect(() => {
     if (!id || churchLoading) return
     setLoading(true)
-    api.get(`/api/services/${id}`)
-      .then(r => setService(r.data))
+    api.get(`/api/plans/${id}`)
+      .then(r => setPlan(r.data))
       .catch(() => setNotFound(true))
       .finally(() => setLoading(false))
-    api.get(`/api/services/${id}/musicians`)
+    api.get(`/api/plans/${id}/musicians`)
       .then(r => setMusicians(r.data))
       .catch(() => {})
   }, [id, churchLoading])
 
   const handleShare = async () => {
-    if (!service) return
-    const url = `${window.location.origin}/s/${service.public_token}`
+    if (!plan) return
+    const url = `${window.location.origin}/s/${plan.public_token}`
     if (navigator.share) {
       try {
-        await navigator.share({ title: 'Service sheet', url })
+        await navigator.share({ title: 'Plan sheet', url })
       } catch (_) {
         // user dismissed — do nothing
       }
@@ -189,38 +189,38 @@ export default function ServiceDetailPage() {
   }
 
   if (loading || churchLoading) return <p className="text-muted" style={{ padding: 'var(--space-xl)' }}>Loading…</p>
-  if (notFound || !service) return (
+  if (notFound || !plan) return (
     <div style={{ padding: 'var(--space-xl)' }}>
-      <p className="text-muted" style={{ marginBottom: 'var(--space-md)' }}>Service not found.</p>
-      <Link href="/services" className="back-link"><ArrowLeft size={14} /> Back to services</Link>
+      <p className="text-muted" style={{ marginBottom: 'var(--space-md)' }}>Plan not found.</p>
+      <Link href="/plans" className="back-link"><ArrowLeft size={14} /> Back to plans</Link>
     </div>
   )
 
   return (
     <div>
-      <Link href="/services" className="back-link"><ArrowLeft size={14} /> Back to services</Link>
+      <Link href="/plans" className="back-link"><ArrowLeft size={14} /> Back to plans</Link>
 
       {/* Header */}
       <div className="card" style={{ marginBottom: 'var(--space-md)' }}>
-        <div className="service-detail-header">
+        <div className="plan-detail-header">
           <div style={{ minWidth: 0 }}>
-            <h1 className="service-detail-title">
-              {format(parseISO(service.service_date), 'd MMMM yyyy')}
+            <h1 className="plan-detail-title">
+              {format(parseISO(plan.plan_date), 'd MMMM yyyy')}
             </h1>
-            {service.service_time && (
-              <p style={{ fontSize: 'var(--text-md)', color: 'var(--color-text-secondary)', marginTop: 2 }}>{service.service_time}</p>
+            {plan.plan_time && (
+              <p style={{ fontSize: 'var(--text-md)', color: 'var(--color-text-secondary)', marginTop: 2 }}>{plan.plan_time}</p>
             )}
-            {service.title && (
-              <p style={{ fontSize: 'var(--text-md)', color: 'var(--color-text-muted)', marginTop: 2 }}>{service.title}</p>
+            {plan.title && (
+              <p style={{ fontSize: 'var(--text-md)', color: 'var(--color-text-muted)', marginTop: 2 }}>{plan.title}</p>
             )}
           </div>
-                    <div className="service-detail-actions">
+                    <div className="plan-detail-actions">
             {/* Share — compact icon+label button */}
             <button
               onClick={handleShare}
               className="btn btn-secondary"
               style={{ padding: '7px 10px', fontSize: 'var(--text-xs)', gap: 4 }}
-              title="Share service"
+              title="Share plan"
             >
               <Share2 size={14} />
               <span>{copied ? 'Copied!' : 'Share'}</span>
@@ -228,7 +228,7 @@ export default function ServiceDetailPage() {
 
             {/* Set mode */}
             <Link
-              href={`/services/${id}/set`}
+              href={`/plans/${id}/set`}
               className="btn btn-secondary"
               style={{ padding: '7px 10px', fontSize: 'var(--text-xs)', gap: 4 }}
               title="Open set mode"
@@ -238,8 +238,8 @@ export default function ServiceDetailPage() {
             </Link>
 
             {/* Edit — admin or owner */}
-            {(isAdmin || service.created_by === userId) && (
-              <Link href={`/services/${id}/edit`} className="btn btn-primary btn-sm">
+            {(isAdmin || plan.created_by === userId) && (
+              <Link href={`/plans/${id}/edit`} className="btn btn-primary btn-sm">
                 Edit
               </Link>
             )}
@@ -251,7 +251,7 @@ export default function ServiceDetailPage() {
       <div className="card" style={{ marginBottom: 'var(--space-md)' }}>
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 'var(--space-sm)' }}>
           <div className="section-label" style={{ marginBottom: 0 }}>Musicians</div>
-          {(isAdmin || service.created_by === userId) && (
+          {(isAdmin || plan.created_by === userId) && (
             <button
               onClick={() => setShowMusicianModal(true)}
               className="btn btn-secondary btn-sm"
@@ -280,10 +280,10 @@ export default function ServiceDetailPage() {
               <div key={group.ids[0]} style={{ display: 'inline-flex', alignItems: 'center', gap: 6, padding: '6px 12px', background: 'var(--color-neutral-50)', border: '1px solid var(--color-border)', borderRadius: 'var(--radius-sm)', fontSize: 'var(--text-sm)' }}>
                 <span style={{ fontWeight: 600, color: 'var(--color-text-primary)' }}>{group.name}</span>
                 <span style={{ color: 'var(--color-text-muted)' }}>{group.roles.join(', ')}</span>
-                {(isAdmin || service.created_by === userId) && (
+                {(isAdmin || plan.created_by === userId) && (
                   <button
                     onClick={async () => {
-                      await Promise.all(group.ids.map(rid => api.delete(`/api/services/${id}/musicians/${rid}`)))
+                      await Promise.all(group.ids.map(rid => api.delete(`/api/plans/${id}/musicians/${rid}`)))
                       setMusicians(prev => prev.filter(m => !group.ids.includes(m.id)))
                     }}
                     style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'var(--color-text-muted)', padding: 0, display: 'flex', alignItems: 'center', marginLeft: 2 }}
@@ -301,11 +301,11 @@ export default function ServiceDetailPage() {
       <div className="card">
         <div className="section-label">Running order</div>
 
-        {!service.items || service.items.length === 0 ? (
+        {!plan.items || plan.items.length === 0 ? (
           <div style={{ textAlign: 'center', padding: 'var(--space-xl)' }}>
             <p className="text-muted" style={{ marginBottom: 'var(--space-sm)' }}>No items added yet.</p>
-            {(isAdmin || service.created_by === userId) && (
-              <Link href={`/services/${id}/edit`} className="btn btn-primary btn-sm">
+            {(isAdmin || plan.created_by === userId) && (
+              <Link href={`/plans/${id}/edit`} className="btn btn-primary btn-sm">
                 <Plus size={14} /> Build the running order
               </Link>
             )}
@@ -315,41 +315,41 @@ export default function ServiceDetailPage() {
             <p style={{ fontSize: 'var(--text-sm)', color: 'var(--color-text-muted)', marginBottom: 'var(--space-md)' }}>
               Tap a song to view sheet music
             </p>
-            {service.items.map((item: any, i: number) => (
+            {plan.items.map((item: any, i: number) => (
               <SongItem key={item.id} item={item} index={i} />
             ))}
           </>
         )}
       </div>
-      {(isAdmin || service.created_by === userId) && (
+      {(isAdmin || plan.created_by === userId) && (
         <div style={{ marginTop: 'var(--space-md)', display: 'flex', justifyContent: 'flex-end' }}>
           <button
-            onClick={() => setShowDeleteService(true)}
+            onClick={() => setShowDeletePlan(true)}
             className="btn btn-secondary"
             style={{ color: '#9a3a3a' }}
           >
-            <Trash2 size={14} /> Delete service
+            <Trash2 size={14} /> Delete plan
           </button>
         </div>
       )}
       {showMusicianModal && (
-        <ServiceMusicianModal
-          serviceId={id as string}
+        <PlanMusicianModal
+          planId={id as string}
           onAdd={musicians => setMusicians(prev => [...prev, ...musicians])}
           onClose={() => setShowMusicianModal(false)}
         />
       )}
-      {showDeleteService && (
+      {showDeletePlan && (
         <ConfirmModal
-          title="Delete service"
-          message="Are you sure you want to delete this service? This cannot be undone."
-          confirmLabel="Delete service"
+          title="Delete plan"
+          message="Are you sure you want to delete this plan? This cannot be undone."
+          confirmLabel="Delete plan"
           danger
           onConfirm={async () => {
-            await api.delete(`/api/services/${id}`)
-            router.push('/services')
+            await api.delete(`/api/plans/${id}`)
+            router.push('/plans')
           }}
-          onCancel={() => setShowDeleteService(false)}
+          onCancel={() => setShowDeletePlan(false)}
         />
       )}
     </div>

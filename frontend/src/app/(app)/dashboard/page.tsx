@@ -11,7 +11,7 @@ import { InviteMemberModal } from '@/components/ui/InviteMemberModal'
 export default function DashboardPage() {
   const { church, loading: churchLoading, isAdmin } = useChurch()
   const [songs, setSongs] = useState<any[]>([])
-  const [services, setServices] = useState<any[]>([])
+  const [plans, setPlans] = useState<any[]>([])
   const [members, setMembers] = useState<any[]>([])
   const [loading, setLoading] = useState(true)
   const fetchedRef = useRef(false)
@@ -23,8 +23,8 @@ export default function DashboardPage() {
     fetchedRef.current = true
     Promise.all([
       api.get('/api/songs').then(r => setSongs(r.data.slice(0, 4))),
-      // Only fetch upcoming services, ascending so next service is first
-      api.get('/api/services', { params: { upcoming: 'true' } }).then(r => setServices(r.data.slice(0, 4))),
+      // Only fetch upcoming plans, ascending so next plan is first
+      api.get('/api/plans', { params: { upcoming: 'true' } }).then(r => setPlans(r.data.slice(0, 4))),
       api.get('/api/members').then(r => {
         const sorted = [...r.data].sort((a, b) => {
           if (a.role === 'admin' && b.role !== 'admin') return -1
@@ -88,32 +88,32 @@ export default function DashboardPage() {
           </div>
         </div>
 
-        {/* Services — upcoming only */}
+        {/* Plans — upcoming only */}
         <div className="card">
           <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 'var(--space-md)' }}>
-            <span className="section-label" style={{ marginBottom: 0 }}>Services</span>
-            {church && <Link href="/services/new" className="btn btn-ghost">Add new +</Link>}
+            <span className="section-label" style={{ marginBottom: 0 }}>Plans</span>
+            {church && <Link href="/plans/new" className="btn btn-ghost">Add new +</Link>}
           </div>
-          {services.length === 0 ? (
-            <p className="text-muted">No upcoming services. <Link href="/services/new" className="link">Plan one</Link></p>
-          ) : services.map((service) => {
-            const date = parseISO(service.service_date)
+          {plans.length === 0 ? (
+            <p className="text-muted">No upcoming plans. <Link href="/plans/new" className="link">Plan one</Link></p>
+          ) : plans.map((plan) => {
+            const date = parseISO(plan.plan_date)
             return (
-              <Link key={service.id} href={`/services/${service.id}`} className="dash-row">
+              <Link key={plan.id} href={`/plans/${plan.id}`} className="dash-row">
                 <div style={{ flex: 1 }}>
                   <p className="dash-row-title">
-                    {format(date, 'd MMM')}{service.service_time ? ` · ${service.service_time}` : ''}
+                    {format(date, 'd MMM')}{plan.plan_time ? ` · ${plan.plan_time}` : ''}
                   </p>
-                  {service.title && <p className="dash-row-meta">{service.title}</p>}
+                  {plan.title && <p className="dash-row-meta">{plan.title}</p>}
                 </div>
-                <span className={`badge ${isToday(service.service_date) ? 'badge-today' : 'badge-upcoming'}`}>
-                  {isToday(service.service_date) ? 'TODAY' : 'UPCOMING'}
+                <span className={`badge ${isToday(plan.plan_date) ? 'badge-today' : 'badge-upcoming'}`}>
+                  {isToday(plan.plan_date) ? 'TODAY' : 'UPCOMING'}
                 </span>
               </Link>
             )
           })}
           <div style={{ marginTop: 'var(--space-md)', borderTop: '1px solid var(--color-border)', paddingTop: 'var(--space-sm)' }}>
-            <Link href="/services" className="btn btn-ghost">View all →</Link>
+            <Link href="/plans" className="btn btn-ghost">View all →</Link>
           </div>
         </div>
       </div>

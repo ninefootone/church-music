@@ -97,17 +97,17 @@ export interface Song {
     times_planned: number
     last_sung: string | null
   }
-  recent_services?: {
+  recent_plans?: {
     id: string
-    service_date: string
+    plan_date: string
     key_override: string | null
-    service_time: string | null
+    plan_time: string | null
   }[]
 }
 
-export interface ServiceItem {
+export interface PlanItem {
   id: string
-  service_id: string
+  plan_id: string
   type: string
   song_id: string | null
   title: string | null
@@ -117,24 +117,24 @@ export interface ServiceItem {
   song?: Song
 }
 
-export interface ServiceMusician {
+export interface PlanMusician {
   id: string
-  service_id?: string
+  plan_id?: string
   user_id: string | null
   name: string
   role: string
   created_at?: string
 }
 
-export interface Service {
+export interface Plan {
   id: string
   church_id: string
-  service_date: string
-  service_time: string | null
+  plan_date: string
+  plan_time: string | null
   title: string | null
   public_token: string
   created_at: string
-  items?: ServiceItem[]
+  items?: PlanItem[]
 }
 
 export interface StatsData {
@@ -146,7 +146,7 @@ export interface StatsData {
     count: number
     last_sung: string
   }[]
-  total_services: number
+  total_plans: number
   total_songs: number
   period_days: number
 }

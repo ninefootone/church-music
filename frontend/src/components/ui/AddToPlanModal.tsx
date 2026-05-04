@@ -6,7 +6,7 @@ import { X, Plus, Calendar } from 'lucide-react'
 import { format, parseISO, isFuture, isToday } from 'date-fns'
 import api from '@/lib/api'
 
-interface AddToServiceModalProps {
+interface AddToPlanModalProps {
   song: {
     id: string
     title: string
@@ -15,27 +15,27 @@ interface AddToServiceModalProps {
   onClose: () => void
 }
 
-export function AddToServiceModal({ song, onClose }: AddToServiceModalProps) {
+export function AddToPlanModal({ song, onClose }: AddToPlanModalProps) {
   const router = useRouter()
-  const [services, setServices] = useState<any[]>([])
+  const [plans, setPlans] = useState<any[]>([])
   const [loading, setLoading] = useState(true)
   const [adding, setAdding] = useState<string | null>(null)
   const [added, setAdded] = useState<string | null>(null)
   const [error, setError] = useState('')
 
   useEffect(() => {
-    api.get('/api/services', { params: { upcoming: 'true' } })
-      .then(r => setServices(r.data))
-      .catch(() => setError('Failed to load services'))
+    api.get('/api/plans', { params: { upcoming: 'true' } })
+      .then(r => setPlans(r.data))
+      .catch(() => setError('Failed to load plans'))
       .finally(() => setLoading(false))
   }, [])
 
-  const handleAdd = async (service: any) => {
-    setAdding(service.id)
+  const handleAdd = async (plan: any) => {
+    setAdding(plan.id)
     setError('')
     try {
       // Fetch current items
-      const { data } = await api.get(`/api/services/${service.id}`)
+      const { data } = await api.get(`/api/plans/${plan.id}`)
       const currentItems = (data.items || []).map((item: any) => ({
         type: item.type,
         song_id: item.song_id || null,
@@ -53,8 +53,8 @@ export function AddToServiceModal({ song, onClose }: AddToServiceModalProps) {
         key_override: song.default_key || null,
       }]
 
-      await api.put(`/api/services/${service.id}/items`, { items: newItems })
-      setAdded(service.id)
+      await api.put(`/api/plans/${plan.id}/items`, { items: newItems })
+      setAdded(plan.id)
     } catch (err: any) {
       setError(err.response?.data?.error || 'Failed to add song')
     } finally {
@@ -62,9 +62,9 @@ export function AddToServiceModal({ song, onClose }: AddToServiceModalProps) {
     }
   }
 
-  const handleViewService = (serviceId: string) => {
+  const handleViewPlan = (planId: string) => {
     onClose()
-    router.push(`/services/${serviceId}`)
+    router.push(`/plans/${planId}`)
   }
 
   return (
@@ -74,7 +74,7 @@ export function AddToServiceModal({ song, onClose }: AddToServiceModalProps) {
       <div style={{ position: 'relative', background: 'var(--color-surface)', borderRadius: 'var(--radius-lg)', padding: 'var(--space-lg)', width: '100%', maxWidth: 480, boxShadow: 'var(--shadow-md)' }}>
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 'var(--space-sm)' }}>
           <h2 style={{ fontSize: 'var(--text-lg)', fontWeight: 700, color: 'var(--color-text-primary)', letterSpacing: '-0.01em' }}>
-            Add to service
+            Add to plan
           </h2>
           <button onClick={onClose} style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'var(--color-text-muted)', padding: 4, display: 'flex' }}>
             <X size={20} />
@@ -88,52 +88,52 @@ export function AddToServiceModal({ song, onClose }: AddToServiceModalProps) {
         {error && <div className="error-box">{error}</div>}
 
         {loading ? (
-          <p className="text-muted">Loading services...</p>
-        ) : services.length === 0 ? (
+          <p className="text-muted">Loading plans...</p>
+        ) : plans.length === 0 ? (
           <div style={{ textAlign: 'center', padding: 'var(--space-lg)' }}>
             <Calendar size={32} style={{ color: 'var(--color-text-muted)', margin: '0 auto 12px' }} />
-            <p className="text-muted" style={{ marginBottom: 'var(--space-md)' }}>No upcoming services.</p>
+            <p className="text-muted" style={{ marginBottom: 'var(--space-md)' }}>No upcoming plans.</p>
             <button
-              onClick={() => { onClose(); router.push('/services/new') }}
+              onClick={() => { onClose(); router.push('/plans/new') }}
               className="btn btn-primary btn-sm"
             >
-              <Plus size={14} /> Create a service
+              <Plus size={14} /> Create a plan
             </button>
           </div>
         ) : (
           <div style={{ display: 'flex', flexDirection: 'column', gap: 8, maxHeight: 360, overflowY: 'auto' }}>
-            {services.map(service => (
+            {plans.map(plan => (
               <div
-                key={service.id}
-                style={{ display: 'flex', alignItems: 'center', gap: 12, padding: 'var(--space-md)', background: 'var(--color-neutral-50)', border: `1px solid ${added === service.id ? 'var(--color-accent)' : 'var(--color-border)'}`, borderRadius: 'var(--radius-md)', transition: 'border-color var(--transition-fast)' }}
+                key={plan.id}
+                style={{ display: 'flex', alignItems: 'center', gap: 12, padding: 'var(--space-md)', background: 'var(--color-neutral-50)', border: `1px solid ${added === plan.id ? 'var(--color-accent)' : 'var(--color-border)'}`, borderRadius: 'var(--radius-md)', transition: 'border-color var(--transition-fast)' }}
               >
                 <div style={{ flex: 1, minWidth: 0 }}>
                   <p className="dash-row-title">
-                    {format(parseISO(service.service_date), 'd MMMM yyyy')}
-                    {service.service_time && <span style={{ fontWeight: 400, color: 'var(--color-text-muted)' }}> · {service.service_time}</span>}
+                    {format(parseISO(plan.plan_date), 'd MMMM yyyy')}
+                    {plan.plan_time && <span style={{ fontWeight: 400, color: 'var(--color-text-muted)' }}> · {plan.plan_time}</span>}
                   </p>
-                  {service.title && <p className="dash-row-meta">{service.title}</p>}
+                  {plan.title && <p className="dash-row-meta">{plan.title}</p>}
                 </div>
 
-                {added === service.id ? (
+                {added === plan.id ? (
                   <div style={{ display: 'flex', gap: 6 }}>
                     <span style={{ fontSize: 'var(--text-sm)', color: 'var(--color-accent-dark)', fontWeight: 500 }}>Added</span>
                     <button
-                      onClick={() => handleViewService(service.id)}
+                      onClick={() => handleViewPlan(plan.id)}
                       className="btn btn-secondary btn-sm"
                     >
-                      View service
+                      View plan
                     </button>
                   </div>
                 ) : (
                   <button
-                    onClick={() => handleAdd(service)}
-                    disabled={adding === service.id}
+                    onClick={() => handleAdd(plan)}
+                    disabled={adding === plan.id}
                     className="btn btn-primary btn-sm"
                     style={{ flexShrink: 0 }}
                   >
                     <Plus size={14} />
-                    {adding === service.id ? 'Adding...' : 'Add'}
+                    {adding === plan.id ? 'Adding...' : 'Add'}
                   </button>
                 )}
               </div>

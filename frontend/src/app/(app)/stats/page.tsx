@@ -90,8 +90,8 @@ export default function StatsPage() {
               <div className="stat-label">Songs in library</div>
             </div>
             <div className="card" style={{ textAlign: 'center' }}>
-              <div className="stat-number">{stats.total_services}</div>
-              <div className="stat-label">Services in last {period === 365 ? 'year' : `${period} days`}</div>
+              <div className="stat-number">{stats.total_plans}</div>
+              <div className="stat-label">Plans in last {period === 365 ? 'year' : `${period} days`}</div>
             </div>
           </div>
 
@@ -99,7 +99,7 @@ export default function StatsPage() {
             <div className="section-label">Most sung songs</div>
             {!stats.top_songs || stats.top_songs.length === 0 ? (
               <div style={{ fontSize: 15, color: 'var(--color-text-muted)', textAlign: 'center', padding: 'var(--space-lg)' }}>
-                No services recorded yet. Add songs to services to see stats here.
+                No plans recorded yet. Add songs to plans to see stats here.
               </div>
             ) : stats.top_songs.map((song: any, i: number) => (
               <div key={song.song_id} style={{ display: 'flex', alignItems: 'center', gap: 14, padding: '12px 0', borderBottom: i < stats.top_songs.length - 1 ? '1px solid var(--color-border)' : 'none' }}>

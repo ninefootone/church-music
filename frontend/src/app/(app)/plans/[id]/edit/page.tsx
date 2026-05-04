@@ -51,7 +51,7 @@ function normaliseKey(key: string | null | undefined): string {
     .trim()
 }
 
-interface ServiceItem {
+interface PlanItem {
   id: string
   type: string
   song_id: string | null
@@ -83,11 +83,11 @@ function SortableItem({
   item, idx, total,
   onRemove, onUpdate, onToggleExpanded,
 }: {
-  item: ServiceItem
+  item: PlanItem
   idx: number
   total: number
   onRemove: () => void
-  onUpdate: (updates: Partial<ServiceItem>) => void
+  onUpdate: (updates: Partial<PlanItem>) => void
   onToggleExpanded: () => void
 }) {
   const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({ id: item.id })
@@ -189,7 +189,7 @@ function SortableItem({
             {item.type === 'song' && (
               <div>
                 <p style={{ fontSize: 'var(--text-xs)', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.07em', color: 'var(--color-text-muted)', marginBottom: 8 }}>
-                  Arrangement for this service
+                  Arrangement for this plan
                 </p>
                 <ArrangementBuilder
                   value={item.custom_arrangement || item.song_suggested_arrangement || ''}
@@ -204,13 +204,13 @@ function SortableItem({
   )
 }
 
-export default function ServiceEditPage() {
+export default function PlanEditPage() {
   const { id } = useParams()
   const router = useRouter()
   const { loading: churchLoading } = useChurch()
   const { getToken } = useAuth()
-  const [service, setService] = useState<any>(null)
-  const [items, setItems] = useState<ServiceItem[]>([])
+  const [plan, setPlan] = useState<any>(null)
+  const [items, setItems] = useState<PlanItem[]>([])
   const [songs, setSongs] = useState<Song[]>([])
   const [songSearch, setSongSearch] = useState('')
   const [saving, setSaving] = useState(false)
@@ -239,11 +239,11 @@ export default function ServiceEditPage() {
   useEffect(() => {
     if (!id || churchLoading) return
     Promise.all([
-      api.get(`/api/services/${id}`),
+      api.get(`/api/plans/${id}`),
       api.get('/api/songs'),
-    ]).then(([serviceRes, songsRes]) => {
-      const s = serviceRes.data
-      setService(s)
+    ]).then(([planRes, songsRes]) => {
+      const s = planRes.data
+      setPlan(s)
       setItems((s.items || []).map((item: any) => ({
         id: newId(),
         type: item.type,
@@ -260,7 +260,7 @@ export default function ServiceEditPage() {
         expanded: false,
       })))
       setSongs(songsRes.data)
-    }).catch(() => setError('Failed to load service'))
+    }).catch(() => setError('Failed to load plan'))
       .finally(() => setLoading(false))
   }, [id, churchLoading])
 
@@ -299,7 +299,7 @@ export default function ServiceEditPage() {
   }
 
   const removeItem = (idx: number) => setItems(prev => prev.filter((_, i) => i !== idx))
-  const updateItem = (idx: number, updates: Partial<ServiceItem>) =>
+  const updateItem = (idx: number, updates: Partial<PlanItem>) =>
     setItems(prev => prev.map((item, i) => i === idx ? { ...item, ...updates } : item))
   const toggleExpanded = (idx: number) =>
     setItems(prev => prev.map((item, i) => i === idx ? { ...item, expanded: !item.expanded } : item))
@@ -309,7 +309,7 @@ export default function ServiceEditPage() {
   try {
     const token = await getToken()
     setAuthToken(token)
-    await api.put(`/api/services/${id}/items`, {
+    await api.put(`/api/plans/${id}/items`, {
         items: items.map(item => ({
           type: item.type, song_id: item.song_id || null,
           title: item.title || null, notes: item.notes || null,
@@ -317,7 +317,7 @@ export default function ServiceEditPage() {
           custom_arrangement: item.custom_arrangement || null,
         }))
       })
-      router.push(`/services/${id}`)
+      router.push(`/plans/${id}`)
     } catch (err: any) {
       setError(err.response?.data?.error || 'Failed to save')
       setSaving(false)
@@ -325,28 +325,28 @@ export default function ServiceEditPage() {
   }
 
   if (loading || churchLoading) return <p className="text-muted" style={{ padding: 'var(--space-xl)' }}>Loading…</p>
-  if (!service) return <p className="text-muted" style={{ padding: 'var(--space-xl)' }}>Service not found.</p>
+  if (!plan) return <p className="text-muted" style={{ padding: 'var(--space-xl)' }}>Plan not found.</p>
 
   return (
     <div>
       {/* Header */}
       <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: 'var(--space-md)', marginBottom: 'var(--space-lg)', flexWrap: 'wrap' }}>
         <div>
-          <Link href={`/services/${id}`} className="back-link" style={{ marginBottom: 6 }}>
-            <ArrowLeft size={14} /> Back to service
+          <Link href={`/plans/${id}`} className="back-link" style={{ marginBottom: 6 }}>
+            <ArrowLeft size={14} /> Back to plan
           </Link>
           <h1 className="page-title">
-            {format(parseISO(service.service_date), 'd MMMM yyyy')}
-            {service.service_time && (
-              <span style={{ fontWeight: 400, color: 'var(--color-text-secondary)', fontSize: 'var(--text-xl)' }}> · {service.service_time}</span>
+            {format(parseISO(plan.plan_date), 'd MMMM yyyy')}
+            {plan.plan_time && (
+              <span style={{ fontWeight: 400, color: 'var(--color-text-secondary)', fontSize: 'var(--text-xl)' }}> · {plan.plan_time}</span>
             )}
           </h1>
-          <Link href={`/services/${id}/settings`} style={{ fontSize: 'var(--text-sm)', color: 'var(--color-text-muted)', textDecoration: 'none', marginTop: 4, display: 'inline-block' }}>
+          <Link href={`/plans/${id}/settings`} style={{ fontSize: 'var(--text-sm)', color: 'var(--color-text-muted)', textDecoration: 'none', marginTop: 4, display: 'inline-block' }}>
             Edit details ↗
           </Link>
         </div>
         <div style={{ display: 'flex', gap: 8, flexShrink: 0 }}>
-          <Link href={`/services/${id}`} className="btn btn-secondary">Cancel</Link>
+          <Link href={`/plans/${id}`} className="btn btn-secondary">Cancel</Link>
           <button className="btn btn-primary" onClick={handleSave} disabled={saving}>
             {saving ? 'Saving…' : 'Save order'}
           </button>
@@ -355,7 +355,7 @@ export default function ServiceEditPage() {
 
       {error && <div className="error-box">{error}</div>}
 
-      <div className="service-edit-grid">
+      <div className="plan-edit-grid">
 
         {/* Left — running order */}
         <div>
@@ -392,7 +392,7 @@ export default function ServiceEditPage() {
         </div>
 
         {/* Right — add panel */}
-        <div className="service-edit-sidebar">
+        <div className="plan-edit-sidebar">
           {/* Song picker */}
           <div className="card" style={{ marginBottom: 'var(--space-md)' }}>
             <div style={{ marginBottom: 'var(--space-sm)' }}>
@@ -451,7 +451,7 @@ export default function ServiceEditPage() {
 
       {/* Fixed bottom save bar */}
       <div style={{ position: 'fixed', bottom: 0, left: 0, right: 0, background: 'var(--color-surface)', borderTop: '1px solid var(--color-border)', padding: '12px var(--space-md)', display: 'flex', justifyContent: 'flex-end', gap: 8, zIndex: 50, boxShadow: '0 -2px 8px rgba(0,0,0,0.06)' }}>
-        <Link href={`/services/${id}`} className="btn btn-secondary">Cancel</Link>
+        <Link href={`/plans/${id}`} className="btn btn-secondary">Cancel</Link>
         <button className="btn btn-primary" onClick={handleSave} disabled={saving}>
           {saving ? 'Saving…' : `Save (${items.length} item${items.length !== 1 ? 's' : ''})`}
         </button>

@@ -14,12 +14,12 @@ interface Member {
 }
 
 interface Props {
-  serviceId: string
+  planId: string
   onAdd: (musicians: { id: string; name: string; role: string; user_id: string | null }[]) => void
   onClose: () => void
 }
 
-export function ServiceMusicianModal({ serviceId, onAdd, onClose }: Props) {
+export function PlanMusicianModal({ planId, onAdd, onClose }: Props) {
   const [members, setMembers] = useState<Member[]>([])
   const [query, setQuery] = useState('')
   const [selectedMember, setSelectedMember] = useState<Member | null>(null)
@@ -56,7 +56,7 @@ export function ServiceMusicianModal({ serviceId, onAdd, onClose }: Props) {
     try {
       const results = await Promise.all(
         allRoles.map(role =>
-          api.post(`/api/services/${serviceId}/musicians`, {
+          api.post(`/api/plans/${planId}/musicians`, {
             name: finalName,
             role,
             user_id: selectedMember?.user_id || null,

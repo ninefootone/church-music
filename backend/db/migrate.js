@@ -78,12 +78,12 @@ const migrate = async () => {
         uploaded_at TIMESTAMPTZ DEFAULT NOW()
       );
 
-      -- Services
-      CREATE TABLE IF NOT EXISTS services (
+      -- Plans
+      CREATE TABLE IF NOT EXISTS plans (
         id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
         church_id UUID NOT NULL REFERENCES churches(id) ON DELETE CASCADE,
-        service_date DATE NOT NULL,
-        service_time TEXT,
+        plan_date DATE NOT NULL,
+        plan_time TEXT,
         title TEXT,
         notes TEXT,
         public_token TEXT UNIQUE DEFAULT encode(gen_random_bytes(16), 'hex'),
@@ -91,10 +91,10 @@ const migrate = async () => {
         created_at TIMESTAMPTZ DEFAULT NOW()
       );
 
-      -- Service items (songs + non-song elements)
-      CREATE TABLE IF NOT EXISTS service_items (
+      -- Plan items (songs + non-song elements)
+      CREATE TABLE IF NOT EXISTS plan_items (
         id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
-        service_id UUID NOT NULL REFERENCES services(id) ON DELETE CASCADE,
+        plan_id UUID NOT NULL REFERENCES plans(id) ON DELETE CASCADE,
         position INTEGER NOT NULL DEFAULT 0,
         item_type TEXT NOT NULL CHECK (item_type IN ('song','reading','prayer','sermon','welcome','confession','assurance','announcement','other')),
         song_id UUID REFERENCES songs(id),
@@ -119,9 +119,9 @@ const migrate = async () => {
         created_at TIMESTAMPTZ DEFAULT NOW()
       );
 
-      CREATE TABLE IF NOT EXISTS service_musicians (
+      CREATE TABLE IF NOT EXISTS plan_musicians (
         id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
-        service_id UUID NOT NULL REFERENCES services(id) ON DELETE CASCADE,
+        plan_id UUID NOT NULL REFERENCES plans(id) ON DELETE CASCADE,
         user_id UUID REFERENCES users(id) ON DELETE SET NULL,
         name TEXT NOT NULL,
         role TEXT NOT NULL,

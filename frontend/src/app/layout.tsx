@@ -7,7 +7,7 @@ export const dynamic = 'force-dynamic'
 
 export const metadata: Metadata = {
   title: 'Song Stack',
-  description: 'Song library and service planning for churches',
+  description: 'Song library and worship plan management for churches',
   viewport: 'width=device-width, initial-scale=1',
   icons: {
     icon: [
