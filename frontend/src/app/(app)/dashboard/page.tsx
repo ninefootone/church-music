@@ -68,6 +68,10 @@ export default function DashboardPage() {
                   {song.first_line && (
                     <span className="dash-row-meta" style={{ fontStyle: 'italic' , lineHeight: '1.4em' }}>{song.first_line}</span>
                   )}
+                  <div className="song-row-badges-mobile">
+                    {song.category && <CategoryBadge category={song.category} />}
+                    {song.default_key && <KeyBadge keyOf={song.default_key} />}
+                  </div>
                   <div style={{ display: 'flex', columnGap: 20 , rowGap: 0 , flexWrap: 'wrap' }}>
                     {song.last_sung && (
                       <span className="dash-row-meta" style={{ fontWeight: 400, fontSize: 'var(--text-xs)' }}>
@@ -82,7 +86,10 @@ export default function DashboardPage() {
                   </div>
                 </div>
               </div>
-              {song.category && <CategoryBadge category={song.category} />}
+              <div className="song-row-badges-desktop">
+                {song.category && <CategoryBadge category={song.category} />}
+                {song.default_key && <KeyBadge keyOf={song.default_key} />}
+              </div>
             </Link>
           ))}
           <div style={{ marginTop: 'var(--space-md)', borderTop: '1px solid var(--color-border)', paddingTop: 'var(--space-sm)' }}>

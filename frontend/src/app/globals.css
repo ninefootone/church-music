@@ -395,6 +395,29 @@ body.set-viewer-active { overflow: hidden; }
     flex-wrap: wrap;
   }
 
+  /* Song/dash row badge layout — responsive */
+.song-row-badges-desktop {
+  display: flex;
+  align-items: center;
+  flex-shrink: 0;
+}
+
+.song-row-badges-mobile {
+  display: none;
+}
+
+@media (max-width: 480px) {
+  .song-row-badges-desktop {
+    display: none;
+  }
+  .song-row-badges-mobile {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+    margin-top: 2px;
+  }
+}
+
   /* ── Song detail ── */
   .song-detail-header {
     display: flex;

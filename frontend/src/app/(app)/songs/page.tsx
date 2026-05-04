@@ -4,7 +4,7 @@ import { useState, useEffect } from 'react'
 import Link from 'next/link'
 import { format, parseISO } from 'date-fns'
 import { Search, Plus, ChevronRight } from 'lucide-react'
-import { CategoryBadge } from '@/components/ui/badges'
+import { CategoryBadge, KeyBadge } from '@/components/ui/badges'
 import { CATEGORIES, Category, Song } from '@/types'
 import { useChurch } from '@/context/ChurchContext'
 import api from '@/lib/api'
@@ -85,6 +85,10 @@ export default function SongsPage() {
                 {song.first_line && (
                   <span style={{ fontStyle: 'italic' , lineHeight: '1.4em' }}>{song.first_line}</span>
                 )}
+                <div className="song-row-badges-mobile">
+                  {song.category && <CategoryBadge category={song.category} />}
+                  {song.default_key && <KeyBadge keyOf={song.default_key} />}
+                </div>
                 <div style={{ display: 'flex', columnGap: 20 , rowGap: 0 , flexWrap: 'wrap' }}>
                   {song.last_sung && (
                     <span style={{ fontWeight: 400, fontSize: 'var(--text-xs)' }}>
@@ -99,8 +103,9 @@ export default function SongsPage() {
                 </div>
               </div>
             </div>
-            <div style={{ display: 'flex', alignItems: 'center', gap: 10, flexShrink: 0 }}>
+            <div className="song-row-badges-desktop" style={{ gap: 10 }}>
               {song.category && <CategoryBadge category={song.category} />}
+              {song.default_key && <KeyBadge keyOf={song.default_key} />}
               <ChevronRight size={18} style={{ color: 'var(--color-text-muted)' }} />
             </div>
           </Link>
