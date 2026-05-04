@@ -184,14 +184,16 @@ export function SetViewerPage() {
     if (!hasChordProContent) return
     // Trigger measurement of first ChordPro file
     const firstChordPro = files.findIndex(f => f.file_type === 'chordpro')
+    console.log('Phase 1: firstChordPro index:', firstChordPro)
     if (firstChordPro !== -1) setMeasuringIndex(firstChordPro)
   }, [files, chordProContents, pageCounts])
 
   // Phase 2: after measurement div renders, measure and paginate
   useEffect(() => {
+    console.log('Phase 2 running. measuringIndex:', measuringIndex, 'div:', measureDivRef.current)
     if (measuringIndex === null) return
     const div = measureDivRef.current
-    if (!div) return
+    if (!div) { console.log('Phase 2: no div ref, aborting'); return }
 
     requestAnimationFrame(() => {
       const pageHeight = (containerSize?.height ?? window.innerHeight) - 32
