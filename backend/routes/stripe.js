@@ -110,7 +110,7 @@ router.post('/webhook', express.raw({ type: 'application/json' }), async (req, r
 });
 
 // POST /api/stripe/create-checkout-session
-router.post('/create-checkout-session', requireAuth, requireAdmin, async (req, res, next) => {
+router.post('/create-checkout-session', requireAuth, express.json(), requireAdmin, async (req, res, next) => {
   try {
     const { priceId, churchId } = req.body;
     if (!priceId || !churchId) return res.status(400).json({ error: 'priceId and churchId required' });
