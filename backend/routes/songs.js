@@ -122,6 +122,17 @@ router.get('/:id', requireAuth, requireMembership, async (req, res, next) => {
 router.post('/', requireAuth, requireAdmin, async (req, res, next) => {
   try {
     const { churchId } = req;
+
+    // Free tier gate — max 5 songs
+    const church = await pool.query('SELECT subscription_status FROM churches WHERE id = $1', [churchId]);
+    const status = church.rows[0]?.subscription_status;
+    if (!status || status === 'free') {
+      const count = await pool.query('SELECT COUNT(*) FROM songs WHERE church_id = $1', [churchId]);
+      if (parseInt(count.rows[0].count) >= 5) {
+        return res.status(403).json({ error: 'free_tier_limit', message: 'You have reached the 5 song limit on the free plan. Please upgrade to add more songs.' });
+      }
+    }
+
     const { title, author, default_key, category, first_line, lyrics, ccli_number, youtube_url, notes, bible_references, suggested_arrangement, ccli_url, tags } = req.body;
 
     const song = await pool.query(
