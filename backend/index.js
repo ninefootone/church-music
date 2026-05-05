@@ -12,6 +12,7 @@ const uploadRoutes = require('./routes/uploads');
 const statsRoutes = require('./routes/stats');
 const templateRoutes = require('./routes/templates');
 const ccliRoutes = require('./routes/ccli');
+const stripeRoutes = require('./routes/stripe');
 
 const app = express();
 
@@ -20,6 +21,7 @@ app.use(cors({
   origin: process.env.FRONTEND_URL || 'http://localhost:3000',
   credentials: true,
 }));
+app.use('/api/stripe', stripeRoutes);
 app.use(express.json());
 
 app.get('/health', (req, res) => res.json({ status: 'ok' }));
