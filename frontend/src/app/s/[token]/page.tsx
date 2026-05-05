@@ -3,17 +3,10 @@
 import { useParams } from 'next/navigation'
 import { useEffect, useState } from 'react'
 import { format, parseISO } from 'date-fns'
-import { Music, BookOpen, Mic2, ChevronDown, ChevronUp, FileText, ExternalLink, PlayCircle } from 'lucide-react'
+import { ChevronDown, ChevronUp, FileText, ExternalLink, PlayCircle } from 'lucide-react'
 import axios from 'axios'
 
 const API = process.env.NEXT_PUBLIC_API_URL
-
-const typeIcon = (type: string) => {
-  if (type === 'song') return <Music size={15} style={{ color: 'var(--color-brand-500)', flexShrink: 0 }} />
-  if (type === 'reading') return <BookOpen size={15} style={{ color: 'var(--color-text-muted)', flexShrink: 0 }} />
-  if (type === 'sermon') return <Mic2 size={15} style={{ color: 'var(--color-text-muted)', flexShrink: 0 }} />
-  return null
-}
 
 interface SongFile {
   id: string
@@ -54,8 +47,6 @@ function SongItem({ item, index }: { item: any; index: number }) {
         <span style={{ fontSize: 'var(--text-sm)', color: 'var(--color-text-muted)', width: 24, textAlign: 'center', flexShrink: 0 }}>
           {index + 1}
         </span>
-
-        {typeIcon(item.type)}
 
         <div style={{ flex: 1, minWidth: 0 }}>
           <p style={{ fontSize: 'var(--text-md)', fontWeight: isSong ? 600 : 400, color: isSong ? 'var(--color-text-primary)' : 'var(--color-text-secondary)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', marginBottom: 0 }}>
