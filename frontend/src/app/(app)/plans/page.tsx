@@ -16,7 +16,7 @@ interface Plan {
 }
 
 export default function PlansPage() {
-  const { church, loading: churchLoading, isAdmin } = useChurch()
+  const { church, loading: churchLoading, isAdmin, canAddPlans } = useChurch()
   const [upcoming, setUpcoming] = useState<Plan[]>([])
   const [past, setPast] = useState<Plan[]>([])
   const [loading, setLoading] = useState(true)
@@ -73,16 +73,16 @@ export default function PlansPage() {
       <div className="page-header">
         <h1 className="page-title">Plans</h1>
         {church && (
-          <Link href="/plans/new" className="btn btn-primary">
+          {canAddPlans && <Link href="/plans/new" className="btn btn-primary">
             <Plus size={16} /> Add new plan
-          </Link>
+          </Link>}
         )}
       </div>
 
       {!hasAny ? (
         <div className="card" style={{ textAlign: 'center', padding: 'var(--space-xl)' }}>
           <p className="text-muted" style={{ marginBottom: 'var(--space-sm)' }}>No plans yet.</p>
-          {isAdmin && <Link href="/plans/new" className="link">Create your first plan</Link>}
+          {canAddPlans && <Link href="/plans/new" className="link">Create your first plan</Link>}
         </div>
       ) : (
         <>
@@ -102,7 +102,7 @@ export default function PlansPage() {
             </>
           ) : todayPlans.length === 0 && (
             <div className="card" style={{ marginBottom: 'var(--space-md)', padding: 'var(--space-md) var(--space-lg)' }}>
-              <p className="text-muted">No upcoming plans. {isAdmin && <Link href="/plans/new" className="link">Add one</Link>}</p>
+              <p className="text-muted">No upcoming plans. {canAddPlans && <Link href="/plans/new" className="link">Add one</Link>}</p>
             </div>
           )}
 

@@ -13,17 +13,23 @@ interface Church {
   ccli_number: string | null
   role: 'admin' | 'member'
   subscription_status: 'free' | 'active' | 'trialing' | 'past_due' | 'canceled' | null
+  can_manage_songs: boolean
+  can_add_plans: boolean
+  can_edit_any_plan: boolean
 }
 
 interface ChurchContextType {
   church: Church | null
   loading: boolean
   isAdmin: boolean
+  canManageSongs: boolean
+  canAddPlans: boolean
+  canEditAnyPlan: boolean
   refetch: () => void
 }
 
 const ChurchContext = createContext<ChurchContextType>({
-  church: null, loading: true, isAdmin: false, refetch: () => {},
+  church: null, loading: true, isAdmin: false, canManageSongs: false, canAddPlans: false, canEditAnyPlan: false, refetch: () => {},
 })
 
 export function ChurchProvider({ children }: { children: ReactNode }) {
@@ -75,6 +81,9 @@ export function ChurchProvider({ children }: { children: ReactNode }) {
     <ChurchContext.Provider value={{
       church, loading,
       isAdmin: church?.role === 'admin',
+      canManageSongs: church?.role === 'admin' || !!church?.can_manage_songs,
+      canAddPlans: church?.role === 'admin' || !!church?.can_add_plans,
+      canEditAnyPlan: church?.role === 'admin' || !!church?.can_edit_any_plan,
       refetch: fetchChurch,
     }}>
       {children}

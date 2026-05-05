@@ -103,7 +103,7 @@ router.post('/join', requireAuth, async (req, res, next) => {
 router.get('/mine', requireAuth, async (req, res, next) => {
   try {
     const churches = await pool.query(
-      `SELECT c.*, m.role FROM churches c
+      `SELECT c.*, m.role, m.can_manage_songs, m.can_add_plans, m.can_edit_any_plan FROM churches c
        JOIN memberships m ON m.church_id = c.id
        WHERE m.user_id = $1 AND m.role != 'revoked'
        ORDER BY c.name`,

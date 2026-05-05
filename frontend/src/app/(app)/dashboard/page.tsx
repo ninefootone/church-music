@@ -10,7 +10,7 @@ import { InviteMemberModal } from '@/components/ui/InviteMemberModal'
 import { ConfirmModal } from '@/components/ui/ConfirmModal'
 
 export default function DashboardPage() {
-  const { church, loading: churchLoading, isAdmin } = useChurch()
+  const { church, loading: churchLoading, isAdmin, canAddPlans } = useChurch()
   const [songs, setSongs] = useState<any[]>([])
   const [plans, setPlans] = useState<any[]>([])
   const [members, setMembers] = useState<any[]>([])
@@ -132,10 +132,10 @@ export default function DashboardPage() {
         <div className="card">
           <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 'var(--space-md)' }}>
             <span className="section-label" style={{ marginBottom: 0 }}>Plans</span>
-            {church && <Link href="/plans/new" className="btn btn-ghost">Add new +</Link>}
+            {canAddPlans && <Link href="/plans/new" className="btn btn-ghost">Add new +</Link>}
           </div>
           {plans.length === 0 ? (
-            <p className="text-muted">No upcoming plans. <Link href="/plans/new" className="link">Add one +</Link></p>
+            <p className="text-muted">No upcoming plans. {canAddPlans && <Link href="/plans/new" className="link">Add one +</Link>}</p>
           ) : plans.map((plan) => {
             const date = parseISO(plan.plan_date)
             return (
