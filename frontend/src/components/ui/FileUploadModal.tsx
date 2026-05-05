@@ -256,6 +256,14 @@ export function FileUploadModal({ songId, defaultKey, onClose, onUploaded }: Fil
             </div>
           )}
 
+          <p style={{ fontSize: 'var(--text-xs)', color: 'var(--color-text-muted)', paddingTop: 'var(--space-sm)', borderTop: '1px solid var(--color-border)' }}>
+            Please ensure you hold a valid{' '}
+            <a href="https://ccli.com" target="_blank" rel="noopener noreferrer" style={{ color: 'var(--color-brand-600)', textDecoration: 'underline' }}>
+              CCLI licence
+            </a>
+            {' '}that covers storing and sharing these files with your team.
+          </p>
+
           <div style={{ display: 'flex', gap: 8, justifyContent: 'flex-end', paddingTop: 'var(--space-sm)' }}>
             <button type="button" onClick={onClose} className="btn btn-secondary">Cancel</button>
             <button
