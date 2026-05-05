@@ -1,7 +1,7 @@
 const express = require('express');
 const router = express.Router();
 const pool = require('../db/pool');
-const { requireAuth, requireMembership, requireAdmin } = require('../middleware/auth');
+const { requireAuth, requireMembership, requireAdmin, requirePermission } = require('../middleware/auth');
 
 // GET /songs/tags/all — all distinct tag names across all churches (for autocomplete)
 router.get('/tags/all', requireAuth, async (req, res, next) => {
@@ -118,8 +118,8 @@ router.get('/:id', requireAuth, requireMembership, async (req, res, next) => {
   }
 });
 
-// POST /songs — create song (admin)
-router.post('/', requireAuth, requireAdmin, async (req, res, next) => {
+// POST /songs — create song (admin or can_manage_songs)
+router.post('/', requireAuth, requirePermission('can_manage_songs'), async (req, res, next) => {
   try {
     const { churchId } = req;
 
@@ -174,8 +174,8 @@ router.post('/', requireAuth, requireAdmin, async (req, res, next) => {
   }
 });
 
-// PUT /songs/:id — update song (admin)
-router.put('/:id', requireAuth, requireAdmin, async (req, res, next) => {
+// PUT /songs/:id — update song (admin or can_manage_songs)
+router.put('/:id', requireAuth, requirePermission('can_manage_songs'), async (req, res, next) => {
   try {
     const { churchId } = req;
     const { title, author, default_key, category, first_line, lyrics, ccli_number, youtube_url, notes, bible_references, suggested_arrangement, ccli_url, tags } = req.body;
@@ -223,9 +223,8 @@ router.put('/:id', requireAuth, requireAdmin, async (req, res, next) => {
   }
 });
 
-// DELETE /songs/:id (admin)
-// DELETE /songs/:id (admin)
-router.delete('/:id', requireAuth, requireAdmin, async (req, res, next) => {
+// DELETE /songs/:id (admin or can_manage_songs)
+router.delete('/:id', requireAuth, requirePermission('can_manage_songs'), async (req, res, next) => {
   try {
     await pool.query('DELETE FROM songs WHERE id = $1 AND church_id = $2', [req.params.id, req.churchId]);
     res.json({ success: true });
@@ -235,7 +234,7 @@ router.delete('/:id', requireAuth, requireAdmin, async (req, res, next) => {
 });
 
 // POST /songs/:id/videos
-router.post('/:id/videos', requireAuth, requireAdmin, async (req, res, next) => {
+router.post('/:id/videos', requireAuth, requirePermission('can_manage_songs'), async (req, res, next) => {
   try {
     const { url, label, sort_order } = req.body;
     if (!url) return res.status(400).json({ error: 'url is required' });

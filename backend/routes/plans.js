@@ -1,7 +1,7 @@
 const express = require('express');
 const router = express.Router();
 const pool = require('../db/pool');
-const { requireAuth, requireMembership, requireAdmin } = require('../middleware/auth');
+const { requireAuth, requireMembership, requireAdmin, requirePermission } = require('../middleware/auth');
 const { v4: uuidv4 } = require('uuid');
 
 router.get('/', requireAuth, requireMembership, async function(req, res, next) {
@@ -102,7 +102,7 @@ router.get('/public/:token', async function(req, res, next) {
   }
 });
 
-router.post('/', requireAuth, requireMembership, async function(req, res, next) {
+router.post('/', requireAuth, requirePermission('can_add_plans'), async function(req, res, next) {
   try {
     const churchId = req.churchId;
 
@@ -141,7 +141,8 @@ router.put('/:id', requireAuth, requireMembership, async function(req, res, next
     if (existing.rows.length === 0) return res.status(404).json({ error: 'Not found' });
     const isAdmin = req.membership.role === 'admin';
     const isOwner = existing.rows[0].created_by === req.user.clerk_id;
-    if (!isAdmin && !isOwner) return res.status(403).json({ error: 'Not authorised' });
+    const canEditAny = req.membership.can_edit_any_plan;
+    if (!isAdmin && !isOwner && !canEditAny) return res.status(403).json({ error: 'Not authorised' });
     const plan_date = req.body.plan_date;
     const plan_time = req.body.plan_time;
     const plan_sort_order = req.body.plan_sort_order ?? 0;
