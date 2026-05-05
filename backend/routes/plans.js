@@ -112,7 +112,7 @@ router.post('/', requireAuth, requireMembership, async function(req, res, next) 
     if (!status || status === 'free') {
       const count = await pool.query('SELECT COUNT(*) FROM plans WHERE church_id = $1', [churchId]);
       if (parseInt(count.rows[0].count) >= 1) {
-        return res.status(403).json({ error: 'free_tier_limit', message: 'You have reached the 1 plan limit on the free plan. Please upgrade to add more plans.' });
+        return res.status(403).json({ error: 'You have reached the 1 plan limit on the free plan. Upgrade in Settings to add more.' });
       }
     }
 
