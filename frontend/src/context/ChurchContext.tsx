@@ -12,6 +12,7 @@ interface Church {
   invite_code: string
   ccli_number: string | null
   role: 'admin' | 'member'
+  subscription_status: 'free' | 'active' | 'trialing' | 'past_due' | 'canceled' | null
 }
 
 interface ChurchContextType {
