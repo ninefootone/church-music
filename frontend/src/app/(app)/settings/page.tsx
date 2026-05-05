@@ -112,7 +112,7 @@ export default function SettingsPage() {
   }
 
   return (
-    <div style={{ maxWidth: 600, margin: '0 auto', padding: '40px 24px' }}>
+    <div>
       <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 32 }}>
         <div style={{ width: 40, height: 40, background: 'var(--color-brand-500)', borderRadius: 10, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
           <Settings size={20} color="white" />
@@ -130,83 +130,88 @@ export default function SettingsPage() {
       )}
 
       {/* Church details */}
+      {/* Church details — full width */}
       <form onSubmit={handleSave}>
         <div style={{ background: 'var(--color-surface)', border: '1px solid var(--color-border)', borderRadius: 14, padding: 24, marginBottom: 20 }}>
           <h2 style={{ fontSize: 16, fontWeight: 600, color: 'var(--color-text-primary)', marginBottom: 20 }}>Church details</h2>
-
-          <div style={{ marginBottom: 16 }}>
-            <label style={labelStyle}>Church name</label>
-            <input
-              style={inputStyle}
-              value={churchName}
-              onChange={e => setChurchName(e.target.value)}
-              required
-            />
-          </div>
-
-          <div style={{ marginBottom: 8 }}>
-            <label style={labelStyle}>
-              CCLI Licence Number <span style={{ fontWeight: 400, textTransform: 'none', letterSpacing: 0 }}>(optional)</span>
-            </label>
-            <input
-              style={inputStyle}
-              placeholder="e.g. 123456"
-              value={ccliNumber}
-              onChange={e => setCcliNumber(e.target.value)}
-            />
-            <p style={{ fontSize: 12, color: 'var(--color-text-muted)', marginTop: 6 }}>
-              Used in usage reports. Don't have one?{' '}
-              <a href="https://uk.ccli.com" target="_blank" rel="noopener noreferrer" style={{ color: 'var(--color-brand-500)' }}>
-                Get licensed at ccli.com
-              </a>
-            </p>
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', gap: 16 }}>
+            <div>
+              <label style={labelStyle}>Church name</label>
+              <input
+                style={inputStyle}
+                value={churchName}
+                onChange={e => setChurchName(e.target.value)}
+                required
+              />
+            </div>
+            <div>
+              <label style={labelStyle}>
+                CCLI Licence Number <span style={{ fontWeight: 400, textTransform: 'none', letterSpacing: 0 }}>(optional)</span>
+              </label>
+              <input
+                style={inputStyle}
+                placeholder="e.g. 123456"
+                value={ccliNumber}
+                onChange={e => setCcliNumber(e.target.value)}
+              />
+              <p style={{ fontSize: 12, color: 'var(--color-text-muted)', marginTop: 6 }}>
+                Used in usage reports. Don't have one?{' '}
+                <a href="https://uk.ccli.com" target="_blank" rel="noopener noreferrer" style={{ color: 'var(--color-brand-500)' }}>
+                  Get licensed at ccli.com
+                </a>
+              </p>
+            </div>
           </div>
         </div>
-
-        <div style={{ display: 'flex', justifyContent: 'flex-end' }}>
+        <div style={{ display: 'flex', justifyContent: 'flex-end', marginBottom: 20 }}>
           <button type="submit" className="btn btn-primary" disabled={saving}>
             {saving ? 'Saving…' : saved ? <><Check size={15} style={{ marginRight: 6 }} />Saved</> : 'Save changes'}
           </button>
         </div>
       </form>
 
-      {/* Billing */}
-      <div style={{ background: 'var(--color-surface)', border: '1px solid var(--color-border)', borderRadius: 14, padding: 24, marginTop: 20 }}>
-        <h2 style={{ fontSize: 16, fontWeight: 600, color: 'var(--color-text-primary)', marginBottom: 4 }}>Billing</h2>
-        <p style={{ fontSize: 13, color: 'var(--color-text-muted)', marginBottom: 16 }}>Manage your Song Stack subscription.</p>
-        {(!church?.subscription_status || church?.subscription_status === 'free') ? (
-          <div>
-            <p style={{ fontSize: 14, color: 'var(--color-text-primary)', marginBottom: 16 }}>You're on the <strong>free plan</strong> — limited to 5 songs and 1 plan.</p>
-            <div style={{ display: 'flex', gap: 10 }}>
-              <button onClick={() => handleUpgrade(process.env.NEXT_PUBLIC_STRIPE_PRICE_MONTHLY!)} className="btn btn-ghost">£5 / month</button>
-              <button onClick={() => handleUpgrade(process.env.NEXT_PUBLIC_STRIPE_PRICE_ANNUAL!)} className="btn btn-primary">£50 / year</button>
-            </div>
-          </div>
-        ) : (
-          <div>
-            <p style={{ fontSize: 14, color: 'var(--color-text-primary)', marginBottom: 16 }}>
-              Status: <strong style={{ textTransform: 'capitalize' }}>{church?.subscription_status}</strong>
-            </p>
-            <button onClick={handleManageBilling} className="btn btn-ghost">Manage subscription →</button>
-          </div>
-        )}
-      </div>
+      {/* Two column grid — billing + invite code */}
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', gap: 20 }}>
 
-      {/* Invite code */}
-      <div style={{ background: 'var(--color-surface)', border: '1px solid var(--color-border)', borderRadius: 14, padding: 24, marginTop: 20 }}>
-        <h2 style={{ fontSize: 16, fontWeight: 600, color: 'var(--color-text-primary)', marginBottom: 4 }}>Invite code</h2>
-        <p style={{ fontSize: 13, color: 'var(--color-text-muted)', marginBottom: 16 }}>Share this code with people you want to join your church.</p>
-        <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-          <div style={{ flex: 1, padding: '10px 14px', background: 'var(--color-bg)', border: '1px solid var(--color-border)', borderRadius: 10, fontFamily: 'monospace', fontSize: 18, fontWeight: 700, letterSpacing: '0.1em', color: 'var(--color-text-primary)' }}>
-            {church?.invite_code}
-          </div>
-          <button type="button" className="btn btn-ghost" onClick={handleCopy} style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
-            {copied ? <><Check size={15} />Copied</> : <><Copy size={15} />Copy</>}
-          </button>
-          <button type="button" className="btn btn-ghost" onClick={handleRegenerateInvite} disabled={regenerating} style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
-            <RefreshCw size={15} />{regenerating ? 'Regenerating…' : 'Regenerate'}
-          </button>
+        {/* Billing */}
+        <div style={{ background: 'var(--color-surface)', border: '1px solid var(--color-border)', borderRadius: 14, padding: 24 }}>
+          <h2 style={{ fontSize: 16, fontWeight: 600, color: 'var(--color-text-primary)', marginBottom: 4 }}>Billing</h2>
+          <p style={{ fontSize: 13, color: 'var(--color-text-muted)', marginBottom: 16 }}>Manage your Song Stack subscription.</p>
+          {(!church?.subscription_status || church?.subscription_status === 'free') ? (
+            <div>
+              <p style={{ fontSize: 14, color: 'var(--color-text-primary)', marginBottom: 16 }}>You're on the <strong>free plan</strong> — limited to 5 songs and 1 plan.</p>
+              <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap' }}>
+                <button onClick={() => handleUpgrade(process.env.NEXT_PUBLIC_STRIPE_PRICE_MONTHLY!)} className="btn btn-ghost">£5 / month</button>
+                <button onClick={() => handleUpgrade(process.env.NEXT_PUBLIC_STRIPE_PRICE_ANNUAL!)} className="btn btn-primary">£50 / year</button>
+              </div>
+            </div>
+          ) : (
+            <div>
+              <p style={{ fontSize: 14, color: 'var(--color-text-primary)', marginBottom: 16 }}>
+                Status: <strong style={{ textTransform: 'capitalize' }}>{church?.subscription_status}</strong>
+              </p>
+              <button onClick={handleManageBilling} className="btn btn-ghost">Manage subscription →</button>
+            </div>
+          )}
         </div>
+
+        {/* Invite code */}
+        <div style={{ background: 'var(--color-surface)', border: '1px solid var(--color-border)', borderRadius: 14, padding: 24 }}>
+          <h2 style={{ fontSize: 16, fontWeight: 600, color: 'var(--color-text-primary)', marginBottom: 4 }}>Invite code</h2>
+          <p style={{ fontSize: 13, color: 'var(--color-text-muted)', marginBottom: 16 }}>Share this code with people you want to join your church.</p>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+            <div style={{ flex: 1, padding: '10px 14px', background: 'var(--color-bg)', border: '1px solid var(--color-border)', borderRadius: 10, fontFamily: 'monospace', fontSize: 18, fontWeight: 700, letterSpacing: '0.1em', color: 'var(--color-text-primary)' }}>
+              {church?.invite_code}
+            </div>
+            <button type="button" className="btn btn-ghost" onClick={handleCopy} style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+              {copied ? <><Check size={15} />Copied</> : <><Copy size={15} />Copy</>}
+            </button>
+            <button type="button" className="btn btn-ghost" onClick={handleRegenerateInvite} disabled={regenerating} style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+              <RefreshCw size={15} />{regenerating ? 'Regenerating…' : 'Regenerate'}
+            </button>
+          </div>
+        </div>
+
       </div>
     </div>
   )
