@@ -76,4 +76,32 @@ const requireAdmin = async (req, res, next) => {
 const requireChurchMember = requireMembership;
 const requireChurchAdmin = requireAdmin;
 
-module.exports = { requireAuth, requireMembership, requireAdmin, requireChurchMember, requireChurchAdmin };
+const requirePermission = (flag) => async (req, res, next) => {
+  try {
+    const pool = require('../db/pool');
+    const churchId = req.headers['x-church-id'] || req.params.churchId || req.body.churchId;
+    if (!churchId) return res.status(400).json({ error: 'x-church-id header required' });
+
+    const membership = await pool.query(
+      "SELECT * FROM memberships WHERE church_id = $1 AND user_id = $2 AND role != 'revoked'",
+      [churchId, req.user.id]
+    );
+    if (membership.rows.length === 0) return res.status(403).json({ error: 'Church membership required' });
+
+    const m = membership.rows[0];
+    req.churchId = churchId;
+    req.membership = m;
+
+    // Admins always pass
+    if (m.role === 'admin') return next();
+
+    // Members need the specific flag
+    if (!m[flag]) return res.status(403).json({ error: 'Permission denied' });
+
+    next();
+  } catch (err) {
+    next(err);
+  }
+};
+
+module.exports = { requireAuth, requireMembership, requireAdmin, requireChurchMember, requireChurchAdmin, requirePermission };
