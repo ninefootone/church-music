@@ -2,6 +2,7 @@ const express = require('express');
 const router = express.Router();
 const stripe = require('stripe')(process.env.STRIPE_SECRET_KEY);
 const pool = require('../db/pool');
+const { requireAuth, requireAdmin } = require('../middleware/auth');
 
 // POST /api/stripe/webhook
 // Must receive raw body — registered before express.json() in index.js
@@ -106,6 +107,31 @@ router.post('/webhook', express.raw({ type: 'application/json' }), async (req, r
   }
 
   res.json({ received: true });
+});
+
+// POST /api/stripe/create-checkout-session
+router.post('/create-checkout-session', requireAuth, requireAdmin, async (req, res, next) => {
+  try {
+    const { priceId, churchId } = req.body;
+    if (!priceId || !churchId) return res.status(400).json({ error: 'priceId and churchId required' });
+
+    const church = await pool.query('SELECT * FROM churches WHERE id = $1', [churchId]);
+    if (church.rows.length === 0) return res.status(404).json({ error: 'Church not found' });
+
+    const session = await stripe.checkout.sessions.create({
+      mode: 'subscription',
+      payment_method_types: ['card'],
+      line_items: [{ price: priceId, quantity: 1 }],
+      customer_email: req.user.email,
+      metadata: { church_id: churchId },
+      success_url: `${process.env.FRONTEND_URL}/dashboard?upgraded=true`,
+      cancel_url: `${process.env.FRONTEND_URL}/dashboard?upgrade=cancelled`,
+    });
+
+    res.json({ url: session.url });
+  } catch (err) {
+    next(err);
+  }
 });
 
 module.exports = router;
