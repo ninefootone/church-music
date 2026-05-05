@@ -199,16 +199,18 @@ export default function SettingsPage() {
         <div style={{ background: 'var(--color-surface)', border: '1px solid var(--color-border)', borderRadius: 14, padding: 24 }}>
           <h2 style={{ fontSize: 16, fontWeight: 600, color: 'var(--color-text-primary)', marginBottom: 4 }}>Invite code</h2>
           <p style={{ fontSize: 13, color: 'var(--color-text-muted)', marginBottom: 16 }}>Share this code with people you want to join your church.</p>
-          <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-            <div style={{ flex: 1, padding: '10px 14px', background: 'var(--color-bg)', border: '1px solid var(--color-border)', borderRadius: 10, fontFamily: 'monospace', fontSize: 18, fontWeight: 700, letterSpacing: '0.1em', color: 'var(--color-text-primary)' }}>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
+            <div style={{ padding: '10px 14px', background: 'var(--color-bg)', border: '1px solid var(--color-border)', borderRadius: 10, fontFamily: 'monospace', fontSize: 18, fontWeight: 700, letterSpacing: '0.1em', color: 'var(--color-text-primary)' }}>
               {church?.invite_code}
             </div>
-            <button type="button" className="btn btn-ghost" onClick={handleCopy} style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
-              {copied ? <><Check size={15} />Copied</> : <><Copy size={15} />Copy</>}
-            </button>
-            <button type="button" className="btn btn-ghost" onClick={handleRegenerateInvite} disabled={regenerating} style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
-              <RefreshCw size={15} />{regenerating ? 'Regenerating…' : 'Regenerate'}
-            </button>
+            <div style={{ display: 'flex', gap: 10 }}>
+              <button type="button" className="btn btn-ghost" onClick={handleCopy} style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+                {copied ? <><Check size={15} />Copied</> : <><Copy size={15} />Copy</>}
+              </button>
+              <button type="button" className="btn btn-ghost" onClick={handleRegenerateInvite} disabled={regenerating} style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+                <RefreshCw size={15} />{regenerating ? 'Regenerating…' : 'Regenerate'}
+              </button>
+            </div>
           </div>
         </div>
 
