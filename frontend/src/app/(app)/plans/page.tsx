@@ -72,10 +72,10 @@ export default function PlansPage() {
     <div>
       <div className="page-header">
         <h1 className="page-title">Plans</h1>
-        {church && (
-          {canAddPlans && <Link href="/plans/new" className="btn btn-primary">
+        {canAddPlans && (
+          <Link href="/plans/new" className="btn btn-primary">
             <Plus size={16} /> Add new plan
-          </Link>}
+          </Link>
         )}
       </div>
 
