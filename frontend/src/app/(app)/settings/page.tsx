@@ -73,7 +73,21 @@ export default function SettingsPage() {
     setTimeout(() => setCopied(false), 2000)
   }
 
-  const labelStyle = { display: 'block', fontSize: 12, fontWeight: 600, color: 'var(--color-text-secondary)', marginBottom: 6, textTransform: 'uppercase' as const, letterSpacing: '0.05em' }
+  async function handleUpgrade(priceId: string) {
+    if (!church) return
+    try {
+      const client = await getAuthenticatedApi()
+      const { data } = await client.post('/api/stripe/create-checkout-session', {
+        priceId,
+        churchId: church.id,
+      })
+      window.location.href = data.url
+    } catch (err) {
+      alert('Something went wrong. Please try again.')
+    }
+  }
+
+  const labelStyle = { display: 'block', const labelStyle = { display: 'block', fontSize: 12, fontWeight: 600, color: 'var(--color-text-secondary)', marginBottom: 6, textTransform: 'uppercase' as const, letterSpacing: '0.05em' }
   const inputStyle = { width: '100%', padding: '10px 14px', border: '1px solid var(--color-border)', borderRadius: '10px', fontFamily: 'inherit', fontSize: 15, color: 'var(--color-text-primary)', background: 'var(--color-surface)', outline: 'none', boxSizing: 'border-box' as const }
 
   if (!isAdmin) {
@@ -142,6 +156,28 @@ export default function SettingsPage() {
           </button>
         </div>
       </form>
+
+      {/* Billing */}
+      <div style={{ background: 'var(--color-surface)', border: '1px solid var(--color-border)', borderRadius: 14, padding: 24, marginTop: 20 }}>
+        <h2 style={{ fontSize: 16, fontWeight: 600, color: 'var(--color-text-primary)', marginBottom: 4 }}>Billing</h2>
+        <p style={{ fontSize: 13, color: 'var(--color-text-muted)', marginBottom: 16 }}>Manage your Song Stack subscription.</p>
+        {(!church?.subscription_status || church?.subscription_status === 'free') ? (
+          <div>
+            <p style={{ fontSize: 14, color: 'var(--color-text-primary)', marginBottom: 16 }}>You're on the <strong>free plan</strong> — limited to 5 songs and 1 plan.</p>
+            <div style={{ display: 'flex', gap: 10 }}>
+              <button onClick={() => handleUpgrade(process.env.NEXT_PUBLIC_STRIPE_PRICE_MONTHLY!)} className="btn btn-ghost">£5 / month</button>
+              <button onClick={() => handleUpgrade(process.env.NEXT_PUBLIC_STRIPE_PRICE_ANNUAL!)} className="btn btn-primary">£50 / year</button>
+            </div>
+          </div>
+        ) : (
+          <div>
+            <p style={{ fontSize: 14, color: 'var(--color-text-primary)', marginBottom: 4 }}>
+              Status: <strong style={{ textTransform: 'capitalize' }}>{church?.subscription_status}</strong>
+            </p>
+            <p style={{ fontSize: 13, color: 'var(--color-text-muted)', marginBottom: 16 }}>To manage or cancel your subscription, contact us at <a href="mailto:hello@songstack.church" style={{ color: 'var(--color-brand-500)' }}>hello@songstack.church</a>.</p>
+          </div>
+        )}
+      </div>
 
       {/* Invite code */}
       <div style={{ background: 'var(--color-surface)', border: '1px solid var(--color-border)', borderRadius: 14, padding: 24, marginTop: 20 }}>
