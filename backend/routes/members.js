@@ -6,7 +6,8 @@ const { requireAuth, requireMembership, requireAdmin } = require('../middleware/
 router.get('/', requireAuth, requireMembership, async function(req, res, next) {
   try {
     const result = await pool.query(
-      `SELECT m.id, m.role, m.joined_at, u.id AS user_id, u.name, u.email, u.image_url
+      `SELECT m.id, m.role, m.can_manage_songs, m.can_add_plans, m.can_edit_any_plan,
+              m.joined_at, u.id AS user_id, u.name, u.email, u.image_url
        FROM memberships m
        JOIN users u ON u.id = m.user_id
        WHERE m.church_id = $1 AND m.role != 'revoked'
@@ -43,6 +44,24 @@ router.put('/:membershipId/role', requireAuth, requireAdmin, async function(req,
     const result = await pool.query(
       `UPDATE memberships SET role = $1 WHERE id = $2 AND church_id = $3 RETURNING *`,
       [role, req.params.membershipId, req.churchId]
+    );
+    if (result.rows.length === 0) return res.status(404).json({ error: 'Membership not found' });
+    res.json(result.rows[0]);
+  } catch (err) {
+    next(err);
+  }
+});
+
+router.put('/:membershipId/permissions', requireAuth, requireAdmin, async function(req, res, next) {
+  try {
+    const { can_manage_songs, can_add_plans, can_edit_any_plan } = req.body;
+
+    const result = await pool.query(
+      `UPDATE memberships
+       SET can_manage_songs = $1, can_add_plans = $2, can_edit_any_plan = $3
+       WHERE id = $4 AND church_id = $5
+       RETURNING *`,
+      [!!can_manage_songs, !!can_add_plans, !!can_edit_any_plan, req.params.membershipId, req.churchId]
     );
     if (result.rows.length === 0) return res.status(404).json({ error: 'Membership not found' });
     res.json(result.rows[0]);
