@@ -141,7 +141,7 @@ router.post('/create-checkout-session', requireAuth, express.json(), requireAdmi
 });
 
 // POST /api/stripe/create-portal-session
-router.post('/create-portal-session', requireAuth, requireAdmin, async (req, res, next) => {
+router.post('/create-portal-session', requireAuth, express.json(), requireAdmin, async (req, res, next) => {
   try {
     const { churchId } = req.body;
     if (!churchId) return res.status(400).json({ error: 'churchId required' });
