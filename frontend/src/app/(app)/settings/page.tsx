@@ -87,6 +87,19 @@ export default function SettingsPage() {
     }
   }
 
+  async function handleManageBilling() {
+    if (!church) return
+    try {
+      const client = await getAuthenticatedApi()
+      const { data } = await client.post('/api/stripe/create-portal-session', {
+        churchId: church.id,
+      })
+      window.location.href = data.url
+    } catch (err) {
+      alert('Something went wrong. Please try again.')
+    }
+  }
+
   const labelStyle = { display: 'block', fontSize: 12, fontWeight: 600, color: 'var(--color-text-secondary)', marginBottom: 6, textTransform: 'uppercase' as const, letterSpacing: '0.05em' }
   const inputStyle = { width: '100%', padding: '10px 14px', border: '1px solid var(--color-border)', borderRadius: '10px', fontFamily: 'inherit', fontSize: 15, color: 'var(--color-text-primary)', background: 'var(--color-surface)', outline: 'none', boxSizing: 'border-box' as const }
 
@@ -171,10 +184,10 @@ export default function SettingsPage() {
           </div>
         ) : (
           <div>
-            <p style={{ fontSize: 14, color: 'var(--color-text-primary)', marginBottom: 4 }}>
+            <p style={{ fontSize: 14, color: 'var(--color-text-primary)', marginBottom: 16 }}>
               Status: <strong style={{ textTransform: 'capitalize' }}>{church?.subscription_status}</strong>
             </p>
-            <p style={{ fontSize: 13, color: 'var(--color-text-muted)', marginBottom: 16 }}>To manage or cancel your subscription, contact us at <a href="mailto:hello@songstack.church" style={{ color: 'var(--color-brand-500)' }}>hello@songstack.church</a>.</p>
+            <button onClick={handleManageBilling} className="btn btn-ghost">Manage subscription →</button>
           </div>
         )}
       </div>
