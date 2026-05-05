@@ -105,6 +105,17 @@ router.get('/public/:token', async function(req, res, next) {
 router.post('/', requireAuth, requireMembership, async function(req, res, next) {
   try {
     const churchId = req.churchId;
+
+    // Free tier gate — max 1 plan
+    const church = await pool.query('SELECT subscription_status FROM churches WHERE id = $1', [churchId]);
+    const status = church.rows[0]?.subscription_status;
+    if (!status || status === 'free') {
+      const count = await pool.query('SELECT COUNT(*) FROM plans WHERE church_id = $1', [churchId]);
+      if (parseInt(count.rows[0].count) >= 1) {
+        return res.status(403).json({ error: 'free_tier_limit', message: 'You have reached the 1 plan limit on the free plan. Please upgrade to add more plans.' });
+      }
+    }
+
     const plan_date = req.body.plan_date;
     const plan_time = req.body.plan_time;
     const plan_sort_order = req.body.plan_sort_order ?? 0;
