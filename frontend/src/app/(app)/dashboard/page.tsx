@@ -309,6 +309,39 @@ export default function DashboardPage() {
                 </select>
               </div>
 
+              {manageMember.role === 'member' && (
+                <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+                  <label style={{ fontSize: 'var(--text-sm)', fontWeight: 500 }}>Permissions</label>
+                  {([
+                    { key: 'can_manage_songs', label: 'Add & edit songs' },
+                    { key: 'can_add_plans', label: 'Add plans' },
+                    { key: 'can_edit_any_plan', label: 'Edit anyone\'s plans' },
+                  ] as { key: 'can_manage_songs' | 'can_add_plans' | 'can_edit_any_plan', label: string }[]).map(({ key, label }) => (
+                    <label key={key} style={{ display: 'flex', alignItems: 'center', gap: 8, fontSize: 'var(--text-sm)', cursor: 'pointer' }}>
+                      <input
+                        type="checkbox"
+                        checked={!!manageMember[key]}
+                        onChange={async (e) => {
+                          const updated = { ...manageMember, [key]: e.target.checked }
+                          try {
+                            await api.put(`/api/members/${manageMember.id}/permissions`, {
+                              can_manage_songs: updated.can_manage_songs,
+                              can_add_plans: updated.can_add_plans,
+                              can_edit_any_plan: updated.can_edit_any_plan,
+                            })
+                            setMembers(prev => prev.map(m => m.id === manageMember.id ? updated : m))
+                            setManageMember(updated)
+                          } catch (err: any) {
+                            alert(err.response?.data?.error || 'Failed to update permissions')
+                          }
+                        }}
+                      />
+                      {label}
+                    </label>
+                  ))}
+                </div>
+              )}
+
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', paddingTop: 'var(--space-sm)', borderTop: '1px solid var(--color-border)' }}>
                 <button
                   onClick={() => setShowRemoveConfirm(true)}
