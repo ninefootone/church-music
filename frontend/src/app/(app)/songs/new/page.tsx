@@ -6,6 +6,7 @@ import { useRouter } from 'next/navigation'
 import CcliAutocomplete from '@/components/CcliAutocomplete'
 import TagInput from '@/components/ui/TagInput'
 import { useAuth } from '@clerk/nextjs'
+import { useChurch } from '@/context/ChurchContext'
 import { ArrowLeft } from 'lucide-react'
 import { CATEGORIES, Category } from '@/types'
 import api, { setAuthToken } from '@/lib/api'
@@ -15,14 +16,26 @@ import { ArrangementBuilder } from '@/components/ui/ArrangementBuilder'
 export default function NewSongPage() {
   const router = useRouter()
   const { getToken } = useAuth()
+  const { church } = useChurch()
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
+  const [atLimit, setAtLimit] = useState(false)
   const [templateSearch, setTemplateSearch] = useState<null | { id: string; title: string; author: string; ccli: string }>(null)
   const [copyrightDismissed, setCopyrightDismissed] = useState(false)
 
   useEffect(() => {
     setCopyrightDismissed(localStorage.getItem('songstack_copyright_notice_dismissed') === 'true')
   }, [])
+
+  useEffect(() => {
+    if (!church) return
+    const status = church.subscription_status
+    if (!status || status === 'free') {
+      api.get('/api/songs').then(r => {
+        if (r.data.length >= 5) setAtLimit(true)
+      }).catch(() => {})
+    }
+  }, [church])
 
   const dismissCopyright = () => {
     localStorage.setItem('songstack_copyright_notice_dismissed', 'true')
@@ -76,6 +89,11 @@ export default function NewSongPage() {
       <Link href="/songs" className="back-link"><ArrowLeft size={14} /> Back to songs</Link>
       <h1 className="page-title" style={{ marginBottom: 'var(--space-sm)' }}>Add new song</h1>
       <p style={{ fontWeight: 600, color: 'var(--color-text-secondary)', marginBottom: 'var(--space-lg)' }}>Add song details below and click 'Save song'. Then you'll be able to upload files.</p>
+      {atLimit && (
+        <div className="error-box">
+          You've reached the 5 song limit on the free plan. <Link href="/settings" className="link">Upgrade in Settings</Link> to add more songs.
+        </div>
+      )}
       {error && <div className="error-box">{error}</div>}
 
       {!copyrightDismissed && (
