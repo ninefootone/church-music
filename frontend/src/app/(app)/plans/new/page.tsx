@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 import { useAuth } from '@clerk/nextjs'
@@ -14,6 +14,17 @@ export default function NewPlanPage() {
   const { church } = useChurch()
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
+  const [atLimit, setAtLimit] = useState(false)
+
+  useEffect(() => {
+    if (!church) return
+    const status = church.subscription_status
+    if (!status || status === 'free') {
+      api.get('/api/plans').then(r => {
+        if (r.data.length >= 1) setAtLimit(true)
+      }).catch(() => {})
+    }
+  }, [church])
   const [form, setForm] = useState({ plan_date: '', plan_time: '', plan_sort_order: 0, title: '' })
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -35,6 +46,11 @@ export default function NewPlanPage() {
     <div>
       <Link href="/plans" className="back-link"><ArrowLeft size={14} /> Back to plans</Link>
       <h1 className="page-title" style={{ marginBottom: 'var(--space-lg)' }}>New plan</h1>
+      {atLimit && (
+        <div className="error-box">
+          You've reached the 1 plan limit on the free plan. <Link href="/settings" className="link">Upgrade in Settings</Link> to add more plans.
+        </div>
+      )}
       {error && <div className="error-box">{error}</div>}
       <div className="card">
         <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-md)' }}>
