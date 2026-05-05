@@ -19,7 +19,7 @@ import { ConfirmModal } from '@/components/ui/ConfirmModal'
 export default function SongDetailPage() {
   const { id } = useParams()
   const router = useRouter()
-  const { isAdmin, loading: churchLoading } = useChurch()
+  const { canManageSongs, loading: churchLoading } = useChurch()
   const [song, setSong] = useState<Song | null>(null)
   const [loading, setLoading] = useState(true)
   const [notFound, setNotFound] = useState(false)
@@ -157,7 +157,7 @@ export default function SongDetailPage() {
       <div className="card" style={{ marginBottom: 'var(--space-md)' }}>
         <div className="song-detail-header">
           <h1 className="song-detail-title">{song.title}</h1>
-          {isAdmin && (
+          {canManageSongs && (
             <div className="song-detail-actions">
               <Link href={`/songs/${song.id}/edit`} className="btn btn-sm btn-secondary"><Edit size={14} /> Edit</Link>
               <button onClick={() => setShowAddToPlan(true)} className="btn btn-sm btn-primary"><Plus size={14} /> Add to plan</button>
@@ -261,7 +261,7 @@ export default function SongDetailPage() {
       <div className="card" style={{ marginBottom: 'var(--space-md)' }}>
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 'var(--space-md)' }}>
           <span className="section-label" style={{ marginBottom: 0 }}>Files</span>
-          {isAdmin && (
+          {canManageSongs && (
             <button onClick={() => setShowUploadModal(true)} className="btn btn-primary btn-sm">
               <Plus size={14} /> Upload file
             </button>
@@ -278,7 +278,7 @@ export default function SongDetailPage() {
                 <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8 }}>
                   {mainFiles.map(f => f.file_type === 'chordpro'
                     ? <button key={f.id} onClick={() => handleViewChordPro(f.id, f.label, f.key_of)} className="btn btn-secondary btn-sm">{f.label}</button>
-                    : <FileRow key={f.id} file={f} songId={song.id} defaultKey={song.default_key} isAdmin={isAdmin} downloadingId={downloadingId} deletingId={deletingId} onDownload={handleDownload} onDelete={handleDelete} onSaved={fetchSong} />
+                    : <FileRow key={f.id} file={f} songId={song.id} defaultKey={song.default_key} isAdmin={canManageSongs} downloadingId={downloadingId} deletingId={deletingId} onDownload={handleDownload} onDelete={handleDelete} onSaved={fetchSong} />
                   )}
                 </div>
               </div>
@@ -291,7 +291,7 @@ export default function SongDetailPage() {
                   <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8 }}>
                     {otherFiles.map(f => f.file_type === 'chordpro'
                       ? <button key={f.id} onClick={() => handleViewChordPro(f.id, f.label, f.key_of)} className="btn btn-secondary btn-sm">{f.label}</button>
-                      : <FileRow key={f.id} file={f} songId={song.id} defaultKey={song.default_key} isAdmin={isAdmin} downloadingId={downloadingId} deletingId={deletingId} onDownload={handleDownload} onDelete={handleDelete} onSaved={fetchSong} />
+                      : <FileRow key={f.id} file={f} songId={song.id} defaultKey={song.default_key} isAdmin={canManageSongs} downloadingId={downloadingId} deletingId={deletingId} onDownload={handleDownload} onDelete={handleDelete} onSaved={fetchSong} />
                     )}
                   </div>
                 </div>
@@ -301,7 +301,7 @@ export default function SongDetailPage() {
         ) : (
           <p className="text-muted" style={{ fontStyle: 'italic' }}>
             No files uploaded yet.
-            {isAdmin && <> <button onClick={() => setShowUploadModal(true)} style={{ background: 'none', border: 'none', cursor: 'pointer', fontFamily: 'inherit', fontSize: 'inherit', color: 'var(--color-brand-500)', padding: 0 }}>Upload a chord chart or sheet music.</button></>}
+            {canManageSongs && <> <button onClick={() => setShowUploadModal(true)} style={{ background: 'none', border: 'none', cursor: 'pointer', fontFamily: 'inherit', fontSize: 'inherit', color: 'var(--color-brand-500)', padding: 0 }}>Upload a chord chart or sheet music.</button></>}
           </p>
         )}
 
@@ -361,7 +361,7 @@ export default function SongDetailPage() {
           </>
         )}
       </div>
-      {isAdmin && (
+      {canManageSongs && (
         <div style={{ marginTop: 'var(--space-md)', display: 'flex', justifyContent: 'flex-end' }}>
           <button
             onClick={() => setShowDeleteSong(true)}

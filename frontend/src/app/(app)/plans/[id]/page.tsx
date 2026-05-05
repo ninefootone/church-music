@@ -151,7 +151,7 @@ export default function PlanDetailPage() {
   const { id } = useParams()
   const router = useRouter()
   const { userId } = useAuth()
-  const { isAdmin, loading: churchLoading } = useChurch()
+  const { isAdmin, canEditAnyPlan, loading: churchLoading } = useChurch()
   const [plan, setPlan] = useState<any>(null)
   const [loading, setLoading] = useState(true)
   const [notFound, setNotFound] = useState(false)
@@ -238,7 +238,7 @@ export default function PlanDetailPage() {
             </Link>
 
             {/* Edit — admin or owner */}
-            {(isAdmin || plan.created_by === userId) && (
+            {(isAdmin || canEditAnyPlan || plan.created_by === userId) && (
               <Link href={`/plans/${id}/edit`} className="btn btn-primary btn-sm">
                 Edit
               </Link>
@@ -251,7 +251,7 @@ export default function PlanDetailPage() {
       <div className="card" style={{ marginBottom: 'var(--space-md)' }}>
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 'var(--space-sm)' }}>
           <div className="section-label" style={{ marginBottom: 0 }}>Musicians</div>
-          {(isAdmin || plan.created_by === userId) && (
+          {(isAdmin || canEditAnyPlan || plan.created_by === userId) && (
             <button
               onClick={() => setShowMusicianModal(true)}
               className="btn btn-secondary btn-sm"
@@ -280,7 +280,7 @@ export default function PlanDetailPage() {
               <div key={group.ids[0]} style={{ display: 'inline-flex', alignItems: 'center', gap: 6, padding: '6px 12px', background: 'var(--color-neutral-50)', border: '1px solid var(--color-border)', borderRadius: 'var(--radius-sm)', fontSize: 'var(--text-sm)' }}>
                 <span style={{ fontWeight: 600, color: 'var(--color-text-primary)' }}>{group.name}</span>
                 <span style={{ color: 'var(--color-text-muted)' }}>{group.roles.join(', ')}</span>
-                {(isAdmin || plan.created_by === userId) && (
+                {(isAdmin || canEditAnyPlan || plan.created_by === userId) && (
                   <button
                     onClick={async () => {
                       await Promise.all(group.ids.map(rid => api.delete(`/api/plans/${id}/musicians/${rid}`)))
@@ -304,7 +304,7 @@ export default function PlanDetailPage() {
         {!plan.items || plan.items.length === 0 ? (
           <div style={{ textAlign: 'center', padding: 'var(--space-xl)' }}>
             <p className="text-muted" style={{ marginBottom: 'var(--space-sm)' }}>No items added yet.</p>
-            {(isAdmin || plan.created_by === userId) && (
+            {(isAdmin || canEditAnyPlan || plan.created_by === userId) && (
               <Link href={`/plans/${id}/edit`} className="btn btn-primary btn-sm">
                 <Plus size={14} /> Build the running order
               </Link>
@@ -321,7 +321,7 @@ export default function PlanDetailPage() {
           </>
         )}
       </div>
-      {(isAdmin || plan.created_by === userId) && (
+      {(isAdmin || canEditAnyPlan || plan.created_by === userId) && (
         <div style={{ marginTop: 'var(--space-md)', display: 'flex', justifyContent: 'flex-end' }}>
           <button
             onClick={() => setShowDeletePlan(true)}
