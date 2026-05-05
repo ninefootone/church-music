@@ -51,7 +51,9 @@ router.post('/webhook', express.raw({ type: 'application/json' }), async (req, r
 
       case 'invoice.paid': {
         // Renewal paid — keep active and update period end
-        const subscription = await stripe.subscriptions.retrieve(data.subscription);
+        const invoiceSubId = data.subscription?.id || data.subscription;
+        if (!invoiceSubId) break;
+        const subscription = await stripe.subscriptions.retrieve(invoiceSubId);
         await pool.query(
           `UPDATE churches SET
             subscription_status = 'active',
