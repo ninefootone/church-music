@@ -87,10 +87,10 @@ export default function DashboardPage() {
         <div className="card">
           <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 'var(--space-md)' }}>
             <span className="section-label" style={{ marginBottom: 0 }}>Songs</span>
-            {isAdmin && <Link href="/songs/new" className="btn btn-ghost">Add new +</Link>}
+            {canManageSongs && <Link href="/songs/new" className="btn btn-ghost">Add new +</Link>}
           </div>
           {songs.length === 0 ? (
-            <p className="text-muted">No songs yet.{isAdmin && <> <Link href="/songs/new" className="link">Add your first</Link></>}</p>
+            <p className="text-muted">No songs yet.{canManageSongs && <> <Link href="/songs/new" className="link">Add your first</Link></>}</p>
           ) : songs.map((song, i) => (
             <Link key={song.id} href={`/songs/${song.id}`} className="dash-row">
               <div style={{ flex: 1, minWidth: 0 }}>
@@ -316,6 +316,39 @@ export default function DashboardPage() {
                     { key: 'can_manage_songs', label: 'Add & edit songs' },
                     { key: 'can_add_plans', label: 'Add plans' },
                     { key: 'can_edit_any_plan', label: 'Edit anyone\'s plans' },
+                  ] as { key: 'can_manage_songs' | 'can_add_plans' | 'can_edit_any_plan', label: string }[]).map(({ key, label }) => (
+                    <label key={key} style={{ display: 'flex', alignItems: 'center', gap: 8, fontSize: 'var(--text-sm)', cursor: 'pointer' }}>
+                      <input
+                        type="checkbox"
+                        checked={!!manageMember[key]}
+                        onChange={async (e) => {
+                          const updated = { ...manageMember, [key]: e.target.checked }
+                          try {
+                            await api.put(`/api/members/${manageMember.id}/permissions`, {
+                              can_manage_songs: updated.can_manage_songs,
+                              can_add_plans: updated.can_add_plans,
+                              can_edit_any_plan: updated.can_edit_any_plan,
+                            })
+                            setMembers(prev => prev.map(m => m.id === manageMember.id ? updated : m))
+                            setManageMember(updated)
+                          } catch (err: any) {
+                            alert(err.response?.data?.error || 'Failed to update permissions')
+                          }
+                        }}
+                      />
+                      {label}
+                    </label>
+                  ))}
+                </div>
+              )}
+
+              {manageMember.role === 'member' && (
+                <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+                  <label style={{ fontSize: 'var(--text-sm)', fontWeight: 500 }}>Permissions</label>
+                  {([
+                    { key: 'can_manage_songs', label: 'Add & edit songs' },
+                    { key: 'can_add_plans', label: 'Add plans' },
+                    { key: 'can_edit_any_plan', label: "Edit anyone's plans" },
                   ] as { key: 'can_manage_songs' | 'can_add_plans' | 'can_edit_any_plan', label: string }[]).map(({ key, label }) => (
                     <label key={key} style={{ display: 'flex', alignItems: 'center', gap: 8, fontSize: 'var(--text-sm)', cursor: 'pointer' }}>
                       <input
