@@ -24,7 +24,11 @@ router.post('/webhook', express.raw({ type: 'application/json' }), async (req, r
       case 'checkout.session.completed': {
         // Payment confirmed — activate subscription
         const customerId = data.customer;
-        const subscriptionId = data.subscription;
+        const subscriptionId = data.subscription?.id || data.subscription;
+        if (!subscriptionId) {
+          console.error('No subscription ID in checkout.session.completed event');
+          break;
+        }
         const subscription = await stripe.subscriptions.retrieve(subscriptionId);
         await pool.query(
           `UPDATE churches SET
