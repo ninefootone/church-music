@@ -140,4 +140,27 @@ router.post('/create-checkout-session', requireAuth, express.json(), requireAdmi
   }
 });
 
+// POST /api/stripe/create-portal-session
+router.post('/create-portal-session', requireAuth, requireAdmin, async (req, res, next) => {
+  try {
+    const { churchId } = req.body;
+    if (!churchId) return res.status(400).json({ error: 'churchId required' });
+
+    const church = await pool.query('SELECT * FROM churches WHERE id = $1', [churchId]);
+    if (church.rows.length === 0) return res.status(404).json({ error: 'Church not found' });
+
+    const customerId = church.rows[0].stripe_customer_id;
+    if (!customerId) return res.status(400).json({ error: 'No Stripe customer found for this church' });
+
+    const session = await stripe.billingPortal.sessions.create({
+      customer: customerId,
+      return_url: `${process.env.FRONTEND_URL}/settings`,
+    });
+
+    res.json({ url: session.url });
+  } catch (err) {
+    next(err);
+  }
+});
+
 module.exports = router;
