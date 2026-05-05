@@ -48,8 +48,39 @@ export default function DashboardPage() {
     <p className="text-muted" style={{ padding: 'var(--space-xl)' }}>Loading…</p>
   )
 
+  const handleUpgrade = async (priceId: string) => {
+    if (!church) return
+    try {
+      const { data } = await api.post('/api/stripe/create-checkout-session', {
+        priceId,
+        churchId: church.id,
+      })
+      window.location.href = data.url
+    } catch (err) {
+      alert('Something went wrong. Please try again.')
+    }
+  }
+
   return (
     <div>
+      {isAdmin && (!church?.subscription_status || church?.subscription_status === 'free') && (
+        <div className="card" style={{ marginBottom: 'var(--space-md)', background: 'var(--color-brand-50)', borderColor: 'var(--color-brand-200)' }}>
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: 'var(--space-md)' }}>
+            <div>
+              <p style={{ fontWeight: 600, margin: 0 }}>You're on the free plan</p>
+              <p style={{ fontSize: 'var(--text-sm)', color: 'var(--color-text-muted)', margin: '4px 0 0' }}>Limited to 5 songs and 1 plan. Upgrade to unlock everything.</p>
+            </div>
+            <div style={{ display: 'flex', gap: 'var(--space-sm)' }}>
+              <button onClick={() => handleUpgrade(process.env.NEXT_PUBLIC_STRIPE_PRICE_MONTHLY!)} className="btn btn-ghost">
+                £5 / month
+              </button>
+              <button onClick={() => handleUpgrade(process.env.NEXT_PUBLIC_STRIPE_PRICE_ANNUAL!)} className="btn btn-primary">
+                £50 / year
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
       <div className="dashboard-grid" style={{ display: 'grid', gridTemplateColumns: '3fr 2fr', gap: 'var(--space-md)', marginBottom: 'var(--space-md)' }}>
 
         {/* Songs */}
