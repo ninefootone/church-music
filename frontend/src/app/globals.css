@@ -851,7 +851,8 @@ body.set-viewer-active { overflow: hidden; }
 }
 
 .legal-content {
-  max-width: 860px;
+  width: 960px;
+  max-width: 100%;
   margin: 3rem auto;
   padding: 0 1.5rem;
   flex: 1;

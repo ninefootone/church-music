@@ -53,7 +53,7 @@ export default function FeedbackForm() {
     return (
       <div className="feedback-success">
         <p>Thanks! We&apos;ll get back to you at {email} as soon as we can.</p>
-        <a href="/" className="btn btn-primary" style={{ marginTop: '1rem', display: 'inline-block', color: 'white' }}>Back to home</a>
+        <a href="/dashboard" className="btn btn-primary" style={{ marginTop: '1rem', display: 'inline-block', color: 'white', textDecoration: 'none' }}>Back to your library</a>
       </div>
     )
   }
@@ -115,6 +115,7 @@ export default function FeedbackForm() {
         className="btn btn-primary"
         onClick={handleSubmit}
         disabled={status === 'sending' || !name || !email || !message}
+        style={{ alignSelf: 'flex-start' }}
       >
         {status === 'sending' ? 'Sending…' : 'Send message'}
       </button>
