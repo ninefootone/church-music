@@ -1,4 +1,5 @@
 import Link from 'next/link'
+import LegalNavActions from '@/components/ui/LegalNavActions'
 
 export const metadata = {
   title: 'Privacy & Cookie Policy | Song Stack',
@@ -13,10 +14,7 @@ export default function PrivacyPage() {
             <img src="/logo.svg" alt="Song Stack" className="landing-nav-logo" />
           </Link>
         </div>
-        <div className="landing-nav-actions">
-          <Link href="/sign-in" className="landing-nav-link">Sign in</Link>
-          <Link href="/sign-up" className="btn btn-primary">Get started</Link>
-        </div>
+        <LegalNavActions />
       </nav>
 
       <main className="legal-content">
