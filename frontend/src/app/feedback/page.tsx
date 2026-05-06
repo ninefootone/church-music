@@ -31,8 +31,6 @@ export default function FeedbackPage() {
           <Link href="/privacy" className="footer-link">Privacy &amp; Cookie Policy</Link>
           &nbsp;&middot;&nbsp;
           <Link href="/legal" className="footer-link">Legal</Link>
-          &nbsp;&middot;&nbsp;
-          <CookieSettingsLink />
         </div>
         <div className="footer-copy">Song Stack &copy; 2026 ninefootone creative ltd</div>
       </footer>
