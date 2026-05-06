@@ -8,6 +8,7 @@ export default function FeedbackForm() {
   const [type, setType] = useState('feedback')
   const [message, setMessage] = useState('')
   const [status, setStatus] = useState<'idle' | 'sending' | 'sent' | 'error'>('idle')
+  const [touched, setTouched] = useState<Record<string, boolean>>({})
 
   useEffect(() => {
     const siteKey = process.env.NEXT_PUBLIC_RECAPTCHA_SITE_KEY
@@ -21,6 +22,8 @@ export default function FeedbackForm() {
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault()
+    setTouched({ name: true, email: true, message: true })
+    if (!name || !email || !message) return
     setStatus('sending')
 
     try {
@@ -64,24 +67,26 @@ export default function FeedbackForm() {
         <div className="feedback-field">
           <label className="feedback-label">Your name</label>
           <input
-            className="feedback-input"
+            className={`feedback-input${touched.name && !name ? ' feedback-input-error' : ''}`}
             type="text"
             value={name}
             onChange={e => setName(e.target.value)}
+            onBlur={() => setTouched(t => ({ ...t, name: true }))}
             placeholder="Jane Smith"
-            required
           />
+          {touched.name && !name && <span className="feedback-field-error">Please enter your name</span>}
         </div>
         <div className="feedback-field">
           <label className="feedback-label">Email address</label>
           <input
-            className="feedback-input"
+            className={`feedback-input${touched.email && !email ? ' feedback-input-error' : ''}`}
             type="email"
             value={email}
             onChange={e => setEmail(e.target.value)}
+            onBlur={() => setTouched(t => ({ ...t, email: true }))}
             placeholder="jane@church.org"
-            required
           />
+          {touched.email && !email && <span className="feedback-field-error">Please enter your email</span>}
         </div>
       </div>
 
@@ -98,13 +103,14 @@ export default function FeedbackForm() {
       <div className="feedback-field">
         <label className="feedback-label">Message</label>
         <textarea
-          className="feedback-input feedback-textarea"
+          className={`feedback-input feedback-textarea${touched.message && !message ? ' feedback-input-error' : ''}`}
           value={message}
           onChange={e => setMessage(e.target.value)}
+          onBlur={() => setTouched(t => ({ ...t, message: true }))}
           placeholder="Tell us what's on your mind..."
-          required
           rows={6}
         />
+        {touched.message && !message && <span className="feedback-field-error">Please enter a message</span>}
       </div>
 
       {status === 'error' && (
@@ -114,7 +120,7 @@ export default function FeedbackForm() {
       <button
         className="btn btn-primary"
         onClick={handleSubmit}
-        disabled={status === 'sending' || !name || !email || !message}
+        disabled={status === 'sending'}
         style={{ alignSelf: 'flex-start' }}
       >
         {status === 'sending' ? 'Sending…' : 'Send message'}

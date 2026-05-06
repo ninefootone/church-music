@@ -25,13 +25,16 @@ export default function FeedbackPage() {
       </main>
 
       <footer className="app-footer">
-        <Link href="/feedback" className="footer-link">Contact &amp; Feedback</Link>
-        &nbsp;&middot;&nbsp;
-        <Link href="/privacy" className="footer-link">Privacy &amp; Cookie Policy</Link>
-        &nbsp;&middot;&nbsp;
-        <Link href="/legal" className="footer-link">Legal</Link>
-        &nbsp;&middot;&nbsp;
-        Song Stack &copy; 2026 ninefootone creative ltd
+        <div className="footer-links">
+          <Link href="/feedback" className="footer-link">Contact &amp; Feedback</Link>
+          &nbsp;&middot;&nbsp;
+          <Link href="/privacy" className="footer-link">Privacy &amp; Cookie Policy</Link>
+          &nbsp;&middot;&nbsp;
+          <Link href="/legal" className="footer-link">Legal</Link>
+          &nbsp;&middot;&nbsp;
+          <CookieSettingsLink />
+        </div>
+        <div className="footer-copy">Song Stack &copy; 2026 ninefootone creative ltd</div>
       </footer>
     </div>
   )
