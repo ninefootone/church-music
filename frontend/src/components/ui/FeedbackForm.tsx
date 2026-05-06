@@ -53,7 +53,7 @@ export default function FeedbackForm() {
     return (
       <div className="feedback-success">
         <p>Thanks! We&apos;ll get back to you at {email} as soon as we can.</p>
-        <a href="/" className="btn btn-primary" style={{ marginTop: '1rem', display: 'inline-block' }}>Back to home</a>
+        <a href="/" className="btn btn-primary" style={{ marginTop: '1rem', display: 'inline-block', color: 'white' }}>Back to home</a>
       </div>
     )
   }
