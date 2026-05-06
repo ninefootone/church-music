@@ -367,7 +367,7 @@ export default function DashboardPage() {
             <p style={{ fontWeight: 600, margin: 0 }}>Got feedback or a question?</p>
             <p style={{ fontSize: 'var(--text-sm)', color: 'var(--color-text-muted)', margin: '4px 0 0' }}>Found a bug, got an idea, or just want to say hello — we&apos;d love to hear from you.</p>
           </div>
-          <Link href="/feedback" className="btn btn-ghost">Get in touch →</Link>
+          <Link href="/feedback" className="btn btn-ghost" style={{ paddingBottom: 0 }}>Get in touch →</Link>
         </div>
       </div>
     </div>
