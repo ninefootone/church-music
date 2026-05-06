@@ -9,6 +9,7 @@ export default function FeedbackForm() {
   const [message, setMessage] = useState('')
   const [status, setStatus] = useState<'idle' | 'sending' | 'sent' | 'error'>('idle')
   const [touched, setTouched] = useState<Record<string, boolean>>({})
+  const [subscribe, setSubscribe] = useState(false)
 
   useEffect(() => {
     const siteKey = process.env.NEXT_PUBLIC_RECAPTCHA_SITE_KEY
@@ -46,6 +47,13 @@ export default function FeedbackForm() {
       })
 
       if (!res.ok) throw new Error('Failed')
+      if (subscribe) {
+        await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/mailing/subscribe`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ email, name }),
+        }).catch(() => {}) // Non-critical
+      }
       setStatus('sent')
     } catch {
       setStatus('error')
@@ -116,6 +124,16 @@ export default function FeedbackForm() {
       {status === 'error' && (
         <p className="feedback-error">Something went wrong — please try again or email us directly at hello@songstack.church.</p>
       )}
+
+      <label className="feedback-subscribe-label">
+        <input
+          type="checkbox"
+          checked={subscribe}
+          onChange={e => setSubscribe(e.target.checked)}
+          className="feedback-subscribe-checkbox"
+        />
+        Keep me updated about Song Stack news and new features
+      </label>
 
       <button
         className="btn btn-primary"

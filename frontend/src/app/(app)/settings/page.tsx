@@ -1,13 +1,14 @@
 'use client'
 
 import { useState, useEffect } from 'react'
-import { useAuth } from '@clerk/nextjs'
+import { useAuth, useUser } from '@clerk/nextjs'
 import { useChurch } from '@/context/ChurchContext'
 import api, { setAuthToken } from '@/lib/api'
 import { Settings, Copy, Check, RefreshCw } from 'lucide-react'
 
 export default function SettingsPage() {
   const { getToken } = useAuth()
+  const { user } = useUser()
   const { church, isAdmin, refetch } = useChurch()
 
   const [churchName, setChurchName] = useState('')
@@ -17,6 +18,8 @@ export default function SettingsPage() {
   const [error, setError] = useState('')
   const [copied, setCopied] = useState(false)
   const [regenerating, setRegenerating] = useState(false)
+  const [subscribed, setSubscribed] = useState<boolean | null>(null)
+  const [mailingLoading, setMailingLoading] = useState(false)
 
   useEffect(() => {
     if (church) {
@@ -24,6 +27,43 @@ export default function SettingsPage() {
       setCcliNumber(church.ccli_number || '')
     }
   }, [church])
+
+  useEffect(() => {
+    const email = user?.primaryEmailAddress?.emailAddress
+    if (!email) return
+    fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/mailing/status?email=${encodeURIComponent(email)}`)
+      .then(r => r.json())
+      .then(d => setSubscribed(d.subscribed))
+      .catch(() => {})
+  }, [user])
+
+  async function handleMailingToggle() {
+    const email = user?.primaryEmailAddress?.emailAddress
+    const name = [user?.firstName, user?.lastName].filter(Boolean).join(' ')
+    if (!email) return
+    setMailingLoading(true)
+    try {
+      if (subscribed) {
+        await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/mailing/unsubscribe`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ email }),
+        })
+        setSubscribed(false)
+      } else {
+        await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/mailing/subscribe`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ email, name }),
+        })
+        setSubscribed(true)
+      }
+    } catch {
+      setError('Failed to update mailing preference.')
+    } finally {
+      setMailingLoading(false)
+    }
+  }
 
   async function getAuthenticatedApi() {
     const token = await getToken()
@@ -212,6 +252,28 @@ export default function SettingsPage() {
               </button>
             </div>
           </div>
+        </div>
+
+      {/* Mailing preferences */}
+        <div style={{ background: 'var(--color-surface)', border: '1px solid var(--color-border)', borderRadius: 14, padding: 24 }}>
+          <h2 style={{ fontSize: 16, fontWeight: 600, color: 'var(--color-text-primary)', marginBottom: 4 }}>Email updates</h2>
+          <p style={{ fontSize: 13, color: 'var(--color-text-muted)', marginBottom: 16 }}>Occasional news and updates about Song Stack. No spam, unsubscribe any time.</p>
+          {subscribed === null ? (
+            <p style={{ fontSize: 13, color: 'var(--color-text-muted)' }}>Loading…</p>
+          ) : (
+            <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+              <p style={{ fontSize: 14, color: 'var(--color-text-primary)', margin: 0 }}>
+                {subscribed ? 'You\'re subscribed to Song Stack updates.' : 'You\'re not currently subscribed.'}
+              </p>
+              <button
+                onClick={handleMailingToggle}
+                disabled={mailingLoading}
+                className="btn btn-ghost"
+              >
+                {mailingLoading ? 'Updating…' : subscribed ? 'Unsubscribe' : 'Subscribe'}
+              </button>
+            </div>
+          )}
         </div>
 
       </div>

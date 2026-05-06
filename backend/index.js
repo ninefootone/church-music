@@ -14,6 +14,7 @@ const templateRoutes = require('./routes/templates');
 const ccliRoutes = require('./routes/ccli');
 const stripeRoutes = require('./routes/stripe');
 const feedbackRoutes = require('./routes/feedback');
+const mailingRoutes = require('./routes/mailing');
 
 const app = express();
 
@@ -36,6 +37,7 @@ app.use('/api/stats', statsRoutes);
 app.use('/api/templates', templateRoutes);
 app.use('/api/ccli', ccliRoutes);
 app.use('/api/feedback', feedbackRoutes);
+app.use('/api/mailing', mailingRoutes);
 
 app.use((err, req, res, next) => {
   console.error(err.stack);

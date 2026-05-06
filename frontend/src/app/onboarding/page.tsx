@@ -3,13 +3,14 @@
 import { useState, useEffect } from 'react'
 import { useSearchParams } from 'next/navigation'
 import { useRouter } from 'next/navigation'
-import { useAuth, SignInButton } from '@clerk/nextjs'
+import { useAuth, useUser, SignInButton } from '@clerk/nextjs'
 import { Music, ArrowLeft } from 'lucide-react'
 import api, { setAuthToken } from '@/lib/api'
 
 export default function OnboardingPage() {
   const router = useRouter()
   const { getToken, isSignedIn, isLoaded } = useAuth()
+  const { user } = useUser()
   const searchParams = useSearchParams()
   const [mode, setMode] = useState<'choose' | 'create' | 'join'>('choose')
   const [churchName, setChurchName] = useState('')
@@ -35,6 +36,21 @@ export default function OnboardingPage() {
     return api
   }
 
+  async function subscribeUser() {
+    try {
+      const email = user?.primaryEmailAddress?.emailAddress
+      const name = [user?.firstName, user?.lastName].filter(Boolean).join(' ')
+      if (!email) return
+      await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/mailing/subscribe`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email, name }),
+      })
+    } catch {
+      // Non-critical — don't block onboarding
+    }
+  }
+
   async function handleCreate(e: React.FormEvent) {
     e.preventDefault()
     setLoading(true)
@@ -42,6 +58,7 @@ export default function OnboardingPage() {
     try {
       const client = await getAuthenticatedApi()
       await client.post('/api/churches', { name: churchName, ccli_number: ccliNumber || undefined })
+      await subscribeUser()
       router.push('/dashboard')
     } catch (err: any) {
       setError(err.response?.data?.error || 'Failed to create church. Please try again.')
@@ -56,6 +73,7 @@ export default function OnboardingPage() {
     try {
       const client = await getAuthenticatedApi()
       await client.post('/api/churches/join', { invite_code: inviteCode })
+      await subscribeUser()
       router.push('/dashboard')
     } catch (err: any) {
       setError(err.response?.data?.error || 'Invalid invite code. Please check and try again.')
