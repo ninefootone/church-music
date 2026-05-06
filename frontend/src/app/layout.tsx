@@ -2,6 +2,7 @@ import type { Metadata } from 'next'
 import { ClerkProvider } from '@clerk/nextjs'
 import { Toaster } from 'react-hot-toast'
 import Script from 'next/script'
+import CookieConsent from '@/components/ui/CookieConsent'
 import './globals.css'
 
 export const dynamic = 'force-dynamic'
@@ -44,11 +45,17 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
             {`
               window.dataLayer = window.dataLayer || [];
               function gtag(){dataLayer.push(arguments);}
+              gtag('consent', 'default', { analytics_storage: 'denied' });
               gtag('js', new Date());
               gtag('config', 'G-6W5HE17FKE');
+              var consent = localStorage.getItem('cookie_consent');
+              if (consent === 'accepted') {
+                gtag('consent', 'update', { analytics_storage: 'granted' });
+              }
             `}
           </Script>
           {children}
+          <CookieConsent />
           <Toaster
             position="top-right"
             toastOptions={{
