@@ -217,7 +217,7 @@ export default function SettingsPage() {
         <div style={{ background: 'var(--color-surface)', border: '1px solid var(--color-border)', borderRadius: 14, padding: 24 }}>
           <h2 style={{ fontSize: 16, fontWeight: 600, color: 'var(--color-text-primary)', marginBottom: 4 }}>Billing</h2>
           <p style={{ fontSize: 13, color: 'var(--color-text-muted)', marginBottom: 16 }}>Manage your Song Stack subscription.</p>
-          {(!church?.subscription_status || church?.subscription_status === 'free') ? (
+          {(!church?.subscription_status || church?.subscription_status === 'free' || church?.subscription_status === 'canceled') ? (
             <div>
               <p style={{ fontSize: 14, color: 'var(--color-text-primary)', marginBottom: 16 }}>You're on the <strong>free plan</strong> — limited to 5 songs and 1 plan.</p>
               <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap' }}>
@@ -228,7 +228,7 @@ export default function SettingsPage() {
           ) : (
             <div>
               <p style={{ fontSize: 14, color: 'var(--color-text-primary)', marginBottom: 16 }}>
-                Status: <strong style={{ textTransform: 'capitalize' }}>{church?.subscription_status}</strong>
+                Status: <strong style={{ textTransform: 'capitalize' }}>{church?.subscription_status === 'canceled' ? 'Cancelled' : church?.subscription_status}</strong>
               </p>
               <button onClick={handleManageBilling} className="btn btn-ghost">Manage subscription →</button>
             </div>
