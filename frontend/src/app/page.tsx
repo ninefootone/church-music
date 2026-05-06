@@ -45,7 +45,11 @@ export default async function HomePage() {
       </section>
 
       <footer className="app-footer">
-        Song Stack &copy; 2026
+        <Link href="/privacy" className="footer-link">Privacy &amp; Cookie Policy</Link>
+        &nbsp;&middot;&nbsp;
+        <Link href="/legal" className="footer-link">Legal</Link>
+        &nbsp;&middot;&nbsp;
+        Song Stack &copy; 2026 ninefootone creative ltd
       </footer>
     </div>
   )
