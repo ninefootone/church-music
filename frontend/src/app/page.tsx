@@ -29,21 +29,20 @@ export default async function HomePage() {
           <p className="landing-hero-text">
             Manage your worship songs, build plans, and share chord charts &ndash; all in one place, for your whole team.
           </p>
+          <section className="landing-pricing">
+            <p className="landing-pricing-text">
+              <strong>Free to try</strong> &mdash; no payment required. Test with up to 5 songs and 1 plan.
+            </p>
+            <p className="landing-pricing-text">
+              Then just <strong>£5&thinsp;/&thinsp;month</strong> or <strong>£50&thinsp;/&thinsp;year</strong> per church.
+            </p>
+          </section>
           <div className="landing-hero-actions">
             <Link href="/sign-up" className="btn btn-primary landing-cta-btn">Get started free</Link>
             <Link href="/sign-in" className="btn btn-secondary landing-cta-btn">Sign in</Link>
           </div>
         </div>
       </main>
-
-      <section className="landing-pricing">
-        <p className="landing-pricing-text">
-          <strong>Free to try</strong> &mdash; no payment required. Test with up to 5 songs and 1 plan.
-        </p>
-        <p className="landing-pricing-text">
-          Then just <strong>£5&thinsp;/&thinsp;month</strong> or <strong>£50&thinsp;/&thinsp;year</strong> <span className="landing-pricing-note">(12 months for the price of 10)</span> per church.
-        </p>
-      </section>
 
       <footer className="app-footer">
         <div className="footer-links">

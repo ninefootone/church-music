@@ -834,7 +834,7 @@ body.set-viewer-active { overflow: hidden; }
 
 .landing-pricing {
   text-align: center;
-  padding: 2rem 1.5rem 3rem;
+  padding: 1rem 0 0.5rem;
 }
 
 .landing-pricing-text {
