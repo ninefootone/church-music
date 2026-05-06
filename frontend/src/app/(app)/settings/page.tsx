@@ -210,8 +210,8 @@ export default function SettingsPage() {
         </div>
       </form>
 
-      {/* Two column grid — billing + invite code */}
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(min(260px, 100%), 1fr))', gap: 20 }}>
+      {/* Settings grid — billing, invite, mailing */}
+      <div className="settings-grid">
 
         {/* Billing */}
         <div style={{ background: 'var(--color-surface)', border: '1px solid var(--color-border)', borderRadius: 14, padding: 24 }}>
@@ -236,7 +236,7 @@ export default function SettingsPage() {
         </div>
 
         {/* Invite code */}
-        <div style={{ background: 'var(--color-surface)', border: '1px solid var(--color-border)', borderRadius: 14, padding: 24 }}>
+        <div style={{ background: 'var(--color-surface)', border: '1px solid var(--color-border)', borderRadius: 14, padding: 24, gridColumn: 'span 1' }}>
           <h2 style={{ fontSize: 16, fontWeight: 600, color: 'var(--color-text-primary)', marginBottom: 4 }}>Invite code</h2>
           <p style={{ fontSize: 13, color: 'var(--color-text-muted)', marginBottom: 16 }}>Share this code with people you want to join your church.</p>
           <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
@@ -255,7 +255,7 @@ export default function SettingsPage() {
         </div>
 
       {/* Mailing preferences */}
-        <div style={{ background: 'var(--color-surface)', border: '1px solid var(--color-border)', borderRadius: 14, padding: 24, gridColumn: '1 / -1' }}>
+        <div className="settings-grid-mailing" style={{ background: 'var(--color-surface)', border: '1px solid var(--color-border)', borderRadius: 14, padding: 24 }}>
           <h2 style={{ fontSize: 16, fontWeight: 600, color: 'var(--color-text-primary)', marginBottom: 4 }}>Email updates</h2>
           <p style={{ fontSize: 13, color: 'var(--color-text-muted)', marginBottom: 16 }}>Occasional news and updates about Song Stack. No spam, unsubscribe any time.</p>
           {subscribed === null ? (
