@@ -32,36 +32,21 @@ async function sendBrevoEmail({ to, toName, subject, htmlContent }) {
   })
 }
 
-async function subscribeToList({ email, name, listId = 2, doubleOptIn = true }) {
+async function subscribeToList({ email, name, listId = 2 }) {
   const [firstName, ...rest] = (name || '').trim().split(' ')
   const lastName = rest.join(' ') || undefined
 
-  const data = JSON.stringify({
+  const body = JSON.stringify({
     email,
     attributes: { FIRSTNAME: firstName, LASTNAME: lastName },
     listIds: [listId],
     updateEnabled: true,
   })
 
-  const path = doubleOptIn
-    ? '/v3/contacts/doubleOptinConfirmation'
-    : '/v3/contacts'
-
-  // doubleOptIn endpoint needs extra fields
-  const body = doubleOptIn
-    ? JSON.stringify({
-        email,
-        attributes: { FIRSTNAME: firstName, LASTNAME: lastName },
-        includeListIds: [listId],
-        templateId: 1, // Brevo default double opt-in template — update if you have a custom one
-        redirectionUrl: 'https://app.songstack.church/dashboard',
-      })
-    : data
-
   return new Promise((resolve, reject) => {
     const options = {
       hostname: 'api.brevo.com',
-      path,
+      path: '/v3/contacts',
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',

@@ -26,6 +26,7 @@ export default function PrivacyPage() {
         <h2>1. What data we collect</h2>
         <p>When you create an account we collect your name and email address via Clerk, our authentication provider. If you are part of a church organisation on the Service, we also store the songs, plans, and files you upload.</p>
         <p>We collect anonymised usage data (pages visited, features used) via Google Analytics to help us improve the Service. No personally identifiable information is sent to Google Analytics.</p>
+        <p>If you opt in during sign-up or via the feedback form, we may send you occasional product updates by email. You can unsubscribe at any time via your settings page or the unsubscribe link in any email.</p>
 
         <h2>2. How we use your data</h2>
         <ul>
