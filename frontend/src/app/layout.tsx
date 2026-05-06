@@ -1,6 +1,7 @@
 import type { Metadata } from 'next'
 import { ClerkProvider } from '@clerk/nextjs'
 import { Toaster } from 'react-hot-toast'
+import Script from 'next/script'
 import './globals.css'
 
 export const dynamic = 'force-dynamic'
@@ -35,6 +36,18 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
           <link rel="manifest" href="/site.webmanifest" />
         </head>
         <body>
+          <Script
+            src="https://www.googletagmanager.com/gtag/js?id=G-6W5HE17FKE"
+            strategy="afterInteractive"
+          />
+          <Script id="google-analytics" strategy="afterInteractive">
+            {`
+              window.dataLayer = window.dataLayer || [];
+              function gtag(){dataLayer.push(arguments);}
+              gtag('js', new Date());
+              gtag('config', 'G-6W5HE17FKE');
+            `}
+          </Script>
           {children}
           <Toaster
             position="top-right"
