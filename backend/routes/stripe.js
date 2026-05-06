@@ -130,6 +130,7 @@ router.post('/create-checkout-session', requireAuth, express.json(), requireAdmi
       line_items: [{ price: priceId, quantity: 1 }],
       customer_email: req.user.email,
       metadata: { church_id: churchId },
+      allow_promotion_codes: true,
       success_url: `${process.env.FRONTEND_URL}/dashboard?upgraded=true`,
       cancel_url: `${process.env.FRONTEND_URL}/dashboard?upgrade=cancelled`,
     });
