@@ -2,6 +2,7 @@ import { auth } from '@clerk/nextjs/server'
 import { redirect } from 'next/navigation'
 import { ChurchProvider } from '@/context/ChurchContext'
 import { AppNavClient } from '@/components/layout/AppNavClient'
+import Link from 'next/link'
 
 export default async function AppLayout({ children }: { children: React.ReactNode }) {
   const { userId } = await auth()
@@ -18,7 +19,11 @@ export default async function AppLayout({ children }: { children: React.ReactNod
           {children}
         </main>
         <footer className="app-footer">
-          Song Stack · Legal · Privacy · Copyright
+          <Link href="/privacy" className="footer-link">Privacy &amp; Cookie Policy</Link>
+          &nbsp;&middot;&nbsp;
+          <Link href="/legal" className="footer-link">Legal</Link>
+          &nbsp;&middot;&nbsp;
+          Song Stack &copy; 2026 ninefootone creative ltd
         </footer>
       </div>
     </ChurchProvider>
