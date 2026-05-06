@@ -84,4 +84,4 @@ static inline `style={{...}}` props to named classes in `globals.css`.
 – [x] Add 'Band Leader' role – can add plans
 - [x] 'Band Leaders' can delete only their own plans (permission scoping)
 – [x] Remove ability to add plans from normal members
-– [x] Paywall!!
+– [x] Paywall / Stripe
