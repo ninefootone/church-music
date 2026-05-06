@@ -1344,3 +1344,79 @@ textarea {
   padding: 0;
   cursor: pointer;
 }
+
+/* Feedback */
+
+.feedback-form {
+  display: flex;
+  flex-direction: column;
+  gap: 1.25rem;
+  margin-top: 1.5rem;
+}
+
+.feedback-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 1.25rem;
+}
+
+@media (max-width: 600px) {
+  .feedback-row {
+    grid-template-columns: 1fr;
+  }
+}
+
+.feedback-field {
+  display: flex;
+  flex-direction: column;
+  gap: 0.375rem;
+}
+
+.feedback-label {
+  font-size: 0.875rem;
+  font-weight: 600;
+  color: var(--color-text-primary);
+}
+
+.feedback-input {
+  padding: 0.625rem 0.875rem;
+  border: 1px solid var(--color-border);
+  border-radius: 8px;
+  font-size: 0.9375rem;
+  font-family: inherit;
+  background: var(--color-surface);
+  color: var(--color-text-primary);
+  outline: none;
+  transition: border-color 0.15s;
+}
+
+.feedback-input:focus {
+  border-color: var(--color-primary, #4f46e5);
+}
+
+.feedback-textarea {
+  resize: vertical;
+  min-height: 140px;
+}
+
+.feedback-error {
+  font-size: 0.875rem;
+  color: var(--color-danger, #dc2626);
+}
+
+.feedback-success {
+  margin-top: 1.5rem;
+  font-size: 1rem;
+  color: var(--color-text-primary);
+}
+
+.feedback-recaptcha-note {
+  font-size: 0.75rem;
+  color: var(--color-text-muted, #888);
+  margin-top: 0.25rem;
+}
+
+.feedback-recaptcha-note a {
+  color: inherit;
+  text-decoration: underline;
+}

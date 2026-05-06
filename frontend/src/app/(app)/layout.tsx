@@ -20,6 +20,8 @@ export default async function AppLayout({ children }: { children: React.ReactNod
           {children}
         </main>
         <footer className="app-footer">
+          <Link href="/feedback" className="footer-link">Contact &amp; Feedback</Link>
+          &nbsp;&middot;&nbsp;
           <Link href="/privacy" className="footer-link">Privacy &amp; Cookie Policy</Link>
           &nbsp;&middot;&nbsp;
           <Link href="/legal" className="footer-link">Legal</Link>
