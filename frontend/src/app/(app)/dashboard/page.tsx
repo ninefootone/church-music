@@ -362,7 +362,7 @@ export default function DashboardPage() {
       </div>
 
       <div className="card feedback-card">
-        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: 'var(--space-md)' }}>
+        <div style={{ display: 'flex', alignItems: 'flex-end', justifyContent: 'space-between', flexWrap: 'wrap', gap: 'var(--space-md)' }}>
           <div>
             <p style={{ fontWeight: 600, margin: 0 }}>Got feedback or a question?</p>
             <p style={{ fontSize: 'var(--text-sm)', color: 'var(--color-text-muted)', margin: '4px 0 0' }}>Found a bug, got an idea, or just want to say hello — we&apos;d love to hear from you.</p>
