@@ -228,7 +228,7 @@ export default function SettingsPage() {
           ) : (
             <div>
               <p style={{ fontSize: 14, color: 'var(--color-text-primary)', marginBottom: 16 }}>
-                Status: <strong style={{ textTransform: 'capitalize' }}>{church?.subscription_status === 'canceled' ? 'Cancelled' : (church?.subscription_status ?? '')}</strong>
+                Status: <strong style={{ textTransform: 'capitalize' }}>{String(church?.subscription_status) === 'canceled' ? 'Cancelled' : (church?.subscription_status ?? '')}</strong>
               </p>
               <button onClick={handleManageBilling} className="btn btn-ghost">Manage subscription →</button>
             </div>
