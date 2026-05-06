@@ -1,6 +1,7 @@
 import { auth } from '@clerk/nextjs/server'
 import { redirect } from 'next/navigation'
 import Link from 'next/link'
+import CookieSettingsLink from '@/components/ui/CookieSettingsLink'
 
 export default async function HomePage() {
   // If already signed in, go straight to dashboard
@@ -48,6 +49,8 @@ export default async function HomePage() {
         <Link href="/privacy" className="footer-link">Privacy &amp; Cookie Policy</Link>
         &nbsp;&middot;&nbsp;
         <Link href="/legal" className="footer-link">Legal</Link>
+        &nbsp;&middot;&nbsp;
+        <CookieSettingsLink />
         &nbsp;&middot;&nbsp;
         Song Stack &copy; 2026 ninefootone creative ltd
       </footer>

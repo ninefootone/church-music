@@ -1334,3 +1334,10 @@ textarea {
   font-size: 0.875rem;
   padding: 0.5rem 1.25rem;
 }
+
+.cookie-settings-btn {
+  background: none;
+  border: none;
+  padding: 0;
+  cursor: pointer;
+}

@@ -9,6 +9,12 @@ export default function CookieConsent() {
   useEffect(() => {
     const consent = localStorage.getItem('cookie_consent')
     if (!consent) setVisible(true)
+
+    function handleReopen() {
+      setVisible(true)
+    }
+    window.addEventListener('open-cookie-settings', handleReopen)
+    return () => window.removeEventListener('open-cookie-settings', handleReopen)
   }, [])
 
   function accept() {
