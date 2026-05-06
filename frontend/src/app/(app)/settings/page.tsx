@@ -255,23 +255,26 @@ export default function SettingsPage() {
         </div>
 
       {/* Mailing preferences */}
-        <div style={{ background: 'var(--color-surface)', border: '1px solid var(--color-border)', borderRadius: 14, padding: 24 }}>
+        <div style={{ background: 'var(--color-surface)', border: '1px solid var(--color-border)', borderRadius: 14, padding: 24, gridColumn: 'span 2' }}>
           <h2 style={{ fontSize: 16, fontWeight: 600, color: 'var(--color-text-primary)', marginBottom: 4 }}>Email updates</h2>
           <p style={{ fontSize: 13, color: 'var(--color-text-muted)', marginBottom: 16 }}>Occasional news and updates about Song Stack. No spam, unsubscribe any time.</p>
           {subscribed === null ? (
             <p style={{ fontSize: 13, color: 'var(--color-text-muted)' }}>Loading…</p>
           ) : (
-            <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
               <p style={{ fontSize: 14, color: 'var(--color-text-primary)', margin: 0 }}>
                 {subscribed ? 'You\'re subscribed to Song Stack updates.' : 'You\'re not currently subscribed.'}
               </p>
-              <button
-                onClick={handleMailingToggle}
-                disabled={mailingLoading}
-                className="btn btn-ghost"
-              >
-                {mailingLoading ? 'Updating…' : subscribed ? 'Unsubscribe' : 'Subscribe'}
-              </button>
+              <div>
+                <button
+                  onClick={handleMailingToggle}
+                  disabled={mailingLoading}
+                  className="btn btn-ghost"
+                  style={{ padding: '4px 0', fontSize: 13 }}
+                >
+                  {mailingLoading ? 'Updating…' : subscribed ? 'Unsubscribe' : 'Subscribe'}
+                </button>
+              </div>
             </div>
           )}
         </div>
