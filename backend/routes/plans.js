@@ -262,8 +262,8 @@ router.post('/:id/email', requireAuth, requireMembership, async function(req, re
       const filesResult = await pool.query(
         `SELECT f.song_id, f.label, f.file_type, f.key_of, f.r2_key
          FROM song_files f
-         WHERE f.song_id = ANY($1::int[])
-         ORDER BY f.position ASC`,
+         WHERE f.song_id = ANY($1::uuid[])
+         ORDER BY f.uploaded_at ASC`,
         [songIds]
       )
       for (const file of filesResult.rows) {
