@@ -15,11 +15,12 @@ export default function SongsPage() {
   const [loading, setLoading] = useState(true)
   const [search, setSearch] = useState('')
   const [activeCategory, setActiveCategory] = useState<Category | 'all'>('all')
+  const [showRetired, setShowRetired] = useState(false)
 
   useEffect(() => {
     if (!church) return
     fetchSongs()
-  }, [church, search, activeCategory])
+  }, [church, search, activeCategory, showRetired])
 
   const fetchSongs = async () => {
     try {
@@ -27,6 +28,7 @@ export default function SongsPage() {
       const params: Record<string, string> = {}
       if (search) params.search = search
       if (activeCategory !== 'all') params.category = activeCategory
+      if (showRetired) params.include_retired = 'true'
       const { data } = await api.get('/api/songs', { params })
       setSongs(data)
     } catch (err) {
@@ -42,11 +44,21 @@ export default function SongsPage() {
     <div>
       <div className="page-header">
         <h1 className="page-title">Songs</h1>
-        {canManageSongs && (
-          <Link href="/songs/new" className="btn btn-primary">
-            <Plus size={16} /> Add new song
-          </Link>
-        )}
+        <div style={{ display: 'flex', gap: 'var(--space-sm)', alignItems: 'center' }}>
+          {canManageSongs && (
+            <button
+              className={`btn btn-secondary${showRetired ? ' is-active' : ''}`}
+              onClick={() => setShowRetired(v => !v)}
+            >
+              {showRetired ? 'Hide retired' : 'Show retired'}
+            </button>
+          )}
+          {canManageSongs && (
+            <Link href="/songs/new" className="btn btn-primary">
+              <Plus size={16} /> Add new song
+            </Link>
+          )}
+        </div>
       </div>
 
       <div style={{ position: 'relative', marginBottom: 'var(--space-sm)' }}>
@@ -78,7 +90,7 @@ export default function SongsPage() {
             No songs found.{canManageSongs && <> <Link href="/songs/new" style={{ color: 'var(--color-brand-500)' }}>Add one?</Link></>}
           </div>
         ) : songs.map((song, i) => (
-          <Link key={song.id} href={`/songs/${song.id}`} className="song-row">
+          <Link key={song.id} href={`/songs/${song.id}`} className="song-row" style={song.retired ? { opacity: 0.5 } : undefined}>
             <div style={{ flex: 1, minWidth: 0 }}>
               <div className="song-title" style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{song.title}</div>
               <div className="song-meta" style={{ display: 'flex', flexDirection: 'column', gap: 2, alignItems: 'flex-start' }}>
