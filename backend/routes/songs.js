@@ -90,10 +90,10 @@ router.get('/:id', requireAuth, requireMembership, async (req, res, next) => {
     // Usage stats
     const usage = await pool.query(
       `SELECT
-        COUNT(*) FILTER (WHERE srv.plan_date <= NOW()) AS times_sung,
-        COUNT(*) FILTER (WHERE srv.plan_date > NOW()) AS times_planned,
-        MAX(srv.plan_date) FILTER (WHERE srv.plan_date <= NOW()) AS last_sung,
-        MIN(srv.plan_date) FILTER (WHERE srv.plan_date > NOW()) AS next_planned
+        COUNT(*) FILTER (WHERE srv.plan_date < CURRENT_DATE) AS times_sung,
+        COUNT(*) FILTER (WHERE srv.plan_date >= CURRENT_DATE) AS times_planned,
+        MAX(srv.plan_date) FILTER (WHERE srv.plan_date < CURRENT_DATE) AS last_sung,
+        MIN(srv.plan_date) FILTER (WHERE srv.plan_date >= CURRENT_DATE) AS next_planned
        FROM plan_items si
        JOIN plans srv ON srv.id = si.plan_id
        WHERE si.song_id = $1 AND srv.church_id = $2`,
