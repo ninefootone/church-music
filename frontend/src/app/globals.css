@@ -1117,7 +1117,7 @@ textarea {
 
 @media (max-width: 480px) {
   .badge-upcoming, .badge-today, .badge-past { font-size: 10px; padding: 2px 7px; }
-  .usage-stats-grid { grid-template-columns: 1fr 1fr !important; }
+  .usage-stats-grid { grid-template-columns: 1fr !important; }
 }
 
 /* ── Arrangement Builder ─────────────────────────────────────── */

@@ -363,11 +363,11 @@ export default function SongDetailPage() {
             <div className="stat-label">Planned</div>
           </div>
           <div className="stat-box">
-            <div className="stat-number">{song.usage?.last_sung ? format(parseISO(song.usage.last_sung), 'd MMM yyyy') : '—'}</div>
+            <div className="stat-number">{song.usage?.last_sung ? format(parseISO(song.usage.last_sung), 'd MMMM yyyy') : '—'}</div>
             <div className="stat-label">Last sung</div>
           </div>
           <div className="stat-box">
-            <div className="stat-number">{song.usage?.next_planned ? format(parseISO(song.usage.next_planned), 'd MMM yyyy') : '—'}</div>
+            <div className="stat-number">{song.usage?.next_planned ? format(parseISO(song.usage.next_planned), 'd MMMM yyyy') : '—'}</div>
             <div className="stat-label">Next planned</div>
           </div>
         </div>
