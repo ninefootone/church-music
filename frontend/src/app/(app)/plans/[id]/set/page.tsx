@@ -337,15 +337,15 @@ export default function SetModePage() {
         </p>
       )}
 
-      <div style={{ display: 'flex', justifyContent: 'flex-end', gap: 8 }}>
-        <Link href={`/plans/${id}`} className="btn btn-secondary">
+      <div style={{ display: 'flex', justifyContent: 'flex-end', flexWrap: 'wrap', gap: 8 }}>
+        <Link href={`/plans/${id}`} className="btn btn-secondary" style={{ flex: '1 1 auto', justifyContent: 'center', minWidth: 120 }}>
           Cancel
         </Link>
         <button
           className="btn btn-secondary"
           onClick={handleDownloadPdf}
           disabled={selectedCount === 0 || merging}
-          style={{ display: 'inline-flex', alignItems: 'center', gap: 6 }}
+          style={{ display: 'inline-flex', alignItems: 'center', justifyContent: 'center', gap: 6, flex: '1 1 auto', minWidth: 120 }}
         >
           {merging ? <Loader2 size={14} className="spin" /> : <Download size={14} />}
           {merging ? 'Generating…' : 'Download PDF'}
@@ -354,7 +354,7 @@ export default function SetModePage() {
           className="btn btn-primary"
           onClick={handleOpenSet}
           disabled={selectedCount === 0}
-          style={{ display: 'inline-flex', alignItems: 'center', gap: 6 }}
+          style={{ display: 'inline-flex', alignItems: 'center', justifyContent: 'center', gap: 6, flex: '1 1 auto', minWidth: 120 }}
         >
           <Play size={14} />
           {`Open set (${selectedCount} ${selectedCount === 1 ? 'file' : 'files'})`}
