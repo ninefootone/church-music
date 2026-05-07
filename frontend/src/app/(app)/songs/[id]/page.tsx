@@ -353,7 +353,7 @@ export default function SongDetailPage() {
       {/* Usage */}
       <div className="card">
         <div className="section-label">Usage</div>
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 'var(--space-md)', marginBottom: 'var(--space-md)' }} className="usage-stats-grid">
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: 'var(--space-md)', marginBottom: 'var(--space-md)' }} className="usage-stats-grid">
           <div className="stat-box">
             <div className="stat-number">{song.usage?.times_sung || 0}</div>
             <div className="stat-label">Times sung</div>
@@ -363,8 +363,12 @@ export default function SongDetailPage() {
             <div className="stat-label">Planned</div>
           </div>
           <div className="stat-box">
-            <div className="stat-number">{song.usage?.last_sung ? format(parseISO(song.usage.last_sung), 'd MMM') : '—'}</div>
+            <div className="stat-number">{song.usage?.last_sung ? format(parseISO(song.usage.last_sung), 'd MMM yyyy') : '—'}</div>
             <div className="stat-label">Last sung</div>
+          </div>
+          <div className="stat-box">
+            <div className="stat-number">{song.usage?.next_planned ? format(parseISO(song.usage.next_planned), 'd MMM yyyy') : '—'}</div>
+            <div className="stat-label">Next planned</div>
           </div>
         </div>
         {song.recent_plans && song.recent_plans.length > 0 && (
