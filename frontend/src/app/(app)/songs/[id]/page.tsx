@@ -30,6 +30,7 @@ export default function SongDetailPage() {
   const [deletingId, setDeletingId] = useState<string | null>(null)
   const [showAddToPlan, setShowAddToPlan] = useState(false)
   const [showDeleteSong, setShowDeleteSong] = useState(false)
+  const [retiring, setRetiring] = useState(false)
   const [showDeleteFile, setShowDeleteFile] = useState<string | null>(null)
 
   const fetchSong = useCallback(() => {
@@ -73,6 +74,19 @@ export default function SongDetailPage() {
       if (newWindow) newWindow.close()
     } finally {
       setDownloadingId(null)
+    }
+  }
+
+  const handleRetire = async () => {
+    if (!song) return
+    setRetiring(true)
+    try {
+      const { data } = await api.patch(`/api/songs/${song.id}/retire`, { retired: !song.retired })
+      setSong(prev => prev ? { ...prev, retired: data.retired } : prev)
+    } catch (err) {
+      console.error('Failed to update retired status:', err)
+    } finally {
+      setRetiring(false)
     }
   }
 
@@ -156,7 +170,14 @@ export default function SongDetailPage() {
       {/* Header */}
       <div className="card" style={{ marginBottom: 'var(--space-md)' }}>
         <div className="song-detail-header">
-          <h1 className="song-detail-title">{song.title}</h1>
+          <h1 className="song-detail-title">
+            {song.title}
+            {song.retired && (
+              <span style={{ marginLeft: 10, fontSize: 'var(--text-sm)', fontWeight: 500, color: 'var(--color-text-muted)', background: 'var(--color-bg-subtle)', border: '1px solid var(--color-border)', borderRadius: 6, padding: '2px 8px', verticalAlign: 'middle' }}>
+                Retired
+              </span>
+            )}
+          </h1>
           {canManageSongs && (
             <div className="song-detail-actions">
               <Link href={`/songs/${song.id}/edit`} className="btn btn-sm btn-secondary"><Edit size={14} /> Edit</Link>
@@ -362,7 +383,14 @@ export default function SongDetailPage() {
         )}
       </div>
       {canManageSongs && (
-        <div style={{ marginTop: 'var(--space-md)', display: 'flex', justifyContent: 'flex-end' }}>
+        <div style={{ marginTop: 'var(--space-md)', display: 'flex', justifyContent: 'flex-end', gap: 'var(--space-sm)' }}>
+          <button
+            onClick={handleRetire}
+            className="btn btn-secondary"
+            disabled={retiring}
+          >
+            {song?.retired ? 'Restore song' : 'Retire song'}
+          </button>
           <button
             onClick={() => setShowDeleteSong(true)}
             className="btn btn-secondary"
