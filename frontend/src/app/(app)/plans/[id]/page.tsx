@@ -4,13 +4,14 @@ import { useState, useEffect } from 'react'
 import Link from 'next/link'
 import { useParams, useRouter } from 'next/navigation'
 import { format, parseISO } from 'date-fns'
-import { ArrowLeft, Share2, Plus, Music, BookOpen, Mic2, Trash2, ChevronDown, ChevronUp, FileText, ExternalLink, X, PlayCircle } from 'lucide-react'
+import { ArrowLeft, Share2, Plus, Music, BookOpen, Mic2, Trash2, ChevronDown, ChevronUp, FileText, ExternalLink, X, PlayCircle, Mail } from 'lucide-react'
 import { KeyBadge, CategoryBadge } from '@/components/ui/badges'
 import { useAuth } from '@clerk/nextjs'
 import { useChurch } from '@/context/ChurchContext'
 import api from '@/lib/api'
 import { ConfirmModal } from '@/components/ui/ConfirmModal'
 import { PlanMusicianModal } from '@/components/ui/PlanMusicianModal'
+import { PlanEmailModal } from '@/components/ui/PlanEmailModal'
 import type { PlanMusician } from '@/types'
 
 interface SongFile {
@@ -159,6 +160,7 @@ export default function PlanDetailPage() {
   const [showDeletePlan, setShowDeletePlan] = useState(false)
   const [musicians, setMusicians] = useState<PlanMusician[]>([])
   const [showMusicianModal, setShowMusicianModal] = useState(false)
+  const [showEmailModal, setShowEmailModal] = useState(false)
 
   useEffect(() => {
     if (!id || churchLoading) return
@@ -236,6 +238,19 @@ export default function PlanDetailPage() {
               <PlayCircle size={14} />
               <span>Set mode</span>
             </Link>
+
+            {/* Email — admin or owner */}
+            {(isAdmin || canEditAnyPlan || plan.created_by === userId) && (
+              <button
+                onClick={() => setShowEmailModal(true)}
+                className="btn btn-secondary"
+                style={{ padding: '7px 10px', fontSize: 'var(--text-xs)', gap: 4 }}
+                title="Send plan email"
+              >
+                <Mail size={14} />
+                <span>Email</span>
+              </button>
+            )}
 
             {/* Edit — admin or owner */}
             {(isAdmin || canEditAnyPlan || plan.created_by === userId) && (
@@ -331,6 +346,12 @@ export default function PlanDetailPage() {
             <Trash2 size={14} /> Delete plan
           </button>
         </div>
+      )}
+      {showEmailModal && (
+        <PlanEmailModal
+          planId={id as string}
+          onClose={() => setShowEmailModal(false)}
+        />
       )}
       {showMusicianModal && (
         <PlanMusicianModal

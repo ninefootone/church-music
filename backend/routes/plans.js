@@ -1,5 +1,6 @@
 const express = require('express');
 const router = express.Router();
+const { sendBrevoEmail } = require('../utils/email');
 const pool = require('../db/pool');
 const { requireAuth, requireMembership, requireAdmin, requirePermission } = require('../middleware/auth');
 const { v4: uuidv4 } = require('uuid');
@@ -224,5 +225,159 @@ router.delete('/:id', requireAuth, requireMembership, async function(req, res, n
     next(err);
   }
 });
+
+router.post('/:id/email', requireAuth, requireMembership, async function(req, res, next) {
+  const planId = req.params.id
+  const churchId = req.churchId
+  const { recipients } = req.body // array of { email, name }
+
+  if (!recipients || recipients.length === 0) {
+    return res.status(400).json({ error: 'No recipients provided' })
+  }
+
+  try {
+    // Fetch plan
+    const planResult = await pool.query(
+      'SELECT p.*, c.name AS church_name FROM plans p JOIN churches c ON c.id = p.church_id WHERE p.id = $1 AND p.church_id = $2',
+      [planId, churchId]
+    )
+    if (planResult.rows.length === 0) return res.status(404).json({ error: 'Plan not found' })
+    const plan = planResult.rows[0]
+
+    // Fetch items
+    const itemsResult = await pool.query(
+      `SELECT si.*, s.title AS song_title, s.default_key AS song_default_key, s.category AS song_category
+       FROM plan_items si
+       LEFT JOIN songs s ON s.id = si.song_id
+       WHERE si.plan_id = $1
+       ORDER BY si.position ASC`,
+      [planId]
+    )
+    const items = itemsResult.rows
+
+    // Fetch files for each song item
+    const songIds = [...new Set(items.filter(i => i.song_id).map(i => i.song_id))]
+    let filesBySongId = {}
+    if (songIds.length > 0) {
+      const filesResult = await pool.query(
+        `SELECT f.song_id, f.label, f.file_type, f.key_of, f.r2_key
+         FROM song_files f
+         WHERE f.song_id = ANY($1::int[])
+         ORDER BY f.position ASC`,
+        [songIds]
+      )
+      for (const file of filesResult.rows) {
+        if (!filesBySongId[file.song_id]) filesBySongId[file.song_id] = []
+        filesBySongId[file.song_id].push(file)
+      }
+    }
+
+    // Fetch musicians
+    const musiciansResult = await pool.query(
+      `SELECT sm.name, sm.role FROM plan_musicians sm WHERE sm.plan_id = $1 ORDER BY sm.id ASC`,
+      [planId]
+    )
+    const musicians = musiciansResult.rows
+
+    // Format date
+    const planDate = plan.plan_date
+      ? new Date(plan.plan_date).toLocaleDateString('en-GB', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' })
+      : 'Date TBC'
+
+    // Build song rows HTML
+    const itemsHtml = items.map((item, i) => {
+      if (item.type !== 'song') {
+        const label = item.title || (item.type.charAt(0).toUpperCase() + item.type.slice(1))
+        return `<tr><td colspan="3" style="padding:10px 16px;background:#f8f9fa;font-size:13px;color:#666;font-style:italic;border-bottom:1px solid #e5e7eb;">${label}</td></tr>`
+      }
+      const title = item.song_title || 'Untitled'
+      const key = item.key_override || item.song_default_key || ''
+      const keyBadge = key ? `<span style="display:inline-block;padding:2px 8px;background:#dbeafe;color:#1e40af;border-radius:4px;font-size:11px;font-weight:600;margin-left:6px;">${key}</span>` : ''
+      const arrangement = item.custom_arrangement || ''
+      const arrangementHtml = arrangement ? `<div style="font-size:12px;color:#6b7280;margin-top:3px;">${arrangement}</div>` : ''
+      const files = filesBySongId[item.song_id] || []
+      const fileLinks = files.map(f => {
+        const r2Base = process.env.R2_PUBLIC_URL || ''
+        const url = `${r2Base}/${f.r2_key}`
+        const label = [f.label, f.key_of].filter(Boolean).join(' — ')
+        return `<a href="${url}" style="display:inline-block;margin-right:6px;margin-top:4px;padding:3px 10px;background:#f3f4f6;border:1px solid #d1d5db;border-radius:4px;font-size:11px;color:#1d4ed8;text-decoration:none;">${label}</a>`
+      }).join('')
+      return `<tr style="border-bottom:1px solid #e5e7eb;">
+        <td style="padding:10px 16px;width:28px;color:#9ca3af;font-size:13px;">${i + 1}</td>
+        <td style="padding:10px 16px;">
+          <div style="font-size:15px;font-weight:600;color:#111827;">${title}${keyBadge}</div>
+          ${arrangementHtml}
+          ${fileLinks ? `<div style="margin-top:4px;">${fileLinks}</div>` : ''}
+        </td>
+        <td style="padding:10px 16px;font-size:13px;color:#6b7280;">${item.song_category || ''}</td>
+      </tr>`
+    }).join('')
+
+    // Musicians section
+    const musicianRows = musicians.length > 0
+      ? musicians.map(m => `<tr><td style="padding:6px 16px;font-size:14px;color:#111827;">${m.name}</td><td style="padding:6px 16px;font-size:13px;color:#6b7280;">${m.role || ''}</td></tr>`).join('')
+      : `<tr><td colspan="2" style="padding:10px 16px;font-size:13px;color:#9ca3af;font-style:italic;">No musicians listed</td></tr>`
+
+    const planTitle = plan.title ? ` — ${plan.title}` : ''
+    const planTime = plan.plan_time ? `<p style="margin:0 0 4px;color:#6b7280;font-size:14px;">⏰ ${plan.plan_time}</p>` : ''
+    const publicUrl = `${process.env.FRONTEND_URL || 'https://songstack.church'}/s/${plan.public_token}`
+
+    const htmlContent = `
+<!DOCTYPE html>
+<html>
+<head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1"></head>
+<body style="margin:0;padding:0;background:#f3f4f6;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;">
+  <div style="max-width:600px;margin:32px auto;background:#ffffff;border-radius:8px;overflow:hidden;box-shadow:0 1px 3px rgba(0,0,0,0.1);">
+    
+    <div style="background:#4b7fa5;padding:24px 32px;">
+      <p style="margin:0;color:rgba(255,255,255,0.8);font-size:12px;text-transform:uppercase;letter-spacing:0.08em;">${plan.church_name}</p>
+      <h1 style="margin:4px 0 0;color:#ffffff;font-size:22px;font-weight:700;">Plan${planTitle}</h1>
+      <p style="margin:8px 0 0;color:rgba(255,255,255,0.9);font-size:16px;">📅 ${planDate}</p>
+      ${planTime}
+    </div>
+
+    <div style="padding:24px 0;">
+      <h2 style="margin:0 16px 12px;font-size:13px;font-weight:700;text-transform:uppercase;letter-spacing:0.07em;color:#9ca3af;">Songs</h2>
+      <table style="width:100%;border-collapse:collapse;border-top:1px solid #e5e7eb;">
+        ${itemsHtml}
+      </table>
+    </div>
+
+    <div style="padding:0 0 24px;">
+      <h2 style="margin:0 16px 12px;font-size:13px;font-weight:700;text-transform:uppercase;letter-spacing:0.07em;color:#9ca3af;">Musicians</h2>
+      <table style="width:100%;border-collapse:collapse;border-top:1px solid #e5e7eb;">
+        ${musicianRows}
+      </table>
+    </div>
+
+    <div style="padding:20px 32px;background:#f8fafc;border-top:1px solid #e5e7eb;text-align:center;">
+      <a href="${publicUrl}" style="display:inline-block;padding:10px 24px;background:#4b7fa5;color:#ffffff;text-decoration:none;border-radius:6px;font-size:14px;font-weight:600;">View Full Plan →</a>
+      <p style="margin:12px 0 0;font-size:12px;color:#9ca3af;">Sent via Song Stack · songstack.church</p>
+    </div>
+
+  </div>
+</body>
+</html>`
+
+    const subject = `${plan.church_name} — Plan for ${planDate}`
+
+    // Send to each recipient
+    const sendResults = await Promise.allSettled(
+      recipients.map(r =>
+        sendBrevoEmail({ to: r.email, toName: r.name || r.email, subject, htmlContent })
+      )
+    )
+
+    const failures = sendResults.filter(r => r.status === 'rejected' || (r.value && r.value.status >= 400))
+    if (failures.length > 0) {
+      console.error('Some emails failed:', failures)
+    }
+
+    res.json({ success: true, sent: recipients.length - failures.length, failed: failures.length })
+  } catch (err) {
+    console.error('Plan email error:', err)
+    res.status(500).json({ error: 'Failed to send email' })
+  }
+})
 
 module.exports = router;
