@@ -4,7 +4,8 @@ import { useState, useEffect } from 'react'
 import Link from 'next/link'
 import { useParams } from 'next/navigation'
 import { format, parseISO } from 'date-fns'
-import { ArrowLeft, FileText, Loader2, Code, Play } from 'lucide-react'
+import { ArrowLeft, FileText, Loader2, Code, Play, Download } from 'lucide-react'
+import { PDFDocument } from 'pdf-lib'
 import { useRouter } from 'next/navigation'
 import api from '@/lib/api'
 import { useChurch } from '@/context/ChurchContext'
@@ -130,6 +131,52 @@ export default function SetModePage() {
   }
 
   const selectedCount = Object.values(selected).reduce((sum, set) => sum + set.size, 0)
+
+  const handleDownloadPdf = async () => {
+    const songItems: SongItem[] = (plan.items || []).filter(
+      (item: SongItem) => item.type === 'song' && item.song_id
+    )
+
+    const pdfUrls: string[] = []
+    for (const item of songItems) {
+      const songId = item.song_id!
+      const files = filesMap[songId] || []
+      const selectedIds = selected[songId] || new Set()
+      const chosenFiles = files.filter(f => selectedIds.has(f.id) && f.file_type !== 'chordpro')
+      chosenFiles.forEach(f => pdfUrls.push(f.url))
+    }
+
+    if (pdfUrls.length === 0) {
+      setError('No PDF files selected. ChordPro files cannot be included in a PDF export.')
+      return
+    }
+
+    setMerging(true)
+    setError(null)
+    try {
+      const mergedPdf = await PDFDocument.create()
+      for (const url of pdfUrls) {
+        const bytes = await fetch(url).then(r => r.arrayBuffer())
+        const donor = await PDFDocument.load(bytes)
+        const pages = await mergedPdf.copyPages(donor, donor.getPageIndices())
+        pages.forEach(p => mergedPdf.addPage(p))
+      }
+      const mergedBytes = await mergedPdf.save()
+      const blob = new Blob([mergedBytes], { type: 'application/pdf' })
+      const blobUrl = URL.createObjectURL(blob)
+      const a = document.createElement('a')
+      a.href = blobUrl
+      const dateStr = format(parseISO(plan.plan_date), 'yyyy-MM-dd')
+      const titleStr = plan.title ? `-${plan.title.replace(/\s+/g, '-').toLowerCase()}` : ''
+      a.download = `set-${dateStr}${titleStr}.pdf`
+      a.click()
+      URL.revokeObjectURL(blobUrl)
+    } catch (err) {
+      setError('Failed to generate PDF. Please try again.')
+    } finally {
+      setMerging(false)
+    }
+  }
 
   const handleOpenSet = () => {
     const songItems: SongItem[] = (plan.items || []).filter(
@@ -294,6 +341,15 @@ export default function SetModePage() {
         <Link href={`/plans/${id}`} className="btn btn-secondary">
           Cancel
         </Link>
+        <button
+          className="btn btn-secondary"
+          onClick={handleDownloadPdf}
+          disabled={selectedCount === 0 || merging}
+          style={{ display: 'inline-flex', alignItems: 'center', gap: 6 }}
+        >
+          {merging ? <Loader2 size={14} className="spin" /> : <Download size={14} />}
+          {merging ? 'Generating…' : 'Download PDF'}
+        </button>
         <button
           className="btn btn-primary"
           onClick={handleOpenSet}
