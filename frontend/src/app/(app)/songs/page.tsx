@@ -50,15 +50,15 @@ export default function SongsPage() {
         <div style={{ display: 'flex', gap: 'var(--space-sm)', alignItems: 'center' }}>
           {canManageSongs && (
             <button
-              className={`btn btn-secondary${showRetired ? ' is-active' : ''}`}
               onClick={() => setShowRetired(v => !v)}
+              style={{ background: 'none', border: 'none', cursor: 'pointer', padding: 0, fontSize: 'var(--text-sm)', color: 'var(--color-text-muted)', fontFamily: 'inherit' }}
             >
               {showRetired ? 'Hide retired' : 'Show retired'}
             </button>
           )}
           {canManageSongs && (
             <Link href="/songs/new" className="btn btn-primary">
-              <Plus size={16} /> Add new song
+              <Plus size={16} /> Add new
             </Link>
           )}
         </div>
