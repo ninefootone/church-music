@@ -39,6 +39,7 @@ app.use('/api/templates', templateRoutes);
 app.use('/api/ccli', ccliRoutes);
 app.use('/api/feedback', feedbackRoutes);
 app.use('/api/mailing', mailingRoutes);
+app.use('/api/superadmin', superAdminRoutes);
 
 app.use((err, req, res, next) => {
   console.error(err.stack);
