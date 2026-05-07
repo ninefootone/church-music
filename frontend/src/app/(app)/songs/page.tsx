@@ -16,11 +16,12 @@ export default function SongsPage() {
   const [search, setSearch] = useState('')
   const [activeCategory, setActiveCategory] = useState<Category | 'all'>('all')
   const [showRetired, setShowRetired] = useState(false)
+  const [sort, setSort] = useState('title')
 
   useEffect(() => {
     if (!church) return
     fetchSongs()
-  }, [church, search, activeCategory, showRetired])
+  }, [church, search, activeCategory, showRetired, sort])
 
   const fetchSongs = async () => {
     try {
@@ -29,6 +30,7 @@ export default function SongsPage() {
       if (search) params.search = search
       if (activeCategory !== 'all') params.category = activeCategory
       if (showRetired) params.include_retired = 'true'
+      if (sort !== 'title') params.sort = sort
       const { data } = await api.get('/api/songs', { params })
       setSongs(data)
     } catch (err) {
@@ -61,16 +63,30 @@ export default function SongsPage() {
         </div>
       </div>
 
-      <div style={{ position: 'relative', marginBottom: 'var(--space-sm)' }}>
-        <Search size={16} style={{ position: 'absolute', left: 14, top: '50%', transform: 'translateY(-50%)', color: 'var(--color-text-muted)' }} />
-        <input
+      <div style={{ display: 'flex', gap: 'var(--space-sm)', marginBottom: 'var(--space-sm)', alignItems: 'center' }}>
+        <div style={{ position: 'relative', flex: 1 }}>
+          <Search size={16} style={{ position: 'absolute', left: 14, top: '50%', transform: 'translateY(-50%)', color: 'var(--color-text-muted)' }} />
+          <input
+            className="input"
+            style={{ paddingLeft: 42 }}
+            type="text"
+            placeholder="Search by title, author, theme or lyric…"
+            value={search}
+            onChange={e => setSearch(e.target.value)}
+          />
+        </div>
+        <select
           className="input"
-          style={{ paddingLeft: 42 }}
-          type="text"
-          placeholder="Search by title, author, theme or lyric…"
-          value={search}
-          onChange={e => setSearch(e.target.value)}
-        />
+          style={{ width: 'auto', flexShrink: 0 }}
+          value={sort}
+          onChange={e => setSort(e.target.value)}
+        >
+          <option value="title">A – Z</option>
+          <option value="most_sung">Most sung</option>
+          <option value="least_sung">Least sung</option>
+          <option value="recent">Recently sung</option>
+          <option value="oldest">Sung long ago</option>
+        </select>
       </div>
 
       <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6, marginBottom: 'var(--space-md)' }}>

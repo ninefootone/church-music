@@ -52,7 +52,16 @@ router.get('/', requireAuth, requireMembership, async (req, res, next) => {
       query += ` AND (s.retired = FALSE OR s.retired IS NULL)`;
     }
 
-    query += ` GROUP BY s.id ORDER BY s.title`;
+    const sort = req.query.sort || 'title';
+    const orderClause = {
+      title:      's.title ASC',
+      most_sung:  'times_sung DESC, s.title ASC',
+      least_sung: 'times_sung ASC, s.title ASC',
+      recent:     'last_sung DESC NULLS LAST, s.title ASC',
+      oldest:     'last_sung ASC NULLS LAST, s.title ASC',
+    }[sort] || 's.title ASC';
+
+    query += ` GROUP BY s.id ORDER BY ${orderClause}`;
 
     const result = await pool.query(query, params);
     res.json(result.rows);
