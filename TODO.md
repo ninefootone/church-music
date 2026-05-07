@@ -9,7 +9,6 @@
 platform-wide stats: number of churches, total songs, total plans, total users, storage used; no church-level data exposed
 
 ### Features – Print/View
-- [ ] Print/download merged PDF — from the set picker, a "Download PDF" button that merges selected PDF files into a single downloadable PDF using pdf-lib (as previously built); useful for printing a full plan's worth of music
 - [ ] Single file viewer — route at /songs/[id]/view/[fileId] that opens a single PDF or ChordPro file in the full set viewer (same component, single file); accessible from the song page for rehearsal use; supports swipe/keyboard navigation and auto-hide controls
 
 ### Features – Songs
@@ -85,3 +84,4 @@ static inline `style={{...}}` props to named classes in `globals.css`.
 - [x] 'Band Leaders' can delete only their own plans (permission scoping)
 – [x] Remove ability to add plans from normal members
 – [x] Paywall / Stripe
+- [x] Print/download merged PDF — from the set picker, a "Download PDF" button that merges selected PDF files into a single downloadable PDF using pdf-lib (as previously built); useful for printing a full plan's worth of music
