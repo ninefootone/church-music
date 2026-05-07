@@ -99,7 +99,6 @@ export function PlanEmailModal({ planId, onClose }: Props) {
         {result ? (
           /* Success state */
           <div style={{ padding: 'var(--space-lg)', textAlign: 'center' }}>
-            <Mail size={32} style={{ color: 'var(--color-brand-500)', marginBottom: 8 }} />
             <p style={{ fontSize: 'var(--text-md)', fontWeight: 600, color: 'var(--color-text-primary)', marginBottom: 4 }}>
               Email sent to {result.sent} recipient{result.sent !== 1 ? 's' : ''}
             </p>

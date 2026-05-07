@@ -18,7 +18,6 @@ platform-wide stats: number of churches, total songs, total plans, total users, 
 - [ ] Consolidate tags — review remaining ~108 tags after initial cleanup; aim for a clean controlled vocabulary of ~20–25 tags
 
 ### Features – Admin
-- [ ] Plan email — send a HTML-formatted email with the full plan outline (song titles, arrangements, musicians) and links to any attached PDFs; triggered from the plan detail page; recipients could be the church members or a custom address list
 - [ ] Super-admin dashboard at `/admin` — route only accessible to a hardcoded Clerk user ID (Jon's account) 
 - [ ] Account deletion — settings page option for users to delete their own account (Clerk backend API + DB cleanup)
 – [ ] Rehearsal plan option for members
@@ -85,3 +84,4 @@ static inline `style={{...}}` props to named classes in `globals.css`.
 – [x] Remove ability to add plans from normal members
 – [x] Paywall / Stripe
 - [x] Print/download merged PDF — from the set picker, a "Download PDF" button that merges selected PDF files into a single downloadable PDF using pdf-lib (as previously built); useful for printing a full plan's worth of music
+- [x] Plan email — send a HTML-formatted email with the full plan outline (song titles, arrangements, musicians) and links to any attached PDFs; triggered from the plan detail page; recipients could be the church members or a custom address list
