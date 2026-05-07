@@ -47,7 +47,7 @@ export default function SongsPage() {
     <div>
       <div className="page-header">
         <h1 className="page-title">Songs</h1>
-        <div style={{ display: 'flex', gap: 'var(--space-sm)', alignItems: 'center' }}>
+        <div style={{ display: 'flex', gap: 'var(--space-md)', alignItems: 'center' }}>
           {canManageSongs && (
             <button
               onClick={() => setShowRetired(v => !v)}
@@ -57,7 +57,7 @@ export default function SongsPage() {
             </button>
           )}
           {canManageSongs && (
-            <Link href="/songs/new" className="btn btn-primary">
+            <Link href="/songs/new" className="btn btn-primary" style={{ paddingLeft: 12, paddingRight: 12 }}>
               <Plus size={16} /> Add new
             </Link>
           )}
