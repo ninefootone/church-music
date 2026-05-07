@@ -240,7 +240,7 @@ export default function PlanEditPage() {
     if (!id || churchLoading) return
     Promise.all([
       api.get(`/api/plans/${id}`),
-      api.get('/api/songs'),
+      api.get('/api/songs', { params: { include_retired: 'false' } }),
     ]).then(([planRes, songsRes]) => {
       const s = planRes.data
       setPlan(s)
