@@ -19,9 +19,6 @@ platform-wide stats: number of churches, total songs, total plans, total users, 
 ### Features – Admin
 - [ ] Account deletion — settings page option for users to delete their own account (Clerk backend API + DB cleanup)
 
-### Features – Stats
-- [ ] Song ordering on songs page — sort by most/least sung
-
 ### Features – Discover
 – [ ] Add artwork to 'Discover' songs
 - [ ] Discover area — `/discover` route visible to all logged-in churches; searches/browses only songs from the master library account that have `share_all_data` enabled; completely separate from a church's own song list; results show title, tags, key, CCLI info, arrangement preview, and an "Add to my library" button that deep-copies the song (and optionally its shared files) into the church's own DB; paginated with full-text search and tag/theme filtering
@@ -83,3 +80,4 @@ static inline `style={{...}}` props to named classes in `globals.css`.
 - [x] Super-admin dashboard at `/admin` — route only accessible to a hardcoded Clerk user ID (Jon's account) 
 - [x] Retire a song — soft-delete: add a `retired` boolean flag to songs, hide retired songs from the main library and plan song-picker by default, but keep them in the DB; include a "Show retired songs" toggle on the songs page and a "Retire / Restore" button on the song detail page
 - [x] Show next planned date on individual song page
+- [x] Song ordering on songs page — sort by most/least sung

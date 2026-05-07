@@ -3,7 +3,7 @@
 import { useState, useEffect } from 'react'
 import Link from 'next/link'
 import { format, parseISO } from 'date-fns'
-import { Search, Plus, ChevronRight } from 'lucide-react'
+import { Search, Plus, ChevronRight, ArrowUpDown } from 'lucide-react'
 import { CategoryBadge, KeyBadge } from '@/components/ui/badges'
 import { CATEGORIES, Category, Song } from '@/types'
 import { useChurch } from '@/context/ChurchContext'
@@ -17,6 +17,7 @@ export default function SongsPage() {
   const [activeCategory, setActiveCategory] = useState<Category | 'all'>('all')
   const [showRetired, setShowRetired] = useState(false)
   const [sort, setSort] = useState('title')
+  const [showSortMenu, setShowSortMenu] = useState(false)
 
   useEffect(() => {
     if (!church) return
@@ -63,7 +64,7 @@ export default function SongsPage() {
         </div>
       </div>
 
-      <div style={{ display: 'flex', gap: 'var(--space-sm)', marginBottom: 'var(--space-sm)', alignItems: 'center' }}>
+      <div style={{ position: 'relative', display: 'flex', gap: 'var(--space-sm)', marginBottom: 'var(--space-sm)', alignItems: 'center' }}>
         <div style={{ position: 'relative', flex: 1 }}>
           <Search size={16} style={{ position: 'absolute', left: 14, top: '50%', transform: 'translateY(-50%)', color: 'var(--color-text-muted)' }} />
           <input
@@ -75,18 +76,34 @@ export default function SongsPage() {
             onChange={e => setSearch(e.target.value)}
           />
         </div>
-        <select
-          className="input"
-          style={{ width: 'auto', flexShrink: 0 }}
-          value={sort}
-          onChange={e => setSort(e.target.value)}
-        >
-          <option value="title">A – Z</option>
-          <option value="most_sung">Most sung</option>
-          <option value="least_sung">Least sung</option>
-          <option value="recent">Recently sung</option>
-          <option value="oldest">Sung long ago</option>
-        </select>
+        <div style={{ position: 'relative' }}>
+          <button
+            className={`btn btn-secondary${sort !== 'title' ? ' is-active' : ''}`}
+            style={{ display: 'flex', alignItems: 'center', gap: 6 }}
+            onClick={() => setShowSortMenu(v => !v)}
+          >
+            <ArrowUpDown size={15} />
+          </button>
+          {showSortMenu && (
+            <div style={{ position: 'absolute', right: 0, top: 'calc(100% + 6px)', background: 'var(--color-surface)', border: '1px solid var(--color-border)', borderRadius: 'var(--radius-md)', boxShadow: 'var(--shadow-md)', zIndex: 50, minWidth: 170, overflow: 'hidden' }}>
+              {([
+                ['title', 'A – Z'],
+                ['most_sung', 'Most sung'],
+                ['least_sung', 'Least sung'],
+                ['recent', 'Recently sung'],
+                ['oldest', 'Sung long ago'],
+              ] as [string, string][]).map(([value, label]) => (
+                <button
+                  key={value}
+                  onClick={() => { setSort(value); setShowSortMenu(false) }}
+                  style={{ display: 'block', width: '100%', textAlign: 'left', padding: '10px 14px', background: sort === value ? 'var(--color-brand-50)' : 'transparent', color: sort === value ? 'var(--color-brand-600)' : 'var(--color-text)', fontWeight: sort === value ? 600 : 400, fontSize: 'var(--text-sm)', border: 'none', cursor: 'pointer' }}
+                >
+                  {label}
+                </button>
+              ))}
+            </div>
+          )}
+        </div>
       </div>
 
       <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6, marginBottom: 'var(--space-md)' }}>
