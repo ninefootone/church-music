@@ -48,6 +48,10 @@ router.get('/', requireAuth, requireMembership, async (req, res, next) => {
       idx++;
     }
 
+    if (req.query.include_retired !== 'true') {
+      query += ` AND (s.retired = FALSE OR s.retired IS NULL)`;
+    }
+
     query += ` GROUP BY s.id ORDER BY s.title`;
 
     const result = await pool.query(query, params);
@@ -169,6 +173,22 @@ router.post('/', requireAuth, requirePermission('can_manage_songs'), async (req,
     }
 
     res.status(201).json(song.rows[0]);
+  } catch (err) {
+    next(err);
+  }
+});
+
+// PATCH /songs/:id/retire — toggle retired flag (admin or can_manage_songs)
+router.patch('/:id/retire', requireAuth, requirePermission('can_manage_songs'), async (req, res, next) => {
+  try {
+    const { churchId } = req;
+    const { retired } = req.body;
+    const result = await pool.query(
+      `UPDATE songs SET retired = $1, updated_at = NOW() WHERE id = $2 AND church_id = $3 RETURNING *`,
+      [retired, req.params.id, churchId]
+    );
+    if (result.rows.length === 0) return res.status(404).json({ error: 'Song not found' });
+    res.json(result.rows[0]);
   } catch (err) {
     next(err);
   }
