@@ -7,6 +7,7 @@ import { format, parseISO } from 'date-fns'
 import { ArrowLeft, FileText, Loader2, Code, Play } from 'lucide-react'
 import { useRouter } from 'next/navigation'
 import api from '@/lib/api'
+import { useChurch } from '@/context/ChurchContext'
 
 interface SongFile {
   id: string
@@ -56,9 +57,10 @@ export default function SetModePage() {
   const [merging, setMerging] = useState(false)
   const router = useRouter()
   const [error, setError] = useState<string | null>(null)
+  const { loading: churchLoading } = useChurch()
 
   useEffect(() => {
-    if (!id) return
+    if (!id || churchLoading) return
     api.get(`/api/plans/${id}`)
       .then(async r => {
         const svc = r.data
@@ -113,7 +115,7 @@ export default function SetModePage() {
       })
       .catch(() => setError('Could not load plan.'))
       .finally(() => setLoading(false))
-  }, [id])
+  }, [id, churchLoading])
 
   const toggleFile = (songId: string, fileId: string) => {
     setSelected(prev => {
@@ -177,7 +179,7 @@ export default function SetModePage() {
 
   if (!plan) return (
     <div style={{ padding: 'var(--space-xl)' }}>
-      <p className="text-muted" style={{ marginBottom: 'var(--space-md)' }}>Plan not found.</p>
+      <p className="text-muted" style={{ marginBottom: 'var(--space-md)' }}>{error || 'Plan not found.'}</p>
       <Link href="/plans" className="back-link"><ArrowLeft size={14} /> Back to plans</Link>
     </div>
   )
