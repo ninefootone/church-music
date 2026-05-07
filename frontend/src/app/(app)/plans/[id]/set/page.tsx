@@ -162,7 +162,7 @@ export default function SetModePage() {
         pages.forEach(p => mergedPdf.addPage(p))
       }
       const mergedBytes = await mergedPdf.save()
-      const blob = new Blob([mergedBytes], { type: 'application/pdf' })
+      const blob = new Blob([mergedBytes as Uint8Array<ArrayBuffer>], { type: 'application/pdf' })
       const blobUrl = URL.createObjectURL(blob)
       const a = document.createElement('a')
       a.href = blobUrl
