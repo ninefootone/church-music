@@ -86,6 +86,7 @@ export interface Song {
   }[]
   is_template: boolean
   template_status: TemplateStatus | null
+  retired: boolean
   contributed_by: string | null
   created_at: string
   last_sung?: string | null
