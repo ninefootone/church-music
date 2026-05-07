@@ -18,9 +18,7 @@ platform-wide stats: number of churches, total songs, total plans, total users, 
 - [ ] Consolidate tags — review remaining ~108 tags after initial cleanup; aim for a clean controlled vocabulary of ~20–25 tags
 
 ### Features – Admin
-- [ ] Super-admin dashboard at `/admin` — route only accessible to a hardcoded Clerk user ID (Jon's account) 
 - [ ] Account deletion — settings page option for users to delete their own account (Clerk backend API + DB cleanup)
-– [ ] Rehearsal plan option for members
 
 ### Features – Stats
 - [ ] Song ordering on songs page — sort by most/least sung
@@ -31,7 +29,6 @@ platform-wide stats: number of churches, total songs, total plans, total users, 
 - [ ] Discover area — `/discover` route visible to all logged-in churches; searches/browses only songs from the master library account that have `share_all_data` enabled; completely separate from a church's own song list; results show title, tags, key, CCLI info, arrangement preview, and an "Add to my library" button that deep-copies the song (and optionally its shared files) into the church's own DB; paginated with full-text search and tag/theme filtering
 - [ ] Master library curation workflow — the master library account gets an extra "Discover visibility" toggle per song (wraps the `share_all_data` flag); curator(s) can add a short "curator note" (e.g. "Great contemporary anthem, works well acoustic") stored in a new `curator_note` column on `songs`; this note shows in Discover results but not in the church's own library after import
 - [ ] "New in Discover" dashboard highlight — once Discover exists, show a small "New songs added" card on the dashboard for churches that haven't seen the latest additions; track last-seen timestamp per church so the highlight clears after they visit `/discover`; lays groundwork for future community/social features
-- [ ] Account deletion — settings page option for users to delete their own account (Clerk backend API + DB cleanup)
 
 ### Inline style refactor
 Work through each file, one at a time, using VSCode/Cursor prompt to move all
@@ -85,3 +82,4 @@ static inline `style={{...}}` props to named classes in `globals.css`.
 – [x] Paywall / Stripe
 - [x] Print/download merged PDF — from the set picker, a "Download PDF" button that merges selected PDF files into a single downloadable PDF using pdf-lib (as previously built); useful for printing a full plan's worth of music
 - [x] Plan email — send a HTML-formatted email with the full plan outline (song titles, arrangements, musicians) and links to any attached PDFs; triggered from the plan detail page; recipients could be the church members or a custom address list
+- [x] Super-admin dashboard at `/admin` — route only accessible to a hardcoded Clerk user ID (Jon's account) 
