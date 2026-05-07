@@ -97,6 +97,7 @@ export interface Song {
     times_sung: number
     times_planned: number
     last_sung: string | null
+    next_planned: string | null
   }
   recent_plans?: {
     id: string
