@@ -329,7 +329,7 @@ router.post('/:id/email', requireAuth, requireMembership, async function(req, re
     }).join('')
 
     // Musicians section — group roles by name
-    const musicianGroups: Record<string, string[]> = {}
+    const musicianGroups = {}
     for (const m of musicians) {
       if (!musicianGroups[m.name]) musicianGroups[m.name] = []
       if (m.role) musicianGroups[m.name].push(m.role)
