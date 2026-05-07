@@ -21,7 +21,6 @@ platform-wide stats: number of churches, total songs, total plans, total users, 
 
 ### Features – Stats
 - [ ] Song ordering on songs page — sort by most/least sung
-- [ ] Show next planned date on individual song page
 
 ### Features – Discover
 – [ ] Add artwork to 'Discover' songs
@@ -83,3 +82,4 @@ static inline `style={{...}}` props to named classes in `globals.css`.
 - [x] Plan email — send a HTML-formatted email with the full plan outline (song titles, arrangements, musicians) and links to any attached PDFs; triggered from the plan detail page; recipients could be the church members or a custom address list
 - [x] Super-admin dashboard at `/admin` — route only accessible to a hardcoded Clerk user ID (Jon's account) 
 - [x] Retire a song — soft-delete: add a `retired` boolean flag to songs, hide retired songs from the main library and plan song-picker by default, but keep them in the DB; include a "Show retired songs" toggle on the songs page and a "Retire / Restore" button on the song detail page
+- [x] Show next planned date on individual song page
