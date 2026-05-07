@@ -24,6 +24,7 @@ export default function SuperAdminPage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
+  console.log('userId:', userId, 'expected:', SUPER_ADMIN_CLERK_ID);
   const isAdmin = userId === SUPER_ADMIN_CLERK_ID;
 
   useEffect(() => {
