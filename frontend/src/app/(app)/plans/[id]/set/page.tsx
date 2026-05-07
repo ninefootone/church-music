@@ -4,7 +4,7 @@ import { useState, useEffect } from 'react'
 import Link from 'next/link'
 import { useParams } from 'next/navigation'
 import { format, parseISO } from 'date-fns'
-import { ArrowLeft, FileText, Loader2, Music, Code, Play } from 'lucide-react'
+import { ArrowLeft, FileText, Loader2, Code, Play } from 'lucide-react'
 import { useRouter } from 'next/navigation'
 import api from '@/lib/api'
 
@@ -224,7 +224,6 @@ export default function SetModePage() {
                   <span style={{ fontSize: 'var(--text-sm)', color: 'var(--color-text-muted)', width: 20, flexShrink: 0 }}>
                     {index + 1}
                   </span>
-                  <Music size={14} style={{ color: 'var(--color-text-muted)', flexShrink: 0 }} />
                   <span style={{ fontSize: 'var(--text-md)', fontWeight: 600, color: 'var(--color-text-primary)', flex: 1, minWidth: 0 }}>
                     {item.song_title}
                   </span>
