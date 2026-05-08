@@ -265,16 +265,50 @@ router.delete('/:id', requireAuth, requirePermission('can_manage_songs'), async 
 // POST /songs/:id/videos
 router.post('/:id/videos', requireAuth, requirePermission('can_manage_songs'), async (req, res, next) => {
   try {
-    const { url, label, sort_order } = req.body;
+    const { url, label, sort_order, link_type } = req.body;
     if (!url) return res.status(400).json({ error: 'url is required' });
 
     const result = await pool.query(
-      `INSERT INTO song_videos (song_id, url, label, sort_order)
-       VALUES ($1, $2, $3, $4) RETURNING *`,
-      [req.params.id, url, label || null, sort_order || 0]
+      `INSERT INTO song_videos (song_id, url, label, sort_order, link_type)
+       VALUES ($1, $2, $3, $4, $5) RETURNING *`,
+      [req.params.id, url, label || null, sort_order || 0, link_type || 'youtube']
     );
 
     res.status(201).json(result.rows[0]);
+  } catch (err) {
+    next(err);
+  }
+});
+
+// PUT /songs/:id/videos/:videoId
+router.put('/:id/videos/:videoId', requireAuth, requirePermission('can_manage_songs'), async (req, res, next) => {
+  try {
+    const { url, label, link_type } = req.body;
+    if (!url) return res.status(400).json({ error: 'url is required' });
+
+    const result = await pool.query(
+      `UPDATE song_videos SET url=$1, label=$2, link_type=$3
+       WHERE id=$4 AND song_id=$5 RETURNING *`,
+      [url, label || null, link_type || 'youtube', req.params.videoId, req.params.id]
+    );
+
+    if (result.rows.length === 0) return res.status(404).json({ error: 'Link not found' });
+    res.json(result.rows[0]);
+  } catch (err) {
+    next(err);
+  }
+});
+
+// DELETE /songs/:id/videos/:videoId
+router.delete('/:id/videos/:videoId', requireAuth, requirePermission('can_manage_songs'), async (req, res, next) => {
+  try {
+    const result = await pool.query(
+      `DELETE FROM song_videos WHERE id=$1 AND song_id=$2 RETURNING id`,
+      [req.params.videoId, req.params.id]
+    );
+
+    if (result.rows.length === 0) return res.status(404).json({ error: 'Link not found' });
+    res.json({ success: true });
   } catch (err) {
     next(err);
   }
