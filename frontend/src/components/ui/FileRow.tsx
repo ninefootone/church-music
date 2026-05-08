@@ -89,11 +89,16 @@ export function FileRow({ file, songId, defaultKey, isAdmin, downloadingId, dele
             </select>
           </div>
         </div>
-        <div style={{ display: 'flex', gap: 6, justifyContent: 'flex-end' }}>
-          <button type="button" onClick={() => setEditing(false)} className="btn btn-secondary btn-sm" style={{ fontSize: 'var(--text-xs)' }}>Cancel</button>
-          <button type="button" onClick={handleSave} disabled={saving} className="btn btn-primary btn-sm" style={{ fontSize: 'var(--text-xs)' }}>
-            {saving ? 'Saving…' : 'Save'}
+        <div style={{ display: 'flex', gap: 6, justifyContent: 'space-between' }}>
+          <button type="button" onClick={() => onDelete(file.id)} className="btn btn-secondary btn-sm" style={{ fontSize: 'var(--text-xs)', color: '#9a3a3a' }}>
+            <Trash2 size={13} /> Delete
           </button>
+          <div style={{ display: 'flex', gap: 6 }}>
+            <button type="button" onClick={() => setEditing(false)} className="btn btn-secondary btn-sm" style={{ fontSize: 'var(--text-xs)' }}>Cancel</button>
+            <button type="button" onClick={handleSave} disabled={saving} className="btn btn-primary btn-sm" style={{ fontSize: 'var(--text-xs)' }}>
+              {saving ? 'Saving…' : 'Save'}
+            </button>
+          </div>
         </div>
       </div>
     )
@@ -111,23 +116,13 @@ export function FileRow({ file, songId, defaultKey, isAdmin, downloadingId, dele
         {file.key_of && file.key_of !== defaultKey && <KeyBadge keyOf={file.key_of} />}
       </button>
       {isAdmin && (
-        <>
-          <button
-            onClick={openEdit}
-            style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'var(--color-text-muted)', padding: 4, display: 'flex' }}
-            title="Edit file details"
-          >
-            <Edit size={14} />
-          </button>
-          <button
-            onClick={() => onDelete(file.id)}
-            disabled={deletingId === file.id}
-            style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'var(--color-text-muted)', padding: 4, display: 'flex', opacity: deletingId === file.id ? 0.5 : 1 }}
-            title="Delete file"
-          >
-            <Trash2 size={14} />
-          </button>
-        </>
+        <button
+          onClick={openEdit}
+          style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'var(--color-text-muted)', padding: 4, display: 'flex' }}
+          title="Edit file details"
+        >
+          <Edit size={14} />
+        </button>
       )}
     </div>
   )
