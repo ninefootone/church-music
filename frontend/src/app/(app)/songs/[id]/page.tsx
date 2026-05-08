@@ -349,7 +349,7 @@ export default function SongDetailPage() {
               )}
             </div>
             <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
-              {song.videos.map(v => {
+              {(song.videos || []).map(v => {
                 const typeLabel = v.link_type === 'spotify' ? 'Spotify'
                   : v.link_type === 'apple_music' ? 'Apple Music'
                   : v.link_type === 'other' ? 'Link'
