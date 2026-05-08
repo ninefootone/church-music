@@ -7,11 +7,20 @@ import CcliAutocomplete from '@/components/CcliAutocomplete'
 import TagInput from '@/components/ui/TagInput'
 import { useAuth } from '@clerk/nextjs'
 import { useChurch } from '@/context/ChurchContext'
-import { ArrowLeft } from 'lucide-react'
+import { ArrowLeft, Plus, Trash2 } from 'lucide-react'
 import { CATEGORIES, Category } from '@/types'
 import api, { setAuthToken } from '@/lib/api'
 import { LyricsEditor } from '@/components/ui/LyricsEditor'
 import { ArrangementBuilder } from '@/components/ui/ArrangementBuilder'
+
+type SongLink = { url: string; label: string; link_type: string }
+
+const LINK_TYPES = [
+  { value: 'youtube', label: 'YouTube' },
+  { value: 'spotify', label: 'Spotify' },
+  { value: 'apple_music', label: 'Apple Music' },
+  { value: 'other', label: 'Other' },
+]
 
 export default function NewSongPage() {
   const router = useRouter()
@@ -43,9 +52,15 @@ export default function NewSongPage() {
   }
   const [form, setForm] = useState({
     title: '', author: '', default_key: '', category: '' as Category | '',
-    first_line: '', ccli_number: '', youtube_url: '', lyrics: '', tags: '',
+    first_line: '', ccli_number: '', lyrics: '', tags: '',
     notes: '', bible_references: '', suggested_arrangement: '',
   })
+  const [links, setLinks] = useState<SongLink[]>([])
+
+  const addLink = () => setLinks(l => [...l, { url: '', label: '', link_type: 'youtube' }])
+  const updateLink = (i: number, field: keyof SongLink, value: string) =>
+    setLinks(l => l.map((item, idx) => idx === i ? { ...item, [field]: value } : item))
+  const removeLink = (i: number) => setLinks(l => l.filter((_, idx) => idx !== i))
 
   const keys = ['C', 'C#', 'Db', 'D', 'Eb', 'E', 'F', 'F#', 'Gb', 'G', 'Ab', 'A', 'Bb', 'B', 'Cm', 'C#m', 'Dm', 'Ebm', 'Em', 'Fm', 'F#m', 'Gm', 'Abm', 'Am', 'Bbm', 'Bm']
 
@@ -77,6 +92,13 @@ export default function NewSongPage() {
       setAuthToken(token)
       const tags = form.tags.split(',').map(t => t.trim()).filter(Boolean)
       const { data } = await api.post('/api/songs', { ...form, tags })
+
+      for (const link of links) {
+        if (link.url.trim()) {
+          await api.post(`/api/songs/${data.id}/videos`, { url: link.url, label: link.label, link_type: link.link_type, sort_order: 0 })
+        }
+      }
+
       router.push(`/songs/${data.id}`)
     } catch (err: any) {
       setError(err.response?.data?.error || 'Failed to save song')
@@ -164,9 +186,24 @@ export default function NewSongPage() {
               <label className="label">CCLI number</label>
               <input className="input" placeholder="e.g. 6016351" value={form.ccli_number} onChange={e => setForm(f => ({ ...f, ccli_number: e.target.value }))} />
             </div>
-            <div>
-              <label className="label">YouTube URL</label>
-              <input className="input" placeholder="https://youtube.com/…" value={form.youtube_url} onChange={e => setForm(f => ({ ...f, youtube_url: e.target.value }))} />
+            <div style={{ gridColumn: '1 / -1' }}>
+              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 8 }}>
+                <label className="label" style={{ marginBottom: 0 }}>Links</label>
+                <button type="button" onClick={addLink} className="btn btn-secondary btn-sm"><Plus size={13} /> Add link</button>
+              </div>
+              {links.length === 0 && (
+                <p className="text-muted" style={{ fontSize: 'var(--text-sm)', fontStyle: 'italic' }}>No links added yet.</p>
+              )}
+              {links.map((link, i) => (
+                <div key={i} style={{ display: 'grid', gridTemplateColumns: '140px 1fr 2fr auto', gap: 8, marginBottom: 8, alignItems: 'center' }}>
+                  <select className="input" value={link.link_type} onChange={e => updateLink(i, 'link_type', e.target.value)}>
+                    {LINK_TYPES.map(t => <option key={t.value} value={t.value}>{t.label}</option>)}
+                  </select>
+                  <input className="input" placeholder="Label (e.g. Live version)" value={link.label} onChange={e => updateLink(i, 'label', e.target.value)} />
+                  <input className="input" placeholder="URL" value={link.url} onChange={e => updateLink(i, 'url', e.target.value)} />
+                  <button type="button" onClick={() => removeLink(i)} className="btn btn-secondary btn-sm" style={{ color: '#9a3a3a' }}><Trash2 size={13} /></button>
+                </div>
+              ))}
             </div>
           </div>
 
