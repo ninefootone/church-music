@@ -326,25 +326,26 @@ export default function SongDetailPage() {
           </p>
         )}
 
-        {/* Videos */}
-        {((song.videos && song.videos.length > 0) || song.youtube_url) && (
+        {/* Links */}
+        {song.videos && song.videos.length > 0 && (
           <>
             <div className="divider" />
-            <p className="downloads-group-label">Reference videos</p>
+            <p className="downloads-group-label">Links</p>
             <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
-              {song.videos && song.videos.length > 0 ? (
-                song.videos.map(v => (
+              {song.videos.map(v => {
+                const typeLabel = v.link_type === 'spotify' ? 'Spotify'
+                  : v.link_type === 'apple_music' ? 'Apple Music'
+                  : v.link_type === 'other' ? 'Link'
+                  : 'YouTube'
+                const displayLabel = v.label || typeLabel
+                return (
                   <a key={v.id} href={v.url} target="_blank" rel="noopener noreferrer" className="youtube-link">
-                    <span className="youtube-icon"><span className="youtube-play" /></span>
-                    {v.label || 'YouTube video'}
+                    <ExternalLink size={14} />
+                    {displayLabel}
+                    <span style={{ fontSize: 'var(--text-xs)', color: 'var(--color-text-muted)', marginLeft: 4 }}>({typeLabel})</span>
                   </a>
-                ))
-              ) : song.youtube_url ? (
-                <a href={song.youtube_url} target="_blank" rel="noopener noreferrer" className="youtube-link">
-                  <span className="youtube-icon"><span className="youtube-play" /></span>
-                  YouTube reference video
-                </a>
-              ) : null}
+                )
+              })}
             </div>
           </>
         )}
