@@ -4,7 +4,7 @@ import { useState, useEffect } from 'react'
 import { X, UserPlus } from 'lucide-react'
 import api from '@/lib/api'
 
-const PRESET_ROLES = ['Vocals', 'Keys', 'Guitar', 'Bass', 'Drums', 'Other']
+const PRESET_ROLES = ['Vocals', 'Keys', 'Guitar', 'Bass', 'Drums']
 
 interface Member {
   id: string
