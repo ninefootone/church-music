@@ -4,8 +4,6 @@ import { useState, useEffect } from 'react'
 import { X, UserPlus } from 'lucide-react'
 import api from '@/lib/api'
 
-const PRESET_ROLES = ['Vocals', 'Keys', 'Guitar', 'Bass', 'Drums']
-
 interface Member {
   id: string
   name: string
@@ -13,14 +11,18 @@ interface Member {
   user_id: string
 }
 
+const DEFAULT_ROLES = ['Vocals', 'Keys', 'Guitar', 'Bass', 'Drums']
+
 interface Props {
   planId: string
+  churchId: string
   onAdd: (musicians: { id: string; name: string; role: string; user_id: string | null }[]) => void
   onClose: () => void
 }
 
-export function PlanMusicianModal({ planId, onAdd, onClose }: Props) {
+export function PlanMusicianModal({ planId, churchId, onAdd, onClose }: Props) {
   const [members, setMembers] = useState<Member[]>([])
+  const [availableRoles, setAvailableRoles] = useState<string[]>([])
   const [query, setQuery] = useState('')
   const [selectedMember, setSelectedMember] = useState<Member | null>(null)
   const [guestName, setGuestName] = useState('')
@@ -32,7 +34,11 @@ export function PlanMusicianModal({ planId, onAdd, onClose }: Props) {
 
   useEffect(() => {
     api.get('/api/members').then(r => setMembers(r.data)).catch(() => {})
-  }, [])
+    api.get(`/api/churches/${churchId}/roles`).then(r => {
+      const names = r.data.map((role: { name: string }) => role.name)
+      setAvailableRoles(names.length > 0 ? names : DEFAULT_ROLES)
+    }).catch(() => setAvailableRoles(DEFAULT_ROLES))
+  }, [churchId])
 
   const filtered = query.length > 0
     ? members.filter(m => m.name?.toLowerCase().includes(query.toLowerCase()) || m.email?.toLowerCase().includes(query.toLowerCase()))
@@ -136,7 +142,7 @@ export function PlanMusicianModal({ planId, onAdd, onClose }: Props) {
             Role / instrument <span style={{ fontWeight: 400, color: 'var(--color-text-muted)' }}>(select one or more)</span>
           </label>
           <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8 }}>
-            {PRESET_ROLES.map(r => (
+            {availableRoles.map(r => (
               <button
                 key={r}
                 onClick={() => toggleRole(r)}
