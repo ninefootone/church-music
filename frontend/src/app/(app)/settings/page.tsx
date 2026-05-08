@@ -1,10 +1,24 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import { useAuth, useUser } from '@clerk/nextjs'
 import { useChurch } from '@/context/ChurchContext'
 import api, { setAuthToken } from '@/lib/api'
-import { Settings, Copy, Check, RefreshCw, Plus, Trash2, ArrowUp, ArrowDown } from 'lucide-react'
+import { Settings, Copy, Check, RefreshCw, Plus, X } from 'lucide-react'
+
+interface RoleItem {
+  id?: string
+  name: string
+  originalName?: string
+}
+
+interface WarningModal {
+  type: 'delete' | 'rename'
+  role: RoleItem
+  index: number
+  count: number
+  newName?: string
+}
 
 export default function SettingsPage() {
   const { getToken } = useAuth()
@@ -22,12 +36,14 @@ export default function SettingsPage() {
   const [mailingLoading, setMailingLoading] = useState(false)
 
   // Roles
-  const [roles, setRoles] = useState<{ id?: string; name: string; originalName?: string }[]>([])
+  const [roles, setRoles] = useState<RoleItem[]>([])
   const [rolesLoaded, setRolesLoaded] = useState(false)
   const [newRoleName, setNewRoleName] = useState('')
   const [rolesSaving, setRolesSaving] = useState(false)
   const [rolesSaved, setRolesSaved] = useState(false)
   const [rolesError, setRolesError] = useState('')
+  const [warningModal, setWarningModal] = useState<WarningModal | null>(null)
+  const dragIndex = useRef<number | null>(null)
 
   useEffect(() => {
     if (church) {
@@ -50,34 +66,6 @@ export default function SettingsPage() {
       .then(d => setSubscribed(d.subscribed))
       .catch(() => {})
   }, [user])
-
-  async function handleMailingToggle() {
-    const email = user?.primaryEmailAddress?.emailAddress
-    const name = [user?.firstName, user?.lastName].filter(Boolean).join(' ')
-    if (!email) return
-    setMailingLoading(true)
-    try {
-      if (subscribed) {
-        await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/mailing/unsubscribe`, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ email }),
-        })
-        setSubscribed(false)
-      } else {
-        await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/mailing/subscribe`, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ email, name }),
-        })
-        setSubscribed(true)
-      }
-    } catch {
-      setError('Failed to update mailing preference.')
-    } finally {
-      setMailingLoading(false)
-    }
-  }
 
   async function getAuthenticatedApi() {
     const token = await getToken()
@@ -131,12 +119,9 @@ export default function SettingsPage() {
     if (!church) return
     try {
       const client = await getAuthenticatedApi()
-      const { data } = await client.post('/api/stripe/create-checkout-session', {
-        priceId,
-        churchId: church.id,
-      })
+      const { data } = await client.post('/api/stripe/create-checkout-session', { priceId, churchId: church.id })
       window.location.href = data.url
-    } catch (err) {
+    } catch {
       alert('Something went wrong. Please try again.')
     }
   }
@@ -145,15 +130,40 @@ export default function SettingsPage() {
     if (!church) return
     try {
       const client = await getAuthenticatedApi()
-      const { data } = await client.post('/api/stripe/create-portal-session', {
-        churchId: church.id,
-      })
+      const { data } = await client.post('/api/stripe/create-portal-session', { churchId: church.id })
       window.location.href = data.url
-    } catch (err) {
+    } catch {
       alert('Something went wrong. Please try again.')
     }
   }
 
+  async function handleMailingToggle() {
+    const email = user?.primaryEmailAddress?.emailAddress
+    const name = [user?.firstName, user?.lastName].filter(Boolean).join(' ')
+    if (!email) return
+    setMailingLoading(true)
+    try {
+      if (subscribed) {
+        await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/mailing/unsubscribe`, {
+          method: 'POST', headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ email }),
+        })
+        setSubscribed(false)
+      } else {
+        await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/mailing/subscribe`, {
+          method: 'POST', headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ email, name }),
+        })
+        setSubscribed(true)
+      }
+    } catch {
+      setError('Failed to update mailing preference.')
+    } finally {
+      setMailingLoading(false)
+    }
+  }
+
+  // Roles
   function handleAddRole() {
     const trimmed = newRoleName.trim()
     if (!trimmed) return
@@ -169,42 +179,17 @@ export default function SettingsPage() {
         const client = await getAuthenticatedApi()
         const { data } = await client.get(`/api/churches/${church!.id}/roles/usage?name=${encodeURIComponent(role.originalName)}`)
         if (data.count > 0) {
-          if (!confirm(`"${role.originalName}" is assigned to ${data.count} musician${data.count !== 1 ? 's' : ''} in your plans. Deleting it won't remove those assignments, but it will no longer appear in the role picker. Delete anyway?`)) return
+          setWarningModal({ type: 'delete', role, index, count: data.count })
+          return
         }
-      } catch { /* proceed if usage check fails */ }
+      } catch { /* proceed */ }
     }
     setRoles(prev => prev.filter((_, i) => i !== index))
   }
 
-  function handleRenameRole(index: number, newName: string) {
-    setRoles(prev => prev.map((r, i) => i === index ? { ...r, name: newName } : r))
-  }
-
-  async function handleBlurRole(index: number) {
-    const role = roles[index]
-    if (!role.id || !role.originalName) return
-    const trimmed = role.name.trim()
-    if (trimmed === role.originalName || !trimmed) return
-    try {
-      const client = await getAuthenticatedApi()
-      const { data } = await client.get(`/api/churches/${church!.id}/roles/usage?name=${encodeURIComponent(role.originalName)}`)
-      if (data.count > 0) {
-        if (!confirm(`"${role.originalName}" is assigned to ${data.count} musician${data.count !== 1 ? 's' : ''} in your plans. Renaming it here won't update those existing assignments. Rename anyway?`)) {
-          setRoles(prev => prev.map((r, i) => i === index ? { ...r, name: role.originalName! } : r))
-          return
-        }
-      }
-    } catch { /* proceed */ }
-  }
-
-  function handleMoveRole(index: number, direction: 'up' | 'down') {
-    setRoles(prev => {
-      const next = [...prev]
-      const swap = direction === 'up' ? index - 1 : index + 1
-      if (swap < 0 || swap >= next.length) return prev;
-      [next[index], next[swap]] = [next[swap], next[index]]
-      return next
-    })
+  function confirmDelete(index: number) {
+    setRoles(prev => prev.filter((_, i) => i !== index))
+    setWarningModal(null)
   }
 
   async function handleSaveRoles() {
@@ -224,6 +209,27 @@ export default function SettingsPage() {
     } finally {
       setRolesSaving(false)
     }
+  }
+
+  // Drag and drop
+  function handleDragStart(index: number) {
+    dragIndex.current = index
+  }
+
+  function handleDragOver(e: React.DragEvent, index: number) {
+    e.preventDefault()
+    if (dragIndex.current === null || dragIndex.current === index) return
+    setRoles(prev => {
+      const next = [...prev]
+      const [moved] = next.splice(dragIndex.current!, 1)
+      next.splice(index, 0, moved)
+      dragIndex.current = index
+      return next
+    })
+  }
+
+  function handleDragEnd() {
+    dragIndex.current = null
   }
 
   const labelStyle = { display: 'block', fontSize: 12, fontWeight: 600, color: 'var(--color-text-secondary)', marginBottom: 6, textTransform: 'uppercase' as const, letterSpacing: '0.05em' }
@@ -256,35 +262,22 @@ export default function SettingsPage() {
       )}
 
       {/* Church details */}
-      {/* Church details — full width */}
       <form onSubmit={handleSave}>
         <div style={{ background: 'var(--color-surface)', border: '1px solid var(--color-border)', borderRadius: 14, padding: 24, marginBottom: 20 }}>
           <h2 style={{ fontSize: 16, fontWeight: 600, color: 'var(--color-text-primary)', marginBottom: 20 }}>Church details</h2>
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(min(280px, 100%), 1fr))', gap: 16 }}>
             <div>
               <label style={labelStyle}>Church name</label>
-              <input
-                style={inputStyle}
-                value={churchName}
-                onChange={e => setChurchName(e.target.value)}
-                required
-              />
+              <input style={inputStyle} value={churchName} onChange={e => setChurchName(e.target.value)} required />
             </div>
             <div>
               <label style={labelStyle}>
                 CCLI Licence Number <span style={{ fontWeight: 400, textTransform: 'none', letterSpacing: 0 }}>(optional)</span>
               </label>
-              <input
-                style={inputStyle}
-                placeholder="e.g. 123456"
-                value={ccliNumber}
-                onChange={e => setCcliNumber(e.target.value)}
-              />
+              <input style={inputStyle} placeholder="e.g. 123456" value={ccliNumber} onChange={e => setCcliNumber(e.target.value)} />
               <p style={{ fontSize: 12, color: 'var(--color-text-muted)', marginTop: 6 }}>
                 Used in usage reports. Don't have one?{' '}
-                <a href="https://uk.ccli.com" target="_blank" rel="noopener noreferrer" style={{ color: 'var(--color-brand-500)' }}>
-                  Get licensed at ccli.com
-                </a>
+                <a href="https://uk.ccli.com" target="_blank" rel="noopener noreferrer" style={{ color: 'var(--color-brand-500)' }}>Get licensed at ccli.com</a>
               </p>
             </div>
           </div>
@@ -300,7 +293,7 @@ export default function SettingsPage() {
       <div style={{ background: 'var(--color-surface)', border: '1px solid var(--color-border)', borderRadius: 14, padding: 24, marginBottom: 20 }}>
         <h2 style={{ fontSize: 16, fontWeight: 600, color: 'var(--color-text-primary)', marginBottom: 4 }}>Musician roles</h2>
         <p style={{ fontSize: 13, color: 'var(--color-text-muted)', marginBottom: 16 }}>
-          Customise the role options shown when adding a musician to a plan. If none are set, a default list is used.
+          Customise the roles shown when adding a musician to a plan. Drag to reorder. If none are set, a default list is used.
         </p>
 
         {rolesError && (
@@ -309,42 +302,35 @@ export default function SettingsPage() {
           </div>
         )}
 
-        <div style={{ display: 'flex', flexDirection: 'column', gap: 8, marginBottom: 12 }}>
+        <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8, marginBottom: 12, minHeight: 36 }}>
           {roles.length === 0 && (
-            <p style={{ fontSize: 13, color: 'var(--color-text-muted)', fontStyle: 'italic' }}>No custom roles yet — defaults will be used.</p>
+            <p style={{ fontSize: 13, color: 'var(--color-text-muted)', fontStyle: 'italic', margin: 0 }}>No custom roles yet — defaults will be used.</p>
           )}
           {roles.map((role, i) => (
-            <div key={i} style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-              <div style={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
-                <button
-                  type="button"
-                  onClick={() => handleMoveRole(i, 'up')}
-                  disabled={i === 0}
-                  style={{ background: 'none', border: 'none', cursor: i === 0 ? 'default' : 'pointer', color: i === 0 ? 'var(--color-border)' : 'var(--color-text-muted)', padding: '1px 4px', lineHeight: 1 }}
-                >
-                  <ArrowUp size={12} />
-                </button>
-                <button
-                  type="button"
-                  onClick={() => handleMoveRole(i, 'down')}
-                  disabled={i === roles.length - 1}
-                  style={{ background: 'none', border: 'none', cursor: i === roles.length - 1 ? 'default' : 'pointer', color: i === roles.length - 1 ? 'var(--color-border)' : 'var(--color-text-muted)', padding: '1px 4px', lineHeight: 1 }}
-                >
-                  <ArrowDown size={12} />
-                </button>
-              </div>
-              <input
-                value={role.name}
-                onChange={e => handleRenameRole(i, e.target.value)}
-                onBlur={() => handleBlurRole(i)}
-                style={{ flex: 1, padding: '8px 12px', border: '1px solid var(--color-border)', borderRadius: 8, fontSize: 14, color: 'var(--color-text-primary)', background: 'var(--color-surface)', fontFamily: 'inherit' }}
-              />
+            <div
+              key={role.id || role.name}
+              draggable
+              onDragStart={() => handleDragStart(i)}
+              onDragOver={e => handleDragOver(e, i)}
+              onDragEnd={handleDragEnd}
+              style={{
+                display: 'inline-flex', alignItems: 'center', gap: 6,
+                padding: '5px 10px 5px 12px',
+                background: 'var(--color-neutral-50)',
+                border: '1px solid var(--color-border)',
+                borderRadius: 999,
+                fontSize: 13, fontWeight: 500,
+                color: 'var(--color-text-primary)',
+                cursor: 'grab', userSelect: 'none',
+              }}
+            >
+              {role.name}
               <button
                 type="button"
                 onClick={() => handleDeleteRole(i)}
-                style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'var(--color-text-muted)', padding: 6, borderRadius: 6, display: 'flex', alignItems: 'center' }}
+                style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'var(--color-text-muted)', padding: 0, display: 'flex', alignItems: 'center', lineHeight: 1 }}
               >
-                <Trash2 size={15} />
+                <X size={13} />
               </button>
             </div>
           ))}
@@ -397,7 +383,7 @@ export default function SettingsPage() {
         </div>
 
         {/* Invite code */}
-        <div style={{ background: 'var(--color-surface)', border: '1px solid var(--color-border)', borderRadius: 14, padding: 24, gridColumn: 'span 1' }}>
+        <div style={{ background: 'var(--color-surface)', border: '1px solid var(--color-border)', borderRadius: 14, padding: 24 }}>
           <h2 style={{ fontSize: 16, fontWeight: 600, color: 'var(--color-text-primary)', marginBottom: 4 }}>Invite code</h2>
           <p style={{ fontSize: 13, color: 'var(--color-text-muted)', marginBottom: 16 }}>Share this code with people you want to join your church.</p>
           <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
@@ -415,7 +401,7 @@ export default function SettingsPage() {
           </div>
         </div>
 
-      {/* Mailing preferences */}
+        {/* Mailing preferences */}
         <div className="settings-grid-mailing" style={{ background: 'var(--color-surface)', border: '1px solid var(--color-border)', borderRadius: 14, padding: 24 }}>
           <h2 style={{ fontSize: 16, fontWeight: 600, color: 'var(--color-text-primary)', marginBottom: 4 }}>Email updates</h2>
           <p style={{ fontSize: 13, color: 'var(--color-text-muted)', marginBottom: 16 }}>Occasional news and updates about Song Stack. No spam, unsubscribe any time.</p>
@@ -427,12 +413,7 @@ export default function SettingsPage() {
                 {subscribed ? 'You\'re subscribed to Song Stack updates.' : 'You\'re not currently subscribed.'}
               </p>
               <div>
-                <button
-                  onClick={handleMailingToggle}
-                  disabled={mailingLoading}
-                  className="btn btn-ghost"
-                  style={{ padding: '4px 0', fontSize: 13 }}
-                >
+                <button onClick={handleMailingToggle} disabled={mailingLoading} className="btn btn-ghost" style={{ padding: '4px 0', fontSize: 13 }}>
                   {mailingLoading ? 'Updating…' : subscribed ? 'Unsubscribe' : 'Subscribe'}
                 </button>
               </div>
@@ -441,6 +422,37 @@ export default function SettingsPage() {
         </div>
 
       </div>
+
+      {/* Warning modal */}
+      {warningModal && (
+        <div
+          style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.5)', zIndex: 50, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 24 }}
+          onClick={e => { if (e.target === e.currentTarget) setWarningModal(null) }}
+        >
+          <div style={{ background: 'var(--color-surface)', borderRadius: 14, padding: 24, maxWidth: 400, width: '100%' }}>
+            <h3 style={{ fontSize: 16, fontWeight: 700, color: 'var(--color-text-primary)', marginBottom: 12 }}>
+              {warningModal.type === 'delete' ? 'Delete role?' : 'Rename role?'}
+            </h3>
+            <p style={{ fontSize: 14, color: 'var(--color-text-secondary)', marginBottom: 20, lineHeight: 1.5 }}>
+              {warningModal.type === 'delete'
+                ? `"${warningModal.role.originalName}" is currently assigned to ${warningModal.count} musician${warningModal.count !== 1 ? 's' : ''} in your plans. Deleting it won't remove those existing assignments, but it will no longer appear in the role picker.`
+                : `"${warningModal.role.originalName}" is currently assigned to ${warningModal.count} musician${warningModal.count !== 1 ? 's' : ''} in your plans. Renaming it here won't update those existing assignments.`
+              }
+            </p>
+            <div style={{ display: 'flex', gap: 10, justifyContent: 'flex-end' }}>
+              <button type="button" className="btn btn-ghost" onClick={() => setWarningModal(null)}>Cancel</button>
+              <button
+                type="button"
+                className="btn btn-primary"
+                style={{ background: 'var(--color-error, #d9534f)', borderColor: 'var(--color-error, #d9534f)' }}
+                onClick={() => confirmDelete(warningModal.index)}
+              >
+                {warningModal.type === 'delete' ? 'Delete anyway' : 'Rename anyway'}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   )
 }
