@@ -28,9 +28,10 @@ interface FileRowProps {
   onDownload: (fileId: string, label: string) => void
   onDelete: (fileId: string) => void
   onSaved: () => void
+  onView?: (fileId: string, label: string, key: string | null) => void
 }
 
-export function FileRow({ file, songId, defaultKey, isAdmin, downloadingId, deletingId, onDownload, onDelete, onSaved }: FileRowProps) {
+export function FileRow({ file, songId, defaultKey, isAdmin, downloadingId, deletingId, onDownload, onDelete, onSaved, onView }: FileRowProps) {
   const [editing, setEditing] = useState(false)
   const [editType, setEditType] = useState(file.file_type || 'chords')
   const [editLabel, setEditLabel] = useState(file.label || '')
@@ -107,12 +108,12 @@ export function FileRow({ file, songId, defaultKey, isAdmin, downloadingId, dele
   return (
     <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
       <button
-        onClick={() => onDownload(file.id, file.label)}
-        disabled={downloadingId === file.id}
+        onClick={() => onView ? onView(file.id, file.label, file.key_of) : onDownload(file.id, file.label)}
+        disabled={!onView && downloadingId === file.id}
         className="download-btn"
       >
-        <Download size={14} />
-        {downloadingId === file.id ? 'Downloading…' : file.label}
+        {!onView && <Download size={14} />}
+        {!onView && downloadingId === file.id ? 'Downloading…' : file.label}
         {file.key_of && file.key_of !== defaultKey && <KeyBadge keyOf={file.key_of} />}
       </button>
       {isAdmin && (

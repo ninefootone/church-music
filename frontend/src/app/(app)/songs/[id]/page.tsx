@@ -337,10 +337,9 @@ export default function SongDetailPage() {
                   Main key{song.default_key && <> — <KeyBadge keyOf={song.default_key} /></>}
                 </p>
                 <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8 }}>
-                  {mainFiles.map(f => f.file_type === 'chordpro'
-                    ? <button key={f.id} onClick={() => handleViewChordPro(f.id, f.label, f.key_of)} className="btn btn-secondary btn-sm">{f.label}</button>
-                    : <FileRow key={f.id} file={f} songId={song.id} defaultKey={song.default_key} isAdmin={canManageSongs} downloadingId={downloadingId} deletingId={deletingId} onDownload={handleDownload} onDelete={handleDelete} onSaved={fetchSong} />
-                  )}
+                  {mainFiles.map(f => (
+                    <FileRow key={f.id} file={f} songId={song.id} defaultKey={song.default_key} isAdmin={canManageSongs} downloadingId={downloadingId} deletingId={deletingId} onDownload={handleDownload} onDelete={handleDelete} onSaved={fetchSong} onView={f.file_type === 'chordpro' ? handleViewChordPro : undefined} />
+                  ))}
                 </div>
               </div>
             )}
@@ -350,11 +349,10 @@ export default function SongDetailPage() {
                 <div>
                   <p className="downloads-group-label">Other keys</p>
                   <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8 }}>
-                    {otherFiles.map(f => f.file_type === 'chordpro'
-                      ? <button key={f.id} onClick={() => handleViewChordPro(f.id, f.label, f.key_of)} className="btn btn-secondary btn-sm">{f.label}</button>
-                      : <FileRow key={f.id} file={f} songId={song.id} defaultKey={song.default_key} isAdmin={canManageSongs} downloadingId={downloadingId} deletingId={deletingId} onDownload={handleDownload} onDelete={handleDelete} onSaved={fetchSong} />
-                    )}
-                  </div>
+                  {otherFiles.map(f => (
+                    <FileRow key={f.id} file={f} songId={song.id} defaultKey={song.default_key} isAdmin={canManageSongs} downloadingId={downloadingId} deletingId={deletingId} onDownload={handleDownload} onDelete={handleDelete} onSaved={fetchSong} onView={f.file_type === 'chordpro' ? handleViewChordPro : undefined} />
+                  ))}
+                </div>
                 </div>
               </>
             )}
