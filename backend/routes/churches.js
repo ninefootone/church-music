@@ -169,4 +169,90 @@ router.post('/:churchId/regenerate-invite', requireAuth, async (req, res, next) 
   }
 });
 
+// Get roles for a church
+router.get('/:churchId/roles', requireAuth, async (req, res, next) => {
+  try {
+    const result = await pool.query(
+      'SELECT * FROM church_roles WHERE church_id = $1 ORDER BY sort_order, name',
+      [req.params.churchId]
+    );
+    res.json(result.rows);
+  } catch (err) {
+    next(err);
+  }
+});
+
+// Save roles for a church (admin only) — receives full array, diffs against DB
+router.put('/:churchId/roles', requireAuth, requireAdmin, async (req, res, next) => {
+  const { roles } = req.body; // [{ id?, name, sort_order }]
+  if (!Array.isArray(roles)) return res.status(400).json({ error: 'roles must be an array' });
+
+  const churchId = req.params.churchId;
+  const client = await pool.connect();
+
+  try {
+    await client.query('BEGIN');
+
+    // Get existing roles
+    const existing = await client.query(
+      'SELECT * FROM church_roles WHERE church_id = $1',
+      [churchId]
+    );
+    const existingIds = existing.rows.map(r => r.id);
+    const incomingIds = roles.filter(r => r.id).map(r => r.id);
+
+    // Delete removed roles
+    const toDelete = existingIds.filter(id => !incomingIds.includes(id));
+    for (const id of toDelete) {
+      await client.query('DELETE FROM church_roles WHERE id = $1', [id]);
+    }
+
+    // Upsert remaining/new roles
+    for (let i = 0; i < roles.length; i++) {
+      const { id, name } = roles[i];
+      if (!name || !name.trim()) continue;
+      if (id) {
+        await client.query(
+          'UPDATE church_roles SET name = $1, sort_order = $2 WHERE id = $3 AND church_id = $4',
+          [name.trim(), i, id, churchId]
+        );
+      } else {
+        await client.query(
+          'INSERT INTO church_roles (church_id, name, sort_order) VALUES ($1, $2, $3)',
+          [churchId, name.trim(), i]
+        );
+      }
+    }
+
+    await client.query('COMMIT');
+    const updated = await pool.query(
+      'SELECT * FROM church_roles WHERE church_id = $1 ORDER BY sort_order, name',
+      [churchId]
+    );
+    res.json(updated.rows);
+  } catch (err) {
+    await client.query('ROLLBACK');
+    next(err);
+  } finally {
+    client.release();
+  }
+});
+
+// Get usage count for a role name (for delete/rename warnings)
+router.get('/:churchId/roles/usage', requireAuth, requireAdmin, async (req, res, next) => {
+  try {
+    const { name } = req.query;
+    if (!name) return res.status(400).json({ error: 'name required' });
+    const result = await pool.query(
+      `SELECT COUNT(*) FROM plan_musicians pm
+       JOIN plans p ON p.id = pm.plan_id
+       WHERE p.church_id = $1 AND pm.role = $2`,
+      [req.params.churchId, name]
+    );
+    res.json({ count: parseInt(result.rows[0].count, 10) });
+  } catch (err) {
+    next(err);
+  }
+});
+
 module.exports = router;
