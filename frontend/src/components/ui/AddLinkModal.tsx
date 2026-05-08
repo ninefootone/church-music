@@ -106,42 +106,42 @@ export function AddLinkModal({ songId, onClose, onSaved }: AddLinkModalProps) {
                 {entry.status === 'done' ? (
                   <span style={{ fontSize: 'var(--text-sm)', color: 'var(--color-success)' }}>✓ Saved</span>
                 ) : (
-                  <div style={{ display: 'grid', gridTemplateColumns: '130px 1fr auto', gap: 8, alignItems: 'center' }}>
-                    <select
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                      <select
+                        className="input"
+                        style={{ fontSize: 'var(--text-sm)', padding: '4px 8px', width: 140, flexShrink: 0 }}
+                        value={entry.link_type}
+                        onChange={e => updateEntry(entry.id, { link_type: e.target.value })}
+                        disabled={entry.status === 'saving'}
+                      >
+                        {LINK_TYPES.map(t => <option key={t.value} value={t.value}>{t.label}</option>)}
+                      </select>
+                      <button
+                        type="button"
+                        onClick={() => removeEntry(entry.id)}
+                        style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'var(--color-text-muted)', padding: 2, display: 'flex', marginLeft: 'auto' }}
+                        disabled={entry.status === 'saving'}
+                      >
+                        <Trash2 size={14} />
+                      </button>
+                    </div>
+                    <input
                       className="input"
                       style={{ fontSize: 'var(--text-sm)', padding: '4px 8px' }}
-                      value={entry.link_type}
-                      onChange={e => updateEntry(entry.id, { link_type: e.target.value })}
+                      placeholder="URL"
+                      value={entry.url}
+                      onChange={e => updateEntry(entry.id, { url: e.target.value })}
                       disabled={entry.status === 'saving'}
-                    >
-                      {LINK_TYPES.map(t => <option key={t.value} value={t.value}>{t.label}</option>)}
-                    </select>
-                    <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
-                      <input
-                        className="input"
-                        style={{ fontSize: 'var(--text-sm)', padding: '4px 8px' }}
-                        placeholder="URL"
-                        value={entry.url}
-                        onChange={e => updateEntry(entry.id, { url: e.target.value })}
-                        disabled={entry.status === 'saving'}
-                      />
-                      <input
-                        className="input"
-                        style={{ fontSize: 'var(--text-sm)', padding: '4px 8px' }}
-                        placeholder="Label (optional, e.g. Live version)"
-                        value={entry.label}
-                        onChange={e => updateEntry(entry.id, { label: e.target.value })}
-                        disabled={entry.status === 'saving'}
-                      />
-                    </div>
-                    <button
-                      type="button"
-                      onClick={() => removeEntry(entry.id)}
-                      style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'var(--color-text-muted)', padding: 2, display: 'flex', alignSelf: 'flex-start', marginTop: 4 }}
+                    />
+                    <input
+                      className="input"
+                      style={{ fontSize: 'var(--text-sm)', padding: '4px 8px' }}
+                      placeholder="Label (optional, e.g. Live version)"
+                      value={entry.label}
+                      onChange={e => updateEntry(entry.id, { label: e.target.value })}
                       disabled={entry.status === 'saving'}
-                    >
-                      <Trash2 size={14} />
-                    </button>
+                    />
                   </div>
                 )}
                 {entry.error && (
