@@ -83,6 +83,7 @@ export interface Song {
     url: string
     label: string | null
     sort_order: number
+    link_type: string | null
   }[]
   is_template: boolean
   template_status: TemplateStatus | null
