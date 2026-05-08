@@ -12,9 +12,16 @@ platform-wide stats: number of churches, total songs, total plans, total users, 
 - [ ] Single file viewer — route at /songs/[id]/view/[fileId] that opens a single PDF or ChordPro file in the full set viewer (same component, single file); accessible from the song page for rehearsal use; supports swipe/keyboard navigation and auto-hide controls
 
 ### Features – Songs
+- [ ] Consolidate tags — review remaining ~108 tags after initial cleanup; aim for a clean controlled vocabulary of ~20–25 tags
 - [ ] 'Share all data' flag on songs — master library account only; marks a song as fully shareable so all fields and files are copied across to other churches via the shared library/template system
 - [ ] ChordPro inline editing — "Edit" button in the viewer toolbar opens a textarea with raw ChordPro text; save writes updated content back to R2 via a new PUT endpoint; admin only
-- [ ] Consolidate tags — review remaining ~108 tags after initial cleanup; aim for a clean controlled vocabulary of ~20–25 tags
+
+### Features – Playlists
+- [ ] DB migration — new `church_playlists` table (`id`, `church_id`, `name`, `url`, `sort_order`, `created_at`) + new `can_manage_playlists` boolean on `memberships` table
+- [ ] Backend routes — `GET/POST/PUT/DELETE /api/playlists` on Express backend
+- [ ] Dashboard block — Playlists section between Plans and Feedback; admins and members with `can_manage_playlists` can add/edit/delete entries (name + URL only, no validation); read-only link list for all other members
+- [ ] Dashboard reorder — Songs & Plans (top), Playlists, Feedback/Questions, Team
+- [ ] Permission checkbox — add "Manage playlists" checkbox to member management modal in dashboard
 
 ### Features – Admin
 - [ ] Account deletion — settings page option for users to delete their own account (Clerk backend API + DB cleanup)
@@ -24,6 +31,15 @@ platform-wide stats: number of churches, total songs, total plans, total users, 
 - [ ] Discover area — `/discover` route visible to all logged-in churches; searches/browses only songs from the master library account that have `share_all_data` enabled; completely separate from a church's own song list; results show title, tags, key, CCLI info, arrangement preview, and an "Add to my library" button that deep-copies the song (and optionally its shared files) into the church's own DB; paginated with full-text search and tag/theme filtering
 - [ ] Master library curation workflow — the master library account gets an extra "Discover visibility" toggle per song (wraps the `share_all_data` flag); curator(s) can add a short "curator note" (e.g. "Great contemporary anthem, works well acoustic") stored in a new `curator_note` column on `songs`; this note shows in Discover results but not in the church's own library after import
 - [ ] "New in Discover" dashboard highlight — once Discover exists, show a small "New songs added" card on the dashboard for churches that haven't seen the latest additions; track last-seen timestamp per church so the highlight clears after they visit `/discover`; lays groundwork for future community/social features
+
+### Features – Musicians / Scheduling
+- [ ] **"Next due to play" dashboard widget** — show each logged-in member their next upcoming plan on which they appear as a musician. Decisions needed before building:
+  - Which plan statuses count? (draft vs published — needs a `status` field on plans if not already present)
+  - Multi-plan display: show nearest only, or list all upcoming? Nearest is simpler; list is more useful
+  - Empty state: "You're not scheduled" vs show nothing — former requires the musician feature to be actively used by admins
+  - Depends entirely on admins populating plan musicians — will be empty/useless for churches that don't use that feature
+  - Natural precursor to email reminders ("you're playing on Sunday — here's the plan"); don't design the widget in isolation from that future need
+  - Consider `plan_availability` table (`plan_id`, `user_id`, `status: available|unavailable|unconfirmed`) for future unavailability/confirmation flow — design DB now even if UI comes later
 
 ### Inline style refactor
 Work through each file, one at a time, using VSCode/Cursor prompt to move all
