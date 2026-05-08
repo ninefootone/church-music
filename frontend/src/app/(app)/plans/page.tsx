@@ -20,6 +20,8 @@ export default function PlansPage() {
   const [upcoming, setUpcoming] = useState<Plan[]>([])
   const [past, setPast] = useState<Plan[]>([])
   const [loading, setLoading] = useState(true)
+  const PAST_PAGE_SIZE = 10
+  const [visiblePast, setVisiblePast] = useState(PAST_PAGE_SIZE)
 
   useEffect(() => {
     if (!church || churchLoading) return
@@ -45,9 +47,6 @@ export default function PlansPage() {
 
   const todayPlans = upcoming.filter(s => isToday(s.plan_date))
   const futurePlans = upcoming.filter(s => !isToday(s.plan_date))
-
-  const PAST_PAGE_SIZE = 10
-  const [visiblePast, setVisiblePast] = useState(PAST_PAGE_SIZE)
 
   const PlanCard = ({ plan, badge }: { plan: Plan; badge: 'today' | 'upcoming' }) => (
     <Link href={`/plans/${plan.id}`} className="plan-card">
