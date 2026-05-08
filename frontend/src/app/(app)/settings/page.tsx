@@ -4,7 +4,7 @@ import { useState, useEffect } from 'react'
 import { useAuth, useUser } from '@clerk/nextjs'
 import { useChurch } from '@/context/ChurchContext'
 import api, { setAuthToken } from '@/lib/api'
-import { Settings, Copy, Check, RefreshCw } from 'lucide-react'
+import { Settings, Copy, Check, RefreshCw, Plus, Trash2, ArrowUp, ArrowDown } from 'lucide-react'
 
 export default function SettingsPage() {
   const { getToken } = useAuth()
@@ -21,12 +21,26 @@ export default function SettingsPage() {
   const [subscribed, setSubscribed] = useState<boolean | null>(null)
   const [mailingLoading, setMailingLoading] = useState(false)
 
+  // Roles
+  const [roles, setRoles] = useState<{ id?: string; name: string; originalName?: string }[]>([])
+  const [rolesLoaded, setRolesLoaded] = useState(false)
+  const [newRoleName, setNewRoleName] = useState('')
+  const [rolesSaving, setRolesSaving] = useState(false)
+  const [rolesSaved, setRolesSaved] = useState(false)
+  const [rolesError, setRolesError] = useState('')
+
   useEffect(() => {
     if (church) {
       setChurchName(church.name)
       setCcliNumber(church.ccli_number || '')
+      if (!rolesLoaded) {
+        api.get(`/api/churches/${church.id}/roles`).then(r => {
+          setRoles(r.data.map((role: { id: string; name: string }) => ({ id: role.id, name: role.name, originalName: role.name })))
+          setRolesLoaded(true)
+        }).catch(() => {})
+      }
     }
-  }, [church])
+  }, [church, rolesLoaded])
 
   useEffect(() => {
     const email = user?.primaryEmailAddress?.emailAddress
@@ -140,6 +154,78 @@ export default function SettingsPage() {
     }
   }
 
+  function handleAddRole() {
+    const trimmed = newRoleName.trim()
+    if (!trimmed) return
+    if (roles.some(r => r.name.toLowerCase() === trimmed.toLowerCase())) return
+    setRoles(prev => [...prev, { name: trimmed }])
+    setNewRoleName('')
+  }
+
+  async function handleDeleteRole(index: number) {
+    const role = roles[index]
+    if (role.id && role.originalName) {
+      try {
+        const client = await getAuthenticatedApi()
+        const { data } = await client.get(`/api/churches/${church!.id}/roles/usage?name=${encodeURIComponent(role.originalName)}`)
+        if (data.count > 0) {
+          if (!confirm(`"${role.originalName}" is assigned to ${data.count} musician${data.count !== 1 ? 's' : ''} in your plans. Deleting it won't remove those assignments, but it will no longer appear in the role picker. Delete anyway?`)) return
+        }
+      } catch { /* proceed if usage check fails */ }
+    }
+    setRoles(prev => prev.filter((_, i) => i !== index))
+  }
+
+  function handleRenameRole(index: number, newName: string) {
+    setRoles(prev => prev.map((r, i) => i === index ? { ...r, name: newName } : r))
+  }
+
+  async function handleBlurRole(index: number) {
+    const role = roles[index]
+    if (!role.id || !role.originalName) return
+    const trimmed = role.name.trim()
+    if (trimmed === role.originalName || !trimmed) return
+    try {
+      const client = await getAuthenticatedApi()
+      const { data } = await client.get(`/api/churches/${church!.id}/roles/usage?name=${encodeURIComponent(role.originalName)}`)
+      if (data.count > 0) {
+        if (!confirm(`"${role.originalName}" is assigned to ${data.count} musician${data.count !== 1 ? 's' : ''} in your plans. Renaming it here won't update those existing assignments. Rename anyway?`)) {
+          setRoles(prev => prev.map((r, i) => i === index ? { ...r, name: role.originalName! } : r))
+          return
+        }
+      }
+    } catch { /* proceed */ }
+  }
+
+  function handleMoveRole(index: number, direction: 'up' | 'down') {
+    setRoles(prev => {
+      const next = [...prev]
+      const swap = direction === 'up' ? index - 1 : index + 1
+      if (swap < 0 || swap >= next.length) return prev;
+      [next[index], next[swap]] = [next[swap], next[index]]
+      return next
+    })
+  }
+
+  async function handleSaveRoles() {
+    setRolesSaving(true)
+    setRolesError('')
+    setRolesSaved(false)
+    try {
+      const client = await getAuthenticatedApi()
+      const { data } = await client.put(`/api/churches/${church!.id}/roles`, {
+        roles: roles.map((r, i) => ({ id: r.id, name: r.name.trim(), sort_order: i }))
+      })
+      setRoles(data.map((role: { id: string; name: string }) => ({ id: role.id, name: role.name, originalName: role.name })))
+      setRolesSaved(true)
+      setTimeout(() => setRolesSaved(false), 3000)
+    } catch {
+      setRolesError('Failed to save roles.')
+    } finally {
+      setRolesSaving(false)
+    }
+  }
+
   const labelStyle = { display: 'block', fontSize: 12, fontWeight: 600, color: 'var(--color-text-secondary)', marginBottom: 6, textTransform: 'uppercase' as const, letterSpacing: '0.05em' }
   const inputStyle = { width: '100%', padding: '10px 14px', border: '1px solid var(--color-border)', borderRadius: '10px', fontFamily: 'inherit', fontSize: 15, color: 'var(--color-text-primary)', background: 'var(--color-surface)', outline: 'none', boxSizing: 'border-box' as const }
 
@@ -209,6 +295,81 @@ export default function SettingsPage() {
           </button>
         </div>
       </form>
+
+      {/* Musician roles */}
+      <div style={{ background: 'var(--color-surface)', border: '1px solid var(--color-border)', borderRadius: 14, padding: 24, marginBottom: 20 }}>
+        <h2 style={{ fontSize: 16, fontWeight: 600, color: 'var(--color-text-primary)', marginBottom: 4 }}>Musician roles</h2>
+        <p style={{ fontSize: 13, color: 'var(--color-text-muted)', marginBottom: 16 }}>
+          Customise the role options shown when adding a musician to a plan. If none are set, a default list is used.
+        </p>
+
+        {rolesError && (
+          <div style={{ background: '#fdf0f0', border: '1px solid #f5c0c0', borderRadius: 10, padding: '10px 14px', marginBottom: 12, fontSize: 13, color: '#9a3a3a' }}>
+            {rolesError}
+          </div>
+        )}
+
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 8, marginBottom: 12 }}>
+          {roles.length === 0 && (
+            <p style={{ fontSize: 13, color: 'var(--color-text-muted)', fontStyle: 'italic' }}>No custom roles yet — defaults will be used.</p>
+          )}
+          {roles.map((role, i) => (
+            <div key={i} style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
+                <button
+                  type="button"
+                  onClick={() => handleMoveRole(i, 'up')}
+                  disabled={i === 0}
+                  style={{ background: 'none', border: 'none', cursor: i === 0 ? 'default' : 'pointer', color: i === 0 ? 'var(--color-border)' : 'var(--color-text-muted)', padding: '1px 4px', lineHeight: 1 }}
+                >
+                  <ArrowUp size={12} />
+                </button>
+                <button
+                  type="button"
+                  onClick={() => handleMoveRole(i, 'down')}
+                  disabled={i === roles.length - 1}
+                  style={{ background: 'none', border: 'none', cursor: i === roles.length - 1 ? 'default' : 'pointer', color: i === roles.length - 1 ? 'var(--color-border)' : 'var(--color-text-muted)', padding: '1px 4px', lineHeight: 1 }}
+                >
+                  <ArrowDown size={12} />
+                </button>
+              </div>
+              <input
+                value={role.name}
+                onChange={e => handleRenameRole(i, e.target.value)}
+                onBlur={() => handleBlurRole(i)}
+                style={{ flex: 1, padding: '8px 12px', border: '1px solid var(--color-border)', borderRadius: 8, fontSize: 14, color: 'var(--color-text-primary)', background: 'var(--color-surface)', fontFamily: 'inherit' }}
+              />
+              <button
+                type="button"
+                onClick={() => handleDeleteRole(i)}
+                style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'var(--color-text-muted)', padding: 6, borderRadius: 6, display: 'flex', alignItems: 'center' }}
+              >
+                <Trash2 size={15} />
+              </button>
+            </div>
+          ))}
+        </div>
+
+        <div style={{ display: 'flex', gap: 8, marginBottom: 16 }}>
+          <input
+            type="text"
+            placeholder="New role, e.g. Violin"
+            value={newRoleName}
+            onChange={e => setNewRoleName(e.target.value)}
+            onKeyDown={e => { if (e.key === 'Enter') { e.preventDefault(); handleAddRole() } }}
+            style={{ flex: 1, padding: '8px 12px', border: '1px solid var(--color-border)', borderRadius: 8, fontSize: 14, color: 'var(--color-text-primary)', background: 'var(--color-surface)', fontFamily: 'inherit' }}
+          />
+          <button type="button" onClick={handleAddRole} className="btn btn-ghost" style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+            <Plus size={15} />Add
+          </button>
+        </div>
+
+        <div style={{ display: 'flex', justifyContent: 'flex-end' }}>
+          <button type="button" onClick={handleSaveRoles} className="btn btn-primary" disabled={rolesSaving}>
+            {rolesSaving ? 'Saving…' : rolesSaved ? <><Check size={15} style={{ marginRight: 6 }} />Saved</> : 'Save roles'}
+          </button>
+        </div>
+      </div>
 
       {/* Settings grid — billing, invite, mailing */}
       <div className="settings-grid">
