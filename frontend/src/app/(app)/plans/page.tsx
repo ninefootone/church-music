@@ -16,7 +16,7 @@ interface Plan {
 }
 
 export default function PlansPage() {
-  const { church, loading: churchLoading, isAdmin, canAddPlans } = useChurch()
+  const { church, loading: churchLoading, canAddPlans } = useChurch()
   const [upcoming, setUpcoming] = useState<Plan[]>([])
   const [past, setPast] = useState<Plan[]>([])
   const [loading, setLoading] = useState(true)
@@ -46,8 +46,11 @@ export default function PlansPage() {
   const todayPlans = upcoming.filter(s => isToday(s.plan_date))
   const futurePlans = upcoming.filter(s => !isToday(s.plan_date))
 
-  const PlanCard = ({ plan, badge }: { plan: Plan; badge: 'today' | 'upcoming' | 'past' }) => (
-    <Link href={`/plans/${plan.id}`} className={`plan-card ${badge === 'past' ? 'is-past' : ''}`}>
+  const PAST_PAGE_SIZE = 10
+  const [visiblePast, setVisiblePast] = useState(PAST_PAGE_SIZE)
+
+  const PlanCard = ({ plan, badge }: { plan: Plan; badge: 'today' | 'upcoming' }) => (
+    <Link href={`/plans/${plan.id}`} className="plan-card">
       <div style={{ flex: 1, minWidth: 0 }}>
         <p className="plan-date">
           {format(parseISO(plan.plan_date), 'd MMMM yyyy')}
@@ -59,10 +62,27 @@ export default function PlansPage() {
       </div>
       <div style={{ display: 'flex', alignItems: 'center', gap: 10, flexShrink: 0 }}>
         <span className={`badge badge-${badge}`}>
-          {badge === 'today' ? 'TODAY' : badge === 'upcoming' ? 'UPCOMING' : 'PAST'}
+          {badge === 'today' ? 'TODAY' : 'UPCOMING'}
         </span>
         <ChevronRight size={18} style={{ color: 'var(--color-text-muted)' }} />
       </div>
+    </Link>
+  )
+
+  const PastRow = ({ plan }: { plan: Plan }) => (
+    <Link href={`/plans/${plan.id}`} className="plan-row-past">
+      <div style={{ flex: 1, minWidth: 0 }}>
+        <span style={{ fontSize: 'var(--text-sm)', color: 'var(--color-text-secondary)', fontWeight: 500 }}>
+          {format(parseISO(plan.plan_date), 'd MMM yyyy')}
+          {plan.plan_time && (
+            <span style={{ fontWeight: 400, color: 'var(--color-text-muted)' }}> · {plan.plan_time}</span>
+          )}
+          {plan.title && (
+            <span style={{ color: 'var(--color-text-muted)', fontWeight: 400 }}> — {plan.title}</span>
+          )}
+        </span>
+      </div>
+      <ChevronRight size={15} style={{ color: 'var(--color-text-muted)', flexShrink: 0 }} />
     </Link>
   )
 
@@ -110,7 +130,18 @@ export default function PlansPage() {
           {past.length > 0 && (
             <>
               <div className="section-label" style={{ marginTop: 'var(--space-lg)' }}>Past</div>
-              {past.map(s => <PlanCard key={s.id} plan={s} badge="past" />)}
+              <div className="card" style={{ padding: 'var(--space-sm) var(--space-lg)' }}>
+                {past.slice(0, visiblePast).map(s => <PastRow key={s.id} plan={s} />)}
+              </div>
+              {visiblePast < past.length && (
+                <button
+                  onClick={() => setVisiblePast(v => v + PAST_PAGE_SIZE)}
+                  className="btn btn-secondary"
+                  style={{ width: '100%', marginTop: 'var(--space-sm)', justifyContent: 'center', fontSize: 'var(--text-sm)' }}
+                >
+                  Show more ({past.length - visiblePast} remaining)
+                </button>
+              )}
             </>
           )}
         </>

@@ -585,6 +585,19 @@ body.set-viewer-active { overflow: hidden; }
   }
   .plan-card:hover    { border-color: var(--color-border-hover); box-shadow: var(--shadow-md); }
   .plan-card.is-past  { opacity: 0.65; }
+  .plan-row-past {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: var(--space-md);
+    padding: 7px 4px;
+    margin-bottom: 1px;
+    text-decoration: none;
+    border-bottom: 1px solid var(--color-border);
+    transition: opacity var(--transition-fast);
+  }
+  .plan-row-past:last-of-type { border-bottom: none; }
+  .plan-row-past:hover { opacity: 0.7; }
   .plan-date {
     font-size: var(--text-md);
     font-weight: 600;
