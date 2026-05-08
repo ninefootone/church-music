@@ -152,7 +152,7 @@ export default function PlanDetailPage() {
   const { id } = useParams()
   const router = useRouter()
   const { userId } = useAuth()
-  const { isAdmin, canEditAnyPlan, loading: churchLoading } = useChurch()
+  const { church, isAdmin, canEditAnyPlan, loading: churchLoading } = useChurch()
   const [plan, setPlan] = useState<any>(null)
   const [loading, setLoading] = useState(true)
   const [notFound, setNotFound] = useState(false)
