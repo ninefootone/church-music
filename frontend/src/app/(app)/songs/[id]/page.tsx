@@ -10,6 +10,7 @@ import { ChordProViewer } from '@/components/ui/ChordProViewer'
 import { CategoryBadge, KeyBadge } from '@/components/ui/badges'
 import { LyricsDisplay } from '@/components/ui/LyricsDisplay'
 import { FileUploadModal } from '@/components/ui/FileUploadModal'
+import { AddLinkModal } from '@/components/ui/AddLinkModal'
 import { Song } from '@/types'
 import api from '@/lib/api'
 import { useChurch } from '@/context/ChurchContext'
@@ -32,6 +33,7 @@ export default function SongDetailPage() {
   const [showDeleteSong, setShowDeleteSong] = useState(false)
   const [retiring, setRetiring] = useState(false)
   const [showDeleteFile, setShowDeleteFile] = useState<string | null>(null)
+  const [showAddLink, setShowAddLink] = useState(false)
 
   const fetchSong = useCallback(() => {
     if (!id || churchLoading) return
@@ -146,6 +148,14 @@ export default function SongDetailPage() {
           songKey={song.default_key}
           label={chordProFile.label}
           onClose={() => setChordProFile(null)}
+        />
+      )}
+
+      {showAddLink && (
+        <AddLinkModal
+          songId={song.id}
+          onClose={() => setShowAddLink(false)}
+          onSaved={fetchSong}
         />
       )}
 
@@ -327,10 +337,17 @@ export default function SongDetailPage() {
         )}
 
         {/* Links */}
-        {song.videos && song.videos.length > 0 && (
+        {(song.videos && song.videos.length > 0 || canManageSongs) && (
           <>
             <div className="divider" />
-            <p className="downloads-group-label">Links</p>
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 'var(--space-sm)' }}>
+              <p className="downloads-group-label" style={{ marginBottom: 0 }}>Links</p>
+              {canManageSongs && (
+                <button onClick={() => setShowAddLink(true)} className="btn btn-primary btn-sm">
+                  <Plus size={14} /> Add link
+                </button>
+              )}
+            </div>
             <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
               {song.videos.map(v => {
                 const typeLabel = v.link_type === 'spotify' ? 'Spotify'
