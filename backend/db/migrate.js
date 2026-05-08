@@ -128,6 +128,15 @@ const migrate = async () => {
         created_at TIMESTAMPTZ DEFAULT NOW()
       );
 
+      CREATE TABLE IF NOT EXISTS church_roles (
+        id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+        church_id UUID NOT NULL REFERENCES churches(id) ON DELETE CASCADE,
+        name TEXT NOT NULL,
+        sort_order INTEGER NOT NULL DEFAULT 0,
+        created_at TIMESTAMPTZ DEFAULT NOW(),
+        UNIQUE(church_id, name)
+      );
+
       ALTER TABLE churches
         ADD COLUMN IF NOT EXISTS is_curator BOOLEAN DEFAULT FALSE,
         ADD COLUMN IF NOT EXISTS stripe_customer_id TEXT,
