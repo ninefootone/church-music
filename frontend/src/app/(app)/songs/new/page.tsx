@@ -110,7 +110,7 @@ export default function NewSongPage() {
     <div style={{ maxWidth: 'var(--width-app)', margin: '0 auto' }}>
       <Link href="/songs" className="back-link"><ArrowLeft size={14} /> Back to songs</Link>
       <h1 className="page-title" style={{ marginBottom: 'var(--space-sm)' }}>Add new song</h1>
-      <p style={{ fontWeight: 600, color: 'var(--color-text-secondary)', marginBottom: 'var(--space-lg)' }}>Add song details below and click 'Save song'. Then you'll be able to upload files.</p>
+      <p style={{ fontWeight: 600, color: 'var(--color-text-secondary)', marginBottom: 'var(--space-lg)' }}>Add song details below and click 'Save song'. Then you'll be able to upload files and add links.</p>
       {atLimit && (
         <div className="error-box">
           You've reached the 5 song limit on the free plan. <Link href="/settings" className="link">Upgrade in Settings</Link> to add more songs.
