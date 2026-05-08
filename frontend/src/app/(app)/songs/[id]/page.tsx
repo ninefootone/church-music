@@ -34,6 +34,36 @@ export default function SongDetailPage() {
   const [retiring, setRetiring] = useState(false)
   const [showDeleteFile, setShowDeleteFile] = useState<string | null>(null)
   const [showAddLink, setShowAddLink] = useState(false)
+  const [editingLinkId, setEditingLinkId] = useState<string | null>(null)
+  const [editingLinkForm, setEditingLinkForm] = useState<{ url: string; label: string; link_type: string }>({ url: '', label: '', link_type: 'youtube' })
+  const [showDeleteLink, setShowDeleteLink] = useState<string | null>(null)
+
+  const startEditLink = (v: { id: string; url: string; label: string | null; link_type: string | null }) => {
+    setEditingLinkId(v.id)
+    setEditingLinkForm({ url: v.url, label: v.label || '', link_type: v.link_type || 'youtube' })
+  }
+
+  const saveEditLink = async () => {
+    if (!song || !editingLinkId) return
+    try {
+      await api.put(`/api/songs/${song.id}/videos/${editingLinkId}`, editingLinkForm)
+      setEditingLinkId(null)
+      fetchSong()
+    } catch (err) {
+      console.error('Failed to update link:', err)
+    }
+  }
+
+  const confirmDeleteLink = async () => {
+    if (!song || !showDeleteLink) return
+    try {
+      await api.delete(`/api/songs/${song.id}/videos/${showDeleteLink}`)
+      setShowDeleteLink(null)
+      fetchSong()
+    } catch (err) {
+      console.error('Failed to delete link:', err)
+    }
+  }
 
   const fetchSong = useCallback(() => {
     if (!id || churchLoading) return
@@ -355,12 +385,40 @@ export default function SongDetailPage() {
                   : v.link_type === 'other' ? 'Link'
                   : 'YouTube'
                 const displayLabel = v.label || typeLabel
+
+                if (canManageSongs && editingLinkId === v.id) {
+                  return (
+                    <div key={v.id} style={{ display: 'flex', flexDirection: 'column', gap: 6, padding: '10px 12px', border: '1px solid var(--color-border)', borderRadius: 'var(--radius-md)', background: 'var(--color-neutral-50)' }}>
+                      <select className="input" style={{ fontSize: 'var(--text-sm)', padding: '4px 8px' }} value={editingLinkForm.link_type} onChange={e => setEditingLinkForm(f => ({ ...f, link_type: e.target.value }))}>
+                        <option value="youtube">YouTube</option>
+                        <option value="spotify">Spotify</option>
+                        <option value="apple_music">Apple Music</option>
+                        <option value="other">Other</option>
+                      </select>
+                      <input className="input" style={{ fontSize: 'var(--text-sm)', padding: '4px 8px' }} placeholder="URL" value={editingLinkForm.url} onChange={e => setEditingLinkForm(f => ({ ...f, url: e.target.value }))} />
+                      <input className="input" style={{ fontSize: 'var(--text-sm)', padding: '4px 8px' }} placeholder="Label (optional)" value={editingLinkForm.label} onChange={e => setEditingLinkForm(f => ({ ...f, label: e.target.value }))} />
+                      <div style={{ display: 'flex', gap: 8 }}>
+                        <button onClick={saveEditLink} className="btn btn-primary btn-sm">Save</button>
+                        <button onClick={() => setEditingLinkId(null)} className="btn btn-secondary btn-sm">Cancel</button>
+                      </div>
+                    </div>
+                  )
+                }
+
                 return (
-                  <a key={v.id} href={v.url} target="_blank" rel="noopener noreferrer" className="youtube-link">
-                    <ExternalLink size={14} />
-                    {displayLabel}
-                    <span style={{ fontSize: 'var(--text-xs)', color: 'var(--color-text-muted)', marginLeft: 4 }}>({typeLabel})</span>
-                  </a>
+                  <div key={v.id} style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                    <a href={v.url} target="_blank" rel="noopener noreferrer" className="youtube-link" style={{ flex: 1, minWidth: 0 }}>
+                      <ExternalLink size={14} />
+                      <span style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{displayLabel}</span>
+                      <span style={{ fontSize: 'var(--text-xs)', color: 'var(--color-text-muted)', marginLeft: 4, flexShrink: 0 }}>({typeLabel})</span>
+                    </a>
+                    {canManageSongs && (
+                      <div style={{ display: 'flex', gap: 4, flexShrink: 0 }}>
+                        <button onClick={() => startEditLink(v)} className="btn btn-secondary btn-sm" style={{ padding: '3px 8px' }}><Edit size={13} /></button>
+                        <button onClick={() => setShowDeleteLink(v.id)} className="btn btn-secondary btn-sm" style={{ padding: '3px 8px', color: '#9a3a3a' }}><Trash2 size={13} /></button>
+                      </div>
+                    )}
+                  </div>
                 )
               })}
             </div>
@@ -443,6 +501,16 @@ export default function SongDetailPage() {
           danger
           onConfirm={confirmDeleteFile}
           onCancel={() => setShowDeleteFile(null)}
+        />
+      )}
+      {showDeleteLink && (
+        <ConfirmModal
+          title="Delete link"
+          message="Are you sure you want to delete this link?"
+          confirmLabel="Delete link"
+          danger
+          onConfirm={confirmDeleteLink}
+          onCancel={() => setShowDeleteLink(null)}
         />
       )}
     </div>
