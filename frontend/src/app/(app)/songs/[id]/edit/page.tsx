@@ -6,11 +6,21 @@ import { useParams, useRouter } from 'next/navigation'
 import { useAuth } from '@clerk/nextjs'
 import { ArrowLeft } from 'lucide-react'
 import { CATEGORIES, Category, Song } from '@/types'
+import { Plus, Trash2 } from 'lucide-react'
 import CcliAutocomplete from '@/components/CcliAutocomplete'
 import api, { setAuthToken } from '@/lib/api'
 import { LyricsEditor } from '@/components/ui/LyricsEditor'
 import { ArrangementBuilder } from '@/components/ui/ArrangementBuilder'
 import TagInput from '@/components/ui/TagInput'
+
+type SongLink = { id?: string; url: string; label: string; link_type: string }
+
+const LINK_TYPES = [
+  { value: 'youtube', label: 'YouTube' },
+  { value: 'spotify', label: 'Spotify' },
+  { value: 'apple_music', label: 'Apple Music' },
+  { value: 'other', label: 'Other' },
+]
 
 export default function EditSongPage() {
   const { id } = useParams()
@@ -19,7 +29,8 @@ export default function EditSongPage() {
   const [loading, setLoading] = useState(false)
   const [fetching, setFetching] = useState(true)
   const [error, setError] = useState('')
-  const [form, setForm] = useState({ title: '', author: '', default_key: '', category: '' as Category | '', first_line: '', ccli_number: '', youtube_url: '', lyrics: '', tags: '', notes: '', bible_references: '', suggested_arrangement: '' })
+  const [form, setForm] = useState({ title: '', author: '', default_key: '', category: '' as Category | '', first_line: '', ccli_number: '', lyrics: '', tags: '', notes: '', bible_references: '', suggested_arrangement: '' })
+  const [links, setLinks] = useState<SongLink[]>([])
 
   const keys = ['C', 'C#', 'Db', 'D', 'Eb', 'E', 'F', 'F#', 'Gb', 'G', 'Ab', 'A', 'Bb', 'B', 'Cm', 'C#m', 'Dm', 'Ebm', 'Em', 'Fm', 'F#m', 'Gm', 'Abm', 'Am', 'Bbm', 'Bm']
 
@@ -28,7 +39,8 @@ export default function EditSongPage() {
     api.get(`/api/songs/${id}`).then(r => {
       const s: Song = r.data
       const normaliseKey = (k: string | null | undefined) => k ? k.replace(/♯/g, '#').replace(/♭/g, 'b') : ''
-      setForm({ title: s.title, author: s.author || '', default_key: normaliseKey(s.default_key), category: s.category || '', first_line: s.first_line || '', ccli_number: s.ccli_number || '', youtube_url: s.youtube_url || '', lyrics: s.lyrics || '', tags: (s.tags || []).join(', '), notes: s.notes || '', bible_references: s.bible_references || '', suggested_arrangement: s.suggested_arrangement || '' })
+      setForm({ title: s.title, author: s.author || '', default_key: normaliseKey(s.default_key), category: s.category || '', first_line: s.first_line || '', ccli_number: s.ccli_number || '', lyrics: s.lyrics || '', tags: (s.tags || []).join(', '), notes: s.notes || '', bible_references: s.bible_references || '', suggested_arrangement: s.suggested_arrangement || '' })
+      setLinks((s.videos || []).map((v: any) => ({ id: v.id, url: v.url, label: v.label || '', link_type: v.link_type || 'youtube' })))
     }).catch(() => setError('Failed to load song')).finally(() => setFetching(false))
   }, [id])
 
@@ -40,11 +52,40 @@ export default function EditSongPage() {
       setAuthToken(token)
       const tags = form.tags.split(',').map(t => t.trim()).filter(Boolean)
       await api.put(`/api/songs/${id}`, { ...form, tags })
+
+      // Sync links: delete removed ones, update existing, add new
+      const existingLinks = links.filter(l => l.id)
+      const newLinks = links.filter(l => !l.id)
+
+      for (const link of existingLinks) {
+        if (link.url.trim()) {
+          await api.put(`/api/songs/${id}/videos/${link.id}`, { url: link.url, label: link.label, link_type: link.link_type })
+        }
+      }
+      for (const link of newLinks) {
+        if (link.url.trim()) {
+          await api.post(`/api/songs/${id}/videos`, { url: link.url, label: link.label, link_type: link.link_type, sort_order: 0 })
+        }
+      }
+
       router.push(`/songs/${id}`)
     } catch (err: any) {
       setError(err.response?.data?.error || 'Failed to save changes')
       setLoading(false)
     }
+  }
+
+  const addLink = () => setLinks(l => [...l, { url: '', label: '', link_type: 'youtube' }])
+
+  const updateLink = (i: number, field: keyof SongLink, value: string) =>
+    setLinks(l => l.map((item, idx) => idx === i ? { ...item, [field]: value } : item))
+
+  const removeLink = async (i: number) => {
+    const link = links[i]
+    if (link.id) {
+      try { await api.delete(`/api/songs/${id}/videos/${link.id}`) } catch {}
+    }
+    setLinks(l => l.filter((_, idx) => idx !== i))
   }
 
   const mb: React.CSSProperties = { marginBottom: 'var(--space-md)' }
@@ -91,7 +132,25 @@ export default function EditSongPage() {
           <div style={mb}><label className="label">First line</label><input className="input" value={form.first_line} onChange={e => setForm(f => ({ ...f, first_line: e.target.value }))} /></div>
           <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 'var(--space-md)', ...mb }}>
             <div><label className="label">CCLI number</label><input className="input" value={form.ccli_number} onChange={e => setForm(f => ({ ...f, ccli_number: e.target.value }))} /></div>
-            <div><label className="label">YouTube URL</label><input className="input" value={form.youtube_url} onChange={e => setForm(f => ({ ...f, youtube_url: e.target.value }))} /></div>
+            <div style={{ gridColumn: '1 / -1' }}>
+              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 8 }}>
+                <label className="label" style={{ marginBottom: 0 }}>Links</label>
+                <button type="button" onClick={addLink} className="btn btn-secondary btn-sm"><Plus size={13} /> Add link</button>
+              </div>
+              {links.length === 0 && (
+                <p className="text-muted" style={{ fontSize: 'var(--text-sm)', fontStyle: 'italic' }}>No links added yet.</p>
+              )}
+              {links.map((link, i) => (
+                <div key={i} style={{ display: 'grid', gridTemplateColumns: '140px 1fr 2fr auto', gap: 8, marginBottom: 8, alignItems: 'center' }}>
+                  <select className="input" value={link.link_type} onChange={e => updateLink(i, 'link_type', e.target.value)}>
+                    {LINK_TYPES.map(t => <option key={t.value} value={t.value}>{t.label}</option>)}
+                  </select>
+                  <input className="input" placeholder="Label (e.g. Live version)" value={link.label} onChange={e => updateLink(i, 'label', e.target.value)} />
+                  <input className="input" placeholder="URL" value={link.url} onChange={e => updateLink(i, 'url', e.target.value)} />
+                  <button type="button" onClick={() => removeLink(i)} className="btn btn-secondary btn-sm" style={{ color: '#9a3a3a' }}><Trash2 size={13} /></button>
+                </div>
+              ))}
+            </div>
           </div>
           <div style={mb}>
             <label className="label">Bible references</label>
