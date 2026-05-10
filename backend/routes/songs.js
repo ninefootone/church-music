@@ -209,13 +209,17 @@ router.put('/:id', requireAuth, requirePermission('can_manage_songs'), async (re
     const { churchId } = req;
     const { title, author, default_key, category, first_line, lyrics, ccli_number, youtube_url, notes, bible_references, suggested_arrangement, ccli_url, share_all_data, copyright_info, copyright_link, tags } = req.body;
 
+    const isMasterLibrary = churchId === process.env.MASTER_CHURCH_ID;
+    const shareEnabled = isMasterLibrary && (share_all_data ?? false);
+
     const song = await pool.query(
       `UPDATE songs SET title=$1, author=$2, default_key=$3, category=$4,
        first_line=$5, lyrics=$6, ccli_number=$7, youtube_url=$8,
        notes=$9, bible_references=$10, suggested_arrangement=$11, ccli_url=$12,
-       share_all_data=$13, copyright_info=$14, copyright_link=$15
-       WHERE id=$16 AND church_id=$17 RETURNING *`,
-      [title, author, default_key, category, first_line, lyrics, ccli_number, youtube_url, notes, bible_references, suggested_arrangement, ccli_url, share_all_data ?? false, copyright_info ?? null, copyright_link ?? null, req.params.id, churchId]
+       share_all_data=$13, copyright_info=$14, copyright_link=$15,
+       is_template=$16, template_status=$17
+       WHERE id=$18 AND church_id=$19 RETURNING *`,
+      [title, author, default_key, category, first_line, lyrics, ccli_number, youtube_url, notes, bible_references, suggested_arrangement, ccli_url, shareEnabled, copyright_info ?? null, copyright_link ?? null, shareEnabled, shareEnabled ? 'approved' : 'pending', req.params.id, churchId]
     );
     if (song.rows.length === 0) return res.status(404).json({ error: 'Song not found' });
 
