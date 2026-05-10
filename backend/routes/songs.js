@@ -43,7 +43,7 @@ router.get('/', requireAuth, requireMembership, async (req, res, next) => {
       params.push(category);
     }
     if (search) {
-      query += ` AND (s.title ILIKE $${idx} OR s.author ILIKE $${idx} OR s.lyrics ILIKE $${idx} OR s.first_line ILIKE $${idx})`;
+      query += ` AND (s.title ILIKE $${idx} OR s.author ILIKE $${idx} OR s.lyrics ILIKE $${idx} OR s.first_line ILIKE $${idx} OR s.bible_references ILIKE $${idx} OR s.notes ILIKE $${idx})`;
       params.push(`%${search}%`);
       idx++;
     }

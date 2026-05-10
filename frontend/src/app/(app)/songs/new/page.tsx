@@ -138,8 +138,8 @@ export default function NewSongPage() {
               titleValue={form.title}
               ccliValue={form.ccli_number}
               onTitleChange={val => handleTitleChange(val)}
-              onCcliChange={val => setForm(f => ({ ...f, ccli_number: val }))}
-              onAuthorChange={val => setForm(f => ({ ...f, author: f.author || val }))}
+              onCcliChange={val => { setForm(f => ({ ...f, ccli_number: val })); setTemplateSearch(null) }}
+              onAuthorChange={val => { setForm(f => ({ ...f, author: f.author || val })); setTemplateSearch(null) }}
               onFirstLineChange={val => setForm(f => ({ ...f, first_line: f.first_line || val }))}
               onDefaultKeyChange={val => setForm(f => ({ ...f, default_key: f.default_key || val }))}
               onCategoryChange={val => setForm(f => ({ ...f, category: f.category || val as Category }))}
