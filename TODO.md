@@ -13,7 +13,6 @@ platform-wide stats: number of churches, total songs, total plans, total users, 
 
 ### Features – Songs
 - [ ] Consolidate tags — review remaining ~108 tags after initial cleanup; aim for a clean controlled vocabulary of ~20–25 tags
-- [ ] 'Share all data' flag on songs — master library account only; marks a song as fully shareable so all fields and files are copied across to other churches via the shared library/template system
 - [ ] ChordPro inline editing — "Edit" button in the viewer toolbar opens a textarea with raw ChordPro text; save writes updated content back to R2 via a new PUT endpoint; admin only
 
 ### Features – Playlists
@@ -97,3 +96,4 @@ static inline `style={{...}}` props to named classes in `globals.css`.
 - [x] Retire a song — soft-delete: add a `retired` boolean flag to songs, hide retired songs from the main library and plan song-picker by default, but keep them in the DB; include a "Show retired songs" toggle on the songs page and a "Retire / Restore" button on the song detail page
 - [x] Show next planned date on individual song page
 - [x] Song ordering on songs page — sort by most/least sung
+- [x] 'Share all data' flag on songs — master library account only; marks a song as fully shareable so all fields and files are copied across to other churches via the shared library/template system

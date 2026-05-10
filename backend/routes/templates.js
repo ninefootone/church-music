@@ -63,8 +63,8 @@ router.post('/:id/import', requireAuth, requireAdmin, async (req, res, next) => 
         t.share_all_data ? t.bible_references : null,
         t.share_all_data ? t.suggested_arrangement : null,
         t.share_all_data ? t.lyrics : null,
-        t.share_all_data ? t.copyright_info : null,
-        t.share_all_data ? t.copyright_link : null,
+        t.copyright_info ?? null,
+        t.copyright_link ?? null,
       ]
     );
 
