@@ -64,9 +64,14 @@ export default function NewSongPage() {
 
   const keys = ['C', 'C#', 'Db', 'D', 'Eb', 'E', 'F', 'F#', 'Gb', 'G', 'Ab', 'A', 'Bb', 'B', 'Cm', 'C#m', 'Dm', 'Ebm', 'Em', 'Fm', 'F#m', 'Gm', 'Abm', 'Am', 'Bbm', 'Bm']
 
-  const handleTitleChange = async (val: string) => {
+  const handleTitleChange = (val: string) => {
     setForm(f => ({ ...f, title: val }))
-    if (val.length < 3) { setTemplateSearch(null); return }
+    setTemplateSearch(null)
+  }
+
+  const handleTitleBlur = async () => {
+    const val = form.title
+    if (val.length < 3) return
     try {
       const { data } = await api.get('/api/templates/search', { params: { q: val } })
       setTemplateSearch(data && data.length > 0 ? { id: data[0].id, title: data[0].title, author: data[0].author, ccli: data[0].ccli_number } : null)
@@ -138,6 +143,7 @@ export default function NewSongPage() {
               titleValue={form.title}
               ccliValue={form.ccli_number}
               onTitleChange={val => handleTitleChange(val)}
+              onBlur={handleTitleBlur}
               onCcliChange={val => { setForm(f => ({ ...f, ccli_number: val })); setTemplateSearch(null) }}
               onAuthorChange={val => { setForm(f => ({ ...f, author: f.author || val })); setTemplateSearch(null) }}
               onFirstLineChange={val => setForm(f => ({ ...f, first_line: f.first_line || val }))}
@@ -147,7 +153,8 @@ export default function NewSongPage() {
             {templateSearch && (
               <div style={{ marginTop: 10, padding: 'var(--space-md)', background: 'var(--color-brand-50)', border: '1px solid var(--color-brand-200)', borderRadius: 'var(--radius-md)' }}>
                 <div style={{ fontSize: 14, fontWeight: 600, color: 'var(--color-brand-700)', marginBottom: 4 }}>Found in shared library</div>
-                <div style={{ fontSize: 15, color: 'var(--color-brand-600)', marginBottom: 10 }}>{templateSearch.title} — {templateSearch.author}</div>
+                <div style={{ fontSize: 15, color: 'var(--color-brand-600)', marginBottom: 6 }}>{templateSearch.title} — {templateSearch.author}</div>
+                <div style={{ fontSize: 13, color: 'var(--color-text-muted)', marginBottom: 10 }}>The copyright holder has given permission for this song to be shared. All fields will be copied to your library.</div>
                 <button type="button" onClick={importTemplate} className="btn btn-primary btn-sm">Import this song</button>
                 <button type="button" onClick={() => setTemplateSearch(null)} className="btn btn-secondary btn-sm" style={{ marginLeft: 8 }}>Create from scratch</button>
               </div>

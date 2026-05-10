@@ -23,6 +23,7 @@ type Props = {
   onFirstLineChange?: (firstLine: string) => void
   onDefaultKeyChange?: (key: string) => void
   onCategoryChange?: (category: string) => void
+  onBlur?: () => void
 }
 
 export default function CcliAutocomplete({
@@ -34,6 +35,7 @@ export default function CcliAutocomplete({
   onFirstLineChange,
   onDefaultKeyChange,
   onCategoryChange,
+  onBlur,
 }: Props) {
   const [suggestions, setSuggestions] = useState<CcliEntry[]>([])
   const [open, setOpen] = useState(false)
@@ -92,6 +94,7 @@ export default function CcliAutocomplete({
         placeholder="Song title"
         value={titleValue}
         onChange={e => handleTitleInput(e.target.value)}
+        onBlur={() => { setOpen(false); onBlur?.() }}
         autoComplete="off"
       />
       {open && (
