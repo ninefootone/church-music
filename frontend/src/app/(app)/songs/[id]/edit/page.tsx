@@ -181,7 +181,28 @@ export default function EditSongPage() {
             )}
             <LyricsEditor value={form.lyrics} onChange={v => setForm(f => ({ ...f, lyrics: v }))} />
           </div>
-        {isMasterLibrary && (
+        <div style={mb}>
+              <label className="label">Copyright</label>
+              <div style={{ marginBottom: 8 }}>
+                <input
+                  className="input"
+                  placeholder="e.g. Public domain / © 2024 Author Name. Used with permission."
+                  value={form.copyright_info}
+                  onChange={e => setForm(f => ({ ...f, copyright_info: e.target.value }))}
+                />
+              </div>
+              <div>
+                <label className="label">Copyright holder website <span className="label-note">(optional)</span></label>
+                <input
+                  className="input"
+                  placeholder="https://..."
+                  value={form.copyright_link}
+                  onChange={e => setForm(f => ({ ...f, copyright_link: e.target.value }))}
+                />
+              </div>
+            </div>
+
+          {isMasterLibrary && (
             <div style={mb}>
               <label className="label">Discover sharing</label>
               <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 8 }}>
@@ -195,28 +216,6 @@ export default function EditSongPage() {
                   Share all data — this song is public domain or we have permission from the copyright holder
                 </label>
               </div>
-              {form.share_all_data && (
-                <>
-                  <div style={{ marginBottom: 8 }}>
-                    <label className="label">Copyright credit</label>
-                    <input
-                      className="input"
-                      placeholder="e.g. Public domain / © 2024 Author Name. Used with permission."
-                      value={form.copyright_info}
-                      onChange={e => setForm(f => ({ ...f, copyright_info: e.target.value }))}
-                    />
-                  </div>
-                  <div>
-                    <label className="label">Copyright holder website <span className="label-note">(optional)</span></label>
-                    <input
-                      className="input"
-                      placeholder="https://..."
-                      value={form.copyright_link}
-                      onChange={e => setForm(f => ({ ...f, copyright_link: e.target.value }))}
-                    />
-                  </div>
-                </>
-              )}
             </div>
           )}
         </form>
