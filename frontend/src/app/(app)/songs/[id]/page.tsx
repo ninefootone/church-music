@@ -316,6 +316,25 @@ export default function SongDetailPage() {
             {renderArrangement(song.suggested_arrangement)}
           </div>
         )}
+
+        {song.copyright_info && (
+          <div style={{ marginTop: 'var(--space-md)', paddingTop: 'var(--space-md)', borderTop: '1px solid var(--color-border)' }}>
+            <span className="section-label" style={{ marginBottom: 4, display: 'block' }}>Copyright</span>
+            <p style={{ fontSize: 'var(--text-sm)', color: 'var(--color-text-secondary)', margin: 0, lineHeight: 1.6 }}>
+              {song.copyright_info}
+            </p>
+            {song.copyright_link && (
+              
+                href={song.copyright_link}
+                target="_blank"
+                rel="noopener noreferrer"
+                style={{ fontSize: 'var(--text-sm)', color: 'var(--color-brand-500)', marginTop: 4, display: 'inline-block' }}
+              >
+                {song.copyright_link}
+              </a>
+            )}
+          </div>
+        )}
       </div>
 
       {/* Files */}
