@@ -20,6 +20,8 @@ const r2 = new S3Client({
 });
 
 const BUCKET = process.env.R2_BUCKET_NAME;
+module.exports.r2 = r2;
+module.exports.BUCKET = BUCKET;
 
 const upload = multer({
   storage: multer.memoryStorage(),
@@ -149,3 +151,5 @@ router.delete('/songs/:songId/files/:fileId', requireAuth, requireAdmin, async f
 });
 
 module.exports = router;
+module.exports.r2 = r2;
+module.exports.BUCKET = BUCKET;

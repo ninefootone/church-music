@@ -2,6 +2,9 @@ const express = require('express');
 const router = express.Router();
 const pool = require('../db/pool');
 const { requireAuth, requireMembership, requireAdmin } = require('../middleware/auth');
+const { r2, BUCKET } = require('./uploads');
+const { CopyObjectCommand } = require('@aws-sdk/client-s3');
+const { v4: uuidv4 } = require('uuid');
 
 // GET /templates/search?q= — search global template library
 router.get('/search', requireAuth, async (req, res, next) => {
@@ -80,6 +83,27 @@ router.post('/:id/import', requireAuth, requireAdmin, async (req, res, next) => 
         'INSERT INTO song_tags (song_id, tag_id) VALUES ($1, $2) ON CONFLICT DO NOTHING',
         [song.rows[0].id, newTag.rows[0].id]
       );
+    }
+
+    // Copy song files in R2 if share_all_data is enabled
+    if (t.share_all_data) {
+      const files = await pool.query(
+        `SELECT * FROM song_files WHERE song_id = $1`,
+        [req.params.id]
+      );
+      for (const file of files.rows) {
+        const ext = file.r2_key.split('.').pop();
+        const newKey = `churches/${churchId}/songs/${song.rows[0].id}/${uuidv4()}.${ext}`;
+        await r2.send(new CopyObjectCommand({
+          Bucket: BUCKET,
+          CopySource: `${BUCKET}/${file.r2_key}`,
+          Key: newKey,
+        }));
+        await pool.query(
+          `INSERT INTO song_files (song_id, file_type, label, key_of, r2_key) VALUES ($1,$2,$3,$4,$5)`,
+          [song.rows[0].id, file.file_type, file.label, file.key_of, newKey]
+        );
+      }
     }
 
     // Copy song_videos if share_all_data is enabled
