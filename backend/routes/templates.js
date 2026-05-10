@@ -49,11 +49,20 @@ router.post('/:id/import', requireAuth, requireAdmin, async (req, res, next) => 
     );
     if (existing.rows.length > 0) return res.status(409).json({ error: 'Song already in your library', existing: existing.rows[0] });
 
-    // Copy template to church
+    // Copy template to church — include extended fields if share_all_data is enabled
     const song = await pool.query(
-      `INSERT INTO songs (church_id, title, author, default_key, category, first_line, ccli_number, is_template)
-       VALUES ($1,$2,$3,$4,$5,$6,$7,false) RETURNING *`,
-      [churchId, t.title, t.author, t.default_key, t.category, t.first_line, t.ccli_number]
+      `INSERT INTO songs (church_id, title, author, default_key, category, first_line, ccli_number,
+        notes, bible_references, suggested_arrangement, lyrics, copyright_info, copyright_link, is_template)
+       VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,false) RETURNING *`,
+      [
+        churchId, t.title, t.author, t.default_key, t.category, t.first_line, t.ccli_number,
+        t.share_all_data ? t.notes : null,
+        t.share_all_data ? t.bible_references : null,
+        t.share_all_data ? t.suggested_arrangement : null,
+        t.share_all_data ? t.lyrics : null,
+        t.share_all_data ? t.copyright_info : null,
+        t.share_all_data ? t.copyright_link : null,
+      ]
     );
 
     // Copy tags
@@ -73,7 +82,21 @@ router.post('/:id/import', requireAuth, requireAdmin, async (req, res, next) => 
       );
     }
 
-    res.status(201).json(song.rows[0]);
+    // Copy song_videos if share_all_data is enabled
+    if (t.share_all_data) {
+      const videos = await pool.query(
+        `SELECT url, label, link_type, sort_order FROM song_videos WHERE song_id = $1`,
+        [req.params.id]
+      );
+      for (const v of videos.rows) {
+        await pool.query(
+          `INSERT INTO song_videos (song_id, url, label, link_type, sort_order) VALUES ($1,$2,$3,$4,$5)`,
+          [song.rows[0].id, v.url, v.label, v.link_type, v.sort_order]
+        );
+      }
+    }
+
+    res.status(201).json({ ...song.rows[0], share_all_data: t.share_all_data });
   } catch (err) {
     next(err);
   }

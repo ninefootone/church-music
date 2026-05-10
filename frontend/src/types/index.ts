@@ -87,6 +87,9 @@ export interface Song {
   }[]
   is_template: boolean
   template_status: TemplateStatus | null
+  share_all_data: boolean
+  copyright_info: string | null
+  copyright_link: string | null
   retired: boolean
   contributed_by: string | null
   created_at: string

@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react'
 import Link from 'next/link'
 import { useParams, useRouter } from 'next/navigation'
 import { useAuth } from '@clerk/nextjs'
+import { useChurch } from '@/context/ChurchContext'
 import { ArrowLeft } from 'lucide-react'
 import { CATEGORIES, Category, Song } from '@/types'
 import { Plus, Trash2 } from 'lucide-react'
@@ -26,10 +27,12 @@ export default function EditSongPage() {
   const { id } = useParams()
   const router = useRouter()
   const { getToken } = useAuth()
+  const { church } = useChurch()
+  const isMasterLibrary = church?.id === process.env.NEXT_PUBLIC_MASTER_CHURCH_ID
   const [loading, setLoading] = useState(false)
   const [fetching, setFetching] = useState(true)
   const [error, setError] = useState('')
-  const [form, setForm] = useState({ title: '', author: '', default_key: '', category: '' as Category | '', first_line: '', ccli_number: '', lyrics: '', tags: '', notes: '', bible_references: '', suggested_arrangement: '' })
+  const [form, setForm] = useState({ title: '', author: '', default_key: '', category: '' as Category | '', first_line: '', ccli_number: '', lyrics: '', tags: '', notes: '', bible_references: '', suggested_arrangement: '', share_all_data: false, copyright_info: '', copyright_link: '' })
   const [links, setLinks] = useState<SongLink[]>([])
 
   const keys = ['C', 'C#', 'Db', 'D', 'Eb', 'E', 'F', 'F#', 'Gb', 'G', 'Ab', 'A', 'Bb', 'B', 'Cm', 'C#m', 'Dm', 'Ebm', 'Em', 'Fm', 'F#m', 'Gm', 'Abm', 'Am', 'Bbm', 'Bm']
@@ -39,7 +42,7 @@ export default function EditSongPage() {
     api.get(`/api/songs/${id}`).then(r => {
       const s: Song = r.data
       const normaliseKey = (k: string | null | undefined) => k ? k.replace(/♯/g, '#').replace(/♭/g, 'b') : ''
-      setForm({ title: s.title, author: s.author || '', default_key: normaliseKey(s.default_key), category: s.category || '', first_line: s.first_line || '', ccli_number: s.ccli_number || '', lyrics: s.lyrics || '', tags: (s.tags || []).join(', '), notes: s.notes || '', bible_references: s.bible_references || '', suggested_arrangement: s.suggested_arrangement || '' })
+      setForm({ title: s.title, author: s.author || '', default_key: normaliseKey(s.default_key), category: s.category || '', first_line: s.first_line || '', ccli_number: s.ccli_number || '', lyrics: s.lyrics || '', tags: (s.tags || []).join(', '), notes: s.notes || '', bible_references: s.bible_references || '', suggested_arrangement: s.suggested_arrangement || '', share_all_data: !!s.share_all_data, copyright_info: s.copyright_info || '', copyright_link: s.copyright_link || '' })
       setLinks((s.videos || []).map((v: any) => ({ id: v.id, url: v.url, label: v.label || '', link_type: v.link_type || 'youtube' })))
     }).catch(() => setError('Failed to load song')).finally(() => setFetching(false))
   }, [id])
@@ -178,6 +181,44 @@ export default function EditSongPage() {
             )}
             <LyricsEditor value={form.lyrics} onChange={v => setForm(f => ({ ...f, lyrics: v }))} />
           </div>
+        {isMasterLibrary && (
+            <div style={mb}>
+              <label className="label">Discover sharing</label>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 8 }}>
+                <input
+                  type="checkbox"
+                  id="share_all_data"
+                  checked={form.share_all_data}
+                  onChange={e => setForm(f => ({ ...f, share_all_data: e.target.checked }))}
+                />
+                <label htmlFor="share_all_data" style={{ fontSize: 14, cursor: 'pointer' }}>
+                  Share all data — this song is public domain or we have permission from the copyright holder
+                </label>
+              </div>
+              {form.share_all_data && (
+                <>
+                  <div style={{ marginBottom: 8 }}>
+                    <label className="label">Copyright credit</label>
+                    <input
+                      className="input"
+                      placeholder="e.g. Public domain / © 2024 Author Name. Used with permission."
+                      value={form.copyright_info}
+                      onChange={e => setForm(f => ({ ...f, copyright_info: e.target.value }))}
+                    />
+                  </div>
+                  <div>
+                    <label className="label">Copyright holder website <span className="label-note">(optional)</span></label>
+                    <input
+                      className="input"
+                      placeholder="https://..."
+                      value={form.copyright_link}
+                      onChange={e => setForm(f => ({ ...f, copyright_link: e.target.value }))}
+                    />
+                  </div>
+                </>
+              )}
+            </div>
+          )}
         </form>
       </div>
       <div className="song-form-footer-spacer" />

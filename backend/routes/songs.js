@@ -146,12 +146,12 @@ router.post('/', requireAuth, requirePermission('can_manage_songs'), async (req,
       }
     }
 
-    const { title, author, default_key, category, first_line, lyrics, ccli_number, youtube_url, notes, bible_references, suggested_arrangement, ccli_url, tags } = req.body;
+    const { title, author, default_key, category, first_line, lyrics, ccli_number, youtube_url, notes, bible_references, suggested_arrangement, ccli_url, share_all_data, copyright_info, copyright_link, tags } = req.body;
 
     const song = await pool.query(
-      `INSERT INTO songs (church_id, title, author, default_key, category, first_line, lyrics, ccli_number, youtube_url, notes, bible_references, suggested_arrangement, ccli_url)
-       VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13) RETURNING *`,
-      [churchId, title, author, default_key, category, first_line, lyrics, ccli_number, youtube_url, notes, bible_references, suggested_arrangement, ccli_url]
+      `INSERT INTO songs (church_id, title, author, default_key, category, first_line, lyrics, ccli_number, youtube_url, notes, bible_references, suggested_arrangement, ccli_url, share_all_data, copyright_info, copyright_link)
+       VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15,$16) RETURNING *`,
+      [churchId, title, author, default_key, category, first_line, lyrics, ccli_number, youtube_url, notes, bible_references, suggested_arrangement, ccli_url, share_all_data ?? false, copyright_info ?? null, copyright_link ?? null]
     );
 
     // Handle tags
@@ -207,14 +207,15 @@ router.patch('/:id/retire', requireAuth, requirePermission('can_manage_songs'), 
 router.put('/:id', requireAuth, requirePermission('can_manage_songs'), async (req, res, next) => {
   try {
     const { churchId } = req;
-    const { title, author, default_key, category, first_line, lyrics, ccli_number, youtube_url, notes, bible_references, suggested_arrangement, ccli_url, tags } = req.body;
+    const { title, author, default_key, category, first_line, lyrics, ccli_number, youtube_url, notes, bible_references, suggested_arrangement, ccli_url, share_all_data, copyright_info, copyright_link, tags } = req.body;
 
     const song = await pool.query(
       `UPDATE songs SET title=$1, author=$2, default_key=$3, category=$4,
        first_line=$5, lyrics=$6, ccli_number=$7, youtube_url=$8,
-       notes=$9, bible_references=$10, suggested_arrangement=$11, ccli_url=$12
-       WHERE id=$13 AND church_id=$14 RETURNING *`,
-      [title, author, default_key, category, first_line, lyrics, ccli_number, youtube_url, notes, bible_references, suggested_arrangement, ccli_url, req.params.id, churchId]
+       notes=$9, bible_references=$10, suggested_arrangement=$11, ccli_url=$12,
+       share_all_data=$13, copyright_info=$14, copyright_link=$15
+       WHERE id=$16 AND church_id=$17 RETURNING *`,
+      [title, author, default_key, category, first_line, lyrics, ccli_number, youtube_url, notes, bible_references, suggested_arrangement, ccli_url, share_all_data ?? false, copyright_info ?? null, copyright_link ?? null, req.params.id, churchId]
     );
     if (song.rows.length === 0) return res.status(404).json({ error: 'Song not found' });
 
