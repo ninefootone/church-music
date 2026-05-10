@@ -324,8 +324,7 @@ export default function SongDetailPage() {
               {song.copyright_info}
             </p>
             {song.copyright_link && (
-              
-                href={song.copyright_link}
+                <a href={song.copyright_link}
                 target="_blank"
                 rel="noopener noreferrer"
                 style={{ fontSize: 'var(--text-sm)', color: 'var(--color-brand-500)', marginTop: 4, display: 'inline-block' }}
