@@ -65,10 +65,27 @@ export default function DiscoverPage() {
   useEffect(() => {
     if (!church || fetchedRef.current) return
     fetchedRef.current = true
-    api.get('/api/templates/discover')
-      .then(r => setSongs(r.data))
-      .catch(() => {})
-      .finally(() => setLoading(false))
+    Promise.all([
+      api.get('/api/templates/discover'),
+      api.get('/api/songs'),
+    ]).then(([discoverRes, songsRes]) => {
+      setSongs(discoverRes.data)
+      const existingTitles: Record<string, string> = {}
+      for (const s of songsRes.data) {
+        existingTitles[s.title.toLowerCase()] = s.id
+      }
+      const preloaded: Record<string, ImportState> = {}
+      const preloadedIds: Record<string, string> = {}
+      for (const ds of discoverRes.data) {
+        const match = existingTitles[ds.title.toLowerCase()]
+        if (match) {
+          preloaded[ds.id] = 'exists'
+          preloadedIds[ds.id] = match
+        }
+      }
+      setImportStates(preloaded)
+      setImportedIds(preloadedIds)
+    }).catch(() => {}).finally(() => setLoading(false))
   }, [church])
 
   const handleImport = async (song: DiscoverSong) => {
