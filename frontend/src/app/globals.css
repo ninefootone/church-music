@@ -1974,23 +1974,20 @@ textarea {
 }
 
 .discover-card {
-  background: var(--color-surface);
-  border: 1px solid var(--color-border);
-  border-radius: var(--radius-lg);
-  overflow: hidden;
   display: flex;
   flex-direction: row;
-  align-items: stretch;
+  align-items: flex-start;
+  gap: var(--space-lg);
 }
 
 .discover-card__image {
-  width: 160px;
-  min-width: 160px;
-  height: 160px;
+  width: 140px;
+  min-width: 140px;
+  height: 140px;
   object-fit: cover;
   display: block;
   flex-shrink: 0;
-  align-self: flex-start;
+  border-radius: 6px;
 }
 
 .discover-card__image--placeholder {
@@ -1999,6 +1996,7 @@ textarea {
   align-items: center;
   justify-content: center;
   color: var(--color-brand-300);
+  border-radius: 6px;
 }
 
 .discover-card__body {
@@ -2008,6 +2006,9 @@ textarea {
   gap: var(--space-xs);
   flex: 1;
   min-width: 0;
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-lg);
 }
 
 .discover-card__meta {
@@ -2101,21 +2102,23 @@ textarea {
 }
 
 @media (max-width: 600px) {
+  .discover-card {
+    flex-direction: column;
+  }
+
   .discover-card__image {
-    width: 90px;
-    min-width: 90px;
-    height: 90px;
+    width: 100%;
+    min-width: 0;
+    height: 200px;
+    border-radius: 6px;
   }
 
   .discover-card__body {
     padding: var(--space-md);
+    width: 100%;
   }
 
   .discover-card__title {
     font-size: var(--text-base);
-  }
-
-  .discover-card__description {
-    display: none;
   }
 }
