@@ -50,10 +50,12 @@ export default function NewSongPage() {
     localStorage.setItem('songstack_copyright_notice_dismissed', 'true')
     setCopyrightDismissed(true)
   }
+  const isMasterLibrary = church?.id === process.env.NEXT_PUBLIC_MASTER_CHURCH_ID
   const [form, setForm] = useState({
     title: '', author: '', default_key: '', category: '' as Category | '',
     first_line: '', ccli_number: '', lyrics: '', tags: '',
     notes: '', bible_references: '', suggested_arrangement: '',
+    share_all_data: false, in_discover: false, discover_description: '',
   })
   const [links, setLinks] = useState<SongLink[]>([])
 
@@ -249,6 +251,48 @@ export default function NewSongPage() {
             )}
             <LyricsEditor value={form.lyrics} onChange={v => setForm(f => ({ ...f, lyrics: v }))} />
           </div>
+
+          {isMasterLibrary && (
+            <div className="form-field">
+              <label className="label">Master library</label>
+              <div className="checkbox-row">
+                <input
+                  type="checkbox"
+                  id="share_all_data"
+                  checked={form.share_all_data}
+                  onChange={e => setForm(f => ({ ...f, share_all_data: e.target.checked }))}
+                />
+                <label htmlFor="share_all_data" className="checkbox-label">
+                  Share all data — this song is public domain or we have permission from the copyright holder
+                </label>
+              </div>
+              <div className="checkbox-row" style={{ marginTop: '0.5rem' }}>
+                <input
+                  type="checkbox"
+                  id="in_discover"
+                  checked={form.in_discover}
+                  onChange={e => setForm(f => ({ ...f, in_discover: e.target.checked }))}
+                />
+                <label htmlFor="in_discover" className="checkbox-label">
+                  Add to Discover — feature this song in the curated Discover area
+                </label>
+              </div>
+              {form.in_discover && (
+                <div style={{ marginTop: '1rem' }}>
+                  <label className="label">Discover description</label>
+                  <textarea
+                    className="input"
+                    rows={3}
+                    placeholder="A short curator note shown in Discover, e.g. 'Great contemporary anthem, works well acoustic'"
+                    value={form.discover_description}
+                    onChange={e => setForm(f => ({ ...f, discover_description: e.target.value }))}
+                    style={{ resize: 'vertical' }}
+                  />
+                  <p className="text-muted" style={{ marginTop: '0.5rem', fontSize: '0.8rem' }}>Artwork can be added after saving.</p>
+                </div>
+              )}
+            </div>
+          )}
         </form>
       </div>
       <div className="song-form-footer-spacer" />
