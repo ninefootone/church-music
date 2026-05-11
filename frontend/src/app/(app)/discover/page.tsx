@@ -5,7 +5,7 @@ import { useAuth } from '@clerk/nextjs'
 import { useChurch } from '@/context/ChurchContext'
 import { CategoryBadge, KeyBadge } from '@/components/ui/badges'
 import api, { setAuthToken } from '@/lib/api'
-import { Sparkles, BookOpen } from 'lucide-react'
+import { Sparkles, BookOpen, Youtube, Music } from 'lucide-react'
 
 type DiscoverSong = {
   id: string
@@ -19,9 +19,37 @@ type DiscoverSong = {
   discover_image_url: string | null
   share_all_data: boolean
   tags: string[]
+  videos: { url: string; label: string | null; link_type: string | null }[]
 }
 
 type ImportState = 'idle' | 'loading' | 'done' | 'exists' | 'error'
+
+function VideoLinks({ videos }: { videos: DiscoverSong['videos'] }) {
+  const relevant = videos.filter(v => v.link_type === 'youtube' || v.link_type === 'spotify' || v.link_type === 'apple_music')
+  if (relevant.length === 0) return null
+  return (
+    <div className="discover-card__links">
+      {relevant.map((v, i) => {
+        const isYoutube = v.link_type === 'youtube'
+        const isSpotify = v.link_type === 'spotify'
+        return (
+          
+            key={i}
+            href={v.url}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="discover-card__link-btn"
+          >
+            {isYoutube && <Youtube size={13} />}
+            {isSpotify && <Music size={13} />}
+            {!isYoutube && !isSpotify && <Music size={13} />}
+            {v.label || (isYoutube ? 'YouTube' : isSpotify ? 'Spotify' : 'Listen')}
+          </a>
+        )
+      })}
+    </div>
+  )
+}
 
 export default function DiscoverPage() {
   const { getToken } = useAuth()
@@ -77,7 +105,7 @@ export default function DiscoverPage() {
           <p>No songs in Discover yet. Check back soon.</p>
         </div>
       ) : (
-        <div className="discover-grid">
+        <div className="discover-list">
           {songs.map(song => {
             const state = importStates[song.id] || 'idle'
             const importedSongId = importedIds[song.id]
@@ -92,7 +120,7 @@ export default function DiscoverPage() {
                   />
                 ) : (
                   <div className="discover-card__image discover-card__image--placeholder">
-                    <BookOpen size={32} />
+                    <BookOpen size={24} />
                   </div>
                 )}
                 <div className="discover-card__body">
@@ -112,12 +140,10 @@ export default function DiscoverPage() {
                       ))}
                     </div>
                   )}
+                  <VideoLinks videos={song.videos || []} />
                   <div className="discover-card__footer">
                     {state === 'idle' && (
-                      <button
-                        className="btn btn-primary btn-sm"
-                        onClick={() => handleImport(song)}
-                      >
+                      <button className="btn btn-primary btn-sm" onClick={() => handleImport(song)}>
                         Add to library
                       </button>
                     )}
