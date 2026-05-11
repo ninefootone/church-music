@@ -122,6 +122,25 @@ router.delete('/songs/:songId/discover-image', requireAuth, requireAdmin, async 
   }
 });
 
+// GET /uploads/songs/:songId/discover-image-url — get signed URL for discover artwork
+router.get('/songs/:songId/discover-image-url', requireAuth, async function(req, res, next) {
+  try {
+    const { songId } = req.params;
+    const result = await pool.query('SELECT discover_image_key FROM songs WHERE id = $1', [songId]);
+    const key = result.rows[0]?.discover_image_key;
+    if (!key) return res.status(404).json({ error: 'No discover image' });
+
+    const url = await getSignedUrl(
+      r2,
+      new GetObjectCommand({ Bucket: BUCKET, Key: key }),
+      { expiresIn: 3600 }
+    );
+    res.json({ url });
+  } catch (err) {
+    next(err);
+  }
+});
+
 router.post('/songs/:songId', requireAuth, requireAdmin, upload.single('file'), async function(req, res, next) {
   try {
     const songId = req.params.songId;

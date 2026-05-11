@@ -32,8 +32,10 @@ export default function EditSongPage() {
   const [loading, setLoading] = useState(false)
   const [fetching, setFetching] = useState(true)
   const [error, setError] = useState('')
-  const [form, setForm] = useState({ title: '', author: '', default_key: '', category: '' as Category | '', first_line: '', ccli_number: '', lyrics: '', tags: '', notes: '', bible_references: '', suggested_arrangement: '', share_all_data: false, copyright_info: '', copyright_link: '' })
+  const [form, setForm] = useState({ title: '', author: '', default_key: '', category: '' as Category | '', first_line: '', ccli_number: '', lyrics: '', tags: '', notes: '', bible_references: '', suggested_arrangement: '', share_all_data: false, copyright_info: '', copyright_link: '', in_discover: false, discover_description: '' })
   const [links, setLinks] = useState<SongLink[]>([])
+  const [discoverImageUrl, setDiscoverImageUrl] = useState<string | null>(null)
+  const [discoverImageUploading, setDiscoverImageUploading] = useState(false)
 
   const keys = ['C', 'C#', 'Db', 'D', 'Eb', 'E', 'F', 'F#', 'Gb', 'G', 'Ab', 'A', 'Bb', 'B', 'Cm', 'C#m', 'Dm', 'Ebm', 'Em', 'Fm', 'F#m', 'Gm', 'Abm', 'Am', 'Bbm', 'Bm']
 
@@ -42,7 +44,13 @@ export default function EditSongPage() {
     api.get(`/api/songs/${id}`).then(r => {
       const s: Song = r.data
       const normaliseKey = (k: string | null | undefined) => k ? k.replace(/♯/g, '#').replace(/♭/g, 'b') : ''
-      setForm({ title: s.title, author: s.author || '', default_key: normaliseKey(s.default_key), category: s.category || '', first_line: s.first_line || '', ccli_number: s.ccli_number || '', lyrics: s.lyrics || '', tags: (s.tags || []).join(', '), notes: s.notes || '', bible_references: s.bible_references || '', suggested_arrangement: s.suggested_arrangement || '', share_all_data: !!s.share_all_data, copyright_info: s.copyright_info || '', copyright_link: s.copyright_link || '' })
+      setForm({ title: s.title, author: s.author || '', default_key: normaliseKey(s.default_key), category: s.category || '', first_line: s.first_line || '', ccli_number: s.ccli_number || '', lyrics: s.lyrics || '', tags: (s.tags || []).join(', '), notes: s.notes || '', bible_references: s.bible_references || '', suggested_arrangement: s.suggested_arrangement || '', share_all_data: !!s.share_all_data, copyright_info: s.copyright_info || '', copyright_link: s.copyright_link || '', in_discover: !!s.in_discover, discover_description: s.discover_description || '' })
+      if (s.discover_image_key) {
+        try {
+          const imgRes = await api.get(`/api/uploads/songs/${s.id}/discover-image-url`)
+          setDiscoverImageUrl(imgRes.data.url)
+        } catch {}
+      }
       setLinks((s.videos || []).map((v: any) => ({ id: v.id, url: v.url, label: v.label || '', link_type: v.link_type || 'youtube' })))
     }).catch(() => setError('Failed to load song')).finally(() => setFetching(false))
   }, [id])
@@ -75,6 +83,37 @@ export default function EditSongPage() {
     } catch (err: any) {
       setError(err.response?.data?.error || 'Failed to save changes')
       setLoading(false)
+    }
+  }
+
+  const handleDiscoverImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0]
+    if (!file) return
+    setDiscoverImageUploading(true)
+    try {
+      const token = await getToken()
+      setAuthToken(token)
+      const formData = new FormData()
+      formData.append('image', file)
+      const res = await api.post(`/api/uploads/songs/${id}/discover-image`, formData, {
+        headers: { 'Content-Type': 'multipart/form-data' },
+      })
+      setDiscoverImageUrl(res.data.url)
+    } catch {
+      setError('Failed to upload image')
+    } finally {
+      setDiscoverImageUploading(false)
+    }
+  }
+
+  const handleDiscoverImageDelete = async () => {
+    try {
+      const token = await getToken()
+      setAuthToken(token)
+      await api.delete(`/api/uploads/songs/${id}/discover-image`)
+      setDiscoverImageUrl(null)
+    } catch {
+      setError('Failed to remove image')
     }
   }
 
@@ -202,7 +241,7 @@ export default function EditSongPage() {
 
           {isMasterLibrary && (
             <div className="form-field">
-              <label className="label">Discover sharing</label>
+              <label className="label">Master library</label>
               <div className="checkbox-row">
                 <input
                   type="checkbox"
@@ -214,6 +253,51 @@ export default function EditSongPage() {
                   Share all data — this song is public domain or we have permission from the copyright holder
                 </label>
               </div>
+              <div className="checkbox-row" style={{ marginTop: '0.5rem' }}>
+                <input
+                  type="checkbox"
+                  id="in_discover"
+                  checked={form.in_discover}
+                  onChange={e => setForm(f => ({ ...f, in_discover: e.target.checked }))}
+                />
+                <label htmlFor="in_discover" className="checkbox-label">
+                  Add to Discover — feature this song in the curated Discover area
+                </label>
+              </div>
+              {form.in_discover && (
+                <div style={{ marginTop: '1rem' }}>
+                  <div className="form-subfield">
+                    <label className="label">Discover description</label>
+                    <textarea
+                      className="input"
+                      rows={3}
+                      placeholder="A short curator note shown in Discover, e.g. 'Great contemporary anthem, works well acoustic'"
+                      value={form.discover_description}
+                      onChange={e => setForm(f => ({ ...f, discover_description: e.target.value }))}
+                      style={{ resize: 'vertical' }}
+                    />
+                  </div>
+                  <div className="form-subfield" style={{ marginTop: '0.75rem' }}>
+                    <label className="label">Discover artwork <span className="label-note">(square image, JPG/PNG/WebP, max 5MB)</span></label>
+                    {discoverImageUrl && (
+                      <div style={{ marginBottom: '0.5rem' }}>
+                        <img src={discoverImageUrl} alt="Discover artwork" style={{ width: 120, height: 120, objectFit: 'cover', borderRadius: 8, display: 'block', marginBottom: '0.5rem' }} />
+                        <button type="button" className="btn btn-secondary btn-sm btn-danger-text" onClick={handleDiscoverImageDelete}>
+                          <Trash2 size={13} /> Remove image
+                        </button>
+                      </div>
+                    )}
+                    <input
+                      type="file"
+                      accept="image/jpeg,image/png,image/webp"
+                      onChange={handleDiscoverImageUpload}
+                      disabled={discoverImageUploading}
+                      style={{ marginTop: discoverImageUrl ? '0.5rem' : 0 }}
+                    />
+                    {discoverImageUploading && <p className="text-muted" style={{ marginTop: '0.25rem' }}>Uploading…</p>}
+                  </div>
+                </div>
+              )}
             </div>
           )}
         </form>
