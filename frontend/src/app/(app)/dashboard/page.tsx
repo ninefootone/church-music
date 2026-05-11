@@ -19,7 +19,7 @@ export default function DashboardPage() {
   const [showInviteModal, setShowInviteModal] = useState(false)
   const [manageMember, setManageMember] = useState<any>(null)
   const [showRemoveConfirm, setShowRemoveConfirm] = useState(false)
-  
+
   useEffect(() => {
     if (!church || fetchedRef.current) return
     fetchedRef.current = true
@@ -45,7 +45,7 @@ export default function DashboardPage() {
   }
 
   if (churchLoading || (loading && !songs.length)) return (
-    <p className="text-muted" style={{ padding: 'var(--space-xl)' }}>Loading…</p>
+    <p className="text-muted dash-loading">Loading…</p>
   )
 
   const handleUpgrade = async (priceId: string) => {
@@ -64,13 +64,13 @@ export default function DashboardPage() {
   return (
     <div>
       {isAdmin && (!church?.subscription_status || church?.subscription_status === 'free') && (
-        <div className="card" style={{ marginBottom: 'var(--space-md)', background: 'var(--color-brand-50)', borderColor: 'var(--color-brand-200)' }}>
-          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: 'var(--space-md)' }}>
+        <div className="card dash-upgrade-banner">
+          <div className="dash-upgrade-inner">
             <div>
-              <p style={{ fontWeight: 600, margin: 0 }}>You're on the free plan</p>
-              <p style={{ fontSize: 'var(--text-sm)', color: 'var(--color-text-muted)', margin: '4px 0 0' }}>Limited to 5 songs and 1 plan. Upgrade to unlock everything.</p>
+              <p className="dash-card-heading">You're on the free plan</p>
+              <p className="dash-card-subtext">Limited to 5 songs and 1 plan. Upgrade to unlock everything.</p>
             </div>
-            <div style={{ display: 'flex', gap: 'var(--space-sm)' }}>
+            <div className="dash-upgrade-actions">
               <button onClick={() => handleUpgrade(process.env.NEXT_PUBLIC_STRIPE_PRICE_MONTHLY!)} className="btn btn-ghost">
                 £5 / month
               </button>
@@ -81,57 +81,57 @@ export default function DashboardPage() {
           </div>
         </div>
       )}
-      <div className="dashboard-grid" style={{ display: 'grid', gridTemplateColumns: '3fr 2fr', gap: 'var(--space-md)', marginBottom: 'var(--space-md)' }}>
+      <div className="dashboard-grid">
 
         {/* Songs */}
         <div className="card">
-          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 'var(--space-md)' }}>
-            <span className="section-label" style={{ marginBottom: 0 }}>Songs</span>
+          <div className="card-header-row">
+            <span className="section-label">Songs</span>
             {canManageSongs && <Link href="/songs/new" className="btn btn-ghost">Add new +</Link>}
           </div>
           {songs.length === 0 ? (
             <p className="text-muted">No songs yet.{canManageSongs && <> <Link href="/songs/new" className="link">Add your first</Link></>}</p>
-          ) : songs.map((song, i) => (
+          ) : songs.map((song) => (
             <Link key={song.id} href={`/songs/${song.id}`} className="dash-row">
-              <div style={{ flex: 1, minWidth: 0 }}>
-                <p className="dash-row-title" style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{song.title}</p>
-                <div style={{ display: 'flex', flexDirection: 'column', gap: 2, alignItems: 'flex-start' }}>
+              <div className="dash-row-content">
+                <p className="dash-row-title">{song.title}</p>
+                <div className="dash-row-body">
                   {song.first_line && (
-                    <span className="dash-row-meta" style={{ fontStyle: 'italic' , lineHeight: '1.4em' }}>{song.first_line}</span>
+                    <span className="dash-row-meta dash-row-meta--italic">{song.first_line}</span>
                   )}
                   <div className="song-row-badges-mobile">
                     {song.default_key && <KeyBadge keyOf={song.default_key} />}
                     {song.category && <CategoryBadge category={song.category} />}
                   </div>
-                  <div style={{ display: 'flex', columnGap: 20 , rowGap: 0 , flexWrap: 'wrap' }}>
+                  <div className="dash-row-dates">
                     {song.last_sung && (
-                      <span className="dash-row-meta" style={{ fontWeight: 400, fontSize: 'var(--text-xs)' }}>
-                        <strong style={{ fontWeight: 600 }}>Last sung</strong>{' '}{format(parseISO(song.last_sung as string), 'd MMM yyyy')}
+                      <span className="dash-row-meta dash-row-meta--xs">
+                        <strong>Last sung</strong>{' '}{format(parseISO(song.last_sung as string), 'd MMM yyyy')}
                       </span>
                     )}
                     {song.next_planned && (
-                      <span className="dash-row-meta" style={{ fontWeight: 400, fontSize: 'var(--text-xs)' }}>
-                        <strong style={{ fontWeight: 600 }}>Planned</strong>{' '}{format(parseISO(song.next_planned as string), 'd MMM yyyy')}
+                      <span className="dash-row-meta dash-row-meta--xs">
+                        <strong>Planned</strong>{' '}{format(parseISO(song.next_planned as string), 'd MMM yyyy')}
                       </span>
                     )}
                   </div>
                 </div>
               </div>
-              <div className="song-row-badges-desktop" style={{ gap: 10 }}>
+              <div className="song-row-badges-desktop">
                 {song.default_key && <KeyBadge keyOf={song.default_key} />}
                 {song.category && <CategoryBadge category={song.category} />}
               </div>
             </Link>
           ))}
-          <div style={{ marginTop: 'var(--space-md)', borderTop: '1px solid var(--color-border)', paddingTop: 'var(--space-sm)' }}>
+          <div className="card-footer">
             <Link href="/songs" className="btn btn-ghost">View all songs →</Link>
           </div>
         </div>
 
         {/* Plans — upcoming only */}
         <div className="card">
-          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 'var(--space-md)' }}>
-            <span className="section-label" style={{ marginBottom: 0 }}>Plans</span>
+          <div className="card-header-row">
+            <span className="section-label">Plans</span>
             {canAddPlans && <Link href="/plans/new" className="btn btn-ghost">Add new +</Link>}
           </div>
           {plans.length === 0 ? (
@@ -140,7 +140,7 @@ export default function DashboardPage() {
             const date = parseISO(plan.plan_date)
             return (
               <Link key={plan.id} href={`/plans/${plan.id}`} className="dash-row">
-                <div style={{ flex: 1 }}>
+                <div className="dash-row-content">
                   <p className="dash-row-title">
                     {format(date, 'd MMM')}{plan.plan_time ? ` · ${plan.plan_time}` : ''}
                   </p>
@@ -152,7 +152,7 @@ export default function DashboardPage() {
               </Link>
             )
           })}
-          <div style={{ marginTop: 'var(--space-md)', borderTop: '1px solid var(--color-border)', paddingTop: 'var(--space-sm)' }}>
+          <div className="card-footer">
             <Link href="/plans" className="btn btn-ghost">View all →</Link>
           </div>
         </div>
@@ -160,8 +160,8 @@ export default function DashboardPage() {
 
       {/* Team */}
       <div className="card">
-        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 'var(--space-md)' }}>
-          <span className="section-label" style={{ marginBottom: 0 }}>Team</span>
+        <div className="card-header-row">
+          <span className="section-label">Team</span>
           {isAdmin && (
             <button onClick={() => setShowInviteModal(true)} className="btn btn-ghost">
               Invite member +
@@ -169,62 +169,35 @@ export default function DashboardPage() {
           )}
         </div>
 
-        <div style={{ display: 'flex', flexWrap: 'wrap', gap: 'var(--space-md)' }}>
+        <div className="member-grid">
           {members.map((member) => (
             <div
               key={member.id}
               onClick={() => isAdmin && setManageMember(member)}
-              style={{
-                display: 'flex',
-                flexDirection: 'column',
-                alignItems: 'center',
-                gap: 6,
-                width: 80,
-                cursor: isAdmin ? 'pointer' : 'default',
-              }}
+              className="member-card"
+              style={{ cursor: isAdmin ? 'pointer' : 'default' }}
             >
-              <div style={{ position: 'relative' }}>
+              <div className="member-avatar-wrap">
                 {member.image_url ? (
                   <img
                     src={member.image_url}
                     alt={member.name || member.email}
-                    style={{ width: 52, height: 52, borderRadius: '50%', objectFit: 'cover' }}
+                    className="member-avatar-img"
                   />
                 ) : (
-                  <div style={{
-                    width: 52, height: 52, borderRadius: '50%',
-                    background: 'var(--color-border)',
-                    display: 'flex', alignItems: 'center', justifyContent: 'center',
-                    fontSize: 20, fontWeight: 600, color: 'var(--color-text-secondary)',
-                  }}>
+                  <div className="member-avatar-placeholder">
                     {(member.name || member.email || '?').charAt(0).toUpperCase()}
                   </div>
                 )}
                 {member.role === 'admin' && (
-                  <span style={{
-                    position: 'absolute', bottom: -2, right: -2,
-                    background: 'var(--color-brand-500)',
-                    color: '#fff', fontSize: 9, fontWeight: 700,
-                    padding: '1px 4px', borderRadius: 4, letterSpacing: '0.03em',
-                    lineHeight: '14px',
-                  }}>A</span>
+                  <span className="member-admin-badge">A</span>
                 )}
               </div>
-              <p style={{
-                fontSize: 'var(--text-xs)', textAlign: 'center', lineHeight: '1.3',
-                color: 'var(--color-text)', margin: 0,
-              overflow: 'hidden', display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical',
-                width: '100%',
-              }}>
+              <p className="member-name-label">
                 {member.name || member.email}
               </p>
               {isAdmin && member.email && (
-                <p style={{
-                  fontSize: 10, textAlign: 'center', lineHeight: '1.2',
-                  color: 'var(--color-text-muted)', margin: 0,
-                  overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap',
-                  width: '100%',
-                }}>
+                <p className="member-email-label">
                   {member.email}
                 </p>
               )}
@@ -262,34 +235,28 @@ export default function DashboardPage() {
         {manageMember && (
           <div
             onClick={() => setManageMember(null)}
-            style={{
-              position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.4)',
-              display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 50,
-            }}
+            className="manage-member-backdrop"
           >
             <div
               onClick={(e) => e.stopPropagation()}
-              style={{
-                background: 'var(--color-surface)', borderRadius: 'var(--radius-md)',
-                padding: 'var(--space-lg)', width: 320, display: 'flex', flexDirection: 'column', gap: 'var(--space-md)',
-              }}
+              className="manage-member-modal"
             >
-              <div style={{ display: 'flex', alignItems: 'center', gap: 'var(--space-md)' }}>
+              <div className="manage-member-header">
                 {manageMember.image_url ? (
-                  <img src={manageMember.image_url} alt={manageMember.name} style={{ width: 48, height: 48, borderRadius: '50%', objectFit: 'cover' }} />
+                  <img src={manageMember.image_url} alt={manageMember.name} className="manage-member-avatar-img" />
                 ) : (
-                  <div style={{ width: 48, height: 48, borderRadius: '50%', background: 'var(--color-border)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 18, fontWeight: 600, color: 'var(--color-text-secondary)' }}>
+                  <div className="manage-member-avatar-placeholder">
                     {(manageMember.name || manageMember.email || '?').charAt(0).toUpperCase()}
                   </div>
                 )}
                 <div>
-                  <p style={{ fontWeight: 600, margin: 0 }}>{manageMember.name || manageMember.email}</p>
-                  {manageMember.name && <p style={{ fontSize: 'var(--text-sm)', color: 'var(--color-text-muted)', margin: 0 }}>{manageMember.email}</p>}
+                  <p className="manage-member-name">{manageMember.name || manageMember.email}</p>
+                  {manageMember.name && <p className="manage-member-email">{manageMember.email}</p>}
                 </div>
               </div>
 
-              <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
-                <label style={{ fontSize: 'var(--text-sm)', fontWeight: 500 }}>Access level</label>
+              <div className="manage-member-field">
+                <label className="manage-member-label">Access level</label>
                 <select
                   value={manageMember.role}
                   onChange={async (e) => {
@@ -302,7 +269,7 @@ export default function DashboardPage() {
                       alert(err.response?.data?.error || 'Failed to update role')
                     }
                   }}
-                  style={{ padding: '6px 8px', border: '1px solid var(--color-border)', borderRadius: 'var(--radius-sm)', fontFamily: 'inherit', fontSize: 'var(--text-sm)', background: 'var(--color-surface)', color: 'var(--color-text)', cursor: 'pointer' }}
+                  className="manage-member-select"
                 >
                   <option value="member">Member</option>
                   <option value="admin">Admin</option>
@@ -310,14 +277,14 @@ export default function DashboardPage() {
               </div>
 
               {manageMember.role === 'member' && (
-                <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
-                  <label style={{ fontSize: 'var(--text-sm)', fontWeight: 500 }}>Permissions</label>
+                <div className="manage-member-perms">
+                  <label className="manage-member-label">Permissions</label>
                   {([
                     { key: 'can_manage_songs', label: 'Add & edit songs' },
                     { key: 'can_add_plans', label: 'Add plans' },
                     { key: 'can_edit_any_plan', label: 'Edit anyone\'s plans' },
                   ] as { key: 'can_manage_songs' | 'can_add_plans' | 'can_edit_any_plan', label: string }[]).map(({ key, label }) => (
-                    <label key={key} style={{ display: 'flex', alignItems: 'center', gap: 8, fontSize: 'var(--text-sm)', cursor: 'pointer' }}>
+                    <label key={key} className="manage-member-perm-label">
                       <input
                         type="checkbox"
                         checked={!!manageMember[key]}
@@ -342,10 +309,10 @@ export default function DashboardPage() {
                 </div>
               )}
 
-              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', paddingTop: 'var(--space-sm)', borderTop: '1px solid var(--color-border)' }}>
+              <div className="manage-member-footer">
                 <button
                   onClick={() => setShowRemoveConfirm(true)}
-                  style={{ padding: '6px 12px', border: '1px solid var(--color-border)', borderRadius: 'var(--radius-sm)', fontSize: 'var(--text-sm)', background: 'var(--color-surface)', color: 'var(--color-text-muted)', cursor: 'pointer', fontFamily: 'inherit' }}
+                  className="btn-muted"
                 >
                   Remove member
                 </button>
@@ -362,12 +329,12 @@ export default function DashboardPage() {
       </div>
 
       <div className="card feedback-card">
-        <div style={{ display: 'flex', alignItems: 'flex-end', justifyContent: 'space-between', flexWrap: 'wrap', gap: 'var(--space-md)' }}>
+        <div className="dash-feedback-inner">
           <div>
-            <p style={{ fontWeight: 600, margin: 0 }}>Got feedback or a question?</p>
-            <p style={{ fontSize: 'var(--text-sm)', color: 'var(--color-text-muted)', margin: '4px 0 0' }}>Found a bug, got an idea, or just want to say hello — we&apos;d love to hear from you.</p>
+            <p className="dash-card-heading">Got feedback or a question?</p>
+            <p className="dash-card-subtext">Found a bug, got an idea, or just want to say hello — we&apos;d love to hear from you.</p>
           </div>
-          <Link href="/feedback" className="btn btn-ghost" style={{ paddingBottom: 0 }}>Get in touch →</Link>
+          <Link href="/feedback" className="btn btn-ghost dash-feedback-link">Get in touch →</Link>
         </div>
       </div>
     </div>
