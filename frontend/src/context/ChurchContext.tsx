@@ -11,6 +11,7 @@ interface Church {
   slug: string
   invite_code: string
   ccli_number: string | null
+  logo_url: string | null
   role: 'admin' | 'member'
   subscription_status: 'free' | 'active' | 'trialing' | 'past_due' | 'canceled' | null
   can_manage_songs: boolean
