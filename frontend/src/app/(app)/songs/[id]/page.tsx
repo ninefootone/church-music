@@ -20,7 +20,8 @@ import { ConfirmModal } from '@/components/ui/ConfirmModal'
 export default function SongDetailPage() {
   const { id } = useParams()
   const router = useRouter()
-  const { canManageSongs, loading: churchLoading } = useChurch()
+  const { canManageSongs, loading: churchLoading, church } = useChurch()
+  const isMasterLibrary = church?.id === process.env.NEXT_PUBLIC_MASTER_CHURCH_ID
   const [song, setSong] = useState<Song | null>(null)
   const [loading, setLoading] = useState(true)
   const [notFound, setNotFound] = useState(false)
@@ -330,6 +331,23 @@ export default function SongDetailPage() {
                 {song.copyright_link}
               </a>
             )}
+          </div>
+        )}
+
+        {isMasterLibrary && (song.in_discover || song.share_all_data) && (
+          <div className="song-section--bordered">
+            <span className="section-label section-label--tight">Master library</span>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '0.25rem', marginTop: '0.25rem' }}>
+              {song.share_all_data && (
+                <span className="text-muted" style={{ fontSize: '0.85rem' }}>✓ Share all data enabled</span>
+              )}
+              {song.in_discover && (
+                <span className="text-muted" style={{ fontSize: '0.85rem' }}>✓ Added to Discover</span>
+              )}
+              {song.in_discover && song.discover_description && (
+                <p className="detail-text" style={{ marginTop: '0.5rem' }}>{song.discover_description}</p>
+              )}
+            </div>
           </div>
         )}
       </div>
