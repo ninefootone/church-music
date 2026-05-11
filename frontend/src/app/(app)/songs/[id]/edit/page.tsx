@@ -91,20 +91,18 @@ export default function EditSongPage() {
     setLinks(l => l.filter((_, idx) => idx !== i))
   }
 
-  const mb: React.CSSProperties = { marginBottom: 'var(--space-md)' }
-
   if (fetching) return <div className="loading-state">Loading…</div>
 
   return (
-    <div style={{ maxWidth: 'var(--width-app)', margin: '0 auto' }}>
+    <div className="page-constrained">
       <Link href={`/songs/${id}`} className="back-link">
         <ArrowLeft size={13} /> Back to song
       </Link>
-      <h1 className="page-title" style={{ marginBottom: 'var(--space-lg)' }}>Edit song</h1>
+      <h1 className="page-title page-title--spaced">Edit song</h1>
       {error && <div className="error-banner">{error}</div>}
       <div className="card">
         <form id="song-edit-form" onSubmit={handleSubmit}>
-          <div style={mb}><label className="label">Song title *</label>
+          <div className="form-field"><label className="label">Song title *</label>
             <CcliAutocomplete
               titleValue={form.title}
               ccliValue={form.ccli_number}
@@ -115,8 +113,8 @@ export default function EditSongPage() {
               onDefaultKeyChange={val => setForm(f => ({ ...f, default_key: f.default_key || val }))}
             />
           </div>
-          <div style={mb}><label className="label">Author(s)</label><input className="input" value={form.author} onChange={e => setForm(f => ({ ...f, author: e.target.value }))} /></div>
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 'var(--space-md)', ...mb }}>
+          <div className="form-field"><label className="label">Author(s)</label><input className="input" value={form.author} onChange={e => setForm(f => ({ ...f, author: e.target.value }))} /></div>
+          <div className="form-grid-2 form-field">
             <div>
               <label className="label">Default key</label>
               <select className="input" value={form.default_key} onChange={e => setForm(f => ({ ...f, default_key: e.target.value }))}>
@@ -132,58 +130,58 @@ export default function EditSongPage() {
               </select>
             </div>
           </div>
-          <div style={mb}><label className="label">First line</label><input className="input" value={form.first_line} onChange={e => setForm(f => ({ ...f, first_line: e.target.value }))} /></div>
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 'var(--space-md)', ...mb }}>
+          <div className="form-field"><label className="label">First line</label><input className="input" value={form.first_line} onChange={e => setForm(f => ({ ...f, first_line: e.target.value }))} /></div>
+          <div className="form-grid-2 form-field">
             <div><label className="label">CCLI number</label><input className="input" value={form.ccli_number} onChange={e => setForm(f => ({ ...f, ccli_number: e.target.value }))} /></div>
-            <div style={{ gridColumn: '1 / -1' }}>
-              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 8 }}>
-                <label className="label" style={{ marginBottom: 0 }}>Links</label>
+            <div className="col-span-full">
+              <div className="card-header-row">
+                <label className="label section-label--flush">Links</label>
                 <button type="button" onClick={addLink} className="btn btn-secondary btn-sm"><Plus size={13} /> Add link</button>
               </div>
               {links.length === 0 && (
-                <p className="text-muted" style={{ fontSize: 'var(--text-sm)', fontStyle: 'italic' }}>No links added yet.</p>
+                <p className="text-muted form-empty-note">No links added yet.</p>
               )}
               {links.map((link, i) => (
-                <div key={i} style={{ display: 'grid', gridTemplateColumns: '140px 1fr 2fr auto', gap: 8, marginBottom: 8, alignItems: 'center' }}>
+                <div key={i} className="link-input-row">
                   <select className="input" value={link.link_type} onChange={e => updateLink(i, 'link_type', e.target.value)}>
                     {LINK_TYPES.map(t => <option key={t.value} value={t.value}>{t.label}</option>)}
                   </select>
                   <input className="input" placeholder="Label (e.g. Live version)" value={link.label} onChange={e => updateLink(i, 'label', e.target.value)} />
                   <input className="input" placeholder="URL" value={link.url} onChange={e => updateLink(i, 'url', e.target.value)} />
-                  <button type="button" onClick={() => removeLink(i)} className="btn btn-secondary btn-sm" style={{ color: '#9a3a3a' }}><Trash2 size={13} /></button>
+                  <button type="button" onClick={() => removeLink(i)} className="btn btn-secondary btn-sm btn-danger-text"><Trash2 size={13} /></button>
                 </div>
               ))}
             </div>
           </div>
-          <div style={mb}>
+          <div className="form-field">
             <label className="label">Bible references</label>
             <input className="input" placeholder="e.g. Romans 8, Colossians 3:1-4" value={form.bible_references} onChange={e => setForm(f => ({ ...f, bible_references: e.target.value }))} />
           </div>
-          <div style={mb}>
+          <div className="form-field">
             <label className="label">Notes</label>
             <textarea className="input" rows={3} placeholder="Performance notes, tips for the band…" value={form.notes} onChange={e => setForm(f => ({ ...f, notes: e.target.value }))} style={{ resize: 'vertical' }} />
           </div>
-          <div style={mb}><label className="label">Tags <span className="label-note">(comma separated)</span></label><TagInput value={form.tags} onChange={v => setForm(f => ({ ...f, tags: v }))} /></div>
-          <div style={mb}>
+          <div className="form-field"><label className="label">Tags <span className="label-note">(comma separated)</span></label><TagInput value={form.tags} onChange={v => setForm(f => ({ ...f, tags: v }))} /></div>
+          <div className="form-field">
             <label className="label">Suggested arrangement</label>
             <ArrangementBuilder
               value={form.suggested_arrangement}
               onChange={val => setForm(f => ({ ...f, suggested_arrangement: val }))}
             />
           </div>
-          <div style={mb}>
+          <div className="form-field">
             <label className="label">Lyrics</label>
             {form.ccli_number && (
-              <div className="text-hint" style={{ marginBottom: 8 }}>
+              <div className="text-hint">
                 Find lyrics on <a href={`https://songselect.ccli.com/songs/${form.ccli_number}`} target="_blank" rel="noopener noreferrer" className="link-brand">SongSelect ↗</a>
-                <span style={{ color: 'var(--color-text-muted)' }}> — CCLI {form.ccli_number}</span>
+                <span className="text-muted"> — CCLI {form.ccli_number}</span>
               </div>
             )}
             <LyricsEditor value={form.lyrics} onChange={v => setForm(f => ({ ...f, lyrics: v }))} />
           </div>
-        <div style={mb}>
+        <div className="form-field">
               <label className="label">Copyright</label>
-              <div style={{ marginBottom: 8 }}>
+              <div className="form-subfield">
                 <input
                   className="input"
                   placeholder="e.g. Public domain / © 2024 Author Name. Used with permission."
@@ -203,16 +201,16 @@ export default function EditSongPage() {
             </div>
 
           {isMasterLibrary && (
-            <div style={mb}>
+            <div className="form-field">
               <label className="label">Discover sharing</label>
-              <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 8 }}>
+              <div className="checkbox-row">
                 <input
                   type="checkbox"
                   id="share_all_data"
                   checked={form.share_all_data}
                   onChange={e => setForm(f => ({ ...f, share_all_data: e.target.checked }))}
                 />
-                <label htmlFor="share_all_data" style={{ fontSize: 14, cursor: 'pointer' }}>
+                <label htmlFor="share_all_data" className="checkbox-label">
                   Share all data — this song is public domain or we have permission from the copyright holder
                 </label>
               </div>

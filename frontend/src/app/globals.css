@@ -242,6 +242,29 @@ body.set-viewer-active { overflow: hidden; }
   }
   .input::placeholder { color: var(--color-text-muted); }
   .input--sm { font-size: var(--text-sm); padding: 4px 8px; }
+  .form-field { margin-bottom: var(--space-md); }
+  .form-subfield { margin-bottom: var(--space-sm); }
+  .form-grid-2 {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: var(--space-md);
+  }
+  .col-span-full { grid-column: 1 / -1; }
+  .form-empty-note { font-size: var(--text-sm); font-style: italic; }
+  .link-input-row {
+    display: grid;
+    grid-template-columns: 140px 1fr 2fr auto;
+    gap: var(--space-sm);
+    margin-bottom: var(--space-sm);
+    align-items: center;
+  }
+  .checkbox-row {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-bottom: var(--space-sm);
+  }
+  .checkbox-label { font-size: var(--text-sm); cursor: pointer; }
 
   input[type="date"] {
     -webkit-appearance: none;
@@ -271,6 +294,12 @@ body.set-viewer-active { overflow: hidden; }
     color: var(--color-text-primary);
     letter-spacing: -0.025em;
     line-height: 1.1;
+  }
+  .page-title--spaced { margin-bottom: var(--space-lg); }
+  .text-hint {
+    font-size: var(--text-sm);
+    color: var(--color-text-muted);
+    margin-bottom: var(--space-sm);
   }
   .section-label {
     font-size: var(--text-xs);
