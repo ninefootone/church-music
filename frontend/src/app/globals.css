@@ -2087,6 +2087,7 @@ textarea {
   display: flex;
   flex-direction: column;
   gap: var(--space-xs);
+  align-items: flex-start;
 }
 
 .empty-state {
