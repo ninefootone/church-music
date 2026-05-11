@@ -32,6 +32,9 @@ export interface Church {
   invite_code: string
   role: 'admin' | 'member'
   created_at: string
+  logo_url?: string
+  ccli_number?: string
+  subscription_status?: string
 }
 
 export interface User {
