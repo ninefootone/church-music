@@ -323,7 +323,7 @@ export default function SettingsPage() {
                   {logoUploading ? 'Uploading…' : church?.logo_url ? 'Replace logo' : 'Upload logo'}
                 </label>
                 {logoError && <p style={{ fontSize: 12, color: 'var(--color-error, #d9534f)', marginTop: 6 }}>{logoError}</p>}
-                <p style={{ fontSize: 12, color: 'var(--color-text-muted)', marginTop: 6 }}>PNG, JPG, SVG or WebP. Max 2MB. Will appear in the nav bar.</p>
+                <p style={{ fontSize: 12, color: 'var(--color-text-muted)', marginTop: 6 }}>PNG, JPG, SVG or WebP. Max 2MB. Wide/horizontal logos work best — tall or square images will be cropped to fit the nav bar.</p>
               </div>
             </div>
           </div>
