@@ -131,12 +131,8 @@ export default function DiscoverPage() {
                   {song.discover_description && (
                     <p className="discover-card__description">{song.discover_description}</p>
                   )}
-                  {song.tags && song.tags.length > 0 && (
-                    <div className="discover-card__tags">
-                      {song.tags.map(tag => (
-                        <span key={tag} className="tag-chip">{tag}</span>
-                      ))}
-                    </div>
+                  {(song.videos || []).some(v => v.link_type === 'youtube' || v.link_type === 'spotify' || v.link_type === 'apple_music') && (
+                    <p className="discover-card__links-label">Listen / Watch</p>
                   )}
                   <VideoLinks videos={song.videos || []} />
                   <div className="discover-card__footer">

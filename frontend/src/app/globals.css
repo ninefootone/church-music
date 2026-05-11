@@ -2053,11 +2053,19 @@ textarea {
   padding: 2px 8px;
 }
 
+.discover-card__links-label {
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: var(--color-text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  margin: var(--space-sm) 0 var(--space-xs);
+}
+
 .discover-card__links {
   display: flex;
   flex-wrap: wrap;
   gap: var(--space-xs);
-  margin-top: var(--space-sm);
 }
 
 .discover-card__link-btn {
