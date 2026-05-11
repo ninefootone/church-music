@@ -46,10 +46,12 @@ export default function EditSongPage() {
       const normaliseKey = (k: string | null | undefined) => k ? k.replace(/♯/g, '#').replace(/♭/g, 'b') : ''
       setForm({ title: s.title, author: s.author || '', default_key: normaliseKey(s.default_key), category: s.category || '', first_line: s.first_line || '', ccli_number: s.ccli_number || '', lyrics: s.lyrics || '', tags: (s.tags || []).join(', '), notes: s.notes || '', bible_references: s.bible_references || '', suggested_arrangement: s.suggested_arrangement || '', share_all_data: !!s.share_all_data, copyright_info: s.copyright_info || '', copyright_link: s.copyright_link || '', in_discover: !!s.in_discover, discover_description: s.discover_description || '' })
       if (s.discover_image_key) {
-        try {
-          const imgRes = await api.get(`/api/uploads/songs/${s.id}/discover-image-url`)
-          setDiscoverImageUrl(imgRes.data.url)
-        } catch {}
+        ;(async () => {
+          try {
+            const imgRes = await api.get(`/api/uploads/songs/${s.id}/discover-image-url`)
+            setDiscoverImageUrl(imgRes.data.url)
+          } catch {}
+        })()
       }
       setLinks((s.videos || []).map((v: any) => ({ id: v.id, url: v.url, label: v.label || '', link_type: v.link_type || 'youtube' })))
     }).catch(() => setError('Failed to load song')).finally(() => setFetching(false))
