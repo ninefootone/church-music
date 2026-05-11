@@ -38,6 +38,90 @@ const upload = multer({
   },
 });
 
+const uploadImage = multer({
+  storage: multer.memoryStorage(),
+  limits: { fileSize: 5 * 1024 * 1024 },
+  fileFilter: function(req, file, cb) {
+    const allowedMime = ['image/jpeg', 'image/png', 'image/webp'];
+    const ext = file.originalname.split('.').pop()?.toLowerCase();
+    const allowedExt = ['jpg', 'jpeg', 'png', 'webp'];
+    if (allowedMime.includes(file.mimetype) && allowedExt.includes(ext || '')) {
+      cb(null, true);
+    } else {
+      cb(new Error('Only JPEG, PNG and WebP images are allowed'));
+    }
+  },
+});
+
+// POST /uploads/songs/:songId/discover-image — upload square artwork for Discover (master library only)
+router.post('/songs/:songId/discover-image', requireAuth, requireAdmin, uploadImage.single('image'), async function(req, res, next) {
+  try {
+    const { songId } = req.params;
+    const churchId = req.churchId;
+
+    if (churchId !== process.env.MASTER_CHURCH_ID) {
+      return res.status(403).json({ error: 'Only the master library can upload discover images' });
+    }
+
+    if (!req.file) {
+      return res.status(400).json({ error: 'No image provided' });
+    }
+
+    const ext = req.file.originalname.split('.').pop()?.toLowerCase();
+    const r2Key = 'discover/songs/' + songId + '/artwork.' + ext;
+
+    // Delete old image if one exists
+    const existing = await pool.query('SELECT discover_image_key FROM songs WHERE id = $1 AND church_id = $2', [songId, churchId]);
+    if (existing.rows[0]?.discover_image_key) {
+      try {
+        await r2.send(new DeleteObjectCommand({ Bucket: BUCKET, Key: existing.rows[0].discover_image_key }));
+      } catch (_) {}
+    }
+
+    await r2.send(new PutObjectCommand({
+      Bucket: BUCKET,
+      Key: r2Key,
+      Body: req.file.buffer,
+      ContentType: req.file.mimetype,
+    }));
+
+    await pool.query('UPDATE songs SET discover_image_key = $1 WHERE id = $2 AND church_id = $3', [r2Key, songId, churchId]);
+
+    const url = await getSignedUrl(
+      r2,
+      new GetObjectCommand({ Bucket: BUCKET, Key: r2Key }),
+      { expiresIn: 3600 }
+    );
+
+    res.status(201).json({ r2_key: r2Key, url });
+  } catch (err) {
+    next(err);
+  }
+});
+
+// DELETE /uploads/songs/:songId/discover-image — remove discover artwork
+router.delete('/songs/:songId/discover-image', requireAuth, requireAdmin, async function(req, res, next) {
+  try {
+    const { songId } = req.params;
+    const churchId = req.churchId;
+
+    if (churchId !== process.env.MASTER_CHURCH_ID) {
+      return res.status(403).json({ error: 'Only the master library can manage discover images' });
+    }
+
+    const existing = await pool.query('SELECT discover_image_key FROM songs WHERE id = $1 AND church_id = $2', [songId, churchId]);
+    const key = existing.rows[0]?.discover_image_key;
+    if (!key) return res.status(404).json({ error: 'No discover image found' });
+
+    await r2.send(new DeleteObjectCommand({ Bucket: BUCKET, Key: key }));
+    await pool.query('UPDATE songs SET discover_image_key = NULL WHERE id = $1 AND church_id = $2', [songId, churchId]);
+
+    res.json({ success: true });
+  } catch (err) {
+    next(err);
+  }
+});
+
 router.post('/songs/:songId', requireAuth, requireAdmin, upload.single('file'), async function(req, res, next) {
   try {
     const songId = req.params.songId;
