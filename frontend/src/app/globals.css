@@ -142,6 +142,16 @@ body.set-viewer-active { overflow: hidden; }
   }
   .btn-ghost:hover { color: var(--color-brand-700); }
   .btn-sm { padding: 6px 14px; font-size: var(--text-sm); }
+  .btn-text {
+    background: none;
+    border: none;
+    cursor: pointer;
+    padding: 0;
+    font-size: var(--text-sm);
+    color: var(--color-text-muted);
+    font-family: inherit;
+  }
+  .btn-compact { padding-left: 12px; padding-right: 12px; }
 
   /* ── Cards ── */
   .card {
@@ -269,6 +279,11 @@ body.set-viewer-active { overflow: hidden; }
     align-items: baseline;
     justify-content: space-between;
     margin-bottom: var(--space-lg);
+  }
+  .page-header-actions {
+    display: flex;
+    gap: var(--space-md);
+    align-items: center;
   }
   .back-link {
     display: inline-flex;
@@ -609,6 +624,9 @@ body.set-viewer-active { overflow: hidden; }
     color: var(--color-text-primary);
     margin-bottom: 3px;
     line-height: 1.3;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
   }
   .song-meta {
     font-size: var(--text-sm);
@@ -617,6 +635,52 @@ body.set-viewer-active { overflow: hidden; }
     align-items: center;
     gap: 10px;
     flex-wrap: wrap;
+  }
+  .song-meta--col {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 2px;
+  }
+  .songs-search-bar {
+    position: relative;
+    display: flex;
+    gap: var(--space-sm);
+    margin-bottom: var(--space-sm);
+    align-items: center;
+  }
+  .songs-search-wrap { position: relative; flex: 1; }
+  .songs-search-icon {
+    position: absolute;
+    left: 14px;
+    top: 50%;
+    transform: translateY(-50%);
+    color: var(--color-text-muted);
+  }
+  .songs-search-input { padding-left: 42px; }
+  .songs-sort-wrap { position: relative; }
+  .songs-sort-btn { display: flex; align-items: center; gap: 6px; }
+  .songs-sort-menu {
+    position: absolute;
+    right: 0;
+    top: calc(100% + 6px);
+    background: var(--color-surface);
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-md);
+    box-shadow: var(--shadow-md);
+    z-index: 50;
+    min-width: 170px;
+    overflow: hidden;
+  }
+  .songs-filter-row {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+    margin-bottom: var(--space-md);
+  }
+  .songs-table-empty {
+    padding: var(--space-xl);
+    text-align: center;
+    color: var(--color-text-muted);
   }
 
   /* Song/dash row badge layout — responsive */

@@ -41,51 +41,49 @@ export default function SongsPage() {
     }
   }
 
-  if (churchLoading) return <div className="text-muted" style={{ padding: 'var(--space-xl)' }}>Loading…</div>
+  if (churchLoading) return <div className="text-muted dash-loading">Loading…</div>
 
   return (
     <div>
       <div className="page-header">
         <h1 className="page-title">Songs</h1>
-        <div style={{ display: 'flex', gap: 'var(--space-md)', alignItems: 'center' }}>
+        <div className="page-header-actions">
           {canManageSongs && (
             <button
               onClick={() => setShowRetired(v => !v)}
-              style={{ background: 'none', border: 'none', cursor: 'pointer', padding: 0, fontSize: 'var(--text-sm)', color: 'var(--color-text-muted)', fontFamily: 'inherit' }}
+              className="btn-text"
             >
               {showRetired ? 'Hide retired' : 'Show retired'}
             </button>
           )}
           {canManageSongs && (
-            <Link href="/songs/new" className="btn btn-primary" style={{ paddingLeft: 12, paddingRight: 12 }}>
+            <Link href="/songs/new" className="btn btn-primary btn-compact">
               <Plus size={16} /> Add new
             </Link>
           )}
         </div>
       </div>
 
-      <div style={{ position: 'relative', display: 'flex', gap: 'var(--space-sm)', marginBottom: 'var(--space-sm)', alignItems: 'center' }}>
-        <div style={{ position: 'relative', flex: 1 }}>
-          <Search size={16} style={{ position: 'absolute', left: 14, top: '50%', transform: 'translateY(-50%)', color: 'var(--color-text-muted)' }} />
+      <div className="songs-search-bar">
+        <div className="songs-search-wrap">
+          <Search size={16} className="songs-search-icon" />
           <input
-            className="input"
-            style={{ paddingLeft: 42 }}
+            className="input songs-search-input"
             type="text"
             placeholder="Search by title, author, theme or lyric…"
             value={search}
             onChange={e => setSearch(e.target.value)}
           />
         </div>
-        <div style={{ position: 'relative' }}>
+        <div className="songs-sort-wrap">
           <button
-            className={`btn btn-secondary${sort !== 'title' ? ' is-active' : ''}`}
-            style={{ display: 'flex', alignItems: 'center', gap: 6 }}
+            className={`btn btn-secondary songs-sort-btn${sort !== 'title' ? ' is-active' : ''}`}
             onClick={() => setShowSortMenu(v => !v)}
           >
             <ArrowUpDown size={15} />
           </button>
           {showSortMenu && (
-            <div style={{ position: 'absolute', right: 0, top: 'calc(100% + 6px)', background: 'var(--color-surface)', border: '1px solid var(--color-border)', borderRadius: 'var(--radius-md)', boxShadow: 'var(--shadow-md)', zIndex: 50, minWidth: 170, overflow: 'hidden' }}>
+            <div className="songs-sort-menu">
               {([
                 ['title', 'A – Z'],
                 ['most_sung', 'Most sung'],
@@ -106,7 +104,7 @@ export default function SongsPage() {
         </div>
       </div>
 
-      <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6, marginBottom: 'var(--space-md)' }}>
+      <div className="songs-filter-row">
         <button className={`filter-chip ${activeCategory === 'all' ? 'is-active' : ''}`} onClick={() => setActiveCategory('all')}>All</button>
         {CATEGORIES.map(cat => (
           <button key={cat.value} className={`filter-chip ${activeCategory === cat.value ? 'is-active' : ''}`} onClick={() => setActiveCategory(cat.value)}>
@@ -117,41 +115,41 @@ export default function SongsPage() {
 
       <div className="songs-table">
         {loading ? (
-          <div style={{ padding: 'var(--space-xl)', textAlign: 'center', color: 'var(--color-text-muted)' }}>Loading songs…</div>
+          <div className="songs-table-empty">Loading songs…</div>
         ) : songs.length === 0 ? (
-          <div style={{ padding: 'var(--space-xl)', textAlign: 'center', color: 'var(--color-text-muted)' }}>
-            No songs found.{canManageSongs && <> <Link href="/songs/new" style={{ color: 'var(--color-brand-500)' }}>Add one?</Link></>}
+          <div className="songs-table-empty">
+            No songs found.{canManageSongs && <> <Link href="/songs/new" className="link">Add one?</Link></>}
           </div>
         ) : songs.map((song, i) => (
           <Link key={song.id} href={`/songs/${song.id}`} className="song-row" style={song.retired ? { opacity: 0.5 } : undefined}>
-            <div style={{ flex: 1, minWidth: 0 }}>
-              <div className="song-title" style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{song.title}</div>
-              <div className="song-meta" style={{ display: 'flex', flexDirection: 'column', gap: 2, alignItems: 'flex-start' }}>
+            <div className="dash-row-content">
+              <div className="song-title">{song.title}</div>
+              <div className="song-meta song-meta--col">
                 {song.first_line && (
-                  <span style={{ fontStyle: 'italic' , lineHeight: '1.4em' }}>{song.first_line}</span>
+                  <span className="dash-row-meta--italic">{song.first_line}</span>
                 )}
                 <div className="song-row-badges-mobile">
                   {song.default_key && <KeyBadge keyOf={song.default_key} />}
                   {song.category && <CategoryBadge category={song.category} />}
                 </div>
-                <div style={{ display: 'flex', columnGap: 20 , rowGap: 0 , flexWrap: 'wrap' }}>
+                <div className="dash-row-dates">
                   {song.last_sung && (
-                    <span style={{ fontWeight: 400, fontSize: 'var(--text-xs)' }}>
-                      <strong style={{ fontWeight: 600 }}>Last sung</strong>{' '}{format(parseISO(song.last_sung as string), 'd MMM yyyy')}
+                    <span className="dash-row-meta--xs">
+                      <strong>Last sung</strong>{' '}{format(parseISO(song.last_sung as string), 'd MMM yyyy')}
                     </span>
                   )}
                   {song.next_planned && (
-                    <span style={{ fontWeight: 400, fontSize: 'var(--text-xs)' }}>
-                      <strong style={{ fontWeight: 600 }}>Planned</strong>{' '}{format(parseISO(song.next_planned as string), 'd MMM yyyy')}
+                    <span className="dash-row-meta--xs">
+                      <strong>Planned</strong>{' '}{format(parseISO(song.next_planned as string), 'd MMM yyyy')}
                     </span>
                   )}
                 </div>
               </div>
             </div>
-            <div className="song-row-badges-desktop" style={{ gap: 10 }}>
+            <div className="song-row-badges-desktop">
               {song.default_key && <KeyBadge keyOf={song.default_key} />}
               {song.category && <CategoryBadge category={song.category} />}
-              <ChevronRight size={18} style={{ color: 'var(--color-text-muted)' }} />
+              <ChevronRight size={18} className="text-muted" />
             </div>
           </Link>
         ))}
