@@ -34,6 +34,8 @@ export default function SettingsPage() {
   const [regenerating, setRegenerating] = useState(false)
   const [subscribed, setSubscribed] = useState<boolean | null>(null)
   const [mailingLoading, setMailingLoading] = useState(false)
+  const [logoUploading, setLogoUploading] = useState(false)
+  const [logoError, setLogoError] = useState('')
 
   // Roles
   const [roles, setRoles] = useState<RoleItem[]>([])
@@ -134,6 +136,27 @@ export default function SettingsPage() {
       window.location.href = data.url
     } catch {
       alert('Something went wrong. Please try again.')
+    }
+  }
+
+  async function handleLogoUpload(e: React.ChangeEvent<HTMLInputElement>) {
+    const file = e.target.files?.[0]
+    if (!file || !church) return
+    setLogoUploading(true)
+    setLogoError('')
+    try {
+      const client = await getAuthenticatedApi()
+      const formData = new FormData()
+      formData.append('logo', file)
+      await client.post(`/api/churches/${church.id}/logo`, formData, {
+        headers: { 'Content-Type': 'multipart/form-data' },
+      })
+      await refetch()
+    } catch (err: any) {
+      setLogoError(err.response?.data?.error || 'Upload failed.')
+    } finally {
+      setLogoUploading(false)
+      e.target.value = ''
     }
   }
 
@@ -281,6 +304,30 @@ export default function SettingsPage() {
               </p>
             </div>
           </div>
+
+          <div style={{ marginTop: 20 }}>
+            <label style={labelStyle}>Church logo <span style={{ fontWeight: 400, textTransform: 'none', letterSpacing: 0 }}>(optional)</span></label>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 16, flexWrap: 'wrap' }}>
+              {church?.logo_url && (
+                <img src={church.logo_url} alt="Church logo" style={{ height: 48, maxWidth: 160, objectFit: 'contain', borderRadius: 6, border: '1px solid var(--color-border)', padding: 4, background: 'var(--color-bg)' }} />
+              )}
+              <div>
+                <input
+                  type="file"
+                  accept="image/png,image/jpeg,image/svg+xml,image/webp"
+                  style={{ display: 'none' }}
+                  id="logo-upload"
+                  onChange={handleLogoUpload}
+                />
+                <label htmlFor="logo-upload" className="btn btn-ghost" style={{ cursor: 'pointer', display: 'inline-flex', alignItems: 'center', gap: 6 }}>
+                  {logoUploading ? 'Uploading…' : church?.logo_url ? 'Replace logo' : 'Upload logo'}
+                </label>
+                {logoError && <p style={{ fontSize: 12, color: 'var(--color-error, #d9534f)', marginTop: 6 }}>{logoError}</p>}
+                <p style={{ fontSize: 12, color: 'var(--color-text-muted)', marginTop: 6 }}>PNG, JPG, SVG or WebP. Max 2MB. Will appear in the nav bar.</p>
+              </div>
+            </div>
+          </div>
+
         </div>
         <div style={{ display: 'flex', justifyContent: 'flex-end', marginBottom: 20 }}>
           <button type="submit" className="btn btn-primary" disabled={saving}>

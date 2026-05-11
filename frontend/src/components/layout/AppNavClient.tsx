@@ -39,8 +39,10 @@ export function AppNavClient() {
         <div className="app-nav-inner">
           <div className="app-nav-left">
             <Link href="/dashboard" className="app-nav-brand" onClick={() => { setDesktopOpen(false); setMobileOpen(false) }}>
-              <img src="/logo-icon.svg" alt="Song Stack" style={{ height: 28, width: 28, borderRadius: 4 }} />
-              {churchName}
+              {church?.logo_url
+                ? <img src={church.logo_url} alt={churchName} style={{ height: 32, maxWidth: 120, objectFit: 'contain', borderRadius: 4 }} />
+                : <><img src="/logo-icon.svg" alt="Song Stack" style={{ height: 28, width: 28, borderRadius: 4 }} />{churchName}</>
+              }
             </Link>
             <span className="app-nav-sep">·</span>
             <div className="app-nav-links">
