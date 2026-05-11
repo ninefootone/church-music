@@ -6,6 +6,48 @@ const { r2, BUCKET } = require('./uploads');
 const { CopyObjectCommand } = require('@aws-sdk/client-s3');
 const { v4: uuidv4 } = require('uuid');
 
+// GET /discover — curated songs from master library with in_discover = true
+router.get('/discover', requireAuth, async (req, res, next) => {
+  try {
+    const { r2, BUCKET } = require('./uploads');
+    const { GetObjectCommand } = require('@aws-sdk/client-s3');
+    const { getSignedUrl } = require('@aws-sdk/s3-request-presigner');
+
+    const result = await pool.query(
+      `SELECT s.id, s.title, s.author, s.default_key, s.category,
+              s.first_line, s.ccli_number, s.discover_description,
+              s.discover_image_key, s.share_all_data,
+              ARRAY_AGG(DISTINCT t.name) FILTER (WHERE t.name IS NOT NULL) AS tags
+       FROM songs s
+       LEFT JOIN song_tags st ON st.song_id = s.id
+       LEFT JOIN tags t ON t.id = st.tag_id
+       WHERE s.church_id = $1
+         AND s.in_discover = true
+         AND (s.retired = false OR s.retired IS NULL)
+       GROUP BY s.id
+       ORDER BY s.updated_at DESC`,
+      [process.env.MASTER_CHURCH_ID]
+    );
+
+    const songs = await Promise.all(result.rows.map(async (song) => {
+      if (song.discover_image_key) {
+        try {
+          song.discover_image_url = await getSignedUrl(
+            r2,
+            new GetObjectCommand({ Bucket: BUCKET, Key: song.discover_image_key }),
+            { expiresIn: 3600 }
+          );
+        } catch {}
+      }
+      return song;
+    }));
+
+    res.json(songs);
+  } catch (err) {
+    next(err);
+  }
+});
+
 // GET /templates/search?q= — search global template library
 router.get('/search', requireAuth, async (req, res, next) => {
   try {
