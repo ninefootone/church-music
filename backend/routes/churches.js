@@ -2,6 +2,20 @@ const express = require('express');
 const router = express.Router();
 const pool = require('../db/pool');
 const { requireAuth, requireAdmin } = require('../middleware/auth');
+const multer = require('multer');
+const { S3Client, PutObjectCommand } = require('@aws-sdk/client-s3');
+const { v4: uuidv4 } = require('uuid');
+
+const s3 = new S3Client({
+  region: 'auto',
+  endpoint: process.env.R2_ENDPOINT,
+  credentials: {
+    accessKeyId: process.env.R2_ACCESS_KEY_ID,
+    secretAccessKey: process.env.R2_SECRET_ACCESS_KEY,
+  },
+});
+
+const upload = multer({ storage: multer.memoryStorage(), limits: { fileSize: 2 * 1024 * 1024 } });
 
 const generateInviteCode = () => Math.random().toString(36).substring(2, 8).toUpperCase();
 const generateShortId = () => Math.random().toString(36).substring(2, 6);
@@ -149,6 +163,35 @@ router.patch('/:churchId', requireAuth, requireAdmin, async (req, res, next) => 
       [name || null, ccli_number || null, req.params.churchId]
     );
     if (church.rows.length === 0) return res.status(404).json({ error: 'Not found' });
+    res.json(church.rows[0]);
+  } catch (err) {
+    next(err);
+  }
+});
+
+// Upload church logo (admin only)
+router.post('/:churchId/logo', requireAuth, requireAdmin, upload.single('logo'), async (req, res, next) => {
+  try {
+    if (!req.file) return res.status(400).json({ error: 'No file provided' });
+
+    const ext = req.file.originalname.split('.').pop().toLowerCase();
+    const allowed = ['jpg', 'jpeg', 'png', 'svg', 'webp'];
+    if (!allowed.includes(ext)) return res.status(400).json({ error: 'Invalid file type' });
+
+    const key = `logos/${uuidv4()}.${ext}`;
+    await s3.send(new PutObjectCommand({
+      Bucket: process.env.R2_BUCKET_NAME,
+      Key: key,
+      Body: req.file.buffer,
+      ContentType: req.file.mimetype,
+    }));
+
+    const logo_url = `${process.env.R2_PUBLIC_URL}/${key}`;
+    const church = await pool.query(
+      'UPDATE churches SET logo_url = $1 WHERE id = $2 RETURNING *',
+      [logo_url, req.params.churchId]
+    );
+
     res.json(church.rows[0]);
   } catch (err) {
     next(err);
