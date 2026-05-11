@@ -2053,6 +2053,11 @@ textarea {
   padding: 2px 8px;
 }
 
+.discover-subtitle {
+  font-weight: 400;
+  padding: var(--space-sm) 0 var(--space-md);
+}
+
 .discover-card__links-label {
   font-size: 0.75rem;
   font-weight: 600;

@@ -114,7 +114,7 @@ export default function DiscoverPage() {
       <div className="page-header-row">
         <div>
           <h1 className="page-title">Discover</h1>
-          <p className="page-subtitle">Curated songs from the Song Stack library. Add any song to your church library in one tap.</p>
+          <p className="discover-subtitle">Curated songs from the Song Stack library. Add any song to your church library in one tap.</p>
         </div>
       </div>
 
