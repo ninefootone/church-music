@@ -2107,9 +2107,9 @@ textarea {
   }
 
   .discover-card__image {
-    width: 100%;
+    width: 180px;
     min-width: 0;
-    height: 200px;
+    height: 180px;
     border-radius: 6px;
   }
 
@@ -2119,6 +2119,6 @@ textarea {
   }
 
   .discover-card__title {
-    font-size: var(--text-base);
+    font-size: var(--text-xl);
   }
 }
