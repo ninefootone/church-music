@@ -1986,10 +1986,11 @@ textarea {
 .discover-card__image {
   width: 160px;
   min-width: 160px;
-  aspect-ratio: 1 / 1;
+  height: 160px;
   object-fit: cover;
   display: block;
-  align-self: stretch;
+  flex-shrink: 0;
+  align-self: flex-start;
 }
 
 .discover-card__image--placeholder {
@@ -2103,6 +2104,7 @@ textarea {
   .discover-card__image {
     width: 90px;
     min-width: 90px;
+    height: 90px;
   }
 
   .discover-card__body {
