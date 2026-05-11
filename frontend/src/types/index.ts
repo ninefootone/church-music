@@ -93,6 +93,9 @@ export interface Song {
   share_all_data: boolean
   copyright_info: string | null
   copyright_link: string | null
+  in_discover: boolean
+  discover_description: string | null
+  discover_image_key: string | null
   retired: boolean
   contributed_by: string | null
   created_at: string
