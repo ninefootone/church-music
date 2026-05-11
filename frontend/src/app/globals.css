@@ -1111,7 +1111,7 @@ textarea {
 
   .song-detail-header  { flex-direction: column; gap: 12px; }
   .song-detail-title   { font-size: var(--text-xl); }
-  .song-detail-actions { margin-top: 0; width: 100%; }
+  .song-detail-actions { margin-top: 0; margin-bottom: 8px; width: 100%; }
   .song-detail-actions .btn { flex: 1; justify-content: center; }
 
   .plan-detail-header { flex-direction: column; gap: var(--space-sm); }
