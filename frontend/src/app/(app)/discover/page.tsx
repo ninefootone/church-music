@@ -33,13 +33,7 @@ function VideoLinks({ videos }: { videos: DiscoverSong['videos'] }) {
         const isYoutube = v.link_type === 'youtube'
         const isSpotify = v.link_type === 'spotify'
         return (
-          
-            key={i}
-            href={v.url}
-            target="_blank"
-            rel="noopener noreferrer"
-            className="discover-card__link-btn"
-          >
+          <a key={i} href={v.url} target="_blank" rel="noopener noreferrer" className="discover-card__link-btn">
             {isYoutube && <Youtube size={13} />}
             {isSpotify && <Music size={13} />}
             {!isYoutube && !isSpotify && <Music size={13} />}
@@ -113,11 +107,7 @@ export default function DiscoverPage() {
             return (
               <div key={song.id} className="discover-card">
                 {song.discover_image_url ? (
-                  <img
-                    src={song.discover_image_url}
-                    alt={song.title}
-                    className="discover-card__image"
-                  />
+                  <img src={song.discover_image_url} alt={song.title} className="discover-card__image" />
                 ) : (
                   <div className="discover-card__image discover-card__image--placeholder">
                     <BookOpen size={24} />
