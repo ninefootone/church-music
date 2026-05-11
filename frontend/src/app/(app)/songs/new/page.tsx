@@ -155,8 +155,10 @@ export default function NewSongPage() {
                 <div style={{ fontSize: 14, fontWeight: 600, color: 'var(--color-brand-700)', marginBottom: 4 }}>Found in shared library</div>
                 <div style={{ fontSize: 15, color: 'var(--color-brand-600)', marginBottom: 6 }}>{templateSearch.title} — {templateSearch.author}</div>
                 <div style={{ fontSize: 13, color: 'var(--color-text-muted)', marginBottom: 10 }}>The copyright holder has given permission for this song to be shared. All fields will be copied to your library.</div>
-                <button type="button" onClick={importTemplate} className="btn btn-primary btn-sm">Import this song</button>
-                <button type="button" onClick={() => setTemplateSearch(null)} className="btn btn-secondary btn-sm" style={{ marginLeft: 8 }}>Create from scratch</button>
+                <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8 }}>
+                  <button type="button" onClick={importTemplate} className="btn btn-primary btn-sm">Import this song</button>
+                  <button type="button" onClick={() => setTemplateSearch(null)} className="btn btn-secondary btn-sm">Create from scratch</button>
+                </div>
               </div>
             )}
           </div>
