@@ -1,7 +1,8 @@
 'use client'
 
 import { useState, useEffect, useRef } from 'react'
-import api from '@/lib/api'
+import api, { setAuthToken } from '@/lib/api'
+import { useAuth } from '@clerk/nextjs'
 
 interface TagInputProps {
   value: string
@@ -9,6 +10,7 @@ interface TagInputProps {
 }
 
 export default function TagInput({ value, onChange }: TagInputProps) {
+  const { getToken } = useAuth()
   const [allTags, setAllTags] = useState<string[]>([])
   const [suggestions, setSuggestions] = useState<string[]>([])
   const [showDropdown, setShowDropdown] = useState(false)
@@ -17,10 +19,11 @@ export default function TagInput({ value, onChange }: TagInputProps) {
   const dropdownRef = useRef<HTMLDivElement>(null)
 
   useEffect(() => {
-    api.get('/api/songs/tags/all')
-      .then(res => setAllTags(res.data))
-      .catch(() => {})
-  }, [])
+    getToken().then(token => {
+      setAuthToken(token)
+      return api.get('/api/songs/tags/all')
+    }).then(res => setAllTags(res.data)).catch(() => {})
+  }, [getToken])
 
   // Get the tag currently being typed (last segment after the final comma)
   const getCurrentToken = (val: string) => {
