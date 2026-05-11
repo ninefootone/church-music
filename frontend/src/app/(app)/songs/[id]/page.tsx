@@ -140,10 +140,10 @@ export default function SongDetailPage() {
     }
   }
 
-  if (loading || churchLoading) return <p className="text-muted" style={{ padding: 'var(--space-xl)' }}>Loading…</p>
+  if (loading || churchLoading) return <p className="text-muted dash-loading">Loading…</p>
   if (notFound || !song) return (
-    <div style={{ padding: 'var(--space-xl)' }}>
-      <p className="text-muted" style={{ marginBottom: 'var(--space-md)' }}>Song not found.</p>
+    <div className="dash-loading">
+      <p className="text-muted page-error-msg">Song not found.</p>
       <Link href="/songs" className="back-link"><ArrowLeft size={14} /> Back to songs</Link>
     </div>
   )
@@ -163,14 +163,14 @@ export default function SongDetailPage() {
       }
     } catch {}
     // Legacy plain text fallback
-    return <p style={{ fontSize: 'var(--text-sm)', color: 'var(--color-text-secondary)', margin: 0, lineHeight: 1.6 }}>{value}</p>
+    return <p className="detail-text">{value}</p>
   }
 
   const mainFiles = (song.files || []).filter(f => f.key_of === song.default_key || !f.key_of)
   const otherFiles = (song.files || []).filter(f => f.key_of && f.key_of !== song.default_key)
 
   return (
-    <div style={{ maxWidth: 'var(--width-app)', margin: '0 auto' }}>
+    <div className="page-constrained">
       {chordProFile && (
         <ChordProViewer
           content={chordProFile.content}
@@ -208,14 +208,12 @@ export default function SongDetailPage() {
       <Link href="/songs" className="back-link"><ArrowLeft size={14} /> Back to songs</Link>
 
       {/* Header */}
-      <div className="card" style={{ marginBottom: 'var(--space-md)' }}>
+      <div className="card card--spaced">
         <div className="song-detail-header">
           <h1 className="song-detail-title">
             {song.title}
             {song.retired && (
-              <span style={{ marginLeft: 10, fontSize: 'var(--text-sm)', fontWeight: 500, color: 'var(--color-text-muted)', background: 'var(--color-bg-subtle)', border: '1px solid var(--color-border)', borderRadius: 6, padding: '2px 8px', verticalAlign: 'middle' }}>
-                Retired
-              </span>
+              <span className="song-retired-badge">Retired</span>
             )}
           </h1>
           {canManageSongs && (
@@ -249,7 +247,7 @@ export default function SongDetailPage() {
           {song.tags && song.tags.length > 0 && (
             <div className="meta-row">
               <span className="meta-label">Tags</span>
-              <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap' }}>
+              <div className="tag-list">
                 {song.tags.map((t: string) => <span key={t} className="tag">{t}</span>)}
               </div>
             </div>
@@ -257,7 +255,7 @@ export default function SongDetailPage() {
           {song.bible_references && (
             <div className="meta-row">
               <span className="meta-label">Bible</span>
-              <span style={{ fontSize: 'var(--text-sm)', color: 'var(--color-text-secondary)' }}>{song.bible_references}</span>
+              <span className="meta-value">{song.bible_references}</span>
             </div>
           )}
           {song.ccli_number && (
@@ -273,16 +271,16 @@ export default function SongDetailPage() {
 
         {/* Notes */}
         {song.notes && (
-          <div style={{ marginBottom: 'var(--space-md)', padding: '12px 16px', background: 'var(--color-neutral-50)', borderRadius: 'var(--radius-md)', borderLeft: '3px solid var(--color-brand-300)' }}>
-            <span className="section-label" style={{ marginBottom: 6, display: 'block' }}>Notes</span>
-            <p style={{ fontSize: 'var(--text-sm)', color: 'var(--color-text-secondary)', margin: 0, lineHeight: 1.6 }}>{song.notes}</p>
+          <div className="song-notes-block">
+            <span className="section-label section-label--tight">Notes</span>
+            <p className="detail-text">{song.notes}</p>
           </div>
         )}
 
         {/* Lyrics */}
         <div>
-          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 12 }}>
-            <span className="section-label" style={{ marginBottom: 0 }}>Lyrics</span>
+          <div className="card-header-row">
+            <span className="section-label section-label--flush">Lyrics</span>
             {song.lyrics && (
               <button onClick={() => setShowFullLyrics(!showFullLyrics)} className="btn btn-ghost">
                 {showFullLyrics ? 'Collapse' : 'Show full lyrics'}
@@ -290,16 +288,16 @@ export default function SongDetailPage() {
             )}
           </div>
           {song.lyrics ? (
-            <div style={{ position: 'relative' }}>
+            <div className="lyrics-wrap">
               <div style={{ maxHeight: showFullLyrics ? 'none' : 140, overflow: 'hidden' }}>
                 <LyricsDisplay lyrics={song.lyrics} />
               </div>
               {!showFullLyrics && (
-                <div style={{ position: 'absolute', bottom: 0, left: 0, right: 0, height: 56, background: 'linear-gradient(transparent, white)', pointerEvents: 'none' }} />
+                <div className="lyrics-fade" />
               )}
             </div>
           ) : (
-            <p className="text-muted" style={{ fontStyle: 'italic' }}>
+            <p className="text-muted text-italic">
               No lyrics added yet.{' '}
               {song.ccli_number && (
                 <a href={`https://songselect.ccli.com/songs/${song.ccli_number}`} target="_blank" rel="noopener noreferrer" className="link">
@@ -311,23 +309,23 @@ export default function SongDetailPage() {
         </div>
 
         {song.suggested_arrangement && (
-          <div style={{ marginTop: 'var(--space-md)' }}>
-            <span className="section-label" style={{ marginBottom: 4, display: 'block' }}>Arrangement</span>
+          <div className="song-section">
+            <span className="section-label section-label--tight">Arrangement</span>
             {renderArrangement(song.suggested_arrangement)}
           </div>
         )}
 
         {song.copyright_info && (
-          <div style={{ marginTop: 'var(--space-md)', paddingTop: 'var(--space-md)', borderTop: '1px solid var(--color-border)' }}>
-            <span className="section-label" style={{ marginBottom: 4, display: 'block' }}>Copyright</span>
-            <p style={{ fontSize: 'var(--text-sm)', color: 'var(--color-text-secondary)', margin: 0, lineHeight: 1.6 }}>
+          <div className="song-section--bordered">
+            <span className="section-label section-label--tight">Copyright</span>
+            <p className="detail-text">
               {song.copyright_info}
             </p>
             {song.copyright_link && (
                 <a href={song.copyright_link}
                 target="_blank"
                 rel="noopener noreferrer"
-                style={{ fontSize: 'var(--text-sm)', color: 'var(--color-brand-500)', marginTop: 4, display: 'inline-block' }}
+                className="copyright-link"
               >
                 {song.copyright_link}
               </a>
@@ -337,9 +335,9 @@ export default function SongDetailPage() {
       </div>
 
       {/* Files */}
-      <div className="card" style={{ marginBottom: 'var(--space-md)' }}>
-        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 'var(--space-md)' }}>
-          <span className="section-label" style={{ marginBottom: 0 }}>Files</span>
+      <div className="card card--spaced">
+        <div className="card-header-row">
+          <span className="section-label section-label--flush">Files</span>
           {canManageSongs && (
             <button onClick={() => setShowUploadModal(true)} className="btn btn-primary btn-sm">
               <Plus size={14} /> Upload file
@@ -350,11 +348,11 @@ export default function SongDetailPage() {
         {song.files && song.files.length > 0 ? (
           <>
             {mainFiles.length > 0 && (
-              <div style={{ marginBottom: 'var(--space-md)' }}>
+              <div className="card--spaced">
                 <p className="downloads-group-label">
                   Main key{song.default_key && <> — <KeyBadge keyOf={song.default_key} /></>}
                 </p>
-                <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8 }}>
+                <div className="file-group">
                   {mainFiles.map(f => (
                     <FileRow key={f.id} file={f} songId={song.id} defaultKey={song.default_key} isAdmin={canManageSongs} downloadingId={downloadingId} deletingId={deletingId} onDownload={handleDownload} onDelete={handleDelete} onSaved={fetchSong} onView={f.file_type === 'chordpro' ? handleViewChordPro : undefined} />
                   ))}
@@ -366,7 +364,7 @@ export default function SongDetailPage() {
                 {mainFiles.length > 0 && <div className="divider" />}
                 <div>
                   <p className="downloads-group-label">Other keys</p>
-                  <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8 }}>
+                  <div className="file-group">
                   {otherFiles.map(f => (
                     <FileRow key={f.id} file={f} songId={song.id} defaultKey={song.default_key} isAdmin={canManageSongs} downloadingId={downloadingId} deletingId={deletingId} onDownload={handleDownload} onDelete={handleDelete} onSaved={fetchSong} onView={f.file_type === 'chordpro' ? handleViewChordPro : undefined} />
                   ))}
@@ -376,9 +374,9 @@ export default function SongDetailPage() {
             )}
           </>
         ) : (
-          <p className="text-muted" style={{ fontStyle: 'italic' }}>
+          <p className="text-muted text-italic">
             No files uploaded yet.
-            {canManageSongs && <> <button onClick={() => setShowUploadModal(true)} style={{ background: 'none', border: 'none', cursor: 'pointer', fontFamily: 'inherit', fontSize: 'inherit', color: 'var(--color-brand-500)', padding: 0 }}>Upload a chord chart or sheet music.</button></>}
+            {canManageSongs && <> <button onClick={() => setShowUploadModal(true)} className="btn-inline-link">Upload a chord chart or sheet music.</button></>}
           </p>
         )}
 
@@ -386,15 +384,15 @@ export default function SongDetailPage() {
         {(song.videos && song.videos.length > 0 || canManageSongs) && (
           <>
             <div className="divider" />
-            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 'var(--space-sm)' }}>
-              <p className="downloads-group-label" style={{ marginBottom: 0 }}>Links</p>
+            <div className="card-header-row">
+              <p className="downloads-group-label">Links</p>
               {canManageSongs && (
                 <button onClick={() => setShowAddLink(true)} className="btn btn-primary btn-sm">
                   <Plus size={14} /> Add link
                 </button>
               )}
             </div>
-            <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+            <div className="link-list">
               {(song.videos || []).map(v => {
                 const typeLabel = v.link_type === 'spotify' ? 'Spotify'
                   : v.link_type === 'apple_music' ? 'Apple Music'
@@ -404,18 +402,18 @@ export default function SongDetailPage() {
 
                 if (canManageSongs && editingLinkId === v.id) {
                   return (
-                    <div key={v.id} style={{ display: 'flex', flexDirection: 'column', gap: 6, padding: '10px 12px', border: '1px solid var(--color-border)', borderRadius: 'var(--radius-md)', background: 'var(--color-neutral-50)' }}>
-                      <select className="input" style={{ fontSize: 'var(--text-sm)', padding: '4px 8px' }} value={editingLinkForm.link_type} onChange={e => setEditingLinkForm(f => ({ ...f, link_type: e.target.value }))}>
+                    <div key={v.id} className="link-edit-form">
+                      <select className="input input--sm" value={editingLinkForm.link_type} onChange={e => setEditingLinkForm(f => ({ ...f, link_type: e.target.value }))}>
                         <option value="youtube">YouTube</option>
                         <option value="spotify">Spotify</option>
                         <option value="apple_music">Apple Music</option>
                         <option value="other">Other</option>
                       </select>
-                      <input className="input" style={{ fontSize: 'var(--text-sm)', padding: '4px 8px' }} placeholder="URL" value={editingLinkForm.url} onChange={e => setEditingLinkForm(f => ({ ...f, url: e.target.value }))} />
-                      <input className="input" style={{ fontSize: 'var(--text-sm)', padding: '4px 8px' }} placeholder="Label (optional)" value={editingLinkForm.label} onChange={e => setEditingLinkForm(f => ({ ...f, label: e.target.value }))} />
-                      <div style={{ display: 'flex', gap: 6, justifyContent: 'space-between' }}>
-                        <button onClick={() => setShowDeleteLink(v.id)} className="btn btn-secondary btn-sm" style={{ color: '#9a3a3a' }}><Trash2 size={13} /> Delete</button>
-                        <div style={{ display: 'flex', gap: 6 }}>
+                      <input className="input input--sm" placeholder="URL" value={editingLinkForm.url} onChange={e => setEditingLinkForm(f => ({ ...f, url: e.target.value }))} />
+                      <input className="input input--sm" placeholder="Label (optional)" value={editingLinkForm.label} onChange={e => setEditingLinkForm(f => ({ ...f, label: e.target.value }))} />
+                      <div className="link-edit-footer">
+                        <button onClick={() => setShowDeleteLink(v.id)} className="btn btn-secondary btn-sm btn-danger-text"><Trash2 size={13} /> Delete</button>
+                        <div className="btn-group">
                           <button onClick={() => setEditingLinkId(null)} className="btn btn-secondary btn-sm">Cancel</button>
                           <button onClick={saveEditLink} className="btn btn-primary btn-sm">Save</button>
                         </div>
@@ -425,14 +423,14 @@ export default function SongDetailPage() {
                 }
 
                 return (
-                  <div key={v.id} style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-                    <a href={v.url} target="_blank" rel="noopener noreferrer" className="youtube-link" style={{ flex: 1, minWidth: 0 }}>
+                  <div key={v.id} className="link-row">
+                    <a href={v.url} target="_blank" rel="noopener noreferrer" className="youtube-link link-row-anchor">
                       <ExternalLink size={14} />
-                      <span style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{displayLabel}</span>
-                      <span style={{ fontSize: 'var(--text-xs)', color: 'var(--color-text-muted)', marginLeft: 4, flexShrink: 0 }}>({typeLabel})</span>
+                      <span className="link-label">{displayLabel}</span>
+                      <span className="link-type-label">({typeLabel})</span>
                     </a>
                     {canManageSongs && (
-                      <button onClick={() => startEditLink(v)} className="btn btn-secondary btn-sm" style={{ padding: '3px 8px', flexShrink: 0 }}><Edit size={13} /></button>
+                      <button onClick={() => startEditLink(v)} className="btn btn-secondary btn-sm link-edit-btn"><Edit size={13} /></button>
                     )}
                   </div>
                 )
@@ -445,7 +443,7 @@ export default function SongDetailPage() {
       {/* Usage */}
       <div className="card">
         <div className="section-label">Usage</div>
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: 'var(--space-md)', marginBottom: 'var(--space-md)' }} className="usage-stats-grid">
+        <div className="usage-stats-grid">
           <div className="stat-box">
             <div className="stat-number">{song.usage?.times_sung || 0}</div>
             <div className="stat-label">Times sung</div>
@@ -467,19 +465,19 @@ export default function SongDetailPage() {
           <>
             <p className="downloads-group-label">Recent plans</p>
             {song.recent_plans.map((s: any, i: number) => (
-              <Link key={s.id} href={`/plans/${s.id}`} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '8px 0', borderBottom: i < song.recent_plans!.length - 1 ? '1px solid var(--color-border)' : 'none', textDecoration: 'none' }}>
-                <span style={{ fontSize: 'var(--text-base)', color: 'var(--color-text-secondary)' }}>
+              <Link key={s.id} href={`/plans/${s.id}`} className="recent-plan-row" style={{ borderBottom: i < song.recent_plans!.length - 1 ? '1px solid var(--color-border)' : 'none' }}>
+                <span className="recent-plan-date">
                   {s.plan_date ? format(parseISO(s.plan_date), 'd MMMM yyyy') : ''}
                 </span>
                 {s.key_override && <KeyBadge keyOf={s.key_override} />}
-                <span className="text-muted" style={{ fontSize: 'var(--text-sm)' }}>{s.plan_time}</span>
+                <span className="text-muted recent-plan-time">{s.plan_time}</span>
               </Link>
             ))}
           </>
         )}
       </div>
       {canManageSongs && (
-        <div style={{ marginTop: 'var(--space-md)', display: 'flex', justifyContent: 'flex-end', gap: 'var(--space-sm)' }}>
+        <div className="song-actions-footer">
           <button
             onClick={handleRetire}
             className="btn btn-secondary"
@@ -489,8 +487,7 @@ export default function SongDetailPage() {
           </button>
           <button
             onClick={() => setShowDeleteSong(true)}
-            className="btn btn-secondary"
-            style={{ color: '#9a3a3a' }}
+            className="btn btn-secondary btn-danger-text"
           >
             <Trash2 size={14} /> Delete song
           </button>
