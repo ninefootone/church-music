@@ -112,10 +112,10 @@ export default function NewSongPage() {
   }
 
   return (
-    <div style={{ maxWidth: 'var(--width-app)', margin: '0 auto' }}>
+    <div className="page-constrained">
       <Link href="/songs" className="back-link"><ArrowLeft size={14} /> Back to songs</Link>
-      <h1 className="page-title" style={{ marginBottom: 'var(--space-sm)' }}>Add new song</h1>
-      <p style={{ fontWeight: 600, color: 'var(--color-text-secondary)', marginBottom: 'var(--space-lg)' }}>Add song details below and click 'Save song'. Then you'll be able to upload files and add links.</p>
+      <h1 className="page-title page-title--tight">Add new song</h1>
+      <p className="page-subtitle">Add song details below and click 'Save song'. Then you'll be able to upload files and add links.</p>
       {atLimit && (
         <div className="error-box">
           You've reached the 5 song limit on the free plan. <Link href="/settings" className="link">Upgrade in Settings</Link> to add more songs.
@@ -137,7 +137,7 @@ export default function NewSongPage() {
 
       <div className="card">
         <form id="song-new-form" onSubmit={handleSubmit}>
-          <div style={{ marginBottom: 'var(--space-md)' }}>
+          <div className="form-field">
             <label className="label">Song title *</label>
             <CcliAutocomplete
               titleValue={form.title}
@@ -151,11 +151,11 @@ export default function NewSongPage() {
               onCategoryChange={val => setForm(f => ({ ...f, category: f.category || val as Category }))}
             />
             {templateSearch && (
-              <div style={{ marginTop: 10, padding: 'var(--space-md)', background: 'var(--color-brand-50)', border: '1px solid var(--color-brand-200)', borderRadius: 'var(--radius-md)' }}>
-                <div style={{ fontSize: 14, fontWeight: 600, color: 'var(--color-brand-700)', marginBottom: 4 }}>Found in shared library</div>
-                <div style={{ fontSize: 15, color: 'var(--color-brand-600)', marginBottom: 6 }}>{templateSearch.title} — {templateSearch.author}</div>
-                <div style={{ fontSize: 13, color: 'var(--color-text-muted)', marginBottom: 10 }}>The copyright holder has given permission for this song to be shared. All fields will be copied to your library.</div>
-                <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8 }}>
+              <div className="template-match">
+                <div className="template-match-heading">Found in shared library</div>
+                <div className="template-match-title">{templateSearch.title} — {templateSearch.author}</div>
+                <div className="template-match-note">The copyright holder has given permission for this song to be shared. All fields will be copied to your library.</div>
+                <div className="btn-group">
                   <button type="button" onClick={importTemplate} className="btn btn-primary btn-sm">Import this song</button>
                   <button type="button" onClick={() => setTemplateSearch(null)} className="btn btn-secondary btn-sm">Create from scratch</button>
                 </div>
@@ -163,12 +163,12 @@ export default function NewSongPage() {
             )}
           </div>
 
-          <div style={{ marginBottom: 'var(--space-md)' }}>
+          <div className="form-field">
             <label className="label">Author(s) *</label>
             <input className="input" placeholder="e.g. Matt Redman" value={form.author} onChange={e => setForm(f => ({ ...f, author: e.target.value }))} />
           </div>
 
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 'var(--space-md)', marginBottom: 'var(--space-md)' }}>
+          <div className="form-grid-2 form-field">
             <div>
               <label className="label">Default key *</label>
               <select className="input" value={form.default_key} onChange={e => setForm(f => ({ ...f, default_key: e.target.value }))}>
@@ -185,53 +185,53 @@ export default function NewSongPage() {
             </div>
           </div>
 
-          <div style={{ marginBottom: 'var(--space-md)' }}>
+          <div className="form-field">
             <label className="label">First line</label>
             <input className="input" placeholder="Opening line of the song" value={form.first_line} onChange={e => setForm(f => ({ ...f, first_line: e.target.value }))} />
           </div>
 
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 'var(--space-md)', marginBottom: 'var(--space-md)' }}>
+          <div className="form-grid-2 form-field">
             <div>
               <label className="label">CCLI number</label>
               <input className="input" placeholder="e.g. 6016351" value={form.ccli_number} onChange={e => setForm(f => ({ ...f, ccli_number: e.target.value }))} />
             </div>
-            <div style={{ gridColumn: '1 / -1' }}>
-              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 8 }}>
-                <label className="label" style={{ marginBottom: 0 }}>Links</label>
+            <div className="col-span-full">
+              <div className="card-header-row">
+                <label className="label section-label--flush">Links</label>
                 <button type="button" onClick={addLink} className="btn btn-secondary btn-sm"><Plus size={13} /> Add link</button>
               </div>
               {links.length === 0 && (
-                <p className="text-muted" style={{ fontSize: 'var(--text-sm)', fontStyle: 'italic' }}>No links added yet.</p>
+                <p className="text-muted form-empty-note">No links added yet.</p>
               )}
               {links.map((link, i) => (
-                <div key={i} style={{ display: 'grid', gridTemplateColumns: '140px 1fr 2fr auto', gap: 8, marginBottom: 8, alignItems: 'center' }}>
+                <div key={i} className="link-input-row">
                   <select className="input" value={link.link_type} onChange={e => updateLink(i, 'link_type', e.target.value)}>
                     {LINK_TYPES.map(t => <option key={t.value} value={t.value}>{t.label}</option>)}
                   </select>
                   <input className="input" placeholder="Label (e.g. Live version)" value={link.label} onChange={e => updateLink(i, 'label', e.target.value)} />
                   <input className="input" placeholder="URL" value={link.url} onChange={e => updateLink(i, 'url', e.target.value)} />
-                  <button type="button" onClick={() => removeLink(i)} className="btn btn-secondary btn-sm" style={{ color: '#9a3a3a' }}><Trash2 size={13} /></button>
+                  <button type="button" onClick={() => removeLink(i)} className="btn btn-secondary btn-sm btn-danger-text"><Trash2 size={13} /></button>
                 </div>
               ))}
             </div>
           </div>
 
-          <div style={{ marginBottom: 'var(--space-md)' }}>
+          <div className="form-field">
             <label className="label">Bible references</label>
             <input className="input" placeholder="e.g. Romans 8, Colossians 3:1-4" value={form.bible_references} onChange={e => setForm(f => ({ ...f, bible_references: e.target.value }))} />
           </div>
 
-          <div style={{ marginBottom: 'var(--space-md)' }}>
+          <div className="form-field">
             <label className="label">Notes</label>
             <textarea className="input" rows={3} placeholder="Performance notes, tips for the band…" value={form.notes} onChange={e => setForm(f => ({ ...f, notes: e.target.value }))} style={{ resize: 'vertical' }} />
           </div>
 
-          <div style={{ marginBottom: 'var(--space-md)' }}>
-            <label className="label">Tags <span style={{ fontWeight: 400, textTransform: 'none', letterSpacing: 0, fontSize: 13 }}>(comma separated)</span></label>
+          <div className="form-field">
+            <label className="label">Tags <span className="label-note">(comma separated)</span></label>
             <TagInput value={form.tags} onChange={v => setForm(f => ({ ...f, tags: v }))} />
           </div>
 
-          <div style={{ marginBottom: 'var(--space-md)' }}>
+          <div className="form-field">
             <label className="label">Suggested arrangement</label>
             <ArrangementBuilder
               value={form.suggested_arrangement}
@@ -239,12 +239,12 @@ export default function NewSongPage() {
             />
           </div>
 
-          <div style={{ marginBottom: 'var(--space-md)' }}>
+          <div className="form-field">
             <label className="label">Lyrics</label>
             {form.ccli_number && (
-              <div style={{ marginBottom: 8, fontSize: 13, color: 'var(--color-text-muted)' }}>
-                Find lyrics on <a href={`https://songselect.ccli.com/songs/${form.ccli_number}`} target="_blank" rel="noopener noreferrer" style={{ color: 'var(--color-brand-500)' }}>SongSelect ↗</a>
-                <span style={{ color: 'var(--color-text-muted)' }}> — CCLI {form.ccli_number}</span>
+              <div className="text-hint">
+                Find lyrics on <a href={`https://songselect.ccli.com/songs/${form.ccli_number}`} target="_blank" rel="noopener noreferrer" className="link-brand">SongSelect ↗</a>
+                <span className="text-muted"> — CCLI {form.ccli_number}</span>
               </div>
             )}
             <LyricsEditor value={form.lyrics} onChange={v => setForm(f => ({ ...f, lyrics: v }))} />
@@ -253,7 +253,7 @@ export default function NewSongPage() {
       </div>
       <div className="song-form-footer-spacer" />
       <div className="song-form-footer">
-        <div style={{ display: 'flex', gap: 8 }}>
+        <div className="btn-group">
           <Link href="/songs" className="btn btn-secondary">Cancel</Link>
           <button type="submit" form="song-new-form" className="btn btn-primary" disabled={loading}>
             {loading ? 'Saving...' : 'Save song'}
