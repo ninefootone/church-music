@@ -4,7 +4,6 @@
 
 ### Features – General
 
-- [ ] Remove inline styles across all frontend files (see below)
 - [ ] Clerk major version upgrade — currently on v5.7.5, latest is v7.x; check migration guides for v5→v6 and v6→v7 before updating; test all auth flows (sign in, sign up, onboarding redirect) on a preview branch first
 platform-wide stats: number of churches, total songs, total plans, total users, storage used; no church-level data exposed
 
@@ -23,7 +22,7 @@ platform-wide stats: number of churches, total songs, total plans, total users, 
 - [ ] Permission checkbox — add "Manage playlists" checkbox to member management modal in dashboard
 
 ### Features – Admin
-- [ ] Account deletion — settings page option for users to delete their own account (Clerk backend API + DB cleanup)
+- [ ] Full offboarding process – account deletion — settings page option for users to delete their own account (Clerk backend API + DB cleanup)
 
 ### Features – Discover
 – [ ] Add artwork to 'Discover' songs
@@ -44,23 +43,42 @@ platform-wide stats: number of churches, total songs, total plans, total users, 
 Work through each file, one at a time, using VSCode/Cursor prompt to move all
 static inline `style={{...}}` props to named classes in `globals.css`.
 
-- [x] `src/app/page.tsx`
-- [ ] `src/app/(app)/dashboard/page.tsx`
-- [ ] `src/app/(app)/songs/page.tsx`
-- [ ] `src/app/(app)/songs/[id]/page.tsx`
-- [ ] `src/app/(app)/songs/[id]/edit/page.tsx`
-- [ ] `src/app/(app)/songs/new/page.tsx`
 - [ ] `src/app/(app)/plans/page.tsx`
 - [ ] `src/app/(app)/plans/[id]/page.tsx`
 - [ ] `src/app/(app)/plans/[id]/edit/page.tsx`
+- [ ] `src/app/(app)/plans/[id]/set/page.tsx`
+- [ ] `src/app/(app)/plans/[id]/set/view/page.tsx`
+- [ ] `src/app/(app)/plans/[id]/settings/page.tsx`
 - [ ] `src/app/(app)/plans/new/page.tsx`
 - [ ] `src/app/(app)/stats/page.tsx`
+- [ ] `src/app/(app)/settings/page.tsx`
 - [ ] `src/app/(app)/layout.tsx`
+- [ ] `src/app/admin/page.tsx`
+- [ ] `src/app/feedback/page.tsx`
+- [ ] `src/app/layout.tsx`
+- [ ] `src/app/onboarding/page.tsx`
+- [ ] `src/app/s/[token]/page.tsx`
+- [ ] `src/app/s/[token]/set/page.tsx`
+- [ ] `src/app/s/[token]/set/view/page.tsx`
+- [ ] `src/components/ui/AddLinkModal.tsx`
 - [ ] `src/components/ui/AddToPlanModal.tsx`
+- [ ] `src/components/ui/ArrangementBuilder.tsx`
+- [ ] `src/components/ui/ChordProViewer.tsx`
+- [ ] `src/components/ui/ConfirmModal.tsx`
+- [ ] `src/components/ui/CookieConsent.tsx`
+- [ ] `src/components/ui/FileRow.tsx`
 - [ ] `src/components/ui/FileUploadModal.tsx`
 - [ ] `src/components/ui/InviteMemberModal.tsx`
-- [ ] `src/components/ui/ConfirmModal.tsx`
+- [ ] `src/components/ui/PlanEmailModal.tsx`
+- [ ] `src/components/ui/PlanMusicianModal.tsx`
+- [ ] `src/components/CcliAutocomplete.tsx`
 - [ ] `src/components/layout/AppNavClient.tsx`
+- [x] `src/app/page.tsx`
+- [x] `src/app/(app)/dashboard/page.tsx`
+- [x] `src/app/(app)/songs/page.tsx`
+- [x] `src/app/(app)/songs/[id]/page.tsx`
+- [x] `src/app/(app)/songs/[id]/edit/page.tsx`
+- [x] `src/app/(app)/songs/new/page.tsx`
 
 ## Done
 - [x] WordPress song import (139 songs, 502 files)
