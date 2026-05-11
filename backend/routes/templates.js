@@ -39,6 +39,11 @@ router.get('/discover', requireAuth, async (req, res, next) => {
           );
         } catch {}
       }
+      const videos = await pool.query(
+        `SELECT url, label, link_type FROM song_videos WHERE song_id = $1 ORDER BY sort_order`,
+        [song.id]
+      );
+      song.videos = videos.rows;
       return song;
     }));
 
