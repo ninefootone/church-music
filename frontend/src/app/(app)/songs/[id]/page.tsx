@@ -38,6 +38,7 @@ export default function SongDetailPage() {
   const [editingLinkId, setEditingLinkId] = useState<string | null>(null)
   const [editingLinkForm, setEditingLinkForm] = useState<{ url: string; label: string; link_type: string }>({ url: '', label: '', link_type: 'youtube' })
   const [showDeleteLink, setShowDeleteLink] = useState<string | null>(null)
+  const [discoverImageUrl, setDiscoverImageUrl] = useState<string | null>(null)
 
   const startEditLink = (v: { id: string; url: string; label: string | null; link_type: string | null }) => {
     setEditingLinkId(v.id)
@@ -71,7 +72,17 @@ export default function SongDetailPage() {
     setLoading(true)
     setNotFound(false)
     api.get(`/api/songs/${id}`)
-      .then(r => setSong(r.data))
+      .then(r => {
+        setSong(r.data)
+        if (r.data.discover_image_key) {
+          ;(async () => {
+            try {
+              const imgRes = await api.get(`/api/uploads/songs/${id}/discover-image-url`)
+              setDiscoverImageUrl(imgRes.data.url)
+            } catch {}
+          })()
+        }
+      })
       .catch(() => setNotFound(true))
       .finally(() => setLoading(false))
   }, [id, churchLoading])
@@ -343,6 +354,9 @@ export default function SongDetailPage() {
               )}
               {song.in_discover && (
                 <span className="text-muted" style={{ fontSize: '0.85rem' }}>✓ Added to Discover</span>
+              )}
+              {song.in_discover && discoverImageUrl && (
+                <img src={discoverImageUrl} alt="Discover artwork" style={{ width: 120, height: 120, objectFit: 'cover', borderRadius: 8, marginTop: '0.5rem', display: 'block' }} />
               )}
               {song.in_discover && song.discover_description && (
                 <p className="detail-text" style={{ marginTop: '0.5rem' }}>{song.discover_description}</p>
