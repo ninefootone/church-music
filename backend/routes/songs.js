@@ -191,6 +191,24 @@ router.post('/', requireAuth, requirePermission('can_manage_songs'), async (req,
   }
 });
 
+router.patch('/:id/discover', requireAuth, requireAdmin, async (req, res, next) => {
+  try {
+    const churchId = req.churchId;
+    if (churchId !== process.env.MASTER_CHURCH_ID) {
+      return res.status(403).json({ error: 'Only the master library can change discover visibility' });
+    }
+    const { in_discover } = req.body;
+    const result = await pool.query(
+      'UPDATE songs SET in_discover = $1 WHERE id = $2 AND church_id = $3 RETURNING id, in_discover',
+      [!!in_discover, req.params.id, churchId]
+    );
+    if (result.rows.length === 0) return res.status(404).json({ error: 'Song not found' });
+    res.json(result.rows[0]);
+  } catch (err) {
+    next(err);
+  }
+});
+
 // PATCH /songs/:id/retire — toggle retired flag (admin or can_manage_songs)
 router.patch('/:id/retire', requireAuth, requirePermission('can_manage_songs'), async (req, res, next) => {
   try {
