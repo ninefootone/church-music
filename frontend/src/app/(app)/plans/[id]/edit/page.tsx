@@ -101,8 +101,8 @@ function SortableItem({
 
   return (
     <div ref={setNodeRef} style={style}>
-      <div className="card" style={{ padding: 0, overflow: 'hidden' }}>
-        <div style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '12px var(--space-md)' }}>
+      <div className="card card--flush">
+        <div className="sortable-item-row">
 
           {/* Drag handle */}
           <div
@@ -114,12 +114,12 @@ function SortableItem({
           </div>
 
           {/* Position */}
-          <div style={{ fontSize: 'var(--text-sm)', color: 'var(--color-text-muted)', width: 20, textAlign: 'center', flexShrink: 0 }}>
+          <div className="item-index">
             {idx + 1}
           </div>
 
           {/* Title */}
-          <div style={{ flex: 1, minWidth: 0 }}>
+          <div className="dash-row-content">
             {item.type === 'song' ? (
               <>
                 <p className="dash-row-title">
@@ -128,11 +128,10 @@ function SortableItem({
               </>
             ) : (
               <input
-                className="input"
+                className="input input--sm"
                 value={item.title}
                 onChange={e => onUpdate({ title: e.target.value })}
                 placeholder={ITEM_TYPES.find(t => t.type === item.type)?.label || item.type}
-                style={{ padding: '4px 8px', fontSize: 'var(--text-base)', height: 'auto' }}
               />
             )}
           </div>
@@ -142,7 +141,7 @@ function SortableItem({
             <select
               value={item.key_override}
               onChange={e => onUpdate({ key_override: e.target.value })}
-              style={{ padding: '4px 6px', border: '1px solid var(--color-border)', borderRadius: 'var(--radius-sm)', fontFamily: 'inherit', fontSize: 'var(--text-sm)', background: 'var(--color-surface)', color: 'var(--color-text-primary)', cursor: 'pointer', width: 62, flexShrink: 0 }}
+              className="key-select"
             >
               <option value="">Key</option>
               {KEYS.map(k => <option key={k} value={k}>{k}</option>)}
@@ -161,7 +160,8 @@ function SortableItem({
             type="button"
             onClick={onToggleExpanded}
             title="Add notes"
-            style={{ background: 'none', border: 'none', cursor: 'pointer', color: item.notes ? 'var(--color-brand-500)' : 'var(--color-text-muted)', padding: 4, display: 'flex', flexShrink: 0 }}
+            className="btn-icon-toggle"
+            style={{ color: item.notes ? 'var(--color-brand-500)' : 'var(--color-text-muted)' }}
           >
             {item.expanded ? <ChevronUp size={16} /> : <ChevronDown size={16} />}
           </button>
@@ -170,7 +170,7 @@ function SortableItem({
           <button
             type="button"
             onClick={onRemove}
-            style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'var(--color-text-muted)', padding: 4, display: 'flex', flexShrink: 0 }}
+            className="btn-icon-remove"
           >
             <X size={16} />
           </button>
@@ -178,17 +178,16 @@ function SortableItem({
 
         {/* Notes + arrangement */}
         {item.expanded && (
-          <div style={{ padding: '0 var(--space-md) var(--space-sm) var(--space-md)', borderTop: '1px solid var(--color-border)' }}>
+          <div className="item-notes-panel">
             <input
-              className="input"
+              className="input notes-input"
               value={item.notes}
               onChange={e => onUpdate({ notes: e.target.value })}
               placeholder="Notes (e.g. Capo 2, acoustic intro…)"
-              style={{ marginTop: 10, marginBottom: 12, fontSize: 'var(--text-sm)', padding: '7px 12px' }}
             />
             {item.type === 'song' && (
               <div>
-                <p style={{ fontSize: 'var(--text-xs)', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.07em', color: 'var(--color-text-muted)', marginBottom: 8 }}>
+                <p className="sub-section-label">
                   Arrangement for this plan
                 </p>
                 <ArrangementBuilder
@@ -324,28 +323,28 @@ export default function PlanEditPage() {
     }
   }
 
-  if (loading || churchLoading) return <p className="text-muted" style={{ padding: 'var(--space-xl)' }}>Loading…</p>
-  if (!plan) return <p className="text-muted" style={{ padding: 'var(--space-xl)' }}>Plan not found.</p>
+  if (loading || churchLoading) return <p className="text-muted dash-loading">Loading…</p>
+  if (!plan) return <p className="text-muted dash-loading">Plan not found.</p>
 
   return (
     <div>
       {/* Header */}
-      <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: 'var(--space-md)', marginBottom: 'var(--space-lg)', flexWrap: 'wrap' }}>
+      <div className="plan-edit-header">
         <div>
-          <Link href={`/plans/${id}`} className="back-link" style={{ marginBottom: 6 }}>
+          <Link href={`/plans/${id}`} className="back-link back-link--spaced">
             <ArrowLeft size={14} /> Back to plan
           </Link>
           <h1 className="page-title">
             {format(parseISO(plan.plan_date), 'd MMMM yyyy')}
             {plan.plan_time && (
-              <span style={{ fontWeight: 400, color: 'var(--color-text-secondary)', fontSize: 'var(--text-xl)' }}> · {plan.plan_time}</span>
+              <span className="page-title-meta"> · {plan.plan_time}</span>
             )}
           </h1>
-          <Link href={`/plans/${id}/settings`} style={{ fontSize: 'var(--text-sm)', color: 'var(--color-text-muted)', textDecoration: 'none', marginTop: 4, display: 'inline-block' }}>
+          <Link href={`/plans/${id}/settings`} className="edit-details-link">
             Edit details ↗
           </Link>
         </div>
-        <div style={{ display: 'flex', gap: 8, flexShrink: 0 }}>
+        <div className="btn-group">
           <Link href={`/plans/${id}`} className="btn btn-secondary">Cancel</Link>
           <button className="btn btn-primary" onClick={handleSave} disabled={saving}>
             {saving ? 'Saving…' : 'Save order'}
@@ -360,16 +359,16 @@ export default function PlanEditPage() {
         {/* Left — running order */}
         <div>
           {/* Label and count on same line, no overlap */}
-          <div style={{ position: 'relative', height: 24, marginBottom: 12, marginTop: 25 }}>
-            <span style={{ position: 'absolute', left: 0, top: 0, fontSize: 'var(--text-xs)', fontWeight: 700, textTransform: 'uppercase' as const, letterSpacing: '0.08em', color: 'var(--color-text-muted)' }}>
+          <div className="section-header-row">
+            <span className="running-order-label">
               Running order
             </span>
-            <span style={{ position: 'absolute', right: 0, top: 0, fontSize: 'var(--text-sm)', color: 'var(--color-text-muted)' }}>
+            <span className="running-order-count">
               {items.length} item{items.length !== 1 ? 's' : ''}
             </span>
           </div>
           {items.length === 0 ? (
-            <div className="card" style={{ textAlign: 'center', padding: 'var(--space-xl)' }}>
+            <div className="card card-empty">
               <p className="text-muted">Add songs and other items</p>
             </div>
           ) : (
@@ -394,40 +393,37 @@ export default function PlanEditPage() {
         {/* Right — add panel */}
         <div className="plan-edit-sidebar">
           {/* Song picker */}
-          <div className="card" style={{ marginBottom: 'var(--space-md)' }}>
-            <div style={{ marginBottom: 'var(--space-sm)' }}>
-              <span className="section-label">Songs</span>
-            </div>
+          <div className="card card--spaced">
+            <span className="section-label">Songs</span>
             <>
-                <div style={{ position: 'relative', marginTop: 'var(--space-sm)', marginBottom: 'var(--space-sm)' }}>
-                  <Search size={14} style={{ position: 'absolute', left: 12, top: '50%', transform: 'translateY(-50%)', color: 'var(--color-text-muted)', pointerEvents: 'none' }} />
+                <div className="songs-search-wrap">
+                  <Search size={14} className="songs-search-icon" />
                   <input
-                    className="input"
-                    style={{ paddingLeft: 34 }}
+                    className="input songs-search-input"
                     placeholder="Search songs…"
                     value={songSearch}
                     onChange={e => setSongSearch(e.target.value)}
                     autoFocus
                   />
                 </div>
-                <div style={{ maxHeight: 300, overflowY: 'auto' }}>
+                <div className="song-picker-list">
                   {isMobile && !songSearch ? (
-                    <p className="text-muted" style={{ fontSize: 'var(--text-sm)', padding: '8px 0' }}>Type to search songs</p>
+                    <p className="text-muted picker-empty">Type to search songs</p>
                   ) : filteredSongs.length === 0 ? (
-                    <p className="text-muted" style={{ fontSize: 'var(--text-sm)', padding: '8px 0' }}>No songs found</p>
+                    <p className="text-muted picker-empty">No songs found</p>
                   ) : filteredSongs.map(song => (
                     <button
                       key={song.id}
                       type="button"
                       onClick={() => addSong(song)}
-                      style={{ width: '100%', display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 8, padding: '10px 0', background: 'none', border: 'none', borderBottom: '1px solid var(--color-border)', cursor: 'pointer', fontFamily: 'inherit', textAlign: 'left' as const }}
+                      className="song-picker-btn"
                     >
-                      <div style={{ flex: 1, minWidth: 0 }}>
-                        <p className="dash-row-title" style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{song.title}</p>
+                      <div className="dash-row-content">
+                        <p className="dash-row-title">{song.title}</p>
                       </div>
-                      <div style={{ display: 'flex', alignItems: 'center', gap: 6, flexShrink: 0 }}>
+                      <div className="song-picker-btn-right">
                         {song.default_key && <KeyBadge keyOf={song.default_key} />}
-                        <Plus size={15} style={{ color: 'var(--color-brand-500)' }} />
+                        <Plus size={15} className="text-brand" />
                       </div>
                     </button>
                   ))}
@@ -438,7 +434,7 @@ export default function PlanEditPage() {
           {/* Other items */}
           <div className="card">
             <div className="section-label">Other items</div>
-            <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6 }}>
+            <div className="item-type-grid">
               {ITEM_TYPES.map(({ type, label }) => (
                 <button key={type} type="button" onClick={() => addItem(type, label)} className="filter-chip">
                   + {label}
@@ -450,13 +446,13 @@ export default function PlanEditPage() {
       </div>
 
       {/* Fixed bottom save bar */}
-      <div style={{ position: 'fixed', bottom: 0, left: 0, right: 0, background: 'var(--color-surface)', borderTop: '1px solid var(--color-border)', padding: '12px var(--space-md)', display: 'flex', justifyContent: 'flex-end', gap: 8, zIndex: 50, boxShadow: '0 -2px 8px rgba(0,0,0,0.06)' }}>
+      <div className="save-bar">
         <Link href={`/plans/${id}`} className="btn btn-secondary">Cancel</Link>
         <button className="btn btn-primary" onClick={handleSave} disabled={saving}>
           {saving ? 'Saving…' : `Save (${items.length} item${items.length !== 1 ? 's' : ''})`}
         </button>
       </div>
-      <div style={{ height: 80 }} />
+      <div className="save-bar-spacer" />
     </div>
   )
 }
