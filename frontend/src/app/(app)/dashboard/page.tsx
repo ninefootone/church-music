@@ -171,7 +171,7 @@ export default function DashboardPage() {
         </div>
 
         {!isAdmin && members.some(m => m.role === 'admin') && (
-          <p className="member-contact-hint">Click an admin to get in touch.</p>
+          <p className="member-contact-hint">Click an admin <span className="member-admin-badge member-admin-badge--inline">A</span> to get in touch.</p>
         )}
 
         <div className="member-grid">

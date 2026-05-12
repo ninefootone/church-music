@@ -2412,3 +2412,9 @@ select.input {
   color: var(--color-text-muted);
   padding: 0 var(--space-lg) var(--space-md);
 }
+
+.member-admin-badge--inline {
+  position: static;
+  display: inline-flex;
+  vertical-align: middle;
+}
