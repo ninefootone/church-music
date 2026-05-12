@@ -20,7 +20,7 @@ export default async function AppLayout({ children }: { children: React.ReactNod
           {children}
         </main>
         <footer className="app-footer">
-        <img src="/logo.svg" alt="Song Stack" className="footer-logo" />
+        <Link href="/dashboard"><img src="/logo.svg" alt="Song Stack" className="footer-logo" /></Link>
         <div className="footer-links">
           <Link href="/feedback" className="footer-link">Contact &amp; Feedback</Link>
           &nbsp;&middot;&nbsp;
