@@ -219,14 +219,14 @@ export default function SetModePage() {
   }
 
   if (loading) return (
-    <div style={{ padding: 'var(--space-xl)', display: 'flex', alignItems: 'center', gap: 8, color: 'var(--color-text-muted)' }}>
+    <div className="loading-spinner-row">
       <Loader2 size={16} className="spin" /> Loading…
     </div>
   )
 
   if (!plan) return (
-    <div style={{ padding: 'var(--space-xl)' }}>
-      <p className="text-muted" style={{ marginBottom: 'var(--space-md)' }}>{error || 'Plan not found.'}</p>
+    <div className="page-loading-wrap">
+      <p className="text-muted page-error-msg">{error || 'Plan not found.'}</p>
       <Link href="/plans" className="back-link"><ArrowLeft size={14} /> Back to plans</Link>
     </div>
   )
@@ -241,54 +241,54 @@ export default function SetModePage() {
         <ArrowLeft size={14} /> Back to plan
       </Link>
 
-      <div className="card" style={{ marginBottom: 'var(--space-md)' }}>
-        <h1 style={{ fontSize: 'var(--text-xl)', fontWeight: 700, color: 'var(--color-text-primary)', marginBottom: 4 }}>
+      <div className="card card--spaced">
+        <h1 className="set-mode-title">
           Set mode
         </h1>
-        <p style={{ fontSize: 'var(--text-md)', color: 'var(--color-text-secondary)' }}>
+        <p className="plan-detail-meta">
           {format(parseISO(plan.plan_date), 'd MMMM yyyy')}
           {plan.plan_time && ` · ${plan.plan_time}`}
           {plan.title && ` · ${plan.title}`}
         </p>
-        <p style={{ fontSize: 'var(--text-sm)', color: 'var(--color-text-muted)', marginTop: 8 }}>
+        <p className="set-instructions">
           Choose which files to include for each song, then open in the set viewer.
         </p>
       </div>
 
       {songItems.length === 0 ? (
         <div className="card">
-          <p style={{ fontSize: 'var(--text-sm)', color: 'var(--color-text-muted)', fontStyle: 'italic' }}>
+          <p className="form-empty-note text-muted">
             No songs in this plan.
           </p>
         </div>
       ) : (
-        <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-sm)', marginBottom: 'var(--space-lg)' }}>
+        <div className="set-song-list">
           {songItems.map((item, index) => {
             const files = filesMap[item.song_id!] || []
             const selectedIds = selected[item.song_id!] || new Set()
 
             return (
-              <div key={item.id} className="card" style={{ padding: 'var(--space-md)' }}>
-                <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: files.length > 0 ? 'var(--space-sm)' : 0 }}>
-                  <span style={{ fontSize: 'var(--text-sm)', color: 'var(--color-text-muted)', width: 20, flexShrink: 0 }}>
+              <div key={item.id} className="card card--padded">
+                <div className="set-song-header" style={{ marginBottom: files.length > 0 ? 'var(--space-sm)' : 0 }}>
+                  <span className="set-song-index">
                     {index + 1}
                   </span>
-                  <span style={{ fontSize: 'var(--text-md)', fontWeight: 600, color: 'var(--color-text-primary)', flex: 1, minWidth: 0 }}>
+                  <span className="set-song-title">
                     {item.song_title}
                   </span>
                   {(item.key_override || item.song_default_key) && (
-                    <span className="badge-key" style={{ flexShrink: 0 }}>
+                    <span className="badge-key badge-key--shrink">
                       {item.key_override || item.song_default_key}
                     </span>
                   )}
                 </div>
 
                 {files.length === 0 ? (
-                  <p style={{ fontSize: 'var(--text-sm)', color: 'var(--color-text-muted)', fontStyle: 'italic', paddingLeft: 30 }}>
+                  <p className="set-no-files">
                     No files uploaded
                   </p>
                 ) : (
-                  <div style={{ display: 'flex', flexDirection: 'column', gap: 6, paddingLeft: 30 }}>
+                  <div className="set-file-list">
                     {files.map(file => (
                       <label
                         key={file.id}
@@ -301,10 +301,10 @@ export default function SetModePage() {
                           style={{ width: 16, height: 16, accentColor: 'var(--color-brand-600)', flexShrink: 0 }}
                         />
                         {file.file_type === 'chordpro'
-                          ? <Code size={13} style={{ color: 'var(--color-brand-500)', flexShrink: 0 }} />
-                          : <FileText size={13} style={{ color: 'var(--color-text-muted)', flexShrink: 0 }} />
+                          ? <Code size={13} className="text-brand" style={{ flexShrink: 0 }} />
+                          : <FileText size={13} className="text-muted" style={{ flexShrink: 0 }} />
                         }
-                        <span style={{ fontSize: 'var(--text-sm)', fontWeight: 500, color: 'var(--color-text-primary)', flex: 1 }}>
+                        <span className="set-file-label">
                           {file.label}
                         </span>
                         {file.file_type === 'chordpro' && selectedIds.has(file.id) && (
@@ -312,14 +312,14 @@ export default function SetModePage() {
                             value={chordProKeys[file.id] || ''}
                             onChange={e => setChordProKeys(prev => ({ ...prev, [file.id]: e.target.value }))}
                             onClick={e => e.stopPropagation()}
-                            style={{ fontSize: 'var(--text-xs)', padding: '2px 4px', borderRadius: 'var(--radius-sm)', border: '1px solid var(--color-border)', background: 'var(--color-surface)', color: 'var(--color-text-primary)', flexShrink: 0 }}
+                            className="transpose-select"
                           >
                             <option value="">No transpose</option>
                             {KEYS.map(k => <option key={k} value={k}>{k}</option>)}
                           </select>
                         )}
                         {file.key_of && (
-                          <span className="badge-key" style={{ fontSize: 'var(--text-xs)' }}>{file.key_of}</span>
+                          <span className="badge-key badge-key--xs">{file.key_of}</span>
                         )}
                       </label>
                     ))}
@@ -332,29 +332,27 @@ export default function SetModePage() {
       )}
 
       {error && (
-        <p style={{ fontSize: 'var(--text-sm)', color: 'var(--color-danger)', marginBottom: 'var(--space-md)' }}>
+        <p className="error-text">
           {error}
         </p>
       )}
 
-      <div style={{ display: 'flex', justifyContent: 'flex-end', flexWrap: 'wrap', gap: 8 }}>
-        <Link href={`/plans/${id}`} className="btn btn-secondary" style={{ flex: '1 1 auto', justifyContent: 'center', minWidth: 120 }}>
+      <div className="set-footer-actions">
+        <Link href={`/plans/${id}`} className="btn btn-secondary set-footer-btn">
           Cancel
         </Link>
         <button
-          className="btn btn-secondary"
+          className="btn btn-secondary set-footer-btn"
           onClick={handleDownloadPdf}
           disabled={selectedCount === 0 || merging}
-          style={{ display: 'inline-flex', alignItems: 'center', justifyContent: 'center', gap: 6, flex: '1 1 auto', minWidth: 120 }}
         >
           {merging ? <Loader2 size={14} className="spin" /> : <Download size={14} />}
           {merging ? 'Generating…' : 'Download PDF'}
         </button>
         <button
-          className="btn btn-primary"
+          className="btn btn-primary set-footer-btn"
           onClick={handleOpenSet}
           disabled={selectedCount === 0}
-          style={{ display: 'inline-flex', alignItems: 'center', justifyContent: 'center', gap: 6, flex: '1 1 auto', minWidth: 120 }}
         >
           <Play size={14} />
           {`Open set (${selectedCount} ${selectedCount === 1 ? 'file' : 'files'})`}

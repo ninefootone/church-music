@@ -48,30 +48,29 @@ export default function PlanSettingsPage() {
     }
   }
 
-  if (loading || churchLoading) return <p className="text-muted" style={{ padding: 'var(--space-xl)' }}>Loading…</p>
+  if (loading || churchLoading) return <p className="text-muted dash-loading">Loading…</p>
 
   return (
     <div>
       <Link href={`/plans/${id}`} className="back-link"><ArrowLeft size={14} /> Back to plan</Link>
-      <h1 className="page-title" style={{ marginBottom: 'var(--space-lg)' }}>Edit plan details</h1>
+      <h1 className="page-title page-title--spaced">Edit plan details</h1>
       {error && <div className="error-box">{error}</div>}
       <div className="card">
-        <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-md)' }}>
+        <div className="form-stack">
           <div>
             <label className="label">Date *</label>
-            <input className="input" type="date" required value={form.plan_date} onChange={e => setForm(f => ({ ...f, plan_date: e.target.value }))} style={{ maxWidth: '100%' }} />
+            <input className="input" type="date" required value={form.plan_date} onChange={e => setForm(f => ({ ...f, plan_date: e.target.value }))} />
           </div>
           <div>
             <label className="label">Time</label>
             <input className="input" type="text" placeholder="e.g. 9.15am" value={form.plan_time} onChange={e => setForm(f => ({ ...f, plan_time: e.target.value }))} />
-            <div style={{ display: 'flex', gap: 6, marginTop: 8 }}>
+            <div className="time-btn-group">
               {[{ label: 'Morning', value: 0 }, { label: 'Afternoon', value: 1 }, { label: 'Evening', value: 2 }].map(opt => (
                 <button
                   key={opt.value}
                   type="button"
                   onClick={() => setForm(f => ({ ...f, plan_sort_order: opt.value }))}
-                  className={form.plan_sort_order === opt.value ? 'btn btn-primary' : 'btn btn-secondary'}
-                  style={{ fontSize: 'var(--text-sm)', padding: '4px 12px' }}
+                  className={`${form.plan_sort_order === opt.value ? 'btn btn-primary' : 'btn btn-secondary'} btn-time`}
                 >
                   {opt.label}
                 </button>
@@ -79,10 +78,10 @@ export default function PlanSettingsPage() {
             </div>
           </div>
           <div>
-            <label className="label">Title <span style={{ fontWeight: 400, textTransform: 'none', letterSpacing: 0, fontSize: 'var(--text-sm)', color: 'var(--color-text-muted)' }}>(optional)</span></label>
+            <label className="label">Title <span className="label-note">(optional)</span></label>
             <input className="input" placeholder="e.g. Easter Sunday" value={form.title} onChange={e => setForm(f => ({ ...f, title: e.target.value }))} />
           </div>
-          <div style={{ display: 'flex', gap: 8, justifyContent: 'flex-end', paddingTop: 'var(--space-sm)' }}>
+          <div className="form-footer">
             <Link href={`/plans/${id}`} className="btn btn-secondary">Cancel</Link>
             <button className="btn btn-primary" onClick={handleSave} disabled={saving}>{saving ? 'Saving…' : 'Save changes'}</button>
           </div>
