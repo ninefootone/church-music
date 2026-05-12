@@ -1993,16 +1993,6 @@ select.input {
   position: relative;
 }
 
-.discover-card__master-controls {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: space-between;
-  padding: var(--space-sm) 0;
-  flex-shrink: 0;
-  border-right: 1px solid var(--color-border);
-}
-
 .discover-card__drag-handle {
   display: flex;
   align-items: center;
@@ -2017,13 +2007,14 @@ select.input {
 }
 
 .discover-card__hide-btn {
-  font-size: 0.7rem;
+  font-size: 0.75rem;
   color: var(--color-text-muted);
   background: none;
   border: none;
   cursor: pointer;
-  padding: 0 var(--space-sm) var(--space-sm);
+  padding: var(--space-sm) 0 0;
   text-decoration: underline;
+  align-self: flex-end;
 }
 
 .discover-card__hide-btn:hover {
@@ -2154,6 +2145,10 @@ select.input {
 .discover-card__footer {
   margin-top: auto;
   padding-top: var(--space-md);
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: var(--space-sm);
 }
 
 .discover-card__added {
