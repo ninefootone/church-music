@@ -1036,6 +1036,15 @@ body.set-viewer-active { overflow: hidden; }
     letter-spacing: -0.01em;
     margin-bottom: 3px;
   }
+  .plan-time       { font-weight: 400; color: var(--color-text-secondary); }
+  .plan-time-muted { font-weight: 400; color: var(--color-text-muted); }
+  .plan-card-right { display: flex; align-items: center; gap: 10px; flex-shrink: 0; }
+  .past-plan-date  { font-size: var(--text-sm); color: var(--color-text-secondary); font-weight: 500; }
+  .card-empty      { text-align: center; padding: var(--space-xl); }
+  .card-notice     { margin-bottom: var(--space-md); padding: var(--space-md) var(--space-lg); }
+  .card-past-list  { padding: var(--space-sm) var(--space-lg); }
+  .empty-message   { margin-bottom: var(--space-sm); }
+  .btn-load-more   { width: 100%; margin-top: var(--space-sm); justify-content: center; font-size: var(--text-sm); }
 
   /* ── Service detail ── */
   .plan-detail-header {

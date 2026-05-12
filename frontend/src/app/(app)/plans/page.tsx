@@ -36,7 +36,7 @@ export default function PlansPage() {
   }, [church, churchLoading])
 
   if (loading || churchLoading) return (
-    <p className="text-muted" style={{ padding: 'var(--space-xl)' }}>Loading…</p>
+    <p className="text-muted dash-loading">Loading…</p>
   )
 
   const isToday = (dateStr: string) => {
@@ -50,38 +50,38 @@ export default function PlansPage() {
 
   const PlanCard = ({ plan, badge }: { plan: Plan; badge: 'today' | 'upcoming' }) => (
     <Link href={`/plans/${plan.id}`} className="plan-card">
-      <div style={{ flex: 1, minWidth: 0 }}>
+      <div className="dash-row-content">
         <p className="plan-date">
           {format(parseISO(plan.plan_date), 'd MMMM yyyy')}
           {plan.plan_time && (
-            <span style={{ fontWeight: 400, color: 'var(--color-text-secondary)' }}> · {plan.plan_time}</span>
+            <span className="plan-time"> · {plan.plan_time}</span>
           )}
         </p>
         {plan.title && <p className="dash-row-meta">{plan.title}</p>}
       </div>
-      <div style={{ display: 'flex', alignItems: 'center', gap: 10, flexShrink: 0 }}>
+      <div className="plan-card-right">
         <span className={`badge badge-${badge}`}>
           {badge === 'today' ? 'TODAY' : 'UPCOMING'}
         </span>
-        <ChevronRight size={18} style={{ color: 'var(--color-text-muted)' }} />
+        <ChevronRight size={18} className="text-muted" />
       </div>
     </Link>
   )
 
   const PastRow = ({ plan }: { plan: Plan }) => (
     <Link href={`/plans/${plan.id}`} className="plan-row-past">
-      <div style={{ flex: 1, minWidth: 0 }}>
-        <span style={{ fontSize: 'var(--text-sm)', color: 'var(--color-text-secondary)', fontWeight: 500 }}>
+      <div className="dash-row-content">
+        <span className="past-plan-date">
           {format(parseISO(plan.plan_date), 'd MMM yyyy')}
           {plan.plan_time && (
-            <span style={{ fontWeight: 400, color: 'var(--color-text-muted)' }}> · {plan.plan_time}</span>
+            <span className="plan-time-muted"> · {plan.plan_time}</span>
           )}
           {plan.title && (
-            <span style={{ color: 'var(--color-text-muted)', fontWeight: 400 }}> — {plan.title}</span>
+            <span className="plan-time-muted"> — {plan.title}</span>
           )}
         </span>
       </div>
-      <ChevronRight size={15} style={{ color: 'var(--color-text-muted)', flexShrink: 0 }} />
+      <ChevronRight size={15} className="text-muted" />
     </Link>
   )
 
@@ -99,8 +99,8 @@ export default function PlansPage() {
       </div>
 
       {!hasAny ? (
-        <div className="card" style={{ textAlign: 'center', padding: 'var(--space-xl)' }}>
-          <p className="text-muted" style={{ marginBottom: 'var(--space-sm)' }}>No plans yet.</p>
+        <div className="card card-empty">
+          <p className="text-muted empty-message">No plans yet.</p>
           {canAddPlans && <Link href="/plans/new" className="link">Create your first plan</Link>}
         </div>
       ) : (
@@ -120,7 +120,7 @@ export default function PlansPage() {
               {futurePlans.map(s => <PlanCard key={s.id} plan={s} badge="upcoming" />)}
             </>
           ) : todayPlans.length === 0 && (
-            <div className="card" style={{ marginBottom: 'var(--space-md)', padding: 'var(--space-md) var(--space-lg)' }}>
+            <div className="card card-notice">
               <p className="text-muted">No upcoming plans. {canAddPlans && <Link href="/plans/new" className="link">Add one</Link>}</p>
             </div>
           )}
@@ -129,14 +129,13 @@ export default function PlansPage() {
           {past.length > 0 && (
             <>
               <div className="section-label" style={{ marginTop: 'var(--space-lg)' }}>Past</div>
-              <div className="card" style={{ padding: 'var(--space-sm) var(--space-lg)' }}>
+              <div className="card card-past-list">
                 {past.slice(0, visiblePast).map(s => <PastRow key={s.id} plan={s} />)}
               </div>
               {visiblePast < past.length && (
                 <button
                   onClick={() => setVisiblePast(v => v + PAST_PAGE_SIZE)}
-                  className="btn btn-secondary"
-                  style={{ width: '100%', marginTop: 'var(--space-sm)', justifyContent: 'center', fontSize: 'var(--text-sm)' }}
+                  className="btn btn-secondary btn-load-more"
                 >
                   Show more ({past.length - visiblePast} remaining)
                 </button>
