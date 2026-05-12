@@ -76,16 +76,8 @@ router.delete('/churches/:id', requireAuth, requireSuperAdmin, async (req, res, 
       [id]
     );
 
-    // 3. Also collect discover image key if the church has one
-    const churchImageResult = await pool.query(
-      'SELECT discover_image_key FROM churches WHERE id = $1',
-      [id]
-    );
-    const discoverImageKey = churchImageResult.rows[0]?.discover_image_key;
-
-    // 4. Delete R2 files (fire-and-forget per file; log failures but don't abort)
+    // 3. Delete R2 files (fire-and-forget per file; log failures but don't abort)
     const r2Keys = filesResult.rows.map(r => r.r2_key);
-    if (discoverImageKey) r2Keys.push(discoverImageKey);
 
     const r2Results = await Promise.allSettled(
       r2Keys.map(key =>
