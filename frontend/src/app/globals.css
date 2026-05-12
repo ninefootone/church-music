@@ -1927,6 +1927,13 @@ select.input {
   gap: 0.25rem;
 }
 
+.footer-logo {
+  height: 1.75rem;
+  width: auto;
+  margin-bottom: 0.75rem;
+  opacity: 0.6;
+}
+
 .footer-copy {
   margin-top: 0.5rem;
   font-size: 0.8125rem;
