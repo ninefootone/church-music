@@ -81,6 +81,8 @@ export interface Song {
   notes: string | null
   bible_references: string | null
   suggested_arrangement: string | null
+  time_signature: string | null
+  tempo: number | null
   videos?: {
     id: string
     url: string
