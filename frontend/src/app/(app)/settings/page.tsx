@@ -325,11 +325,11 @@ export default function SettingsPage() {
             </div>
           </div>
 
-        </div>
-        <div className="settings-save-row">
-          <button type="submit" className="btn btn-primary" disabled={saving}>
-            {saving ? 'Saving…' : saved ? <><Check size={15} className="icon-mr" />Saved</> : 'Save changes'}
-          </button>
+          <div className="settings-save-row">
+            <button type="submit" className="btn btn-primary" disabled={saving}>
+              {saving ? 'Saving…' : saved ? <><Check size={15} className="icon-mr" />Saved</> : 'Save changes'}
+            </button>
+          </div>
         </div>
       </form>
 
