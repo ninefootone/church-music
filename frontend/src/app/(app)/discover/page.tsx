@@ -114,7 +114,7 @@ export default function DiscoverPage() {
       <div className="page-header-row">
         <div>
           <h1 className="page-title">Discover</h1>
-          <p className="discover-subtitle">Curated songs from the Song Stack library. Add any song to your church library in one tap.</p>
+          <p className="discover-subtitle">Curated songs from the Song Stack library. Add any song to your church library in one tap. Some songs include lyrics and files ready to use. Others will need you to add your own or access via SongSelect.</p>
         </div>
       </div>
 
@@ -143,6 +143,9 @@ export default function DiscoverPage() {
                   </div>
                   <h2 className="discover-card__title">{song.title}</h2>
                   {song.author && <p className="discover-card__author">{song.author}</p>}
+                  {song.share_all_data && (
+                    <span className="discover-card__files-badge">Lyrics &amp; Files Included</span>
+                  )}
                   {song.discover_description && (
                     <p className="discover-card__description">{song.discover_description}</p>
                   )}
