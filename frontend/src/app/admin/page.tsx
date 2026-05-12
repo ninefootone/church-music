@@ -75,7 +75,7 @@ export default function SuperAdminPage() {
 
   if (!isAdmin) {
     return (
-      <div style={{ padding: '2rem', textAlign: 'center' }}>
+      <div className="admin-restricted">
         <p>Not authorised.</p>
       </div>
     );
@@ -86,89 +86,68 @@ export default function SuperAdminPage() {
   const totalMembers = churches.reduce((sum, c) => sum + parseInt(c.member_count), 0);
 
   return (
-    <div style={{ padding: '2rem', maxWidth: '1200px', margin: '0 auto' }}>
-      <h1 style={{ fontSize: '1.5rem', fontWeight: 700, marginBottom: '0.25rem' }}>Super Admin</h1>
-      <p style={{ color: 'var(--color-text-muted)', marginBottom: '2rem', fontSize: '0.875rem' }}>
+    <div className="admin-wrap">
+      <h1 className="admin-title">Super Admin</h1>
+      <p className="admin-subtitle">
         Platform overview — visible to you only
       </p>
 
       {loading && <p>Loading...</p>}
-      {error && <p style={{ color: 'red' }}>{error}</p>}
+      {error && <p className="admin-error">{error}</p>}
 
       {!loading && !error && (
         <>
-          <div style={{ display: 'flex', gap: '1rem', marginBottom: '2rem', flexWrap: 'wrap' }}>
+          <div className="admin-stats-row">
             {[
               { label: 'Churches', value: churches.length },
               { label: 'Total Songs', value: totalSongs },
               { label: 'Total Plans', value: totalPlans },
               { label: 'Total Members', value: totalMembers },
             ].map(({ label, value }) => (
-              <div
-                key={label}
-                style={{
-                  background: 'var(--color-surface)',
-                  border: '1px solid var(--color-border)',
-                  borderRadius: '0.5rem',
-                  padding: '1rem 1.5rem',
-                  minWidth: '140px',
-                }}
-              >
-                <div style={{ fontSize: '1.75rem', fontWeight: 700, color: 'var(--color-brand-500)' }}>
-                  {value}
-                </div>
-                <div style={{ fontSize: '0.8rem', color: 'var(--color-text-muted)' }}>{label}</div>
+              <div key={label} className="admin-stat-card">
+                <div className="admin-stat-value">{value}</div>
+                <div className="admin-stat-label">{label}</div>
               </div>
             ))}
           </div>
 
-          <div style={{ overflowX: 'auto' }}>
-            <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '0.875rem' }}>
+          <div className="admin-table-wrap">
+            <table className="admin-table">
               <thead>
-                <tr style={{ borderBottom: '2px solid var(--color-border)', textAlign: 'left' }}>
+                <tr className="admin-thead-row">
                   {['Church', 'Owner', 'Songs', 'Plans', 'Members', 'Last Plan', 'Joined', ''].map(h => (
-                    <th key={h} style={{ padding: '0.5rem 0.75rem', fontWeight: 600, whiteSpace: 'nowrap' }}>
-                      {h}
-                    </th>
+                    <th key={h} className="admin-th">{h}</th>
                   ))}
                 </tr>
               </thead>
               <tbody>
                 {churches.map(c => (
-                  <tr
-                    key={c.id}
-                    style={{ borderBottom: '1px solid var(--color-border)' }}
-                  >
-                    <td style={{ padding: '0.6rem 0.75rem' }}>
-                      <div style={{ fontWeight: 600 }}>{c.name}</div>
-                      <div style={{ fontSize: '0.75rem', color: 'var(--color-text-muted)' }}>{c.slug}</div>
+                  <tr key={c.id} className="admin-tr">
+                    <td className="admin-td">
+                      <div className="admin-td-name">{c.name}</div>
+                      <div className="admin-td-sub">{c.slug}</div>
                     </td>
-                    <td style={{ padding: '0.6rem 0.75rem' }}>
+                    <td className="admin-td">
                       <div>{c.owner_name || '—'}</div>
-                      <div style={{ fontSize: '0.75rem', color: 'var(--color-text-muted)' }}>{c.owner_email || '—'}</div>
+                      <div className="admin-td-sub">{c.owner_email || '—'}</div>
                     </td>
-                    <td style={{ padding: '0.6rem 0.75rem', textAlign: 'center' }}>{c.song_count}</td>
-                    <td style={{ padding: '0.6rem 0.75rem', textAlign: 'center' }}>{c.plan_count}</td>
-                    <td style={{ padding: '0.6rem 0.75rem', textAlign: 'center' }}>{c.member_count}</td>
-                    <td style={{ padding: '0.6rem 0.75rem', whiteSpace: 'nowrap' }}>
+                    <td className="admin-td-center">{c.song_count}</td>
+                    <td className="admin-td-center">{c.plan_count}</td>
+                    <td className="admin-td-center">{c.member_count}</td>
+                    <td className="admin-td-nowrap">
                       {c.last_plan_date
                         ? new Date(c.last_plan_date).toLocaleDateString('en-GB')
                         : '—'}
                     </td>
-                    <td style={{ padding: '0.6rem 0.75rem', whiteSpace: 'nowrap' }}>
+                    <td className="admin-td-nowrap">
                       {new Date(c.created_at).toLocaleDateString('en-GB')}
                     </td>
-                    <td style={{ padding: '0.6rem 0.75rem' }}>
+                    <td className="admin-td">
                       <button
                         onClick={() => handleDelete(c)}
                         disabled={deleting === c.id}
+                        className="admin-delete-btn"
                         style={{
-                          fontSize: '0.75rem',
-                          padding: '0.25rem 0.6rem',
-                          borderRadius: '0.25rem',
-                          border: '1px solid var(--color-danger, #dc2626)',
-                          color: 'var(--color-danger, #dc2626)',
-                          background: 'transparent',
                           cursor: deleting === c.id ? 'not-allowed' : 'pointer',
                           opacity: deleting === c.id ? 0.5 : 1,
                         }}

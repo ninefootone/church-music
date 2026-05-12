@@ -2343,3 +2343,26 @@ select.input {
     font-size: var(--text-xl);
   }
 }
+
+/* ── Admin ── */
+.admin-restricted { padding: 2rem; text-align: center; }
+.admin-wrap       { padding: 2rem; max-width: 1200px; margin: 0 auto; }
+.admin-title      { font-size: 1.5rem; font-weight: 700; margin-bottom: 0.25rem; }
+.admin-subtitle   { color: var(--color-text-muted); margin-bottom: 2rem; font-size: 0.875rem; }
+.admin-error      { color: red; }
+.admin-stats-row  { display: flex; gap: 1rem; margin-bottom: 2rem; flex-wrap: wrap; }
+.admin-stat-card  { background: var(--color-surface); border: 1px solid var(--color-border); border-radius: 0.5rem; padding: 1rem 1.5rem; min-width: 140px; }
+.admin-stat-value { font-size: 1.75rem; font-weight: 700; color: var(--color-brand-500); }
+.admin-stat-label { font-size: 0.8rem; color: var(--color-text-muted); }
+.admin-table-wrap { overflow-x: auto; }
+.admin-table      { width: 100%; border-collapse: collapse; font-size: 0.875rem; }
+.admin-thead-row  { border-bottom: 2px solid var(--color-border); text-align: left; }
+.admin-th         { padding: 0.5rem 0.75rem; font-weight: 600; white-space: nowrap; }
+.admin-tr         { border-bottom: 1px solid var(--color-border); }
+.admin-td         { padding: 0.6rem 0.75rem; }
+.admin-td-name    { font-weight: 600; }
+.admin-td-sub     { font-size: 0.75rem; color: var(--color-text-muted); }
+.admin-td-center  { padding: 0.6rem 0.75rem; text-align: center; }
+.admin-td-nowrap  { padding: 0.6rem 0.75rem; white-space: nowrap; }
+.admin-delete-btn { font-size: 0.75rem; padding: 0.25rem 0.6rem; border-radius: 0.25rem; border: 1px solid var(--color-danger, #dc2626); color: var(--color-danger, #dc2626); background: transparent; }
+}
