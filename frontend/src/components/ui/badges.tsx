@@ -25,3 +25,7 @@ export function KeyBadge({ keyOf }: { keyOf: string }) {
   const normalised = keyOf.replace(/♯/g, '#').replace(/♭/g, 'b')
   return <span className="badge-key">{normalised}</span>
 }
+
+export function RetiredBadge() {
+  return <span className="badge-retired">Retired</span>
+}

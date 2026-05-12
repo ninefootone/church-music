@@ -4,7 +4,7 @@ import { useState, useEffect } from 'react'
 import Link from 'next/link'
 import { format, parseISO } from 'date-fns'
 import { Search, Plus, ChevronRight, ArrowUpDown } from 'lucide-react'
-import { CategoryBadge, KeyBadge } from '@/components/ui/badges'
+import { CategoryBadge, KeyBadge, RetiredBadge } from '@/components/ui/badges'
 import { CATEGORIES, Category, Song } from '@/types'
 import { useChurch } from '@/context/ChurchContext'
 import api from '@/lib/api'
@@ -131,6 +131,7 @@ export default function SongsPage() {
                 <div className="song-row-badges-mobile">
                   {song.default_key && <KeyBadge keyOf={song.default_key} />}
                   {song.category && <CategoryBadge category={song.category} />}
+                  {song.retired && <RetiredBadge />}
                 </div>
                 <div className="dash-row-dates">
                   {song.last_sung && (
@@ -149,6 +150,7 @@ export default function SongsPage() {
             <div className="song-row-badges-desktop">
               {song.default_key && <KeyBadge keyOf={song.default_key} />}
               {song.category && <CategoryBadge category={song.category} />}
+              {song.retired && <RetiredBadge />}
               <ChevronRight size={18} className="text-muted" />
             </div>
           </Link>
