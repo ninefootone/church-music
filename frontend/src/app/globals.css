@@ -1993,6 +1993,16 @@ select.input {
   position: relative;
 }
 
+.discover-card__master-controls {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: space-between;
+  padding: var(--space-sm) 0;
+  flex-shrink: 0;
+  border-right: 1px solid var(--color-border);
+}
+
 .discover-card__drag-handle {
   display: flex;
   align-items: center;
@@ -2004,6 +2014,20 @@ select.input {
 
 .discover-card__drag-handle:active {
   cursor: grabbing;
+}
+
+.discover-card__hide-btn {
+  font-size: 0.7rem;
+  color: var(--color-text-muted);
+  background: none;
+  border: none;
+  cursor: pointer;
+  padding: 0 var(--space-sm) var(--space-sm);
+  text-decoration: underline;
+}
+
+.discover-card__hide-btn:hover {
+  color: var(--color-danger);
 }
 
 .discover-card__image {

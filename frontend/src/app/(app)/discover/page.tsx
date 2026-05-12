@@ -77,12 +77,16 @@ function SortableCard({
   importState,
   importedSongId,
   onImport,
+  onDiscoverToggle,
+  togglingDiscover,
 }: {
   song: DiscoverSong
   isMasterLibrary: boolean
   importState: ImportState
   importedSongId: string | undefined
   onImport: (song: DiscoverSong) => void
+  onDiscoverToggle: (song: DiscoverSong) => void
+  togglingDiscover: boolean
 }) {
   const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({ id: song.id })
   const style = {
@@ -94,8 +98,18 @@ function SortableCard({
   return (
     <div ref={setNodeRef} style={style} className="discover-card">
       {isMasterLibrary && (
-        <div className="discover-card__drag-handle" {...attributes} {...listeners}>
-          <GripVertical size={16} />
+        <div className="discover-card__master-controls">
+          <div className="discover-card__drag-handle" {...attributes} {...listeners}>
+            <GripVertical size={16} />
+          </div>
+          <button
+            className="discover-card__hide-btn"
+            onClick={() => onDiscoverToggle(song)}
+            disabled={togglingDiscover}
+            title="Hide from Discover"
+          >
+            Hide
+          </button>
         </div>
       )}
       <img
@@ -158,6 +172,7 @@ export default function DiscoverPage() {
   const [importStates, setImportStates] = useState<Record<string, ImportState>>({})
   const [importedIds, setImportedIds] = useState<Record<string, string>>({})
   const [savingOrder, setSavingOrder] = useState(false)
+  const [togglingDiscover, setTogglingDiscover] = useState<Record<string, boolean>>({})
   const fetchedRef = useRef(false)
 
   const sensors = useSensors(useSensor(PointerSensor))
@@ -187,6 +202,18 @@ export default function DiscoverPage() {
       setImportedIds(preloadedIds)
     }).catch(() => {}).finally(() => setLoading(false))
   }, [church])
+
+  const handleDiscoverToggle = async (song: DiscoverSong) => {
+    setTogglingDiscover(s => ({ ...s, [song.id]: true }))
+    try {
+      const token = await getToken()
+      setAuthToken(token)
+      await api.patch(`/api/songs/${song.id}/discover`, { in_discover: false })
+      setSongs(s => s.filter(s => s.id !== song.id))
+    } catch {} finally {
+      setTogglingDiscover(s => ({ ...s, [song.id]: false }))
+    }
+  }
 
   const handleDragEnd = async (event: DragEndEvent) => {
     const { active, over } = event
@@ -249,13 +276,15 @@ export default function DiscoverPage() {
             <div className="discover-list">
               {songs.map(song => (
                 <SortableCard
-                  key={song.id}
-                  song={song}
-                  isMasterLibrary={isMasterLibrary}
-                  importState={importStates[song.id] || 'idle'}
-                  importedSongId={importedIds[song.id]}
-                  onImport={handleImport}
-                />
+                key={song.id}
+                song={song}
+                isMasterLibrary={isMasterLibrary}
+                importState={importStates[song.id] || 'idle'}
+                importedSongId={importedIds[song.id]}
+                onImport={handleImport}
+                onDiscoverToggle={handleDiscoverToggle}
+                togglingDiscover={!!togglingDiscover[song.id]}
+              />
               ))}
             </div>
           </SortableContext>
