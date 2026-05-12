@@ -98,18 +98,8 @@ function SortableCard({
   return (
     <div ref={setNodeRef} style={style} className="discover-card">
       {isMasterLibrary && (
-        <div className="discover-card__master-controls">
-          <div className="discover-card__drag-handle" {...attributes} {...listeners}>
-            <GripVertical size={16} />
-          </div>
-          <button
-            className="discover-card__hide-btn"
-            onClick={() => onDiscoverToggle(song)}
-            disabled={togglingDiscover}
-            title="Hide from Discover"
-          >
-            Hide
-          </button>
+        <div className="discover-card__drag-handle" {...attributes} {...listeners}>
+          <GripVertical size={16} />
         </div>
       )}
       <img
@@ -132,30 +122,41 @@ function SortableCard({
         </div>
         <VideoLinks videos={song.videos || []} />
         <div className="discover-card__footer">
-          {importState === 'idle' && (
-            <button className="btn btn-primary btn-sm" onClick={() => onImport(song)}>
-              Add to library
-            </button>
-          )}
-          {importState === 'loading' && (
-            <button className="btn btn-primary btn-sm" disabled>Adding…</button>
-          )}
-          {(importState === 'done' || importState === 'exists') && (
-            <div className="discover-card__added">
-              <span className="text-muted" style={{ fontSize: '0.85rem' }}>
-                {importState === 'exists' ? 'Already in your library' : '✓ Added'}
+          <div>
+            {importState === 'idle' && (
+              <button className="btn btn-primary btn-sm" onClick={() => onImport(song)}>
+                Add to library
+              </button>
+            )}
+            {importState === 'loading' && (
+              <button className="btn btn-primary btn-sm" disabled>Adding…</button>
+            )}
+            {(importState === 'done' || importState === 'exists') && (
+              <div className="discover-card__added">
+                <span className="text-muted" style={{ fontSize: '0.85rem' }}>
+                  {importState === 'exists' ? 'Already in your library' : '✓ Added'}
+                </span>
+                {importedSongId && (
+                  <a href={`/songs/${importedSongId}`} className="btn btn-secondary btn-sm">
+                    {!song.share_all_data ? 'Edit to add lyrics & files →' : 'View song →'}
+                  </a>
+                )}
+              </div>
+            )}
+            {importState === 'error' && (
+              <span style={{ fontSize: '0.85rem', color: 'var(--color-danger)' }}>
+                Failed — try again
               </span>
-              {importedSongId && (
-                <a href={`/songs/${importedSongId}`} className="btn btn-secondary btn-sm">
-                  {!song.share_all_data ? 'Edit to add lyrics & files →' : 'View song →'}
-                </a>
-              )}
-            </div>
-          )}
-          {importState === 'error' && (
-            <span style={{ fontSize: '0.85rem', color: 'var(--color-danger)' }}>
-              Failed — try again
-            </span>
+            )}
+          </div>
+          {isMasterLibrary && (
+            <button
+              className="discover-card__hide-btn"
+              onClick={() => onDiscoverToggle(song)}
+              disabled={togglingDiscover}
+            >
+              Remove from Discover
+            </button>
           )}
         </div>
       </div>
