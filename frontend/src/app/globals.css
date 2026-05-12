@@ -2400,3 +2400,15 @@ select.input {
 .app-nav-help:hover {
   color: var(--color-text-primary);
 }
+
+.member-contact-hint {
+  font-size: var(--text-sm);
+  color: var(--color-text-muted);
+  margin: 0 0 var(--space-md);
+}
+
+.member-contact-modal-hint {
+  font-size: var(--text-sm);
+  color: var(--color-text-muted);
+  padding: 0 var(--space-lg) var(--space-md);
+}

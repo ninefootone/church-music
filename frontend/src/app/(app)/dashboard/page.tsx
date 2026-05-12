@@ -19,6 +19,7 @@ export default function DashboardPage() {
   const [showInviteModal, setShowInviteModal] = useState(false)
   const [manageMember, setManageMember] = useState<any>(null)
   const [showRemoveConfirm, setShowRemoveConfirm] = useState(false)
+  const [contactAdmin, setContactAdmin] = useState<any>(null)
 
   useEffect(() => {
     if (!church || fetchedRef.current) return
@@ -169,13 +170,20 @@ export default function DashboardPage() {
           )}
         </div>
 
+        {!isAdmin && members.some(m => m.role === 'admin') && (
+          <p className="member-contact-hint">Click an admin to get in touch.</p>
+        )}
+
         <div className="member-grid">
           {members.map((member) => (
             <div
               key={member.id}
-              onClick={() => isAdmin && setManageMember(member)}
+              onClick={() => {
+                if (isAdmin) setManageMember(member)
+                else if (member.role === 'admin' && member.email) setContactAdmin(member)
+              }}
               className="member-card"
-              style={{ cursor: isAdmin ? 'pointer' : 'default' }}
+              style={{ cursor: (isAdmin || (!isAdmin && member.role === 'admin' && member.email)) ? 'pointer' : 'default' }}
             >
               <div className="member-avatar-wrap">
                 {member.image_url ? (
@@ -204,6 +212,33 @@ export default function DashboardPage() {
             </div>
           ))}
         </div>
+
+        {contactAdmin && (
+          <div className="manage-member-backdrop" onClick={() => setContactAdmin(null)}>
+            <div className="manage-member-modal" onClick={e => e.stopPropagation()}>
+              <div className="manage-member-header">
+                {contactAdmin.image_url ? (
+                  <img src={contactAdmin.image_url} alt={contactAdmin.name} className="manage-member-avatar-img" />
+                ) : (
+                  <div className="manage-member-avatar-placeholder">
+                    {(contactAdmin.name || contactAdmin.email || '?').charAt(0).toUpperCase()}
+                  </div>
+                )}
+                <div>
+                  <p className="manage-member-name">{contactAdmin.name || contactAdmin.email}</p>
+                  {contactAdmin.name && <p className="manage-member-email">{contactAdmin.email}</p>}
+                </div>
+              </div>
+              <p className="member-contact-modal-hint">Get in touch with your church admin.</p>
+              <div className="manage-member-footer">
+                <button onClick={() => setContactAdmin(null)} className="btn btn-ghost">Close</button>
+                <a href={`mailto:${contactAdmin.email}`} className="btn btn-primary">
+                  Email {contactAdmin.name?.split(' ')[0] || 'admin'} →
+                </a>
+              </div>
+            </div>
+          </div>
+        )}
 
         {showRemoveConfirm && manageMember && (
           <ConfirmModal
