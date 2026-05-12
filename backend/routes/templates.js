@@ -104,10 +104,14 @@ router.post('/:id/import', requireAuth, requireAdmin, async (req, res, next) => 
   try {
     const { churchId } = req;
 
-    // Get template
+    // Get template — either a shared template or a discover song from the master library
     const template = await pool.query(
-      `SELECT * FROM songs WHERE id = $1 AND is_template = true AND template_status = 'approved'`,
-      [req.params.id]
+      `SELECT * FROM songs WHERE id = $1 AND (
+        (is_template = true AND template_status = 'approved')
+        OR
+        (church_id = $2 AND in_discover = true)
+      )`,
+      [req.params.id, process.env.MASTER_CHURCH_ID]
     );
     if (template.rows.length === 0) return res.status(404).json({ error: 'Template not found' });
     const t = template.rows[0];
