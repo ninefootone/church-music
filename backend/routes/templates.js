@@ -25,7 +25,7 @@ router.get('/discover', requireAuth, async (req, res, next) => {
          AND s.in_discover = true
          AND (s.retired = false OR s.retired IS NULL)
        GROUP BY s.id
-       ORDER BY s.updated_at DESC`,
+       ORDER BY s.discover_sort_order ASC NULLS LAST, s.updated_at DESC`,
       [process.env.MASTER_CHURCH_ID]
     );
 
@@ -48,6 +48,26 @@ router.get('/discover', requireAuth, async (req, res, next) => {
     }));
 
     res.json(songs);
+  } catch (err) {
+    next(err);
+  }
+});
+
+// PUT /templates/discover/order — save drag-and-drop order (master library only)
+router.put('/discover/order', requireAuth, requireAdmin, async (req, res, next) => {
+  try {
+    const churchId = req.churchId;
+    if (churchId !== process.env.MASTER_CHURCH_ID) {
+      return res.status(403).json({ error: 'Only the master library can set discover order' });
+    }
+    const { order } = req.body; // array of song ids in new order
+    if (!Array.isArray(order)) return res.status(400).json({ error: 'order must be an array' });
+
+    await Promise.all(order.map((id, index) =>
+      pool.query('UPDATE songs SET discover_sort_order = $1 WHERE id = $2 AND church_id = $3', [index, id, churchId])
+    ));
+
+    res.json({ success: true });
   } catch (err) {
     next(err);
   }
