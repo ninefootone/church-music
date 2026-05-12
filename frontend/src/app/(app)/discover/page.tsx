@@ -131,13 +131,11 @@ export default function DiscoverPage() {
 
             return (
               <div key={song.id} className="discover-card">
-                {song.discover_image_url ? (
-                  <img src={song.discover_image_url} alt={song.title} className="discover-card__image" />
-                ) : (
-                  <div className="discover-card__image discover-card__image--placeholder">
-                    <BookOpen size={24} />
-                  </div>
-                )}
+                <img
+                  src={song.discover_image_url || '/discover-fallback.jpg'}
+                  alt={song.title}
+                  className="discover-card__image"
+                />
                 <div className="discover-card__body">
                   <div className="discover-card__meta">
                     {song.category && <CategoryBadge category={song.category as any} />}
