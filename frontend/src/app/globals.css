@@ -162,7 +162,7 @@ body.set-viewer-active { overflow: hidden; }
     padding: 0;
   }
   .btn-danger-text { color: #9a3a3a; }
-  .btn-group        { display: flex; gap: 6px; }
+  .btn-group        { display: flex; gap: 6px; flex-wrap: wrap; }
   .btn-compact-icon { padding: 7px 10px; font-size: var(--text-xs); gap: 4px; }
   .btn-xs           { font-size: var(--text-xs); padding: 5px 10px; }
   .btn-icon-remove  { background: none; border: none; cursor: pointer; color: var(--color-text-muted); padding: 0; display: flex; align-items: center; margin-left: 2px; }
@@ -2060,6 +2060,48 @@ select.input {
 }
 
 /* Settings */
+
+.settings-restricted       { max-width: 600px; margin: 0 auto; padding: 40px 24px; text-align: center; }
+.settings-restricted-text  { color: var(--color-text-muted); font-size: 15px; }
+.settings-page-header      { display: flex; align-items: center; gap: 12px; margin-bottom: 32px; }
+.settings-icon-wrap        { width: 40px; height: 40px; background: var(--color-brand-500); border-radius: 10px; display: flex; align-items: center; justify-content: center; }
+.settings-title            { font-size: 22px; font-weight: 700; color: var(--color-text-primary); letter-spacing: -0.02em; }
+.settings-subtitle         { font-size: 13px; color: var(--color-text-muted); }
+.settings-error            { background: #fdf0f0; border: 1px solid #f5c0c0; border-radius: 10px; padding: 12px 16px; margin-bottom: 20px; font-size: 14px; color: #9a3a3a; }
+.settings-card             { background: var(--color-surface); border: 1px solid var(--color-border); border-radius: 14px; padding: 24px; }
+.settings-card--spaced     { margin-bottom: 20px; }
+.settings-section-heading        { font-size: 16px; font-weight: 600; color: var(--color-text-primary); margin-bottom: 20px; }
+.settings-section-heading--tight { margin-bottom: 4px; }
+.settings-section-desc     { font-size: 13px; color: var(--color-text-muted); margin-bottom: 16px; }
+.settings-form-grid        { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(280px, 100%), 1fr)); gap: 16px; }
+.settings-label            { display: block; font-size: 12px; font-weight: 600; color: var(--color-text-secondary); margin-bottom: 6px; text-transform: uppercase; letter-spacing: 0.05em; }
+.settings-input            { width: 100%; padding: 10px 14px; border: 1px solid var(--color-border); border-radius: 10px; font-family: inherit; font-size: 15px; color: var(--color-text-primary); background: var(--color-surface); outline: none; box-sizing: border-box; }
+.settings-hint             { font-size: 12px; color: var(--color-text-muted); margin-top: 6px; }
+.settings-hint--error      { color: var(--color-error, #d9534f); }
+.settings-logo-section     { margin-top: 20px; }
+.settings-logo-row         { display: flex; align-items: center; gap: 16px; flex-wrap: wrap; }
+.settings-logo-preview     { height: 48px; max-width: 160px; object-fit: contain; border-radius: 6px; border: 1px solid var(--color-border); padding: 4px; background: var(--color-bg); }
+.visually-hidden-input     { display: none; }
+.btn-upload-label          { cursor: pointer; display: inline-flex; align-items: center; gap: 6px; }
+.settings-save-row         { display: flex; justify-content: flex-end; margin-bottom: 20px; }
+.settings-footer-row       { display: flex; justify-content: flex-end; }
+.icon-mr                   { margin-right: 6px; }
+.role-chip-list            { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 12px; min-height: 36px; }
+.role-chip                 { display: inline-flex; align-items: center; gap: 6px; padding: 5px 10px 5px 12px; background: var(--color-neutral-50); border: 1px solid var(--color-border); border-radius: 999px; font-size: 13px; font-weight: 500; color: var(--color-text-primary); cursor: grab; user-select: none; }
+.role-add-row              { display: flex; gap: 8px; margin-bottom: 16px; }
+.role-input                { flex: 1; padding: 8px 12px; border: 1px solid var(--color-border); border-radius: 8px; font-size: 14px; color: var(--color-text-primary); background: var(--color-surface); font-family: inherit; }
+.btn-icon-label            { display: flex; align-items: center; gap: 6px; }
+.settings-body-text        { font-size: 14px; color: var(--color-text-primary); }
+.settings-body-text--spaced { margin-bottom: 16px; }
+.invite-code-display       { padding: 10px 14px; background: var(--color-bg); border: 1px solid var(--color-border); border-radius: 10px; font-family: monospace; font-size: 18px; font-weight: 700; letter-spacing: 0.1em; color: var(--color-text-primary); }
+.invite-col                { display: flex; flex-direction: column; gap: 10px; }
+.mailing-col               { display: flex; flex-direction: column; gap: 8px; }
+.btn-link-inline           { padding: 4px 0; font-size: 13px; }
+.modal-overlay             { position: fixed; inset: 0; background: rgba(0,0,0,0.5); z-index: 50; display: flex; align-items: center; justify-content: center; padding: 24px; }
+.warning-modal-box         { background: var(--color-surface); border-radius: 14px; padding: 24px; max-width: 400px; width: 100%; }
+.modal-title               { font-size: 16px; font-weight: 700; color: var(--color-text-primary); margin-bottom: 12px; }
+.modal-body                { font-size: 14px; color: var(--color-text-secondary); margin-bottom: 20px; line-height: 1.5; }
+.modal-footer              { display: flex; gap: 10px; justify-content: flex-end; }
 
 .settings-grid {
   display: grid;

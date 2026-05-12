@@ -255,103 +255,100 @@ export default function SettingsPage() {
     dragIndex.current = null
   }
 
-  const labelStyle = { display: 'block', fontSize: 12, fontWeight: 600, color: 'var(--color-text-secondary)', marginBottom: 6, textTransform: 'uppercase' as const, letterSpacing: '0.05em' }
-  const inputStyle = { width: '100%', padding: '10px 14px', border: '1px solid var(--color-border)', borderRadius: '10px', fontFamily: 'inherit', fontSize: 15, color: 'var(--color-text-primary)', background: 'var(--color-surface)', outline: 'none', boxSizing: 'border-box' as const }
-
   if (!isAdmin) {
     return (
-      <div style={{ maxWidth: 600, margin: '0 auto', padding: '40px 24px', textAlign: 'center' }}>
-        <p style={{ color: 'var(--color-text-muted)', fontSize: 15 }}>Only admins can access settings.</p>
+      <div className="settings-restricted">
+        <p className="settings-restricted-text">Only admins can access settings.</p>
       </div>
     )
   }
 
   return (
     <div>
-      <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 32 }}>
-        <div style={{ width: 40, height: 40, background: 'var(--color-brand-500)', borderRadius: 10, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+      <div className="settings-page-header">
+        <div className="settings-icon-wrap">
           <Settings size={20} color="white" />
         </div>
         <div>
-          <h1 style={{ fontSize: 22, fontWeight: 700, color: 'var(--color-text-primary)', letterSpacing: '-0.02em' }}>Settings</h1>
-          <p style={{ fontSize: 13, color: 'var(--color-text-muted)' }}>Manage your church details</p>
+          <h1 className="settings-title">Settings</h1>
+          <p className="settings-subtitle">Manage your church details</p>
         </div>
       </div>
 
       {error && (
-        <div style={{ background: '#fdf0f0', border: '1px solid #f5c0c0', borderRadius: 10, padding: '12px 16px', marginBottom: 20, fontSize: 14, color: '#9a3a3a' }}>
+        <div className="settings-error">
           {error}
         </div>
       )}
 
       {/* Church details */}
       <form onSubmit={handleSave}>
-        <div style={{ background: 'var(--color-surface)', border: '1px solid var(--color-border)', borderRadius: 14, padding: 24, marginBottom: 20 }}>
-          <h2 style={{ fontSize: 16, fontWeight: 600, color: 'var(--color-text-primary)', marginBottom: 20 }}>Church details</h2>
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(min(280px, 100%), 1fr))', gap: 16 }}>
+        <div className="settings-card settings-card--spaced">
+          <h2 className="settings-section-heading">Church details</h2>
+          <div className="settings-form-grid">
             <div>
-              <label style={labelStyle}>Church name</label>
-              <input style={inputStyle} value={churchName} onChange={e => setChurchName(e.target.value)} required />
+              <label className="settings-label">Church name</label>
+              <input className="settings-input" value={churchName} onChange={e => setChurchName(e.target.value)} required />
             </div>
             <div>
-              <label style={labelStyle}>
-                CCLI Licence Number <span style={{ fontWeight: 400, textTransform: 'none', letterSpacing: 0 }}>(optional)</span>
+              <label className="settings-label">
+                CCLI Licence Number <span className="label-note">(optional)</span>
               </label>
-              <input style={inputStyle} placeholder="e.g. 123456" value={ccliNumber} onChange={e => setCcliNumber(e.target.value)} />
-              <p style={{ fontSize: 12, color: 'var(--color-text-muted)', marginTop: 6 }}>
+              <input className="settings-input" placeholder="e.g. 123456" value={ccliNumber} onChange={e => setCcliNumber(e.target.value)} />
+              <p className="settings-hint">
                 Used in usage reports. Don't have one?{' '}
-                <a href="https://uk.ccli.com" target="_blank" rel="noopener noreferrer" style={{ color: 'var(--color-brand-500)' }}>Get licensed at ccli.com</a>
+                <a href="https://uk.ccli.com" target="_blank" rel="noopener noreferrer" className="link">Get licensed at ccli.com</a>
               </p>
             </div>
           </div>
 
-          <div style={{ marginTop: 20 }}>
-            <label style={labelStyle}>Church logo <span style={{ fontWeight: 400, textTransform: 'none', letterSpacing: 0 }}>(optional)</span></label>
-            <div style={{ display: 'flex', alignItems: 'center', gap: 16, flexWrap: 'wrap' }}>
+          <div className="settings-logo-section">
+            <label className="settings-label">Church logo <span className="label-note">(optional)</span></label>
+            <div className="settings-logo-row">
               {church?.logo_url && (
-                <img src={church.logo_url} alt="Church logo" style={{ height: 48, maxWidth: 160, objectFit: 'contain', borderRadius: 6, border: '1px solid var(--color-border)', padding: 4, background: 'var(--color-bg)' }} />
+                <img src={church.logo_url} alt="Church logo" className="settings-logo-preview" />
               )}
               <div>
                 <input
                   type="file"
                   accept="image/png,image/jpeg,image/svg+xml,image/webp"
-                  style={{ display: 'none' }}
+                  className="visually-hidden-input"
                   id="logo-upload"
                   onChange={handleLogoUpload}
                 />
-                <label htmlFor="logo-upload" className="btn btn-ghost" style={{ cursor: 'pointer', display: 'inline-flex', alignItems: 'center', gap: 6 }}>
+                <label htmlFor="logo-upload" className="btn btn-ghost btn-upload-label">
                   {logoUploading ? 'Uploading…' : church?.logo_url ? 'Replace logo' : 'Upload logo'}
                 </label>
-                {logoError && <p style={{ fontSize: 12, color: 'var(--color-error, #d9534f)', marginTop: 6 }}>{logoError}</p>}
-                <p style={{ fontSize: 12, color: 'var(--color-text-muted)', marginTop: 6 }}>PNG, JPG, SVG or WebP. Max 2MB. Wide/horizontal logos work best — tall or square images will be cropped to fit the nav bar.</p>
+                {logoError && <p className="settings-hint settings-hint--error">{logoError}</p>}
+                <p className="settings-hint">PNG, JPG, SVG or WebP. Max 2MB. Wide/horizontal logos work best — tall or square images will be cropped to fit the nav bar.</p>
               </div>
             </div>
           </div>
 
         </div>
-        <div style={{ display: 'flex', justifyContent: 'flex-end', marginBottom: 20 }}>
+        <div className="settings-save-row">
           <button type="submit" className="btn btn-primary" disabled={saving}>
-            {saving ? 'Saving…' : saved ? <><Check size={15} style={{ marginRight: 6 }} />Saved</> : 'Save changes'}
+            {saving ? 'Saving…' : saved ? <><Check size={15} className="icon-mr" />Saved</> : 'Save changes'}
           </button>
         </div>
       </form>
 
       {/* Musician roles */}
-      <div style={{ background: 'var(--color-surface)', border: '1px solid var(--color-border)', borderRadius: 14, padding: 24, marginBottom: 20 }}>
-        <h2 style={{ fontSize: 16, fontWeight: 600, color: 'var(--color-text-primary)', marginBottom: 4 }}>Musician roles</h2>
-        <p style={{ fontSize: 13, color: 'var(--color-text-muted)', marginBottom: 16 }}>
+      <div className="settings-card settings-card--spaced">
+        <h2 className="settings-section-heading settings-section-heading--tight">Musician roles</h2>
+        <p className="settings-section-desc">
           Customise the roles shown when adding a musician to a plan. Drag to reorder. If none are set, a default list is used.
         </p>
 
         {rolesError && (
-          <div style={{ background: '#fdf0f0', border: '1px solid #f5c0c0', borderRadius: 10, padding: '10px 14px', marginBottom: 12, fontSize: 13, color: '#9a3a3a' }}>
+          <div className="settings-error">
             {rolesError}
           </div>
         )}
 
-        <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8, marginBottom: 12, minHeight: 36 }}>
+        <div className="role-chip-list">
           {roles.length === 0 && (
-            <p style={{ fontSize: 13, color: 'var(--color-text-muted)', fontStyle: 'italic', margin: 0 }}>No custom roles yet — defaults will be used.</p>
+            <p className="form-empty-note">No custom roles yet — defaults will be used.</p>
           )}
           {roles.map((role, i) => (
             <div
@@ -360,22 +357,13 @@ export default function SettingsPage() {
               onDragStart={() => handleDragStart(i)}
               onDragOver={e => handleDragOver(e, i)}
               onDragEnd={handleDragEnd}
-              style={{
-                display: 'inline-flex', alignItems: 'center', gap: 6,
-                padding: '5px 10px 5px 12px',
-                background: 'var(--color-neutral-50)',
-                border: '1px solid var(--color-border)',
-                borderRadius: 999,
-                fontSize: 13, fontWeight: 500,
-                color: 'var(--color-text-primary)',
-                cursor: 'grab', userSelect: 'none',
-              }}
+              className="role-chip"
             >
               {role.name}
               <button
                 type="button"
                 onClick={() => handleDeleteRole(i)}
-                style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'var(--color-text-muted)', padding: 0, display: 'flex', alignItems: 'center', lineHeight: 1 }}
+                className="btn-icon-remove"
               >
                 <X size={13} />
               </button>
@@ -383,23 +371,23 @@ export default function SettingsPage() {
           ))}
         </div>
 
-        <div style={{ display: 'flex', gap: 8, marginBottom: 16 }}>
+        <div className="role-add-row">
           <input
             type="text"
             placeholder="New role, e.g. Violin"
             value={newRoleName}
             onChange={e => setNewRoleName(e.target.value)}
             onKeyDown={e => { if (e.key === 'Enter') { e.preventDefault(); handleAddRole() } }}
-            style={{ flex: 1, padding: '8px 12px', border: '1px solid var(--color-border)', borderRadius: 8, fontSize: 14, color: 'var(--color-text-primary)', background: 'var(--color-surface)', fontFamily: 'inherit' }}
+            className="role-input"
           />
-          <button type="button" onClick={handleAddRole} className="btn btn-ghost" style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+          <button type="button" onClick={handleAddRole} className="btn btn-ghost btn-icon-label">
             <Plus size={15} />Add
           </button>
         </div>
 
-        <div style={{ display: 'flex', justifyContent: 'flex-end' }}>
+        <div className="settings-footer-row">
           <button type="button" onClick={handleSaveRoles} className="btn btn-primary" disabled={rolesSaving}>
-            {rolesSaving ? 'Saving…' : rolesSaved ? <><Check size={15} style={{ marginRight: 6 }} />Saved</> : 'Save roles'}
+            {rolesSaving ? 'Saving…' : rolesSaved ? <><Check size={15} className="icon-mr" />Saved</> : 'Save roles'}
           </button>
         </div>
       </div>
@@ -408,20 +396,20 @@ export default function SettingsPage() {
       <div className="settings-grid">
 
         {/* Billing */}
-        <div style={{ background: 'var(--color-surface)', border: '1px solid var(--color-border)', borderRadius: 14, padding: 24 }}>
-          <h2 style={{ fontSize: 16, fontWeight: 600, color: 'var(--color-text-primary)', marginBottom: 4 }}>Billing</h2>
-          <p style={{ fontSize: 13, color: 'var(--color-text-muted)', marginBottom: 16 }}>Manage your Song Stack subscription.</p>
+        <div className="settings-card">
+          <h2 className="settings-section-heading settings-section-heading--tight">Billing</h2>
+          <p className="settings-section-desc">Manage your Song Stack subscription.</p>
           {(!church?.subscription_status || church?.subscription_status === 'free' || church?.subscription_status === 'canceled') ? (
             <div>
-              <p style={{ fontSize: 14, color: 'var(--color-text-primary)', marginBottom: 16 }}>You're on the <strong>free plan</strong> — limited to 5 songs and 1 plan.</p>
-              <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap' }}>
+              <p className="settings-body-text settings-body-text--spaced">You're on the <strong>free plan</strong> — limited to 5 songs and 1 plan.</p>
+              <div className="btn-group">
                 <button onClick={() => handleUpgrade(process.env.NEXT_PUBLIC_STRIPE_PRICE_MONTHLY!)} className="btn btn-ghost">£5 / month</button>
                 <button onClick={() => handleUpgrade(process.env.NEXT_PUBLIC_STRIPE_PRICE_ANNUAL!)} className="btn btn-primary">£50 / year</button>
               </div>
             </div>
           ) : (
             <div>
-              <p style={{ fontSize: 14, color: 'var(--color-text-primary)', marginBottom: 16 }}>
+              <p className="settings-body-text settings-body-text--spaced">
                 Status: <strong style={{ textTransform: 'capitalize' }}>{String(church?.subscription_status) === 'canceled' ? 'Cancelled' : (church?.subscription_status ?? '')}</strong>
               </p>
               <button onClick={handleManageBilling} className="btn btn-ghost">Manage subscription →</button>
@@ -430,18 +418,18 @@ export default function SettingsPage() {
         </div>
 
         {/* Invite code */}
-        <div style={{ background: 'var(--color-surface)', border: '1px solid var(--color-border)', borderRadius: 14, padding: 24 }}>
-          <h2 style={{ fontSize: 16, fontWeight: 600, color: 'var(--color-text-primary)', marginBottom: 4 }}>Invite code</h2>
-          <p style={{ fontSize: 13, color: 'var(--color-text-muted)', marginBottom: 16 }}>Share this code with people you want to join your church.</p>
-          <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
-            <div style={{ padding: '10px 14px', background: 'var(--color-bg)', border: '1px solid var(--color-border)', borderRadius: 10, fontFamily: 'monospace', fontSize: 18, fontWeight: 700, letterSpacing: '0.1em', color: 'var(--color-text-primary)' }}>
+        <div className="settings-card">
+          <h2 className="settings-section-heading settings-section-heading--tight">Invite code</h2>
+          <p className="settings-section-desc">Share this code with people you want to join your church.</p>
+          <div className="invite-col">
+            <div className="invite-code-display">
               {church?.invite_code}
             </div>
-            <div style={{ display: 'flex', gap: 10 }}>
-              <button type="button" className="btn btn-ghost" onClick={handleCopy} style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+            <div className="btn-group">
+              <button type="button" className="btn btn-ghost btn-icon-label" onClick={handleCopy}>
                 {copied ? <><Check size={15} />Copied</> : <><Copy size={15} />Copy</>}
               </button>
-              <button type="button" className="btn btn-ghost" onClick={handleRegenerateInvite} disabled={regenerating} style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+              <button type="button" className="btn btn-ghost btn-icon-label" onClick={handleRegenerateInvite} disabled={regenerating}>
                 <RefreshCw size={15} />{regenerating ? 'Regenerating…' : 'Regenerate'}
               </button>
             </div>
@@ -449,18 +437,18 @@ export default function SettingsPage() {
         </div>
 
         {/* Mailing preferences */}
-        <div className="settings-grid-mailing" style={{ background: 'var(--color-surface)', border: '1px solid var(--color-border)', borderRadius: 14, padding: 24 }}>
-          <h2 style={{ fontSize: 16, fontWeight: 600, color: 'var(--color-text-primary)', marginBottom: 4 }}>Email updates</h2>
-          <p style={{ fontSize: 13, color: 'var(--color-text-muted)', marginBottom: 16 }}>Occasional news and updates about Song Stack. No spam, unsubscribe any time.</p>
+        <div className="settings-grid-mailing settings-card">
+          <h2 className="settings-section-heading settings-section-heading--tight">Email updates</h2>
+          <p className="settings-section-desc">Occasional news and updates about Song Stack. No spam, unsubscribe any time.</p>
           {subscribed === null ? (
-            <p style={{ fontSize: 13, color: 'var(--color-text-muted)' }}>Loading…</p>
+            <p className="settings-subtitle">Loading…</p>
           ) : (
-            <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
-              <p style={{ fontSize: 14, color: 'var(--color-text-primary)', margin: 0 }}>
+            <div className="mailing-col">
+              <p className="settings-body-text">
                 {subscribed ? 'You\'re subscribed to Song Stack updates.' : 'You\'re not currently subscribed.'}
               </p>
               <div>
-                <button onClick={handleMailingToggle} disabled={mailingLoading} className="btn btn-ghost" style={{ padding: '4px 0', fontSize: 13 }}>
+                <button onClick={handleMailingToggle} disabled={mailingLoading} className="btn btn-ghost btn-link-inline">
                   {mailingLoading ? 'Updating…' : subscribed ? 'Unsubscribe' : 'Subscribe'}
                 </button>
               </div>
@@ -473,20 +461,20 @@ export default function SettingsPage() {
       {/* Warning modal */}
       {warningModal && (
         <div
-          style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.5)', zIndex: 50, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 24 }}
+          className="modal-overlay"
           onClick={e => { if (e.target === e.currentTarget) setWarningModal(null) }}
         >
-          <div style={{ background: 'var(--color-surface)', borderRadius: 14, padding: 24, maxWidth: 400, width: '100%' }}>
-            <h3 style={{ fontSize: 16, fontWeight: 700, color: 'var(--color-text-primary)', marginBottom: 12 }}>
+          <div className="warning-modal-box">
+            <h3 className="modal-title">
               {warningModal.type === 'delete' ? 'Delete role?' : 'Rename role?'}
             </h3>
-            <p style={{ fontSize: 14, color: 'var(--color-text-secondary)', marginBottom: 20, lineHeight: 1.5 }}>
+            <p className="modal-body">
               {warningModal.type === 'delete'
                 ? `"${warningModal.role.originalName}" is currently assigned to ${warningModal.count} musician${warningModal.count !== 1 ? 's' : ''} in your plans. Deleting it won't remove those existing assignments, but it will no longer appear in the role picker.`
                 : `"${warningModal.role.originalName}" is currently assigned to ${warningModal.count} musician${warningModal.count !== 1 ? 's' : ''} in your plans. Renaming it here won't update those existing assignments.`
               }
             </p>
-            <div style={{ display: 'flex', gap: 10, justifyContent: 'flex-end' }}>
+            <div className="modal-footer">
               <button type="button" className="btn btn-ghost" onClick={() => setWarningModal(null)}>Cancel</button>
               <button
                 type="button"
