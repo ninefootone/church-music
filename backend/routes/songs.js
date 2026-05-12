@@ -146,7 +146,7 @@ router.post('/', requireAuth, requirePermission('can_manage_songs'), async (req,
       }
     }
 
-    const { title, author, default_key, category, first_line, lyrics, ccli_number, youtube_url, notes, bible_references, suggested_arrangement, ccli_url, share_all_data, copyright_info, copyright_link, in_discover, discover_description, tags } = req.body;
+    const { title, author, default_key, category, first_line, lyrics, ccli_number, youtube_url, notes, bible_references, suggested_arrangement, ccli_url, share_all_data, copyright_info, copyright_link, in_discover, discover_description, tags, time_signature, tempo } = req.body;
 
     const isMasterLibrary = churchId === process.env.MASTER_CHURCH_ID;
     const discoverEnabled = isMasterLibrary && (in_discover ?? false);
@@ -229,7 +229,7 @@ router.patch('/:id/retire', requireAuth, requirePermission('can_manage_songs'), 
 router.put('/:id', requireAuth, requirePermission('can_manage_songs'), async (req, res, next) => {
   try {
     const { churchId } = req;
-    const { title, author, default_key, category, first_line, lyrics, ccli_number, youtube_url, notes, bible_references, suggested_arrangement, ccli_url, share_all_data, copyright_info, copyright_link, in_discover, discover_description, tags } = req.body;
+    const { title, author, default_key, category, first_line, lyrics, ccli_number, youtube_url, notes, bible_references, suggested_arrangement, ccli_url, share_all_data, copyright_info, copyright_link, in_discover, discover_description, tags, time_signature, tempo } = req.body;
 
     const isMasterLibrary = churchId === process.env.MASTER_CHURCH_ID;
     const shareEnabled = isMasterLibrary && (share_all_data ?? false);
