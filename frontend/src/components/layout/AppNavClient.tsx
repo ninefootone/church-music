@@ -18,13 +18,14 @@ const navLinks = [
 
 export function AppNavClient() {
   const pathname = usePathname()
-  const { church, loading } = useChurch()
+  const { church, loading, isAdmin } = useChurch()
   const { signOut, user } = useClerk()
   const churchName = loading ? '…' : (church?.name || 'Song Stack')
   const [desktopOpen, setDesktopOpen] = useState(false)
   const [mobileOpen, setMobileOpen] = useState(false)
 
   const isActive = (href: string) => pathname === href || pathname.startsWith(href + '/')
+  const visibleLinks = navLinks.filter(link => link.href !== '/settings' || isAdmin)
 
   const avatarStyle = (size: number) => ({
     width: size, height: size, borderRadius: '50%' as const, background: 'var(--color-brand-100)',
@@ -47,7 +48,7 @@ export function AppNavClient() {
             </Link>
             <span className="app-nav-sep">·</span>
             <div className="app-nav-links">
-              {navLinks.map(link => (
+              {visibleLinks.map(link => (
                 <Link key={link.href} href={link.href} className={`app-nav-link ${isActive(link.href) ? 'is-active' : ''}`}>
                   {link.label}
                 </Link>
@@ -84,7 +85,7 @@ export function AppNavClient() {
                             </p>
                           </div>
                         </div>
-                        {navLinks.map(link => (
+                        {visibleLinks.map(link => (
                           <Link key={link.href} href={link.href} className={`app-nav-mobile-link ${isActive(link.href) ? 'is-active' : ''}`} onClick={() => setDesktopOpen(false)}>
                             {link.label}
                           </Link>
@@ -130,7 +131,7 @@ export function AppNavClient() {
                 </div>
               </div>
             )}
-            {navLinks.map(link => (
+            {visibleLinks.map(link => (
               <Link key={link.href} href={link.href} className={`app-nav-mobile-link ${isActive(link.href) ? 'is-active' : ''}`} onClick={() => setMobileOpen(false)}>
                 {link.label}
               </Link>
