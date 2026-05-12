@@ -179,7 +179,11 @@ export default function PlanDetailPage() {
     const url = `${window.location.origin}/s/${plan.public_token}`
     if (navigator.share) {
       try {
-        await navigator.share({ title: 'Plan sheet', url })
+        await navigator.share({
+          title: plan.title,
+          url,
+          text: `Here's the service plan${plan.plan_date ? ` for ${format(parseISO(plan.plan_date), 'EEEE d MMMM')}` : ''}:`,
+        })
       } catch (_) {
         // user dismissed — do nothing
       }
