@@ -137,18 +137,18 @@ export default function DiscoverPage() {
                   className="discover-card__image"
                 />
                 <div className="discover-card__body">
-                  <div className="discover-card__meta">
-                    {song.category && <CategoryBadge category={song.category as any} />}
-                    {song.default_key && <KeyBadge keyOf={song.default_key} />}
-                  </div>
                   <h2 className="discover-card__title">{song.title}</h2>
                   {song.author && <p className="discover-card__author">{song.author}</p>}
-                  {song.share_all_data && (
-                    <span className="discover-card__files-badge">Lyrics &amp; Files Included</span>
-                  )}
                   {song.discover_description && (
                     <p className="discover-card__description">{song.discover_description}</p>
                   )}
+                  <div className="discover-card__meta">
+                    {song.category && <CategoryBadge category={song.category as any} />}
+                    {song.default_key && <KeyBadge keyOf={song.default_key} />}
+                    {song.share_all_data && (
+                      <span className="discover-card__files-badge">Lyrics &amp; Files Included</span>
+                    )}
+                  </div>
                   {(song.videos || []).some(v => v.link_type === 'youtube' || v.link_type === 'spotify' || v.link_type === 'apple_music') && (
                     <p className="discover-card__links-label">Listen / Watch</p>
                   )}
