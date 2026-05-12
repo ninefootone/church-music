@@ -1990,6 +1990,20 @@ select.input {
   border: 1px solid var(--color-border);
   border-radius: var(--radius-lg);
   overflow: hidden;
+  position: relative;
+}
+
+.discover-card__drag-handle {
+  display: flex;
+  align-items: center;
+  padding: 0 var(--space-sm);
+  color: var(--color-text-muted);
+  cursor: grab;
+  flex-shrink: 0;
+}
+
+.discover-card__drag-handle:active {
+  cursor: grabbing;
 }
 
 .discover-card__image {
