@@ -327,16 +327,6 @@ export default function DashboardPage() {
           </div>
         )}
       </div>
-
-      <div className="card feedback-card">
-        <div className="dash-feedback-inner">
-          <div>
-            <p className="dash-card-heading">Got feedback or a question?</p>
-            <p className="dash-card-subtext">Found a bug, got an idea, or just want to say hello? We&apos;d love to hear from you.</p>
-          </div>
-          <Link href="/feedback" className="btn btn-ghost dash-feedback-link">Get in touch →</Link>
-        </div>
-      </div>
     </div>
   )
 }

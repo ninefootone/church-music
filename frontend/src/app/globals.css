@@ -2387,3 +2387,16 @@ select.input {
 .footer-brand-link:hover {
   text-decoration: underline;
 }
+
+.app-nav-help {
+  display: flex;
+  align-items: center;
+  color: var(--color-text-muted);
+  padding: 4px;
+  border-radius: var(--radius-sm);
+  transition: color 0.15s;
+}
+
+.app-nav-help:hover {
+  color: var(--color-text-primary);
+}

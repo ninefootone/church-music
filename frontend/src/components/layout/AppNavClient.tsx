@@ -4,7 +4,7 @@ import { useState } from 'react'
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
 import { useClerk } from '@clerk/nextjs'
-import { Menu, X, LogOut } from 'lucide-react'
+import { Menu, X, LogOut, HelpCircle } from 'lucide-react'
 import { useChurch } from '@/context/ChurchContext'
 
 const navLinks = [
@@ -57,6 +57,11 @@ export function AppNavClient() {
           </div>
 
           <div className="app-nav-right">
+            {/* Help */}
+            <Link href="/feedback" className="app-nav-help" title="Help &amp; technical support">
+              <HelpCircle size={20} />
+            </Link>
+
             {/* Desktop avatar + dropdown */}
             <div className="app-nav-user-desktop" style={{ position: 'relative' }}>
               {user && (

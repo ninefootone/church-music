@@ -19,8 +19,8 @@ export default function FeedbackPage() {
       </nav>
 
       <main className="legal-content">
-        <h1>Get in touch</h1>
-        <p className="legal-updated">Bug report, question, or feedback — we&apos;d love to hear from you.</p>
+        <h1>Help &amp; technical support</h1>
+        <p className="legal-updated">This form goes directly to the Song Stack team — not your church admin. Use it for bug reports, technical issues, or feature suggestions.</p>
         <FeedbackForm />
       </main>
 
