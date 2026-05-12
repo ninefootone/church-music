@@ -32,7 +32,7 @@ export default function FeedbackPage() {
           &nbsp;&middot;&nbsp;
           <Link href="/legal" className="footer-link">Legal</Link>
         </div>
-        <div className="footer-copy">Song Stack &copy; 2026 ninefootone creative ltd</div>
+        <div className="footer-copy">Song Stack &copy; 2026 <a href="https://www.ninefootone.co.uk/" target="_blank" rel="noopener noreferrer" className="footer-brand-link">ninefootone creative ltd</a></div>
       </footer>
     </div>
   )
