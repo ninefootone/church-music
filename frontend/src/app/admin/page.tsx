@@ -23,6 +23,7 @@ export default function SuperAdminPage() {
   const [churches, setChurches] = useState<ChurchRow[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [deleting, setDeleting] = useState<string | null>(null);
 
   const isAdmin = userId === SUPER_ADMIN_CLERK_ID;
 
@@ -47,6 +48,30 @@ export default function SuperAdminPage() {
 
     fetchChurches();
   }, [isAdmin, getToken]);
+
+  const handleDelete = async (church: ChurchRow) => {
+    const confirmed = window.confirm(
+      `Permanently delete "${church.name}"?\n\nThis will remove all songs, files, plans, and members. This cannot be undone.`
+    );
+    if (!confirmed) return;
+
+    setDeleting(church.id);
+    try {
+      const token = await getToken();
+      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/superadmin/churches/${church.id}`, {
+        method: 'DELETE',
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      if (!res.ok) throw new Error('Delete failed');
+      const data = await res.json();
+      setChurches(prev => prev.filter(c => c.id !== church.id));
+      alert(`"${data.churchName}" deleted. ${data.filesDeleted} R2 file(s) removed.${data.r2Failures.length > 0 ? `\n\nWarning: ${data.r2Failures.length} R2 file(s) failed to delete — check server logs.` : ''}`);
+    } catch (err) {
+      alert('Failed to delete church. Check server logs.');
+    } finally {
+      setDeleting(null);
+    }
+  };
 
   if (!isAdmin) {
     return (
@@ -101,7 +126,7 @@ export default function SuperAdminPage() {
             <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '0.875rem' }}>
               <thead>
                 <tr style={{ borderBottom: '2px solid var(--color-border)', textAlign: 'left' }}>
-                  {['Church', 'Owner', 'Songs', 'Plans', 'Members', 'Last Plan', 'Joined'].map(h => (
+                  {['Church', 'Owner', 'Songs', 'Plans', 'Members', 'Last Plan', 'Joined', ''].map(h => (
                     <th key={h} style={{ padding: '0.5rem 0.75rem', fontWeight: 600, whiteSpace: 'nowrap' }}>
                       {h}
                     </th>
@@ -132,6 +157,24 @@ export default function SuperAdminPage() {
                     </td>
                     <td style={{ padding: '0.6rem 0.75rem', whiteSpace: 'nowrap' }}>
                       {new Date(c.created_at).toLocaleDateString('en-GB')}
+                    </td>
+                    <td style={{ padding: '0.6rem 0.75rem' }}>
+                      <button
+                        onClick={() => handleDelete(c)}
+                        disabled={deleting === c.id}
+                        style={{
+                          fontSize: '0.75rem',
+                          padding: '0.25rem 0.6rem',
+                          borderRadius: '0.25rem',
+                          border: '1px solid var(--color-danger, #dc2626)',
+                          color: 'var(--color-danger, #dc2626)',
+                          background: 'transparent',
+                          cursor: deleting === c.id ? 'not-allowed' : 'pointer',
+                          opacity: deleting === c.id ? 0.5 : 1,
+                        }}
+                      >
+                        {deleting === c.id ? 'Deleting…' : 'Delete'}
+                      </button>
                     </td>
                   </tr>
                 ))}
