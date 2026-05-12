@@ -1985,8 +1985,11 @@ select.input {
 .discover-card {
   display: flex;
   flex-direction: row;
-  align-items: flex-start;
-  gap: var(--space-lg);
+  align-items: stretch;
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-lg);
+  overflow: hidden;
 }
 
 .discover-card__image {
@@ -1997,6 +2000,7 @@ select.input {
   display: block;
   flex-shrink: 0;
   border-radius: 6px;
+  margin: var(--space-md) 0 var(--space-md) var(--space-md);
 }
 
 .discover-card__image--placeholder {
@@ -2005,7 +2009,6 @@ select.input {
   align-items: center;
   justify-content: center;
   color: var(--color-brand-300);
-  border-radius: 6px;
 }
 
 .discover-card__body {
@@ -2015,9 +2018,6 @@ select.input {
   gap: var(--space-xs);
   flex: 1;
   min-width: 0;
-  background: var(--color-surface);
-  border: 1px solid var(--color-border);
-  border-radius: var(--radius-lg);
 }
 
 .discover-card__meta {
@@ -2134,6 +2134,7 @@ select.input {
     min-width: 0;
     height: 180px;
     border-radius: 6px;
+    margin: var(--space-md) var(--space-md) 0 var(--space-md);
   }
 
   .discover-card__body {
