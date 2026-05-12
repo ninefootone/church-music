@@ -1040,6 +1040,13 @@ body.set-viewer-active { overflow: hidden; }
     text-transform: uppercase;
     letter-spacing: 0.06em;
   }
+  .stat-number--lg   { font-size: 20px; }
+  .card--center      { text-align: center; }
+  .stats-song-row    { display: flex; align-items: center; gap: 14px; padding: 12px 0; }
+  .stats-rank        { font-size: 20px; font-weight: 700; color: var(--color-brand-200); width: 36px; text-align: center; flex-shrink: 0; }
+  .stats-song-info   { flex: 1; }
+  .stats-count-col   { text-align: right; flex-shrink: 0; }
+  .stats-empty       { font-size: 15px; color: var(--color-text-muted); text-align: center; padding: var(--space-lg); }
 
   /* ── Services ── */
   .plan-card {

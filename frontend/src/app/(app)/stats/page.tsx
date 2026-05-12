@@ -68,7 +68,7 @@ export default function StatsPage() {
     <div>
       <div className="page-header">
         <h1 className="page-title">Stats</h1>
-        <div style={{ display: 'flex', gap: 8, alignItems: 'center', flexWrap: 'wrap' }}>
+        <div className="page-header-actions">
           {[30, 90, 365].map(p => (
             <button key={p} className={`filter-chip ${period === p ? 'is-active' : ''}`} onClick={() => setPeriod(p)}>
               {p === 365 ? '1 year' : `${p} days`}
@@ -79,17 +79,17 @@ export default function StatsPage() {
       </div>
 
       {loading ? (
-        <div style={{ color: 'var(--color-text-muted)', padding: 'var(--space-xl)' }}>Loading…</div>
+        <div className="dash-loading text-muted">Loading…</div>
       ) : !stats ? (
-        <div style={{ color: 'var(--color-text-muted)', padding: 'var(--space-xl)' }}>No data yet.</div>
+        <div className="dash-loading text-muted">No data yet.</div>
       ) : (
         <>
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: 'var(--space-md)', marginBottom: 'var(--space-md)' }}>
-            <div className="card" style={{ textAlign: 'center' }}>
+          <div className="usage-stats-grid">
+            <div className="card card--center">
               <div className="stat-number">{stats.total_songs}</div>
               <div className="stat-label">Songs in library</div>
             </div>
-            <div className="card" style={{ textAlign: 'center' }}>
+            <div className="card card--center">
               <div className="stat-number">{stats.total_plans}</div>
               <div className="stat-label">Plans in last {period === 365 ? 'year' : `${period} days`}</div>
             </div>
@@ -98,17 +98,17 @@ export default function StatsPage() {
           <div className="card">
             <div className="section-label">Most sung songs</div>
             {!stats.top_songs || stats.top_songs.length === 0 ? (
-              <div style={{ fontSize: 15, color: 'var(--color-text-muted)', textAlign: 'center', padding: 'var(--space-lg)' }}>
+              <div className="stats-empty">
                 No plans recorded yet. Add songs to plans to see stats here.
               </div>
             ) : stats.top_songs.map((song: any, i: number) => (
-              <div key={song.song_id} style={{ display: 'flex', alignItems: 'center', gap: 14, padding: '12px 0', borderBottom: i < stats.top_songs.length - 1 ? '1px solid var(--color-border)' : 'none' }}>
-                <div style={{ fontSize: 20, fontWeight: 700, color: 'var(--color-brand-200)', width: 36, textAlign: 'center', flexShrink: 0 }}>{i + 1}</div>
-                <div style={{ flex: 1 }}>
+              <div key={song.song_id} className="stats-song-row" style={{ borderBottom: i < stats.top_songs.length - 1 ? '1px solid var(--color-border)' : 'none' }}>
+                <div className="stats-rank">{i + 1}</div>
+                <div className="stats-song-info">
                   <div className="song-title">{song.title}</div>
                 </div>
-                <div style={{ textAlign: 'right', flexShrink: 0 }}>
-                  <div className="stat-number" style={{ fontSize: 20 }}>{song.times_sung}</div>
+                <div className="stats-count-col">
+                  <div className="stat-number stat-number--lg">{song.times_sung}</div>
                   <div className="stat-label">times</div>
                 </div>
               </div>
