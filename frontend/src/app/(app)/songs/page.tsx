@@ -3,7 +3,7 @@
 import { useState, useEffect } from 'react'
 import Link from 'next/link'
 import { format, parseISO } from 'date-fns'
-import { Search, Plus, ChevronRight, ArrowUpDown } from 'lucide-react'
+import { Search, Plus, ChevronRight, ArrowUpDown, X } from 'lucide-react'
 import { CategoryBadge, KeyBadge, RetiredBadge } from '@/components/ui/badges'
 import { CATEGORIES, Category, Song } from '@/types'
 import { useChurch } from '@/context/ChurchContext'
@@ -74,6 +74,15 @@ export default function SongsPage() {
             value={search}
             onChange={e => setSearch(e.target.value)}
           />
+          {search && (
+            <button
+              className="songs-search-clear"
+              onClick={() => setSearch('')}
+              aria-label="Clear search"
+            >
+              <X size={15} />
+            </button>
+          )}
         </div>
         <div className="songs-sort-wrap">
           <button

@@ -764,7 +764,22 @@ body.set-viewer-active { overflow: hidden; }
     color: var(--color-text-muted);
     pointer-events: none;
   }
-  .songs-search-input { padding-left: 42px; }
+  .songs-search-input { padding-left: 42px; padding-right: 36px; }
+  .songs-search-clear {
+    position: absolute;
+    right: 10px;
+    top: 50%;
+    transform: translateY(-50%);
+    background: none;
+    border: none;
+    cursor: pointer;
+    color: var(--color-text-muted);
+    padding: 2px;
+    display: flex;
+    align-items: center;
+    line-height: 1;
+  }
+  .songs-search-clear:hover { color: var(--color-text-primary); }
   .songs-sort-wrap { position: relative; }
   .songs-sort-btn { display: flex; align-items: center; gap: 6px; }
   .songs-sort-menu {
