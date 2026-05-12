@@ -270,6 +270,18 @@ export default function SongDetailPage() {
               <span className="meta-value">{song.bible_references}</span>
             </div>
           )}
+          {song.time_signature && (
+            <div className="meta-row">
+              <span className="meta-label">Time</span>
+              <span className="meta-value">{song.time_signature}</span>
+            </div>
+          )}
+          {song.tempo && (
+            <div className="meta-row">
+              <span className="meta-label">Tempo</span>
+              <span className="meta-value">{song.tempo} BPM</span>
+            </div>
+          )}
           {song.ccli_number && (
             <div className="meta-row">
               <span className="meta-label">CCLI</span>

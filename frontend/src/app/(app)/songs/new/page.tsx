@@ -56,6 +56,7 @@ export default function NewSongPage() {
     first_line: '', ccli_number: '', lyrics: '', tags: '',
     notes: '', bible_references: '', suggested_arrangement: '',
     share_all_data: false, in_discover: false, discover_description: '',
+    time_signature: '', tempo: '',
   })
   const [links, setLinks] = useState<SongLink[]>([])
 
@@ -226,6 +227,25 @@ export default function NewSongPage() {
           <div className="form-field">
             <label className="label">Notes</label>
             <textarea className="input" rows={3} placeholder="Performance notes, tips for the band…" value={form.notes} onChange={e => setForm(f => ({ ...f, notes: e.target.value }))} style={{ resize: 'vertical' }} />
+              <div style={{ display: 'flex', gap: '1rem', marginTop: '1rem' }}>
+                <div style={{ flex: 1 }}>
+                  <label className="label">Time Signature</label>
+                  <select className="input" value={form.time_signature} onChange={e => setForm(f => ({ ...f, time_signature: e.target.value }))}>
+                    <option value="">— select —</option>
+                    <option value="4/4">4/4</option>
+                    <option value="3/4">3/4</option>
+                    <option value="6/8">6/8</option>
+                    <option value="12/8">12/8</option>
+                    <option value="2/4">2/4</option>
+                    <option value="5/4">5/4</option>
+                    <option value="7/8">7/8</option>
+                  </select>
+                </div>
+                <div style={{ flex: 1 }}>
+                  <label className="label">Tempo (BPM)</label>
+                  <input className="input" type="number" min="40" max="240" placeholder="e.g. 120" value={form.tempo} onChange={e => setForm(f => ({ ...f, tempo: e.target.value }))} />
+                </div>
+              </div>
           </div>
 
           <div className="form-field">

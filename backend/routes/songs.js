@@ -153,9 +153,9 @@ router.post('/', requireAuth, requirePermission('can_manage_songs'), async (req,
     const shareEnabled = isMasterLibrary && (share_all_data ?? false);
 
     const song = await pool.query(
-      `INSERT INTO songs (church_id, title, author, default_key, category, first_line, lyrics, ccli_number, youtube_url, notes, bible_references, suggested_arrangement, ccli_url, share_all_data, copyright_info, copyright_link, in_discover, discover_description)
-       VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15,$16,$17,$18) RETURNING *`,
-      [churchId, title, author, default_key, category, first_line, lyrics, ccli_number, youtube_url, notes, bible_references, suggested_arrangement, ccli_url, shareEnabled, copyright_info ?? null, copyright_link ?? null, discoverEnabled, discover_description ?? null]
+      `INSERT INTO songs (church_id, title, author, default_key, category, first_line, lyrics, ccli_number, youtube_url, notes, bible_references, suggested_arrangement, ccli_url, share_all_data, copyright_info, copyright_link, in_discover, discover_description, time_signature, tempo)
+       VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15,$16,$17,$18,$19,$20) RETURNING *`,
+      [churchId, title, author, default_key, category, first_line, lyrics, ccli_number, youtube_url, notes, bible_references, suggested_arrangement, ccli_url, shareEnabled, copyright_info ?? null, copyright_link ?? null, discoverEnabled, discover_description ?? null, time_signature ?? null, tempo ? parseInt(tempo) : null]
     );
 
     // Handle tags
@@ -241,9 +241,10 @@ router.put('/:id', requireAuth, requirePermission('can_manage_songs'), async (re
        notes=$9, bible_references=$10, suggested_arrangement=$11, ccli_url=$12,
        share_all_data=$13, copyright_info=$14, copyright_link=$15,
        is_template=$16, template_status=$17,
-       in_discover=$18, discover_description=$19
-       WHERE id=$20 AND church_id=$21 RETURNING *`,
-      [title, author, default_key, category, first_line, lyrics, ccli_number, youtube_url, notes, bible_references, suggested_arrangement, ccli_url, shareEnabled, copyright_info ?? null, copyright_link ?? null, shareEnabled, shareEnabled ? 'approved' : 'pending', discoverEnabled, discover_description ?? null, req.params.id, churchId]
+       in_discover=$18, discover_description=$19,
+       time_signature=$20, tempo=$21
+       WHERE id=$22 AND church_id=$23 RETURNING *`,
+      [title, author, default_key, category, first_line, lyrics, ccli_number, youtube_url, notes, bible_references, suggested_arrangement, ccli_url, shareEnabled, copyright_info ?? null, copyright_link ?? null, shareEnabled, shareEnabled ? 'approved' : 'pending', discoverEnabled, discover_description ?? null, time_signature ?? null, tempo ? parseInt(tempo) : null, req.params.id, churchId]
     );
     if (song.rows.length === 0) return res.status(404).json({ error: 'Song not found' });
 

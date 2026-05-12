@@ -108,7 +108,9 @@ const migrate = async () => {
         ADD COLUMN IF NOT EXISTS notes TEXT,
         ADD COLUMN IF NOT EXISTS bible_references TEXT,
         ADD COLUMN IF NOT EXISTS suggested_arrangement TEXT,
-        ADD COLUMN IF NOT EXISTS ccli_url TEXT;
+        ADD COLUMN IF NOT EXISTS ccli_url TEXT,
+        ADD COLUMN IF NOT EXISTS time_signature TEXT,
+        ADD COLUMN IF NOT EXISTS tempo INTEGER;
 
       CREATE TABLE IF NOT EXISTS song_videos (
         id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
