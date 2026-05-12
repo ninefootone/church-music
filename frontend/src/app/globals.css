@@ -1467,6 +1467,12 @@ body.set-viewer-active { overflow: hidden; }
 }
 
 /* ============================================================
+   APP SHELL
+============================================================ */
+.app-shell        { min-height: 100vh; background: var(--color-bg); }
+.app-main-content { max-width: var(--width-app); margin: 0 auto; padding: var(--space-xl) var(--space-lg); overflow-x: hidden; }
+
+/* ============================================================
    NAVIGATION
 ============================================================ */
 .app-nav {
