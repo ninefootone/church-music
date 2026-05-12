@@ -162,7 +162,10 @@ body.set-viewer-active { overflow: hidden; }
     padding: 0;
   }
   .btn-danger-text { color: #9a3a3a; }
-  .btn-group { display: flex; gap: 6px; }
+  .btn-group        { display: flex; gap: 6px; }
+  .btn-compact-icon { padding: 7px 10px; font-size: var(--text-xs); gap: 4px; }
+  .btn-xs           { font-size: var(--text-xs); padding: 5px 10px; }
+  .btn-icon-remove  { background: none; border: none; cursor: pointer; color: var(--color-text-muted); padding: 0; display: flex; align-items: center; margin-left: 2px; }
 
   /* ── Cards ── */
   .card {
@@ -412,7 +415,8 @@ body.set-viewer-active { overflow: hidden; }
     gap: var(--space-md);
     margin-bottom: var(--space-md);
   }
-  .dash-loading { padding: var(--space-xl); }
+  .dash-loading      { padding: var(--space-xl); }
+  .page-loading-wrap { padding: var(--space-xl); }
   .card-header-row {
     display: flex;
     align-items: center;
@@ -658,6 +662,11 @@ body.set-viewer-active { overflow: hidden; }
     color: var(--color-text-muted);
     text-transform: none;
   }
+
+  /* ── Musicians ── */
+  .musician-chip  { display: inline-flex; align-items: center; gap: 6px; padding: 6px 12px; background: var(--color-neutral-50); border: 1px solid var(--color-border); border-radius: var(--radius-sm); font-size: var(--text-sm); }
+  .musician-name  { font-weight: 600; color: var(--color-text-primary); }
+  .musician-roles { color: var(--color-text-muted); }
 
   /* ── Songs list ── */
   .songs-table {
@@ -956,6 +965,9 @@ body.set-viewer-active { overflow: hidden; }
     text-align: left;
   }
   .download-btn:hover { background: var(--color-brand-50); border-color: var(--color-brand-200); color: var(--color-brand-600); }
+  .file-download-btn  { display: inline-flex; align-items: center; gap: 6px; padding: 8px 14px; background: var(--color-surface); border: 1px solid var(--color-border); border-radius: var(--radius-sm); font-size: var(--text-sm); font-weight: 500; color: var(--color-brand-600); text-decoration: none; }
+  .file-download-btn .badge-key { margin-left: 2px; }
+  .icon-faded { opacity: 0.5; }
   .youtube-link {
     display: flex;
     align-items: center;
@@ -1045,6 +1057,19 @@ body.set-viewer-active { overflow: hidden; }
   .card-past-list  { padding: var(--space-sm) var(--space-lg); }
   .empty-message   { margin-bottom: var(--space-sm); }
   .btn-load-more   { width: 100%; margin-top: var(--space-sm); justify-content: center; font-size: var(--text-sm); }
+  .song-item-card    { background: var(--color-surface); border: 1px solid var(--color-border); border-radius: var(--radius-md); overflow: hidden; margin-bottom: 8px; }
+  .item-index        { font-size: var(--text-sm); color: var(--color-text-muted); width: 24px; text-align: center; flex-shrink: 0; }
+  .item-notes        { font-size: var(--text-sm); color: var(--color-text-muted); font-style: italic; margin-top: 2px; }
+  .item-chevron      { color: var(--color-text-muted); display: flex; }
+  .item-expanded     { border-top: 1px solid var(--color-border); padding: var(--space-md); background: var(--color-neutral-50); }
+  .sub-section-label { font-size: var(--text-xs); font-weight: 700; text-transform: uppercase; letter-spacing: 0.07em; color: var(--color-text-muted); margin-bottom: 10px; }
+  .item-detail-text  { font-size: var(--text-sm); color: var(--color-text-muted); }
+  .item-detail-xs    { font-size: var(--text-xs); color: var(--color-text-muted); margin-top: 10px; }
+  .label-note-inline { font-weight: 400; text-transform: none; letter-spacing: 0; }
+  .pill-row          { display: flex; flex-wrap: wrap; gap: 4px; }
+  .plan-detail-meta  { font-size: var(--text-md); color: var(--color-text-secondary); margin-top: 2px; }
+  .plan-header-left  { min-width: 0; }
+  .plan-hint         { font-size: var(--text-sm); color: var(--color-text-muted); margin-bottom: var(--space-md); }
 
   /* ── Service detail ── */
   .plan-detail-header {

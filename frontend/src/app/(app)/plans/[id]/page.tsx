@@ -45,20 +45,20 @@ function SongItem({ item, index }: { item: any; index: number }) {
   const isSong = item.type === 'song'
 
   return (
-    <div style={{ background: 'var(--color-surface)', border: '1px solid var(--color-border)', borderRadius: 'var(--radius-md)', overflow: 'hidden', marginBottom: 8 }}>
+    <div className="song-item-card">
       <div
         className="plan-item-row" style={{ cursor: isSong ? 'pointer' : 'default' }}
         onClick={isSong ? handleExpand : undefined}
       >
-        <span style={{ fontSize: 'var(--text-sm)', color: 'var(--color-text-muted)', width: 24, textAlign: 'center', flexShrink: 0 }}>
+        <span className="item-index">
           {index + 1}
         </span>
-        <div style={{ flex: 1, minWidth: 0 }}>
+        <div className="dash-row-content">
           <p style={{ fontSize: 'var(--text-md)', fontWeight: isSong ? 600 : 400, color: isSong ? 'var(--color-text-primary)' : 'var(--color-text-secondary)', marginBottom: 0 }}>
             {isSong && item.song_title ? item.song_title : (item.title || item.type.charAt(0).toUpperCase() + item.type.slice(1))}
           </p>
           {item.notes && (
-            <p style={{ fontSize: 'var(--text-sm)', color: 'var(--color-text-muted)', fontStyle: 'italic', marginTop: 2 }}>{item.notes}</p>
+            <p className="item-notes">{item.notes}</p>
           )}
         </div>
         {isSong && (
@@ -69,7 +69,7 @@ function SongItem({ item, index }: { item: any; index: number }) {
             {item.song_category && (
               <CategoryBadge category={item.song_category} />
             )}
-            <span style={{ color: 'var(--color-text-muted)', display: 'flex' }}>
+            <span className="item-chevron">
               {expanded ? <ChevronUp size={18} /> : <ChevronDown size={18} />}
             </span>
           </div>
@@ -77,33 +77,33 @@ function SongItem({ item, index }: { item: any; index: number }) {
       </div>
 
       {isSong && expanded && (
-        <div style={{ borderTop: '1px solid var(--color-border)', padding: 'var(--space-md)', background: 'var(--color-neutral-50)' }}>
+        <div className="item-expanded">
           {loadingFiles ? (
-            <p style={{ fontSize: 'var(--text-sm)', color: 'var(--color-text-muted)' }}>Loading files...</p>
+            <p className="item-detail-text">Loading files...</p>
           ) : files && files.length > 0 ? (
             <div>
-              <p style={{ fontSize: 'var(--text-xs)', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.07em', color: 'var(--color-text-muted)', marginBottom: 10 }}>Sheet music</p>
-              <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8 }}>
+              <p className="sub-section-label">Sheet music</p>
+              <div className="file-group">
                 {files.map(file => (
                   <a
                     key={file.id}
                     href={file.url}
                     target="_blank"
                     rel="noopener noreferrer"
-                    style={{ display: 'inline-flex', alignItems: 'center', gap: 6, padding: '8px 14px', background: 'var(--color-surface)', border: '1px solid var(--color-border)', borderRadius: 'var(--radius-sm)', fontSize: 'var(--text-sm)', fontWeight: 500, color: 'var(--color-brand-600)', textDecoration: 'none' }}
+                    className="file-download-btn"
                   >
                     <FileText size={14} />
                     {file.label}
                     {file.key_of && (
-                      <span className="badge-key" style={{ marginLeft: 2 }}>{file.key_of}</span>
+                      <span className="badge-key">{file.key_of}</span>
                     )}
-                    <ExternalLink size={12} style={{ opacity: 0.5 }} />
+                    <ExternalLink size={12} className="icon-faded" />
                   </a>
                 ))}
               </div>
             </div>
           ) : (
-            <p style={{ fontSize: 'var(--text-sm)', color: 'var(--color-text-muted)', fontStyle: 'italic' }}>
+            <p className="form-empty-note text-muted">
               No sheet music uploaded for this song yet.
             </p>
           )}
@@ -112,11 +112,11 @@ function SongItem({ item, index }: { item: any; index: number }) {
             try {
               const parts: string[] = JSON.parse(raw)
               if (Array.isArray(parts)) return (
-                <div style={{ marginTop: 10 }}>
-                  <p style={{ fontSize: 'var(--text-xs)', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.07em', color: 'var(--color-text-muted)', marginBottom: 6 }}>
-                    Arrangement{item.custom_arrangement ? <span style={{ fontWeight: 400, textTransform: 'none', letterSpacing: 0 }}> (custom)</span> : ''}
+                <div className="song-section">
+                  <p className="sub-section-label">
+                    Arrangement{item.custom_arrangement ? <span className="label-note-inline"> (custom)</span> : ''}
                   </p>
-                  <div style={{ display: 'flex', flexWrap: 'wrap', gap: 4 }}>
+                  <div className="pill-row">
                     {parts.map((label: string, i: number) => (
                       <span key={i} className="arrangement-pill arrangement-pill-sm">{label}</span>
                     ))}
@@ -125,13 +125,13 @@ function SongItem({ item, index }: { item: any; index: number }) {
               )
             } catch {}
             return (
-              <p style={{ fontSize: 'var(--text-xs)', color: 'var(--color-text-muted)', marginTop: 10 }}>
+              <p className="item-detail-xs">
                 {raw}
               </p>
             )
           })()}
           {item.song_ccli_number && (
-            <p style={{ fontSize: 'var(--text-xs)', color: 'var(--color-text-muted)', marginTop: 10 }}>
+            <p className="item-detail-xs">
               CCLI {item.song_ccli_number}
             </p>
           )}
@@ -190,10 +190,10 @@ export default function PlanDetailPage() {
     }
   }
 
-  if (loading || churchLoading) return <p className="text-muted" style={{ padding: 'var(--space-xl)' }}>Loading…</p>
+  if (loading || churchLoading) return <p className="text-muted dash-loading">Loading…</p>
   if (notFound || !plan) return (
-    <div style={{ padding: 'var(--space-xl)' }}>
-      <p className="text-muted" style={{ marginBottom: 'var(--space-md)' }}>Plan not found.</p>
+    <div className="page-loading-wrap">
+      <p className="text-muted page-error-msg">Plan not found.</p>
       <Link href="/plans" className="back-link"><ArrowLeft size={14} /> Back to plans</Link>
     </div>
   )
@@ -203,25 +203,24 @@ export default function PlanDetailPage() {
       <Link href="/plans" className="back-link"><ArrowLeft size={14} /> Back to plans</Link>
 
       {/* Header */}
-      <div className="card" style={{ marginBottom: 'var(--space-md)' }}>
+      <div className="card card--spaced">
         <div className="plan-detail-header">
-          <div style={{ minWidth: 0 }}>
+          <div className="plan-header-left">
             <h1 className="plan-detail-title">
               {format(parseISO(plan.plan_date), 'd MMMM yyyy')}
             </h1>
             {plan.plan_time && (
-              <p style={{ fontSize: 'var(--text-md)', color: 'var(--color-text-secondary)', marginTop: 2 }}>{plan.plan_time}</p>
+              <p className="plan-detail-meta">{plan.plan_time}</p>
             )}
             {plan.title && (
-              <p style={{ fontSize: 'var(--text-md)', color: 'var(--color-text-muted)', marginTop: 2 }}>{plan.title}</p>
+              <p className="plan-detail-meta text-muted">{plan.title}</p>
             )}
           </div>
                     <div className="plan-detail-actions">
             {/* Share — compact icon+label button */}
             <button
               onClick={handleShare}
-              className="btn btn-secondary"
-              style={{ padding: '7px 10px', fontSize: 'var(--text-xs)', gap: 4 }}
+              className="btn btn-secondary btn-compact-icon"
               title="Share plan"
             >
               <Share2 size={14} />
@@ -231,8 +230,7 @@ export default function PlanDetailPage() {
             {/* Set mode */}
             <Link
               href={`/plans/${id}/set`}
-              className="btn btn-secondary"
-              style={{ padding: '7px 10px', fontSize: 'var(--text-xs)', gap: 4 }}
+              className="btn btn-secondary btn-compact-icon"
               title="Open set mode"
             >
               <PlayCircle size={14} />
@@ -243,8 +241,7 @@ export default function PlanDetailPage() {
             {(isAdmin || canEditAnyPlan || plan.created_by === userId) && (
               <button
                 onClick={() => setShowEmailModal(true)}
-                className="btn btn-secondary"
-                style={{ padding: '7px 10px', fontSize: 'var(--text-xs)', gap: 4 }}
+                className="btn btn-secondary btn-compact-icon"
                 title="Send plan email"
               >
                 <Mail size={14} />
@@ -263,14 +260,13 @@ export default function PlanDetailPage() {
       </div>
 
       {/* Musicians */}
-      <div className="card" style={{ marginBottom: 'var(--space-md)' }}>
-        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 'var(--space-sm)' }}>
-          <div className="section-label" style={{ marginBottom: 0 }}>Musicians</div>
+      <div className="card card--spaced">
+        <div className="card-header-row">
+          <div className="section-label section-label--flush">Musicians</div>
           {(isAdmin || canEditAnyPlan || plan.created_by === userId) && (
             <button
               onClick={() => setShowMusicianModal(true)}
-              className="btn btn-secondary btn-sm"
-              style={{ fontSize: 'var(--text-xs)', padding: '5px 10px' }}
+              className="btn btn-secondary btn-xs"
             >
               <Plus size={13} /> Add
             </button>
@@ -278,11 +274,11 @@ export default function PlanDetailPage() {
         </div>
 
         {musicians.length === 0 ? (
-          <p style={{ fontSize: 'var(--text-sm)', color: 'var(--color-text-muted)', fontStyle: 'italic' }}>
+          <p className="form-empty-note text-muted">
             No musicians added yet.
           </p>
         ) : (
-          <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8 }}>
+          <div className="file-group">
             {Object.values(
               musicians.reduce((acc, m) => {
                 const key = m.user_id || m.name
@@ -292,16 +288,16 @@ export default function PlanDetailPage() {
                 return acc
               }, {} as Record<string, { name: string; user_id: string | null; roles: string[]; ids: string[] }>)
             ).map(group => (
-              <div key={group.ids[0]} style={{ display: 'inline-flex', alignItems: 'center', gap: 6, padding: '6px 12px', background: 'var(--color-neutral-50)', border: '1px solid var(--color-border)', borderRadius: 'var(--radius-sm)', fontSize: 'var(--text-sm)' }}>
-                <span style={{ fontWeight: 600, color: 'var(--color-text-primary)' }}>{group.name}</span>
-                <span style={{ color: 'var(--color-text-muted)' }}>{group.roles.join(', ')}</span>
+              <div key={group.ids[0]} className="musician-chip">
+                <span className="musician-name">{group.name}</span>
+                <span className="musician-roles">{group.roles.join(', ')}</span>
                 {(isAdmin || canEditAnyPlan || plan.created_by === userId) && (
                   <button
                     onClick={async () => {
                       await Promise.all(group.ids.map(rid => api.delete(`/api/plans/${id}/musicians/${rid}`)))
                       setMusicians(prev => prev.filter(m => !group.ids.includes(m.id)))
                     }}
-                    style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'var(--color-text-muted)', padding: 0, display: 'flex', alignItems: 'center', marginLeft: 2 }}
+                    className="btn-icon-remove"
                   >
                     <X size={13} />
                   </button>
@@ -317,8 +313,8 @@ export default function PlanDetailPage() {
         <div className="section-label">Running order</div>
 
         {!plan.items || plan.items.length === 0 ? (
-          <div style={{ textAlign: 'center', padding: 'var(--space-xl)' }}>
-            <p className="text-muted" style={{ marginBottom: 'var(--space-sm)' }}>No items added yet.</p>
+          <div className="card-empty">
+            <p className="text-muted empty-message">No items added yet.</p>
             {(isAdmin || canEditAnyPlan || plan.created_by === userId) && (
               <Link href={`/plans/${id}/edit`} className="btn btn-primary btn-sm">
                 <Plus size={14} /> Build the running order
@@ -327,7 +323,7 @@ export default function PlanDetailPage() {
           </div>
         ) : (
           <>
-            <p style={{ fontSize: 'var(--text-sm)', color: 'var(--color-text-muted)', marginBottom: 'var(--space-md)' }}>
+            <p className="plan-hint">
               Tap a song to view sheet music
             </p>
             {plan.items.map((item: any, i: number) => (
@@ -337,11 +333,10 @@ export default function PlanDetailPage() {
         )}
       </div>
       {(isAdmin || canEditAnyPlan || plan.created_by === userId) && (
-        <div style={{ marginTop: 'var(--space-md)', display: 'flex', justifyContent: 'flex-end' }}>
+        <div className="song-actions-footer">
           <button
             onClick={() => setShowDeletePlan(true)}
-            className="btn btn-secondary"
-            style={{ color: '#9a3a3a' }}
+            className="btn btn-secondary btn-danger-text"
           >
             <Trash2 size={14} /> Delete plan
           </button>
