@@ -3,12 +3,10 @@
 ## Backlog
 
 ### Features – General
-
 - [ ] Clerk major version upgrade — currently on v5.7.5, latest is v7.x; check migration guides for v5→v6 and v6→v7 before updating; test all auth flows (sign in, sign up, onboarding redirect) on a preview branch first
 platform-wide stats: number of churches, total songs, total plans, total users, storage used; no church-level data exposed
 
 ### Discover
-
 - [ ] Dashboard Discover block — swipeable carousel showing in_discover songs with image, title, category and description; settings toggle (`hide_discover_dashboard` on `churches` table) to hide it
 
 ### Features – Print/View
@@ -26,32 +24,13 @@ platform-wide stats: number of churches, total songs, total plans, total users, 
 - [ ] Permission checkbox — add "Manage playlists" checkbox to member management modal in dashboard
 
 ### Features – Admin
+- [ ] Automated email reminders – email musicans 1 week before a plan
 - [ ] Full offboarding process – account deletion — settings page option for users to delete their own account (Clerk backend API + DB cleanup)
-
-### Features – Musicians / Scheduling
-- [ ] **"Next due to play" dashboard widget** — show each logged-in member their next upcoming plan on which they appear as a musician. Decisions needed before building:
-  - Which plan statuses count? (draft vs published — needs a `status` field on plans if not already present)
-  - Multi-plan display: show nearest only, or list all upcoming? Nearest is simpler; list is more useful
-  - Empty state: "You're not scheduled" vs show nothing — former requires the musician feature to be actively used by admins
-  - Depends entirely on admins populating plan musicians — will be empty/useless for churches that don't use that feature
-  - Natural precursor to email reminders ("you're playing on Sunday — here's the plan"); don't design the widget in isolation from that future need
-  - Consider `plan_availability` table (`plan_id`, `user_id`, `status: available|unavailable|unconfirmed`) for future unavailability/confirmation flow — design DB now even if UI comes later
 
 ### Inline style refactor
 Work through each file, one at a time, using VSCode/Cursor prompt to move all
 static inline `style={{...}}` props to named classes in `globals.css`.
 
-- [ ] `src/app/(app)/plans/page.tsx`
-- [ ] `src/app/(app)/plans/[id]/page.tsx`
-- [ ] `src/app/(app)/plans/[id]/edit/page.tsx`
-- [ ] `src/app/(app)/plans/[id]/set/page.tsx`
-- [ ] `src/app/(app)/plans/[id]/set/view/page.tsx`
-- [ ] `src/app/(app)/plans/[id]/settings/page.tsx`
-- [ ] `src/app/(app)/plans/new/page.tsx`
-- [ ] `src/app/(app)/stats/page.tsx`
-- [ ] `src/app/(app)/settings/page.tsx`
-- [ ] `src/app/(app)/layout.tsx`
-- [ ] `src/app/admin/page.tsx`
 - [ ] `src/app/feedback/page.tsx`
 - [ ] `src/app/layout.tsx`
 - [ ] `src/app/onboarding/page.tsx`
@@ -71,12 +50,6 @@ static inline `style={{...}}` props to named classes in `globals.css`.
 - [ ] `src/components/ui/PlanMusicianModal.tsx`
 - [ ] `src/components/CcliAutocomplete.tsx`
 - [ ] `src/components/layout/AppNavClient.tsx`
-- [x] `src/app/page.tsx`
-- [x] `src/app/(app)/dashboard/page.tsx`
-- [x] `src/app/(app)/songs/page.tsx`
-- [x] `src/app/(app)/songs/[id]/page.tsx`
-- [x] `src/app/(app)/songs/[id]/edit/page.tsx`
-- [x] `src/app/(app)/songs/new/page.tsx`
 
 ## Done
 - [x] WordPress song import (139 songs, 502 files)
@@ -117,4 +90,30 @@ static inline `style={{...}}` props to named classes in `globals.css`.
 - [x] Discover area — `/discover` route visible to all logged-in churches; searches/browses only songs from the master library account that have `share_all_data` enabled; completely separate from a church's own song list; results show title, tags, key, CCLI info, arrangement preview, and an "Add to my library" button that deep-copies the song (and optionally its shared files) into the church's own DB; paginated with full-text search and tag/theme filtering
 - [x] Master library curation workflow — the master library account gets an extra "Discover visibility" toggle per song (wraps the `share_all_data` flag); curator(s) can add a short "curator note" (e.g. "Great contemporary anthem, works well acoustic") stored in a new `curator_note` column on `songs`; this note shows in Discover results but not in the church's own library after import
 - [x] "New in Discover" dashboard highlight — once Discover exists, show a small "New songs added" card on the dashboard for churches that haven't seen the latest additions; track last-seen timestamp per church so the highlight clears after they visit `/discover`; lays groundwork for future community/social features
+- [x] **"Next due to play" dashboard widget** — show each logged-in member their next upcoming plan on which they appear as a musician. Decisions needed before building:
+  - Which plan statuses count? (draft vs published — needs a `status` field on plans if not already present)
+  - Multi-plan display: show nearest only, or list all upcoming? Nearest is simpler; list is more useful
+  - Empty state: "You're not scheduled" vs show nothing — former requires the musician feature to be actively used by admins
+  - Depends entirely on admins populating plan musicians — will be empty/useless for churches that don't use that feature
+  - Natural precursor to email reminders ("you're playing on Sunday — here's the plan"); don't design the widget in isolation from that future need
+  - Consider `plan_availability` table (`plan_id`, `user_id`, `status: available|unavailable|unconfirmed`) for future unavailability/confirmation flow — design DB now even if UI comes later
 
+
+### Inline style refactor
+- [x] `src/app/page.tsx`
+- [x] `src/app/(app)/dashboard/page.tsx`
+- [x] `src/app/(app)/songs/page.tsx`
+- [x] `src/app/(app)/songs/[id]/page.tsx`
+- [x] `src/app/(app)/songs/[id]/edit/page.tsx`
+- [x] `src/app/(app)/songs/new/page.tsx`
+- [x] `src/app/(app)/plans/page.tsx`
+- [x] `src/app/(app)/plans/[id]/page.tsx`
+- [x] `src/app/(app)/plans/[id]/edit/page.tsx`
+- [x] `src/app/(app)/plans/[id]/set/page.tsx`
+- [x] `src/app/(app)/plans/[id]/set/view/page.tsx`
+- [x] `src/app/(app)/plans/[id]/settings/page.tsx`
+- [x] `src/app/(app)/plans/new/page.tsx`
+- [x] `src/app/(app)/layout.tsx`
+- [x] `src/app/(app)/stats/page.tsx`
+- [x] `src/app/(app)/settings/page.tsx`
+- [x] `src/app/admin/page.tsx`
