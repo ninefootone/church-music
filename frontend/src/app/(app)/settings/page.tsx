@@ -458,6 +458,13 @@ export default function SettingsPage() {
 
       </div>
 
+      {/* Team management */}
+      <div className="settings-card settings-card--spaced">
+        <h2 className="settings-section-heading settings-section-heading--tight">Team</h2>
+        <p className="settings-section-desc">Manage your church members, roles and permissions.</p>
+        <a href="/team" className="btn btn-ghost">Manage team →</a>
+      </div>
+
       {/* Warning modal */}
       {warningModal && (
         <div
