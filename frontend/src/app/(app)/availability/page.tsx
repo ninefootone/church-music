@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react'
 import { CalendarOff, Trash2 } from 'lucide-react'
 import { format, parseISO } from 'date-fns'
 import api from '@/lib/api'
+import { useChurch } from '@/context/ChurchContext'
 
 interface UnavailabilityEntry {
   id: string
@@ -13,6 +14,7 @@ interface UnavailabilityEntry {
 }
 
 export default function AvailabilityPage() {
+  const { church } = useChurch()
   const [entries, setEntries] = useState<UnavailabilityEntry[]>([])
   const [loading, setLoading] = useState(true)
   const [startDate, setStartDate] = useState('')
@@ -22,11 +24,12 @@ export default function AvailabilityPage() {
   const [error, setError] = useState('')
 
   useEffect(() => {
+    if (!church) return
     api.get('/api/unavailability')
       .then(r => setEntries(r.data))
       .catch(() => {})
       .finally(() => setLoading(false))
-  }, [])
+  }, [church])
 
   async function handleAdd() {
     setError('')
