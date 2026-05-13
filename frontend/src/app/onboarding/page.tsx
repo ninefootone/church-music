@@ -4,7 +4,7 @@ import { useState, useEffect } from 'react'
 import { useSearchParams } from 'next/navigation'
 import { useRouter } from 'next/navigation'
 import { useAuth, useUser, SignInButton } from '@clerk/nextjs'
-import { Music, ArrowLeft } from 'lucide-react'
+import { ArrowLeft } from 'lucide-react'
 import api, { setAuthToken } from '@/lib/api'
 
 export default function OnboardingPage() {
@@ -85,12 +85,7 @@ export default function OnboardingPage() {
     <div className="onboarding-shell">
       <div className="onboarding-inner">
         <div className="onboarding-header">
-          <div className="onboarding-icon">
-            <Music size={24} color="white" />
-          </div>
-          <h1 className="onboarding-title">
-            Welcome to Song Stack
-          </h1>
+          <img src="/logo-strap.svg" alt="Song Stack" className="onboarding-logo" />
           <p className="onboarding-subtitle">
             Get started by creating a new church or joining an existing one.
           </p>
