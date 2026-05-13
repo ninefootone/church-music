@@ -226,6 +226,7 @@ export default function TeamPage() {
                   { key: 'can_manage_songs', label: 'Add & edit songs' },
                   { key: 'can_add_plans', label: 'Add plans' },
                   { key: 'can_edit_any_plan', label: "Edit anyone's plans" },
+                  { key: 'can_manage_playlists', label: 'Manage playlists' },                    
                 ] as { key: 'can_manage_songs' | 'can_add_plans' | 'can_edit_any_plan', label: string }[]).map(({ key, label }) => (
                   <label key={key} className="manage-member-perm-label">
                     <input
@@ -238,6 +239,7 @@ export default function TeamPage() {
                             can_manage_songs: updated.can_manage_songs,
                             can_add_plans: updated.can_add_plans,
                             can_edit_any_plan: updated.can_edit_any_plan,
+                            can_manage_playlists: updated.can_manage_playlists,
                           })
                           setMembers(prev => prev.map(m => m.id === manageMember.id ? updated : m))
                           setManageMember(updated)
