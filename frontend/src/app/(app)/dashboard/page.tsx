@@ -265,17 +265,15 @@ export default function DashboardPage() {
                   </div>
                 </div>
               ) : (
-                <>
-                  <div className="dash-row-content">
-                    <a href={p.url} target="_blank" rel="noopener noreferrer" className="dash-row-title link">{p.name}</a>
+                <div className="dash-row-content">
+                <a href={p.url} target="_blank" rel="noopener noreferrer" className="dash-row-title link">{p.name}</a>
+                {canManagePlaylists && (
+                  <div style={{ display: 'flex', gap: '0.5rem', marginTop: '0.4rem' }}>
+                    <button className="btn btn-ghost" onClick={() => { setEditingPlaylist(p); setEditName(p.name); setEditUrl(p.url) }}>Edit</button>
+                    <button className="btn btn-ghost" onClick={() => deletePlaylist(p.id)}>Delete</button>
                   </div>
-                  {canManagePlaylists && (
-                    <div style={{ display: 'flex', gap: '0.5rem', flexShrink: 0 }}>
-                      <button className="btn btn-ghost" onClick={() => { setEditingPlaylist(p); setEditName(p.name); setEditUrl(p.url) }}>Edit</button>
-                      <button className="btn btn-ghost" onClick={() => deletePlaylist(p.id)}>Delete</button>
-                    </div>
-                  )}
-                </>
+                )}
+              </div>
               )}
             </div>
           ))}
