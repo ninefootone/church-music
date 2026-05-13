@@ -43,6 +43,26 @@ router.get('/', requireAuth, requireMembership, async function(req, res, next) {
   }
 });
 
+// GET /api/plans/my-upcoming — plans where the logged-in user is listed as a musician
+router.get('/my-upcoming', requireAuth, requireMembership, async function(req, res, next) {
+  try {
+    const result = await pool.query(
+      `SELECT p.id, p.plan_date, p.plan_time, p.title, pm.role AS musician_role
+       FROM plans p
+       JOIN plan_musicians pm ON pm.plan_id = p.id
+       WHERE p.church_id = $1
+         AND pm.user_id = $2
+         AND p.plan_date >= CURRENT_DATE
+       ORDER BY p.plan_date ASC, p.plan_time ASC
+       LIMIT 10`,
+      [req.churchId, req.user.id]
+    );
+    res.json(result.rows);
+  } catch (err) {
+    next(err);
+  }
+});
+
 router.get('/:id/musicians', async function(req, res, next) {
   try {
     const result = await pool.query(
