@@ -55,9 +55,12 @@ export default function TeamPage() {
       <div className="settings-card settings-card--spaced">
         <div className="card-header-row">
           <h2 className="settings-section-heading settings-section-heading--tight">Members</h2>
-          <button onClick={() => setShowInviteModal(true)} className="btn btn-ghost">
-            Invite member +
-          </button>
+          <div style={{ display: 'flex', gap: 'var(--space-sm)' }}>
+            <Link href="/team/unavailability" className="btn btn-ghost">View unavailability →</Link>
+            <button onClick={() => setShowInviteModal(true)} className="btn btn-ghost">
+              Invite member +
+            </button>
+          </div>
         </div>
 
         {loading ? (

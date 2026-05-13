@@ -782,6 +782,32 @@ body.set-viewer-active { overflow: hidden; }
   color: var(--color-text-muted);
 }
 
+/* Team unavailability page */
+.team-unavail-member {
+  margin-bottom: var(--space-lg);
+  padding-bottom: var(--space-lg);
+  border-bottom: 1px solid var(--color-border);
+}
+
+.team-unavail-member:last-child {
+  border-bottom: none;
+  margin-bottom: 0;
+  padding-bottom: 0;
+}
+
+.team-unavail-member-header {
+  display: flex;
+  align-items: center;
+  gap: var(--space-sm);
+  margin-bottom: var(--space-sm);
+}
+
+.team-unavail-member-name {
+  font-size: var(--text-base);
+  font-weight: 600;
+  color: var(--color-text-primary);
+}
+
   /* ── Musicians ── */
   .musician-chip  { display: inline-flex; align-items: center; gap: 6px; padding: 6px 12px; background: var(--color-neutral-50); border: 1px solid var(--color-border); border-radius: var(--radius-sm); font-size: var(--text-sm); }
   .musician-name  { font-weight: 600; color: var(--color-text-primary); }
