@@ -2347,7 +2347,7 @@ select.input {
 
 .settings-restricted       { max-width: 600px; margin: 0 auto; padding: 40px 24px; text-align: center; }
 .settings-restricted-text  { color: var(--color-text-muted); font-size: 15px; }
-.settings-page-header      { display: flex; align-items: center; gap: 12px; margin-bottom: 32px; }
+.settings-page-header      { display: flex; flex-direction: column; gap: 4px; margin-bottom: 32px; }
 .settings-icon-wrap        { width: 40px; height: 40px; background: var(--color-brand-500); border-radius: 10px; display: flex; align-items: center; justify-content: center; }
 .settings-title            { font-size: 22px; font-weight: 700; color: var(--color-text-primary); letter-spacing: -0.02em; }
 .settings-subtitle         { font-size: 13px; color: var(--color-text-muted); }

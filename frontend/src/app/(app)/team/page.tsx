@@ -2,7 +2,6 @@
 
 import { useState, useEffect, useRef } from 'react'
 import Link from 'next/link'
-import { Users } from 'lucide-react'
 import { format, parseISO } from 'date-fns'
 import { useChurch } from '@/context/ChurchContext'
 import api from '@/lib/api'
@@ -75,13 +74,8 @@ export default function TeamPage() {
   return (
     <div>
       <div className="settings-page-header">
-        <div className="settings-icon-wrap">
-          <Users size={20} color="white" />
-        </div>
-        <div>
-          <h1 className="settings-title">Team</h1>
-          <p className="settings-subtitle">Manage members and their permissions</p>
-        </div>
+        <h1 className="settings-title">Team</h1>
+        <p className="settings-subtitle">Manage members and their permissions</p>
       </div>
 
       {/* Members grid */}
