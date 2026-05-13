@@ -8,12 +8,13 @@ import { Menu, X, LogOut, HelpCircle, Home } from 'lucide-react'
 import { useChurch } from '@/context/ChurchContext'
 
 const navLinks = [
-  { href: '/dashboard', label: <Home size={16} /> },
-  { href: '/songs',     label: 'Songs' },
-  { href: '/plans',     label: 'Plans' },
-  { href: '/discover',  label: 'Discover' },
-  { href: '/stats',     label: 'Stats' },
-  { href: '/settings',  label: 'Settings' },
+  { href: '/dashboard', label: <Home size={16} />, adminOnly: false },
+  { href: '/songs',     label: 'Songs',            adminOnly: false },
+  { href: '/plans',     label: 'Plans',            adminOnly: false },
+  { href: '/discover',  label: 'Discover',         adminOnly: false },
+  { href: '/stats',     label: 'Stats',            adminOnly: false },
+  { href: '/team',      label: 'Team',             adminOnly: true  },
+  { href: '/settings',  label: 'Settings',         adminOnly: true  },
 ]
 
 export function AppNavClient() {
@@ -25,7 +26,7 @@ export function AppNavClient() {
   const [mobileOpen, setMobileOpen] = useState(false)
 
   const isActive = (href: string) => pathname === href || pathname.startsWith(href + '/')
-  const visibleLinks = navLinks.filter(link => link.href !== '/settings' || isAdmin)
+  const visibleLinks = navLinks.filter(link => !link.adminOnly || isAdmin)
 
   const avatarStyle = (size: number) => ({
     width: size, height: size, borderRadius: '50%' as const, background: 'var(--color-brand-100)',

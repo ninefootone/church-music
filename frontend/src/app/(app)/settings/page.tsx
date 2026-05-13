@@ -333,65 +333,6 @@ export default function SettingsPage() {
         </div>
       </form>
 
-      {/* Musician roles */}
-      <div className="settings-card settings-card--spaced">
-        <h2 className="settings-section-heading settings-section-heading--tight">Musician roles</h2>
-        <p className="settings-section-desc">
-          Customise the roles shown when adding a musician to a plan. Drag to reorder. If none are set, a default list is used.
-        </p>
-
-        {rolesError && (
-          <div className="settings-error">
-            {rolesError}
-          </div>
-        )}
-
-        <div className="role-chip-list">
-          {roles.length === 0 && (
-            <p className="form-empty-note">No custom roles yet — defaults will be used.</p>
-          )}
-          {roles.map((role, i) => (
-            <div
-              key={role.id || role.name}
-              draggable
-              onDragStart={() => handleDragStart(i)}
-              onDragOver={e => handleDragOver(e, i)}
-              onDragEnd={handleDragEnd}
-              className="role-chip"
-            >
-              {role.name}
-              <button
-                type="button"
-                onClick={() => handleDeleteRole(i)}
-                className="btn-icon-remove"
-              >
-                <X size={13} />
-              </button>
-            </div>
-          ))}
-        </div>
-
-        <div className="role-add-row">
-          <input
-            type="text"
-            placeholder="New role, e.g. Violin"
-            value={newRoleName}
-            onChange={e => setNewRoleName(e.target.value)}
-            onKeyDown={e => { if (e.key === 'Enter') { e.preventDefault(); handleAddRole() } }}
-            className="role-input"
-          />
-          <button type="button" onClick={handleAddRole} className="btn btn-ghost btn-icon-label">
-            <Plus size={15} />Add
-          </button>
-        </div>
-
-        <div className="settings-footer-row">
-          <button type="button" onClick={handleSaveRoles} className="btn btn-primary" disabled={rolesSaving}>
-            {rolesSaving ? 'Saving…' : rolesSaved ? <><Check size={15} className="icon-mr" />Saved</> : 'Save roles'}
-          </button>
-        </div>
-      </div>
-
       {/* Settings grid — billing, invite, mailing */}
       <div className="settings-grid">
 
@@ -458,11 +399,63 @@ export default function SettingsPage() {
 
       </div>
 
-      {/* Team management */}
+      {/* Musician roles */}
       <div className="settings-card settings-card--spaced">
-        <h2 className="settings-section-heading settings-section-heading--tight">Team</h2>
-        <p className="settings-section-desc">Manage your church members, roles and permissions.</p>
-        <a href="/team" className="btn btn-ghost">Manage team →</a>
+        <h2 className="settings-section-heading settings-section-heading--tight">Musician roles</h2>
+        <p className="settings-section-desc">
+          Customise the roles shown when adding a musician to a plan. Drag to reorder. If none are set, a default list is used.
+        </p>
+
+        {rolesError && (
+          <div className="settings-error">
+            {rolesError}
+          </div>
+        )}
+
+        <div className="role-chip-list">
+          {roles.length === 0 && (
+            <p className="form-empty-note">No custom roles yet — defaults will be used.</p>
+          )}
+          {roles.map((role, i) => (
+            <div
+              key={role.id || role.name}
+              draggable
+              onDragStart={() => handleDragStart(i)}
+              onDragOver={e => handleDragOver(e, i)}
+              onDragEnd={handleDragEnd}
+              className="role-chip"
+            >
+              {role.name}
+              <button
+                type="button"
+                onClick={() => handleDeleteRole(i)}
+                className="btn-icon-remove"
+              >
+                <X size={13} />
+              </button>
+            </div>
+          ))}
+        </div>
+
+        <div className="role-add-row">
+          <input
+            type="text"
+            placeholder="New role, e.g. Violin"
+            value={newRoleName}
+            onChange={e => setNewRoleName(e.target.value)}
+            onKeyDown={e => { if (e.key === 'Enter') { e.preventDefault(); handleAddRole() } }}
+            className="role-input"
+          />
+          <button type="button" onClick={handleAddRole} className="btn btn-ghost btn-icon-label">
+            <Plus size={15} />Add
+          </button>
+        </div>
+
+        <div className="settings-footer-row">
+          <button type="button" onClick={handleSaveRoles} className="btn btn-primary" disabled={rolesSaving}>
+            {rolesSaving ? 'Saving…' : rolesSaved ? <><Check size={15} className="icon-mr" />Saved</> : 'Save roles'}
+          </button>
+        </div>
       </div>
 
       {/* Warning modal */}
