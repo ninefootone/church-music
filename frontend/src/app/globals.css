@@ -2725,8 +2725,11 @@ select.input {
   max-width: 380px;
 }
 .not-found-icon {
-  margin-bottom: 1.25rem;
-  border-radius: 14px;
+  display: block;
+  margin: 0 auto 1.25rem;
+  border-radius: 5px;
+  width: 40px;
+  height: 40px;
 }
 .not-found-title {
   font-size: 1.75rem;
