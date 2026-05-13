@@ -14,7 +14,7 @@ const navLinks = [
   { href: '/discover',  label: 'Discover',                adminOnly: false },
   { href: '/team',      label: 'Team',                    adminOnly: true  },
   { href: '/settings',  label: 'Settings',                adminOnly: true  },
-  { href: '/stats',     label: <BarChart2 size={16} />,   dropdownLabel: 'Stats', adminOnly: false },
+  { href: '/stats',     label: <BarChart2 size={16} strokeWidth={2.5} />,   dropdownLabel: 'Stats', adminOnly: false },
 ]
 
 export function AppNavClient() {
