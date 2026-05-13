@@ -6,36 +6,22 @@ import { format, parseISO } from 'date-fns'
 import { CategoryBadge, KeyBadge } from '@/components/ui/badges'
 import { useChurch } from '@/context/ChurchContext'
 import api from '@/lib/api'
-import { InviteMemberModal } from '@/components/ui/InviteMemberModal'
-import { ConfirmModal } from '@/components/ui/ConfirmModal'
 
 export default function DashboardPage() {
   const { church, loading: churchLoading, isAdmin, canManageSongs, canAddPlans } = useChurch()
   const [songs, setSongs] = useState<any[]>([])
   const [plans, setPlans] = useState<any[]>([])
-  const [members, setMembers] = useState<any[]>([])
+  const [myUpcoming, setMyUpcoming] = useState<any[]>([])
   const [loading, setLoading] = useState(true)
   const fetchedRef = useRef(false)
-  const [showInviteModal, setShowInviteModal] = useState(false)
-  const [manageMember, setManageMember] = useState<any>(null)
-  const [showRemoveConfirm, setShowRemoveConfirm] = useState(false)
-  const [contactAdmin, setContactAdmin] = useState<any>(null)
 
   useEffect(() => {
     if (!church || fetchedRef.current) return
     fetchedRef.current = true
     Promise.all([
       api.get('/api/songs').then(r => setSongs(r.data.slice(0, 4))),
-      // Only fetch upcoming plans, ascending so next plan is first
       api.get('/api/plans', { params: { upcoming: 'true' } }).then(r => setPlans(r.data.slice(0, 4))),
-      api.get('/api/members').then(r => {
-        const sorted = [...r.data].sort((a, b) => {
-          if (a.role === 'admin' && b.role !== 'admin') return -1
-          if (a.role !== 'admin' && b.role === 'admin') return 1
-          return 0
-        })
-        setMembers(sorted)
-      }),
+      api.get('/api/plans/my-upcoming').then(r => setMyUpcoming(r.data)),
     ]).finally(() => setLoading(false))
   }, [church])
 
@@ -57,7 +43,7 @@ export default function DashboardPage() {
         churchId: church.id,
       })
       window.location.href = data.url
-    } catch (err) {
+    } catch {
       alert('Something went wrong. Please try again.')
     }
   }
@@ -82,6 +68,7 @@ export default function DashboardPage() {
           </div>
         </div>
       )}
+
       <div className="dashboard-grid">
 
         {/* Songs */}
@@ -159,208 +146,38 @@ export default function DashboardPage() {
         </div>
       </div>
 
-      {/* Team */}
+      {/* Upcoming */}
       <div className="card">
         <div className="card-header-row">
-          <span className="section-label">Team</span>
+          <span className="section-label">Upcoming</span>
           {isAdmin && (
-            <button onClick={() => setShowInviteModal(true)} className="btn btn-ghost">
-              Invite member +
-            </button>
+            <Link href="/team" className="btn btn-ghost">Manage team →</Link>
           )}
         </div>
-
-        {!isAdmin && members.some(m => m.role === 'admin') && (
-          <p className="member-contact-hint">Click an admin <span className="member-admin-badge member-admin-badge--inline">A</span> to get in touch.</p>
+        {myUpcoming.length === 0 ? (
+          <p className="text-muted">You haven&apos;t been added to any upcoming plans yet.</p>
+        ) : (
+          myUpcoming.map((plan) => {
+            const date = parseISO(plan.plan_date)
+            return (
+              <Link key={plan.id} href={`/plans/${plan.id}`} className="dash-row">
+                <div className="dash-row-content">
+                  <p className="dash-row-title">
+                    {format(date, 'd MMM yyyy')}{plan.plan_time ? ` · ${plan.plan_time}` : ''}
+                  </p>
+                  {plan.title && <p className="dash-row-meta">{plan.title}</p>}
+                  {plan.musician_role && <p className="dash-row-meta">{plan.musician_role}</p>}
+                </div>
+                <span className={`badge ${isToday(plan.plan_date) ? 'badge-today' : 'badge-upcoming'}`}>
+                  {isToday(plan.plan_date) ? 'TODAY' : 'UPCOMING'}
+                </span>
+              </Link>
+            )
+          })
         )}
-
-        <div className="member-grid">
-          {members.map((member) => (
-            <div
-              key={member.id}
-              onClick={() => {
-                if (isAdmin) setManageMember(member)
-                else if (member.role === 'admin' && member.email) setContactAdmin(member)
-              }}
-              className="member-card"
-              style={{ cursor: (isAdmin || (!isAdmin && member.role === 'admin' && member.email)) ? 'pointer' : 'default' }}
-            >
-              <div className="member-avatar-wrap">
-                {member.image_url ? (
-                  <img
-                    src={member.image_url}
-                    alt={member.name || member.email}
-                    className="member-avatar-img"
-                  />
-                ) : (
-                  <div className="member-avatar-placeholder">
-                    {(member.name || member.email || '?').charAt(0).toUpperCase()}
-                  </div>
-                )}
-                {member.role === 'admin' && (
-                  <span className="member-admin-badge">A</span>
-                )}
-              </div>
-              <p className="member-name-label">
-                {member.name || member.email}
-              </p>
-              {isAdmin && member.email && (
-                <p className="member-email-label">
-                  {member.email}
-                </p>
-              )}
-            </div>
-          ))}
+        <div className="card-footer">
+          <Link href="/availability" className="btn btn-ghost">Manage my availability →</Link>
         </div>
-
-        {contactAdmin && (
-          <div className="manage-member-backdrop" onClick={() => setContactAdmin(null)}>
-            <div className="manage-member-modal" onClick={e => e.stopPropagation()}>
-              <div className="manage-member-header">
-                {contactAdmin.image_url ? (
-                  <img src={contactAdmin.image_url} alt={contactAdmin.name} className="manage-member-avatar-img" />
-                ) : (
-                  <div className="manage-member-avatar-placeholder">
-                    {(contactAdmin.name || contactAdmin.email || '?').charAt(0).toUpperCase()}
-                  </div>
-                )}
-                <div>
-                  <p className="manage-member-name">{contactAdmin.name || contactAdmin.email}</p>
-                  {contactAdmin.name && <p className="manage-member-email">{contactAdmin.email}</p>}
-                </div>
-              </div>
-              <p className="member-contact-modal-hint">Get in touch with your church admin.</p>
-              <div className="manage-member-footer">
-                <button onClick={() => setContactAdmin(null)} className="btn btn-ghost">Close</button>
-                <a href={`mailto:${contactAdmin.email}`} className="btn btn-primary">
-                  Email {contactAdmin.name?.split(' ')[0] || 'admin'} →
-                </a>
-              </div>
-            </div>
-          </div>
-        )}
-
-        {showRemoveConfirm && manageMember && (
-          <ConfirmModal
-            title="Remove member"
-            message={`Remove ${manageMember.name || manageMember.email} from ${church?.name}? They will lose access immediately.`}
-            confirmLabel="Remove"
-            danger
-            onConfirm={async () => {
-              try {
-                await api.delete(`/api/members/${manageMember.id}`)
-                setMembers(prev => prev.filter(m => m.id !== manageMember.id))
-                setManageMember(null)
-              } catch (err: any) {
-                alert(err.response?.data?.error || 'Failed to remove member')
-              } finally {
-                setShowRemoveConfirm(false)
-              }
-            }}
-            onCancel={() => setShowRemoveConfirm(false)}
-          />
-        )}
-        {showInviteModal && church && (
-          <InviteMemberModal
-            church={church}
-            onClose={() => setShowInviteModal(false)}
-          />
-        )}
-
-        {manageMember && (
-          <div
-            onClick={() => setManageMember(null)}
-            className="manage-member-backdrop"
-          >
-            <div
-              onClick={(e) => e.stopPropagation()}
-              className="manage-member-modal"
-            >
-              <div className="manage-member-header">
-                {manageMember.image_url ? (
-                  <img src={manageMember.image_url} alt={manageMember.name} className="manage-member-avatar-img" />
-                ) : (
-                  <div className="manage-member-avatar-placeholder">
-                    {(manageMember.name || manageMember.email || '?').charAt(0).toUpperCase()}
-                  </div>
-                )}
-                <div>
-                  <p className="manage-member-name">{manageMember.name || manageMember.email}</p>
-                  {manageMember.name && <p className="manage-member-email">{manageMember.email}</p>}
-                </div>
-              </div>
-
-              <div className="manage-member-field">
-                <label className="manage-member-label">Access level</label>
-                <select
-                  value={manageMember.role}
-                  onChange={async (e) => {
-                    const newRole = e.target.value
-                    try {
-                      await api.put(`/api/members/${manageMember.id}/role`, { role: newRole })
-                      setMembers(prev => prev.map(m => m.id === manageMember.id ? { ...m, role: newRole } : m))
-                      setManageMember((prev: any) => ({ ...prev, role: newRole }))
-                    } catch (err: any) {
-                      alert(err.response?.data?.error || 'Failed to update role')
-                    }
-                  }}
-                  className="manage-member-select"
-                >
-                  <option value="member">Member</option>
-                  <option value="admin">Admin</option>
-                </select>
-              </div>
-
-              {manageMember.role === 'member' && (
-                <div className="manage-member-perms">
-                  <label className="manage-member-label">Permissions</label>
-                  {([
-                    { key: 'can_manage_songs', label: 'Add & edit songs' },
-                    { key: 'can_add_plans', label: 'Add plans' },
-                    { key: 'can_edit_any_plan', label: 'Edit anyone\'s plans' },
-                  ] as { key: 'can_manage_songs' | 'can_add_plans' | 'can_edit_any_plan', label: string }[]).map(({ key, label }) => (
-                    <label key={key} className="manage-member-perm-label">
-                      <input
-                        type="checkbox"
-                        checked={!!manageMember[key]}
-                        onChange={async (e) => {
-                          const updated = { ...manageMember, [key]: e.target.checked }
-                          try {
-                            await api.put(`/api/members/${manageMember.id}/permissions`, {
-                              can_manage_songs: updated.can_manage_songs,
-                              can_add_plans: updated.can_add_plans,
-                              can_edit_any_plan: updated.can_edit_any_plan,
-                            })
-                            setMembers(prev => prev.map(m => m.id === manageMember.id ? updated : m))
-                            setManageMember(updated)
-                          } catch (err: any) {
-                            alert(err.response?.data?.error || 'Failed to update permissions')
-                          }
-                        }}
-                      />
-                      {label}
-                    </label>
-                  ))}
-                </div>
-              )}
-
-              <div className="manage-member-footer">
-                <button
-                  onClick={() => setShowRemoveConfirm(true)}
-                  className="btn-muted"
-                >
-                  Remove member
-                </button>
-                <button
-                  onClick={() => setManageMember(null)}
-                  className="btn btn-ghost"
-                >
-                  Done
-                </button>
-              </div>
-            </div>
-          </div>
-        )}
       </div>
     </div>
   )
