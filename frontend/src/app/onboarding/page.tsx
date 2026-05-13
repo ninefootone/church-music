@@ -81,62 +81,60 @@ export default function OnboardingPage() {
     }
   }
 
-  const inputStyle = { width: '100%', padding: '10px 14px', border: '1px solid var(--color-border)', borderRadius: '10px', fontFamily: 'inherit', fontSize: 15, color: 'var(--color-text-primary)', background: 'var(--color-surface)', outline: 'none', marginBottom: '16px' }
-
   return (
-    <div style={{ minHeight: '100vh', background: 'var(--color-bg)', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '24px' }}>
-      <div style={{ width: '100%', maxWidth: 440 }}>
-        <div style={{ textAlign: 'center', marginBottom: '32px' }}>
-          <div style={{ width: 48, height: 48, background: 'var(--color-brand-500)', borderRadius: '12px', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 16px' }}>
+    <div className="onboarding-shell">
+      <div className="onboarding-inner">
+        <div className="onboarding-header">
+          <div className="onboarding-icon">
             <Music size={24} color="white" />
           </div>
-          <h1 style={{ fontSize: 24, fontWeight: 700, color: 'var(--color-text-primary)', letterSpacing: '-0.02em', marginBottom: 8 }}>
+          <h1 className="onboarding-title">
             Welcome to Song Stack
           </h1>
-          <p style={{ fontSize: 15, color: 'var(--color-text-secondary)' }}>
+          <p className="onboarding-subtitle">
             Get started by creating a new church or joining an existing one.
           </p>
         </div>
 
         {error && (
-          <div style={{ background: '#fdf0f0', border: '1px solid #f5c0c0', borderRadius: 10, padding: '12px 16px', marginBottom: 16, fontSize: 14, color: '#9a3a3a' }}>
+          <div className="settings-error">
             {error}
           </div>
         )}
 
         {mode === 'choose' && (
-          <div style={{ display: 'grid', gap: '12px' }}>
-            <button onClick={() => setMode('create')} style={{ width: '100%', padding: '20px', background: 'var(--color-surface)', border: '1px solid var(--color-border)', borderRadius: '14px', cursor: 'pointer', fontFamily: 'inherit', textAlign: 'left' }}>
-              <div style={{ fontSize: 16, fontWeight: 600, color: 'var(--color-text-primary)', marginBottom: 4 }}>Create a new church</div>
-              <div style={{ fontSize: 13, color: 'var(--color-text-muted)' }}>Set up a song library for your church from scratch</div>
+          <div className="onboarding-choices">
+            <button onClick={() => setMode('create')} className="onboarding-choice-btn">
+              <div className="onboarding-choice-title">Create a new church</div>
+              <div className="onboarding-choice-desc">Set up a song library for your church from scratch</div>
             </button>
-            <button onClick={() => setMode('join')} style={{ width: '100%', padding: '20px', background: 'var(--color-surface)', border: '1px solid var(--color-border)', borderRadius: '14px', cursor: 'pointer', fontFamily: 'inherit', textAlign: 'left' }}>
-              <div style={{ fontSize: 16, fontWeight: 600, color: 'var(--color-text-primary)', marginBottom: 4 }}>Join an existing church</div>
-              <div style={{ fontSize: 13, color: 'var(--color-text-muted)' }}>Enter an invite code from your church admin</div>
+            <button onClick={() => setMode('join')} className="onboarding-choice-btn">
+              <div className="onboarding-choice-title">Join an existing church</div>
+              <div className="onboarding-choice-desc">Enter an invite code from your church admin</div>
             </button>
           </div>
         )}
 
         {mode === 'create' && (
-          <form onSubmit={handleCreate} style={{ background: 'var(--color-surface)', border: '1px solid var(--color-border)', borderRadius: '14px', padding: '24px' }}>
-            <h2 style={{ fontSize: 18, fontWeight: 600, color: 'var(--color-text-primary)', marginBottom: '8px' }}>Create your church</h2>
-            <p style={{ fontSize: 13, color: 'var(--color-text-muted)', marginBottom: '20px' }}>
+          <form onSubmit={handleCreate} className="onboarding-panel">
+            <h2 className="onboarding-form-title">Create your church</h2>
+            <p className="onboarding-tip">
               Tip: include your location if your church name is common, e.g. "Grace Church Sheffield"
             </p>
-            <label style={{ display: 'block', fontSize: 12, fontWeight: 600, color: 'var(--color-text-secondary)', marginBottom: 6, textTransform: 'uppercase' as const, letterSpacing: '0.05em' }}>
+            <label className="settings-label">
               Church name
             </label>
-            <input style={inputStyle} required autoFocus placeholder="e.g. Endcliffe Church" value={churchName} onChange={e => setChurchName(e.target.value)} />
-            <label style={{ display: 'block', fontSize: 12, fontWeight: 600, color: 'var(--color-text-secondary)', marginBottom: 6, textTransform: 'uppercase' as const, letterSpacing: '0.05em' }}>
-              CCLI Licence Number <span style={{ fontWeight: 400, textTransform: 'none', letterSpacing: 0 }}>(optional)</span>
+            <input className="onboarding-input" required autoFocus placeholder="e.g. Endcliffe Church" value={churchName} onChange={e => setChurchName(e.target.value)} />
+            <label className="settings-label">
+              CCLI Licence Number <span className="label-note">(optional)</span>
             </label>
-            <input style={inputStyle} placeholder="e.g. 123456" value={ccliNumber} onChange={e => setCcliNumber(e.target.value)} />
-            <p style={{ fontSize: 12, color: 'var(--color-text-muted)', marginTop: -12, marginBottom: 16 }}>
-              Your CCLI licence number allows Song Stack to include it in usage reports. Don't have one? <a href="https://uk.ccli.com" target="_blank" rel="noopener noreferrer" style={{ color: 'var(--color-brand-500)' }}>Get licensed at ccli.com</a>
+            <input className="onboarding-input" placeholder="e.g. 123456" value={ccliNumber} onChange={e => setCcliNumber(e.target.value)} />
+            <p className="onboarding-ccli-hint">
+              Your CCLI licence number allows Song Stack to include it in usage reports. Don't have one? <a href="https://uk.ccli.com" target="_blank" rel="noopener noreferrer" className="link-brand">Get licensed at ccli.com</a>
             </p>
-            <div style={{ display: 'flex', gap: 10 }}>
-              <button type="button" onClick={() => setMode('choose')} className="btn btn-ghost" style={{ display: 'flex', alignItems: 'center', gap: 6 }}><ArrowLeft size={16} /> Back</button>
-              <button type="submit" className="btn btn-primary" style={{ marginLeft: 'auto' }} disabled={loading}>
+            <div className="btn-group">
+              <button type="button" onClick={() => setMode('choose')} className="btn btn-ghost btn-icon-label"><ArrowLeft size={16} /> Back</button>
+              <button type="submit" className="btn btn-primary ml-auto" disabled={loading}>
                 {loading ? 'Creating…' : 'Create church'}
               </button>
             </div>
@@ -144,27 +142,27 @@ export default function OnboardingPage() {
         )}
 
         {mode === 'join' && isLoaded && !isSignedIn && (
-          <div style={{ background: 'var(--color-surface)', border: '1px solid var(--color-border)', borderRadius: '14px', padding: '24px', textAlign: 'center' }}>
-            <h2 style={{ fontSize: 18, fontWeight: 600, color: 'var(--color-text-primary)', marginBottom: '8px' }}>Sign in to join</h2>
-            <p style={{ fontSize: 14, color: 'var(--color-text-muted)', marginBottom: '20px' }}>
+          <div className="onboarding-panel onboarding-panel--centered">
+            <h2 className="onboarding-form-title">Sign in to join</h2>
+            <p className="onboarding-tip">
               You need an account to join {inviteCode ? 'this church' : 'a church'}. It only takes a moment.
             </p>
             <SignInButton mode="redirect" forceRedirectUrl={redirectUrl}>
-              <button className="btn btn-primary" style={{ width: '100%', textAlign: 'center', justifyContent: 'center' }}>Sign in or create an account</button>
+              <button className="btn btn-primary btn-full">Sign in or create an account</button>
             </SignInButton>
           </div>
         )}
 
         {mode === 'join' && isLoaded && isSignedIn && (
-          <form onSubmit={handleJoin} style={{ background: 'var(--color-surface)', border: '1px solid var(--color-border)', borderRadius: '14px', padding: '24px' }}>
-            <h2 style={{ fontSize: 18, fontWeight: 600, color: 'var(--color-text-primary)', marginBottom: '20px' }}>Join a church</h2>
-            <label style={{ display: 'block', fontSize: 12, fontWeight: 600, color: 'var(--color-text-secondary)', marginBottom: 6, textTransform: 'uppercase' as const, letterSpacing: '0.05em' }}>
+          <form onSubmit={handleJoin} className="onboarding-panel">
+            <h2 className="onboarding-form-title onboarding-form-title--lg">Join a church</h2>
+            <label className="settings-label">
               Invite code
             </label>
-            <input style={inputStyle} required autoFocus placeholder="Enter the code from your admin" value={inviteCode} onChange={e => setInviteCode(e.target.value.toUpperCase())} maxLength={8} />
-            <div style={{ display: 'flex', gap: 10 }}>
-              <button type="button" onClick={() => setMode('choose')} className="btn btn-ghost" style={{ display: 'flex', alignItems: 'center', gap: 6 }}><ArrowLeft size={16} /> Back</button>
-              <button type="submit" className="btn btn-primary" style={{ marginLeft: 'auto' }} disabled={loading}>
+            <input className="onboarding-input" required autoFocus placeholder="Enter the code from your admin" value={inviteCode} onChange={e => setInviteCode(e.target.value.toUpperCase())} maxLength={8} />
+            <div className="btn-group">
+              <button type="button" onClick={() => setMode('choose')} className="btn btn-ghost btn-icon-label"><ArrowLeft size={16} /> Back</button>
+              <button type="submit" className="btn btn-primary ml-auto" disabled={loading}>
                 {loading ? 'Joining…' : 'Join church'}
               </button>
             </div>
