@@ -2710,3 +2710,49 @@ select.input {
 .auth-header { text-align: center; margin-bottom: 8px; }
 .auth-logo   { height: 32px; width: auto; margin: 0 auto 4px; display: block; }
 .auth-tagline { font-size: var(--text-md); color: var(--color-text-muted); }
+
+/* 404 page */
+.not-found-page {
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background-color: var(--color-bg);
+  padding: 2rem;
+}
+.not-found-inner {
+  text-align: center;
+  max-width: 380px;
+}
+.not-found-icon {
+  font-size: 3.5rem;
+  color: var(--color-brand-200);
+  margin-bottom: 1.25rem;
+  line-height: 1;
+}
+.not-found-title {
+  font-size: 1.75rem;
+  font-weight: 700;
+  color: var(--color-text-primary);
+  margin: 0 0 0.75rem;
+}
+.not-found-body {
+  color: var(--color-text-secondary);
+  margin: 0 0 2rem;
+  font-size: 1rem;
+  line-height: 1.6;
+}
+.not-found-btn {
+  display: inline-block;
+  background-color: var(--color-brand-500);
+  color: #fff;
+  padding: 0.65rem 1.5rem;
+  border-radius: 8px;
+  font-weight: 600;
+  font-size: 0.95rem;
+  text-decoration: none;
+  transition: background-color 0.15s;
+}
+.not-found-btn:hover {
+  background-color: var(--color-brand-600);
+}
