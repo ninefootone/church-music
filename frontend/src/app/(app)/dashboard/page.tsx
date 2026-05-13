@@ -14,6 +14,7 @@ export default function DashboardPage() {
   const [playlists, setPlaylists] = useState<any[]>([])
   const [myUpcoming, setMyUpcoming] = useState<any[]>([])
   const [loading, setLoading] = useState(true)
+  const [showAddPlaylist, setShowAddPlaylist] = useState(false)
   const [playlistName, setPlaylistName] = useState('')
   const [playlistUrl, setPlaylistUrl] = useState('')
   const [editingPlaylist, setEditingPlaylist] = useState<any | null>(null)
@@ -39,6 +40,7 @@ export default function DashboardPage() {
       setPlaylists(prev => [...prev, data])
       setPlaylistName('')
       setPlaylistUrl('')
+      setShowAddPlaylist(false)
     } catch {
       alert('Failed to add playlist.')
     }
@@ -186,104 +188,99 @@ export default function DashboardPage() {
         </div>
       </div>
 
-      {/* Playlists */}
-      <div className="card">
-        <div className="card-header-row">
-          <span className="section-label">Playlists</span>
+      {/* Add playlist modal */}
+      {showAddPlaylist && (
+        <div style={{ position: 'fixed', inset: 0, zIndex: 300, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 'var(--space-md)' }}>
+          <div onClick={() => setShowAddPlaylist(false)} style={{ position: 'absolute', inset: 0, background: 'rgba(0,0,0,0.4)' }} />
+          <div style={{ position: 'relative', background: 'var(--color-surface)', borderRadius: 'var(--radius-lg)', padding: 'var(--space-lg)', width: '100%', maxWidth: 400, boxShadow: 'var(--shadow-md)' }}>
+            <h2 style={{ fontSize: 'var(--text-lg)', fontWeight: 700, marginBottom: 'var(--space-md)' }}>Add playlist</h2>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-sm)' }}>
+              <input className="input" placeholder="Name" value={playlistName} onChange={e => setPlaylistName(e.target.value)} />
+              <input className="input" placeholder="URL" value={playlistUrl} onChange={e => setPlaylistUrl(e.target.value)} />
+            </div>
+            <div style={{ display: 'flex', gap: 8, justifyContent: 'flex-end', marginTop: 'var(--space-md)' }}>
+              <button className="btn btn-secondary" onClick={() => setShowAddPlaylist(false)}>Cancel</button>
+              <button className="btn btn-primary" onClick={addPlaylist}>Add</button>
+            </div>
+          </div>
         </div>
-        {playlists.length === 0 && !canManagePlaylists && (
-          <p className="text-muted">No playlists yet.</p>
-        )}
-        {playlists.map(p => (
-          <div key={p.id} className="dash-row">
-            {editingPlaylist?.id === p.id ? (
-              <div className="dash-row-content">
-                <input
-                  className="input"
-                  value={editName}
-                  onChange={e => setEditName(e.target.value)}
-                  placeholder="Name"
-                />
-                <input
-                  className="input"
-                  value={editUrl}
-                  onChange={e => setEditUrl(e.target.value)}
-                  placeholder="URL"
-                  style={{ marginTop: '0.4rem' }}
-                />
-                <div style={{ marginTop: '0.4rem', display: 'flex', gap: '0.5rem' }}>
-                  <button className="btn btn-primary" onClick={saveEdit}>Save</button>
-                  <button className="btn btn-ghost" onClick={() => setEditingPlaylist(null)}>Cancel</button>
-                </div>
-              </div>
-            ) : (
-              <>
-                <div className="dash-row-content">
-                  <a href={p.url} target="_blank" rel="noopener noreferrer" className="dash-row-title link">
-                    {p.name}
-                  </a>
-                </div>
-                {canManagePlaylists && (
-                  <div style={{ display: 'flex', gap: '0.5rem', flexShrink: 0 }}>
-                    <button className="btn btn-ghost" onClick={() => { setEditingPlaylist(p); setEditName(p.name); setEditUrl(p.url) }}>Edit</button>
-                    <button className="btn btn-ghost" onClick={() => deletePlaylist(p.id)}>Delete</button>
-                  </div>
-                )}
-              </>
+      )}
+
+      <div className="dashboard-grid-reverse">
+
+        {/* Upcoming */}
+        <div className="card">
+          <div className="card-header-row">
+            <span className="section-label">Upcoming</span>
+            {isAdmin && (
+              <Link href="/team" className="btn btn-ghost">Manage team →</Link>
             )}
           </div>
-        ))}
-        {canManagePlaylists && (
-          <div style={{ padding: '0.75rem 0 0.25rem', display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
-            <input
-              className="input"
-              placeholder="Playlist name"
-              value={playlistName}
-              onChange={e => setPlaylistName(e.target.value)}
-            />
-            <input
-              className="input"
-              placeholder="URL"
-              value={playlistUrl}
-              onChange={e => setPlaylistUrl(e.target.value)}
-            />
-            <button className="btn btn-ghost" onClick={addPlaylist}>Add playlist +</button>
-          </div>
-        )}
-      </div>
-
-      {/* Upcoming */}
-      <div className="card">
-        <div className="card-header-row">
-          <span className="section-label">Upcoming</span>
-          {isAdmin && (
-            <Link href="/team" className="btn btn-ghost">Manage team →</Link>
+          {myUpcoming.length === 0 ? (
+            <p className="text-muted">You haven&apos;t been added to any upcoming plans yet.</p>
+          ) : (
+            myUpcoming.map((plan) => {
+              const date = parseISO(plan.plan_date)
+              return (
+                <Link key={plan.id} href={`/plans/${plan.id}`} className="dash-row">
+                  <div className="dash-row-content">
+                    <p className="dash-row-title">
+                      {format(date, 'd MMM yyyy')}{plan.plan_time ? ` · ${plan.plan_time}` : ''}
+                    </p>
+                    {plan.title && <p className="dash-row-meta">{plan.title}</p>}
+                    {plan.musician_roles && <p className="dash-row-meta">{plan.musician_roles}</p>}
+                  </div>
+                  <span className={`badge ${isToday(plan.plan_date) ? 'badge-today' : 'badge-upcoming'}`}>
+                    {isToday(plan.plan_date) ? 'TODAY' : 'UPCOMING'}
+                  </span>
+                </Link>
+              )
+            })
           )}
+          <div className="card-footer">
+            <Link href="/availability" className="btn btn-ghost">Manage my availability →</Link>
+          </div>
         </div>
-        {myUpcoming.length === 0 ? (
-          <p className="text-muted">You haven&apos;t been added to any upcoming plans yet.</p>
-        ) : (
-          myUpcoming.map((plan) => {
-            const date = parseISO(plan.plan_date)
-            return (
-              <Link key={plan.id} href={`/plans/${plan.id}`} className="dash-row">
+
+        {/* Playlists */}
+        <div className="card">
+          <div className="card-header-row">
+            <span className="section-label">Playlists</span>
+            {canManagePlaylists && (
+              <button className="btn btn-ghost" onClick={() => setShowAddPlaylist(true)}>Add new +</button>
+            )}
+          </div>
+          {playlists.length === 0 && (
+            <p className="text-muted">No playlists yet.{canManagePlaylists && ' Add one above.'}</p>
+          )}
+          {playlists.map(p => (
+            <div key={p.id} className="dash-row">
+              {editingPlaylist?.id === p.id ? (
                 <div className="dash-row-content">
-                  <p className="dash-row-title">
-                    {format(date, 'd MMM yyyy')}{plan.plan_time ? ` · ${plan.plan_time}` : ''}
-                  </p>
-                  {plan.title && <p className="dash-row-meta">{plan.title}</p>}
-                  {plan.musician_roles && <p className="dash-row-meta">{plan.musician_roles}</p>}
+                  <input className="input" value={editName} onChange={e => setEditName(e.target.value)} placeholder="Name" />
+                  <input className="input" value={editUrl} onChange={e => setEditUrl(e.target.value)} placeholder="URL" style={{ marginTop: '0.4rem' }} />
+                  <div style={{ marginTop: '0.4rem', display: 'flex', gap: '0.5rem' }}>
+                    <button className="btn btn-primary" onClick={saveEdit}>Save</button>
+                    <button className="btn btn-ghost" onClick={() => setEditingPlaylist(null)}>Cancel</button>
+                  </div>
                 </div>
-                <span className={`badge ${isToday(plan.plan_date) ? 'badge-today' : 'badge-upcoming'}`}>
-                  {isToday(plan.plan_date) ? 'TODAY' : 'UPCOMING'}
-                </span>
-              </Link>
-            )
-          })
-        )}
-        <div className="card-footer">
-          <Link href="/availability" className="btn btn-ghost">Manage my availability →</Link>
+              ) : (
+                <>
+                  <div className="dash-row-content">
+                    <a href={p.url} target="_blank" rel="noopener noreferrer" className="dash-row-title link">{p.name}</a>
+                  </div>
+                  {canManagePlaylists && (
+                    <div style={{ display: 'flex', gap: '0.5rem', flexShrink: 0 }}>
+                      <button className="btn btn-ghost" onClick={() => { setEditingPlaylist(p); setEditName(p.name); setEditUrl(p.url) }}>Edit</button>
+                      <button className="btn btn-ghost" onClick={() => deletePlaylist(p.id)}>Delete</button>
+                    </div>
+                  )}
+                </>
+              )}
+            </div>
+          ))}
         </div>
+
       </div>
     </div>
   )

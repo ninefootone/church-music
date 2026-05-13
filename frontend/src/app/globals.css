@@ -458,6 +458,12 @@ body.set-viewer-active { overflow: hidden; }
     gap: var(--space-md);
     margin-bottom: var(--space-md);
   }
+  .dashboard-grid-reverse {
+    display: grid;
+    grid-template-columns: 3fr 2fr;
+    gap: var(--space-md);
+    margin-bottom: var(--space-md);
+  }
   .dash-loading      { padding: var(--space-xl); }
   .page-loading-wrap { padding: var(--space-xl); }
   .card-header-row {
@@ -1951,7 +1957,7 @@ select.input {
   .plan-card  { padding: var(--space-md); }
   .song-row      { padding: 12px var(--space-sm); }
 
-  .dashboard-grid  { grid-template-columns: 1fr !important; }
+  .dashboard-grid, .dashboard-grid-reverse { grid-template-columns: 1fr !important; }
   .form-grid-2     { grid-template-columns: 1fr !important; }
 
   .song-detail-header  { flex-direction: column; gap: 12px; }
