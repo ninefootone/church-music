@@ -11,7 +11,7 @@ router.get('/', requireAuth, requireMembership, async function(req, res, next) {
        FROM member_unavailability
        WHERE church_id = $1 AND user_id = $2
        ORDER BY start_date ASC`,
-      [req.churchId, req.userId]
+      [req.churchId, req.user.id]
     );
     res.json(result.rows);
   } catch (err) {
@@ -33,7 +33,7 @@ router.post('/', requireAuth, requireMembership, async function(req, res, next) 
       `INSERT INTO member_unavailability (church_id, user_id, start_date, end_date, note)
        VALUES ($1, $2, $3, $4, $5)
        RETURNING *`,
-      [req.churchId, req.userId, start_date, end_date, note || null]
+      [req.churchId, req.user.id, start_date, end_date, note || null]
     );
     res.status(201).json(result.rows[0]);
   } catch (err) {
@@ -56,7 +56,7 @@ router.put('/:id', requireAuth, requireMembership, async function(req, res, next
        SET start_date = $1, end_date = $2, note = $3
        WHERE id = $4 AND church_id = $5 AND user_id = $6
        RETURNING *`,
-      [start_date, end_date, note || null, req.params.id, req.churchId, req.userId]
+      [start_date, end_date, note || null, req.params.id, req.churchId, req.user.id]
     );
     if (result.rows.length === 0) return res.status(404).json({ error: 'Entry not found' });
     res.json(result.rows[0]);
@@ -72,7 +72,7 @@ router.delete('/:id', requireAuth, requireMembership, async function(req, res, n
       `DELETE FROM member_unavailability
        WHERE id = $1 AND church_id = $2 AND user_id = $3
        RETURNING id`,
-      [req.params.id, req.churchId, req.userId]
+      [req.params.id, req.churchId, req.user.id]
     );
     if (result.rows.length === 0) return res.status(404).json({ error: 'Entry not found' });
     res.json({ success: true });
