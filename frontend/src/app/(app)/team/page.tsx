@@ -3,14 +3,25 @@
 import { useState, useEffect, useRef } from 'react'
 import Link from 'next/link'
 import { Users } from 'lucide-react'
+import { format, parseISO } from 'date-fns'
 import { useChurch } from '@/context/ChurchContext'
 import api from '@/lib/api'
 import { InviteMemberModal } from '@/components/ui/InviteMemberModal'
 import { ConfirmModal } from '@/components/ui/ConfirmModal'
 
+interface UnavailabilityEntry {
+  id: string
+  start_date: string
+  end_date: string
+  note: string | null
+  name: string
+  email: string
+}
+
 export default function TeamPage() {
   const { church, isAdmin } = useChurch()
   const [members, setMembers] = useState<any[]>([])
+  const [unavailability, setUnavailability] = useState<UnavailabilityEntry[]>([])
   const [loading, setLoading] = useState(true)
   const [showInviteModal, setShowInviteModal] = useState(false)
   const [manageMember, setManageMember] = useState<any>(null)
@@ -20,15 +31,17 @@ export default function TeamPage() {
   useEffect(() => {
     if (!church || fetchedRef.current) return
     fetchedRef.current = true
-    api.get('/api/members')
-      .then(r => {
+    Promise.all([
+      api.get('/api/members').then(r => {
         const sorted = [...r.data].sort((a, b) => {
           if (a.role === 'admin' && b.role !== 'admin') return -1
           if (a.role !== 'admin' && b.role === 'admin') return 1
           return 0
         })
         setMembers(sorted)
-      })
+      }),
+      api.get('/api/unavailability/team').then(r => setUnavailability(r.data)),
+    ])
       .catch(() => {})
       .finally(() => setLoading(false))
   }, [church])
@@ -40,6 +53,24 @@ export default function TeamPage() {
       </div>
     )
   }
+
+  const formatDateRange = (entry: UnavailabilityEntry) => {
+    const start = parseISO(entry.start_date)
+    const end = parseISO(entry.end_date)
+    if (entry.start_date === entry.end_date) return format(start, 'd MMM yyyy')
+    return `${format(start, 'd MMM yyyy')} – ${format(end, 'd MMM yyyy')}`
+  }
+
+  // Group unavailability by member email
+  const grouped = unavailability.reduce((acc, entry) => {
+    if (!acc[entry.email]) acc[entry.email] = { name: entry.name, email: entry.email, entries: [] }
+    acc[entry.email].entries.push(entry)
+    return acc
+  }, {} as Record<string, { name: string, email: string, entries: UnavailabilityEntry[] }>)
+
+  const membersWithUnavailability = Object.values(grouped).sort((a, b) =>
+    (a.name || a.email).localeCompare(b.name || b.email)
+  )
 
   return (
     <div>
@@ -53,15 +84,13 @@ export default function TeamPage() {
         </div>
       </div>
 
+      {/* Members grid */}
       <div className="settings-card settings-card--spaced">
         <div className="card-header-row">
           <h2 className="settings-section-heading settings-section-heading--tight">Members</h2>
-          <div style={{ display: 'flex', gap: 'var(--space-sm)' }}>
-            <Link href="/team/unavailability" className="btn btn-ghost">View unavailability →</Link>
-            <button onClick={() => setShowInviteModal(true)} className="btn btn-ghost">
-              Invite member +
-            </button>
-          </div>
+          <button onClick={() => setShowInviteModal(true)} className="btn btn-ghost">
+            Invite member +
+          </button>
         </div>
 
         {loading ? (
@@ -89,6 +118,33 @@ export default function TeamPage() {
                 </div>
                 <p className="member-name-label">{member.name || member.email}</p>
                 <p className="member-email-label">{member.email}</p>
+              </div>
+            ))}
+          </div>
+        )}
+      </div>
+
+      {/* Unavailability */}
+      <div className="settings-card settings-card--spaced">
+        <h2 className="settings-section-heading settings-section-heading--tight">Team unavailability</h2>
+        <p className="settings-section-desc">Dates team members have marked themselves as unavailable.</p>
+
+        {loading ? (
+          <p className="text-muted">Loading…</p>
+        ) : membersWithUnavailability.length === 0 ? (
+          <p className="text-muted">No unavailability declared yet.</p>
+        ) : (
+          <div className="team-unavail-list">
+            {membersWithUnavailability.map(member => (
+              <div key={member.email} className="team-unavail-row">
+                <div className="team-unavail-name">{member.name || member.email}</div>
+                <div className="team-unavail-dates">
+                  {member.entries.map(entry => (
+                    <span key={entry.id} className="team-unavail-badge">
+                      {formatDateRange(entry)}{entry.note ? ` · ${entry.note}` : ''}
+                    </span>
+                  ))}
+                </div>
               </div>
             ))}
           </div>
