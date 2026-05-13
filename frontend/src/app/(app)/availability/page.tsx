@@ -1,7 +1,7 @@
 'use client'
 
 import { useState, useEffect } from 'react'
-import { CalendarOff, Trash2 } from 'lucide-react'
+import { Trash2 } from 'lucide-react'
 import { format, parseISO } from 'date-fns'
 import api from '@/lib/api'
 import { useChurch } from '@/context/ChurchContext'
@@ -73,13 +73,8 @@ export default function AvailabilityPage() {
   return (
     <div>
       <div className="settings-page-header">
-        <div className="settings-icon-wrap">
-          <CalendarOff size={20} color="white" />
-        </div>
-        <div>
-          <h1 className="settings-title">My Availability</h1>
-          <p className="settings-subtitle">Let your admins know when you can't serve</p>
-        </div>
+        <h1 className="settings-title">My Availability</h1>
+        <p className="settings-subtitle">Let your admins know when you can't serve</p>
       </div>
 
       {/* Add new entry */}

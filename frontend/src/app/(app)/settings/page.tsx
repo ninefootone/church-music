@@ -4,7 +4,7 @@ import { useState, useEffect, useRef } from 'react'
 import { useAuth, useUser } from '@clerk/nextjs'
 import { useChurch } from '@/context/ChurchContext'
 import api, { setAuthToken } from '@/lib/api'
-import { Settings, Copy, Check, RefreshCw, Plus, X } from 'lucide-react'
+import { Copy, Check, RefreshCw, Plus, X } from 'lucide-react'
 
 interface RoleItem {
   id?: string
@@ -266,13 +266,8 @@ export default function SettingsPage() {
   return (
     <div>
       <div className="settings-page-header">
-        <div className="settings-icon-wrap">
-          <Settings size={20} color="white" />
-        </div>
-        <div>
-          <h1 className="settings-title">Settings</h1>
-          <p className="settings-subtitle">Manage your church details</p>
-        </div>
+        <h1 className="settings-title">Settings</h1>
+        <p className="settings-subtitle">Manage your church details</p>
       </div>
 
       {error && (
