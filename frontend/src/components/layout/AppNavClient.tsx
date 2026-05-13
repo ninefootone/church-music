@@ -8,7 +8,7 @@ import { Menu, X, LogOut, HelpCircle, Home } from 'lucide-react'
 import { useChurch } from '@/context/ChurchContext'
 
 const navLinks = [
-  { href: '/dashboard', label: <Home size={16} />, adminOnly: false },
+  { href: '/dashboard', label: <Home size={16} />, dropdownLabel: 'Home', adminOnly: false },
   { href: '/songs',     label: 'Songs',            adminOnly: false },
   { href: '/plans',     label: 'Plans',            adminOnly: false },
   { href: '/discover',  label: 'Discover',         adminOnly: false },
@@ -93,7 +93,7 @@ export function AppNavClient() {
                         </div>
                         {visibleLinks.map(link => (
                           <Link key={link.href} href={link.href} className={`app-nav-mobile-link ${isActive(link.href) ? 'is-active' : ''}`} onClick={() => setDesktopOpen(false)}>
-                            {link.label}
+                            {'dropdownLabel' in link ? link.dropdownLabel : link.label}
                           </Link>
                         ))}
                         <div style={{ borderTop: '1px solid var(--color-border)', marginTop: 'var(--space-xs)', padding: 'var(--space-sm) 0' }}>
@@ -139,7 +139,7 @@ export function AppNavClient() {
             )}
             {visibleLinks.map(link => (
               <Link key={link.href} href={link.href} className={`app-nav-mobile-link ${isActive(link.href) ? 'is-active' : ''}`} onClick={() => setMobileOpen(false)}>
-                {link.label}
+                {'dropdownLabel' in link ? link.dropdownLabel : link.label}
               </Link>
             ))}
             <div style={{ borderTop: '1px solid var(--color-border)', marginTop: 'var(--space-xs)', padding: 'var(--space-sm) 0' }}>
