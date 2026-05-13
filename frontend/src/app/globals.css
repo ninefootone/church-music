@@ -745,6 +745,43 @@ body.set-viewer-active { overflow: hidden; }
   color: var(--color-brand-500);
 }
 
+/* Availability page */
+.unavailability-list {
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+  margin-top: var(--space-md);
+}
+
+.unavailability-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: var(--space-sm) 0;
+  border-bottom: 1px solid var(--color-border);
+}
+
+.unavailability-row:last-child {
+  border-bottom: none;
+}
+
+.unavailability-info {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.unavailability-dates {
+  font-size: var(--text-base);
+  font-weight: 600;
+  color: var(--color-text-primary);
+}
+
+.unavailability-note {
+  font-size: var(--text-sm);
+  color: var(--color-text-muted);
+}
+
   /* ── Musicians ── */
   .musician-chip  { display: inline-flex; align-items: center; gap: 6px; padding: 6px 12px; background: var(--color-neutral-50); border: 1px solid var(--color-border); border-radius: var(--radius-sm); font-size: var(--text-sm); }
   .musician-name  { font-weight: 600; color: var(--color-text-primary); }
