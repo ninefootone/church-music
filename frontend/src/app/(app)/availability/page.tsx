@@ -128,7 +128,7 @@ export default function AvailabilityPage() {
           />
         </div>
 
-        <div className="settings-save-row">
+        <div className="settings-save-row" style={{ marginTop: 'var(--space-lg)' }}>
           <button className="btn btn-primary" onClick={handleAdd} disabled={saving}>
             {saving ? 'Saving…' : 'Add dates'}
           </button>
