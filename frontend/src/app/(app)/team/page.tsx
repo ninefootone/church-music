@@ -1,6 +1,7 @@
 'use client'
 
 import { useState, useEffect, useRef } from 'react'
+import Link from 'next/link'
 import { Users } from 'lucide-react'
 import { useChurch } from '@/context/ChurchContext'
 import api from '@/lib/api'
