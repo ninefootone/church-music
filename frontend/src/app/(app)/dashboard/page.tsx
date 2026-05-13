@@ -166,7 +166,7 @@ export default function DashboardPage() {
                     {format(date, 'd MMM yyyy')}{plan.plan_time ? ` · ${plan.plan_time}` : ''}
                   </p>
                   {plan.title && <p className="dash-row-meta">{plan.title}</p>}
-                  {plan.musician_role && <p className="dash-row-meta">{plan.musician_role}</p>}
+                  {plan.musician_roles && <p className="dash-row-meta">{plan.musician_roles}</p>}
                 </div>
                 <span className={`badge ${isToday(plan.plan_date) ? 'badge-today' : 'badge-upcoming'}`}>
                   {isToday(plan.plan_date) ? 'TODAY' : 'UPCOMING'}

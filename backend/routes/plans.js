@@ -47,12 +47,14 @@ router.get('/', requireAuth, requireMembership, async function(req, res, next) {
 router.get('/my-upcoming', requireAuth, requireMembership, async function(req, res, next) {
   try {
     const result = await pool.query(
-      `SELECT p.id, p.plan_date, p.plan_time, p.title, pm.role AS musician_role
+      `SELECT p.id, p.plan_date, p.plan_time, p.title,
+              STRING_AGG(pm.role, ', ' ORDER BY pm.role) AS musician_roles
        FROM plans p
        JOIN plan_musicians pm ON pm.plan_id = p.id
        WHERE p.church_id = $1
          AND pm.user_id = $2
          AND p.plan_date >= CURRENT_DATE
+       GROUP BY p.id, p.plan_date, p.plan_time, p.title
        ORDER BY p.plan_date ASC, p.plan_time ASC
        LIMIT 10`,
       [req.churchId, req.user.id]
