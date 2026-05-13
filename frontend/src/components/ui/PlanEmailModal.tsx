@@ -43,7 +43,7 @@ export function PlanEmailModal({ planId, onClose }: Props) {
           .filter((pm: { user_id: string | null }) => pm.user_id !== null)
           .map((pm: { user_id: string }) => pm.user_id)
       )
-      const preSelected = new Set(
+      const preSelected = new Set<string>(
         withEmail
           .filter((m: Member) => planUserIds.has(m.user_id))
           .map((m: Member) => m.email)
