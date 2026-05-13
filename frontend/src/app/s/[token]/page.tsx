@@ -39,25 +39,26 @@ function SongItem({ item, index }: { item: any; index: number }) {
   const isSong = item.type === 'song'
 
   return (
-    <div style={{ background: 'var(--color-surface)', border: '1px solid var(--color-border)', borderRadius: 'var(--radius-md)', overflow: 'hidden', marginBottom: 8 }}>
+    <div className="song-item-card">
       <div
-        style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '14px var(--space-md)', cursor: isSong ? 'pointer' : 'default' }}
+        className="item-row"
+        style={{ cursor: isSong ? 'pointer' : 'default' }}
         onClick={isSong ? handleExpand : undefined}
       >
-        <span style={{ fontSize: 'var(--text-sm)', color: 'var(--color-text-muted)', width: 24, textAlign: 'center', flexShrink: 0 }}>
+        <span className="item-index">
           {index + 1}
         </span>
 
-        <div style={{ flex: 1, minWidth: 0 }}>
-          <p style={{ fontSize: 'var(--text-md)', fontWeight: isSong ? 600 : 400, color: isSong ? 'var(--color-text-primary)' : 'var(--color-text-secondary)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', marginBottom: 0 }}>
+        <div className="dash-row-content">
+          <p className="item-title" style={{ fontWeight: isSong ? 600 : 400, color: isSong ? 'var(--color-text-primary)' : 'var(--color-text-secondary)' }}>
             {isSong && item.song_title ? item.song_title : (item.title || item.type)}
           </p>
           {item.notes && (
-            <p style={{ fontSize: 'var(--text-sm)', color: 'var(--color-text-muted)', fontStyle: 'italic', marginTop: 2 }}>{item.notes}</p>
+            <p className="item-notes">{item.notes}</p>
           )}
         </div>
 
-        <div style={{ display: 'flex', alignItems: 'center', gap: 8, flexShrink: 0 }}>
+        <div className="item-right">
           {isSong && (item.key_override || item.song_default_key) && (
             <span className="badge-key">{(item.key_override || item.song_default_key || '').replace(/♯/g, '#').replace(/♭/g, 'b')}</span>
           )}
@@ -67,13 +68,13 @@ function SongItem({ item, index }: { item: any; index: number }) {
               target="_blank"
               rel="noopener noreferrer"
               onClick={e => e.stopPropagation()}
-              style={{ width: 28, height: 28, background: '#e33', borderRadius: 5, display: 'flex', alignItems: 'center', justifyContent: 'center', textDecoration: 'none', flexShrink: 0 }}
+              className="yt-btn"
             >
-              <span style={{ width: 0, height: 0, borderTop: '5px solid transparent', borderBottom: '5px solid transparent', borderLeft: '9px solid white', marginLeft: 2 }} />
+              <span className="youtube-play" />
             </a>
           )}
           {isSong && (
-            <span style={{ color: 'var(--color-text-muted)', display: 'flex' }}>
+            <span className="item-chevron">
               {expanded ? <ChevronUp size={18} /> : <ChevronDown size={18} />}
             </span>
           )}
@@ -81,33 +82,33 @@ function SongItem({ item, index }: { item: any; index: number }) {
       </div>
 
       {isSong && expanded && (
-        <div style={{ borderTop: '1px solid var(--color-border)', padding: 'var(--space-md)', background: 'var(--color-neutral-50)' }}>
+        <div className="item-expanded">
           {loadingFiles ? (
-            <p style={{ fontSize: 'var(--text-sm)', color: 'var(--color-text-muted)' }}>Loading files...</p>
+            <p className="item-detail-text">Loading files...</p>
           ) : files && files.length > 0 ? (
             <div>
-              <p style={{ fontSize: 'var(--text-xs)', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.07em', color: 'var(--color-text-muted)', marginBottom: 10 }}>Sheet music</p>
-              <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8 }}>
+              <p className="sub-section-label">Sheet music</p>
+              <div className="file-group">
                 {files.map(file => (
                   <a
                     key={file.id}
                     href={file.url}
                     target="_blank"
                     rel="noopener noreferrer"
-                    style={{ display: 'inline-flex', alignItems: 'center', gap: 6, padding: '8px 14px', background: 'var(--color-surface)', border: '1px solid var(--color-border)', borderRadius: 'var(--radius-sm)', fontSize: 'var(--text-sm)', fontWeight: 500, color: 'var(--color-brand-600)', textDecoration: 'none', transition: 'all var(--transition-fast)' }}
+                    className="file-download-btn"
                   >
                     <FileText size={14} />
                     {file.label}
                     {file.key_of && (
-                      <span className="badge-key" style={{ marginLeft: 2 }}>{file.key_of.replace(/♯/g, '#').replace(/♭/g, 'b')}</span>
+                      <span className="badge-key">{file.key_of.replace(/♯/g, '#').replace(/♭/g, 'b')}</span>
                     )}
-                    <ExternalLink size={12} style={{ opacity: 0.5 }} />
+                    <ExternalLink size={12} className="icon-faded" />
                   </a>
                 ))}
               </div>
             </div>
           ) : (
-            <p style={{ fontSize: 'var(--text-sm)', color: 'var(--color-text-muted)', fontStyle: 'italic' }}>
+            <p className="text-sm text-muted text-italic">
               No sheet music uploaded for this song yet.
             </p>
           )}
@@ -117,9 +118,9 @@ function SongItem({ item, index }: { item: any; index: number }) {
             try {
               const parts: string[] = JSON.parse(raw)
               if (Array.isArray(parts)) return (
-                <div style={{ marginTop: 10 }}>
-                  <p style={{ fontSize: 'var(--text-xs)', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.07em', color: 'var(--color-text-muted)', marginBottom: 6 }}>Arrangement</p>
-                  <div style={{ display: 'flex', flexWrap: 'wrap', gap: 4 }}>
+                <div className="song-section">
+                  <p className="sub-section-label">Arrangement</p>
+                  <div className="pill-row">
                     {parts.map((label: string, i: number) => (
                       <span key={i} className="arrangement-pill arrangement-pill-sm">{label}</span>
                     ))}
@@ -128,13 +129,13 @@ function SongItem({ item, index }: { item: any; index: number }) {
               )
             } catch {}
             return (
-              <p style={{ fontSize: 'var(--text-xs)', color: 'var(--color-text-muted)', marginTop: 10 }}>
+              <p className="item-footnote">
                 {raw}
               </p>
             )
           })()}
           {item.song_ccli_number && (
-            <p style={{ fontSize: 'var(--text-xs)', color: 'var(--color-text-muted)', marginTop: 10 }}>
+            <p className="item-footnote">
               CCLI {item.song_ccli_number}
             </p>
           )}
@@ -166,39 +167,39 @@ export default function PublicPlanPage() {
   }, [token])
 
   if (loading) return (
-    <div style={{ minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', background: 'var(--color-bg)' }}>
+    <div className="fullscreen-center">
       <p className="text-muted">Loading...</p>
     </div>
   )
 
   if (error || !plan) return (
-    <div style={{ minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', background: 'var(--color-bg)' }}>
+    <div className="fullscreen-center">
       <p className="text-muted">Plan not found.</p>
     </div>
   )
 
   return (
-    <div style={{ minHeight: '100vh', background: 'var(--color-bg)' }}>
-      <nav style={{ background: 'var(--color-surface)', borderBottom: '1px solid var(--color-border)', boxShadow: 'var(--shadow-sm)', padding: '0 var(--space-lg)', height: 58, display: 'flex', alignItems: 'center' }}>
-        <div style={{ maxWidth: 'var(--width-app)', margin: '0 auto', width: '100%', display: 'flex', alignItems: 'center', gap: 8 }}>
-          <img src="/logo.svg" alt="Song Stack" style={{ height: 22, borderRadius: 4 }} />
-          <span style={{ fontSize: 'var(--text-sm)', color: 'var(--color-text-muted)', marginLeft: 4 }}>View only</span>
+    <div className="app-shell">
+      <nav className="public-nav">
+        <div className="public-nav-inner">
+          <img src="/logo.svg" alt="Song Stack" className="public-nav-logo" />
+          <span className="public-nav-label">View only</span>
         </div>
       </nav>
 
-      <main style={{ maxWidth: 'var(--width-app)', margin: '0 auto', padding: 'var(--space-xl) var(--space-lg)' }}>
-        <div style={{ marginBottom: 'var(--space-xl)' }}>
-          <h1 className="page-title" style={{ marginBottom: 4 }}>
+      <main className="public-main">
+        <div className="public-plan-header">
+          <h1 className="page-title page-title--tight">
             {format(parseISO(plan.plan_date), 'd MMMM yyyy')}
           </h1>
           {plan.plan_time && (
-            <p style={{ fontSize: 'var(--text-md)', color: 'var(--color-text-secondary)' }}>{plan.plan_time}</p>
+            <p className="plan-detail-meta">{plan.plan_time}</p>
           )}
           {plan.title && (
-            <p style={{ fontSize: 'var(--text-md)', color: 'var(--color-text-muted)', marginTop: 2 }}>{plan.title}</p>
+            <p className="plan-detail-meta">{plan.title}</p>
           )}
-          <div style={{ marginTop: 'var(--space-md)' }}>
-            <a href={`/s/${token}/set`} style={{ display: 'inline-flex', alignItems: 'center', gap: 6, padding: '8px 14px', background: 'var(--color-brand-600)', color: 'white', borderRadius: 'var(--radius-sm)', fontSize: 'var(--text-sm)', fontWeight: 600, textDecoration: 'none' }}>
+          <div className="public-set-cta">
+            <a href={`/s/${token}/set`} className="btn-set-mode">
               <PlayCircle size={15} />
               Set mode
             </a>
@@ -206,7 +207,7 @@ export default function PublicPlanPage() {
         </div>
 
         {musicians.length > 0 && (
-          <p style={{ fontSize: 'var(--text-sm)', color: 'var(--color-text-secondary)', marginBottom: 'var(--space-lg)' }}>
+          <p className="public-musicians">
             {Object.values(
               musicians.reduce((acc: any, m: any) => {
                 const key = m.user_id || m.name
@@ -222,7 +223,7 @@ export default function PublicPlanPage() {
           <p className="text-muted">No items in this plan yet.</p>
         ) : (
           <>
-            <p style={{ fontSize: 'var(--text-sm)', color: 'var(--color-text-muted)', marginBottom: 'var(--space-md)' }}>
+            <p className="plan-hint">
               Tap a song to view sheet music
             </p>
             {plan.items.map((item: any, i: number) => (
