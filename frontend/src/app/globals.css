@@ -773,7 +773,7 @@ body.set-viewer-active { overflow: hidden; }
 
 .unavailability-dates {
   font-size: var(--text-base);
-  font-weight: 600;
+  font-weight: 400;
   color: var(--color-text-primary);
 }
 

@@ -117,7 +117,7 @@ export default function AvailabilityPage() {
           </div>
         </div>
 
-        <div style={{ marginTop: 'var(--space-md)' }}>
+        <div style={{ marginTop: 'var(--space-lg)' }}>
           <label className="settings-label">Note <span className="label-note">(optional)</span></label>
           <input
             type="text"
