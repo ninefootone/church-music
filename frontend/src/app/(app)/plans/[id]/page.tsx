@@ -355,6 +355,7 @@ export default function PlanDetailPage() {
       {showMusicianModal && (
         <PlanMusicianModal
           planId={id as string}
+          planDate={plan?.plan_date ?? ''}
           churchId={church!.id}
           onAdd={musicians => setMusicians(prev => [...prev, ...musicians])}
           onClose={() => setShowMusicianModal(false)}

@@ -1,7 +1,7 @@
 'use client'
 
 import { useState, useEffect } from 'react'
-import { X, UserPlus } from 'lucide-react'
+import { X, UserPlus, AlertTriangle } from 'lucide-react'
 import api from '@/lib/api'
 
 interface Member {
@@ -15,16 +15,18 @@ const DEFAULT_ROLES = ['Vocals', 'Keys', 'Guitar', 'Bass', 'Drums']
 
 interface Props {
   planId: string
+  planDate: string
   churchId: string
   onAdd: (musicians: { id: string; name: string; role: string; user_id: string | null }[]) => void
   onClose: () => void
 }
 
-export function PlanMusicianModal({ planId, churchId, onAdd, onClose }: Props) {
+export function PlanMusicianModal({ planId, planDate, churchId, onAdd, onClose }: Props) {
   const [members, setMembers] = useState<Member[]>([])
   const [availableRoles, setAvailableRoles] = useState<string[]>([])
   const [query, setQuery] = useState('')
   const [selectedMember, setSelectedMember] = useState<Member | null>(null)
+  const [unavailabilityWarning, setUnavailabilityWarning] = useState<string | null>(null)
   const [guestName, setGuestName] = useState('')
   const [selectedRoles, setSelectedRoles] = useState<string[]>([])
   const [customRole, setCustomRole] = useState('')
@@ -39,6 +41,26 @@ export function PlanMusicianModal({ planId, churchId, onAdd, onClose }: Props) {
       setAvailableRoles(names.length > 0 ? names : DEFAULT_ROLES)
     }).catch(() => setAvailableRoles(DEFAULT_ROLES))
   }, [churchId])
+
+  const selectMember = async (member: Member) => {
+    setSelectedMember(member)
+    setQuery('')
+    setUnavailabilityWarning(null)
+    if (member.user_id && planDate) {
+      try {
+        const { data } = await api.get('/api/unavailability/check', {
+          params: { userId: member.user_id, date: planDate }
+        })
+        if (data.unavailable) {
+          const entry = data.entries[0]
+          const note = entry.note ? ` (${entry.note})` : ''
+          setUnavailabilityWarning(`${member.name} has marked themselves unavailable on this date${note}.`)
+        }
+      } catch {
+        // Non-critical — silently ignore check failures
+      }
+    }
+  }
 
   const filtered = query.length > 0
     ? members.filter(m => m.name?.toLowerCase().includes(query.toLowerCase()) || m.email?.toLowerCase().includes(query.toLowerCase()))
@@ -97,11 +119,21 @@ export function PlanMusicianModal({ planId, churchId, onAdd, onClose }: Props) {
           <label style={{ fontSize: 'var(--text-sm)', fontWeight: 600, color: 'var(--color-text-secondary)', display: 'block', marginBottom: 6 }}>Person</label>
 
           {selectedMember ? (
-            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '10px 14px', background: 'var(--color-neutral-50)', border: '1px solid var(--color-border)', borderRadius: 'var(--radius-sm)' }}>
-              <span style={{ fontSize: 'var(--text-md)', fontWeight: 500 }}>{selectedMember.name}</span>
-              <button onClick={() => { setSelectedMember(null); setQuery('') }} style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'var(--color-text-muted)', padding: 2 }}>
-                <X size={16} />
-              </button>
+            <div>
+              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '10px 14px', background: 'var(--color-neutral-50)', border: '1px solid var(--color-border)', borderRadius: 'var(--radius-sm)' }}>
+                <span style={{ fontSize: 'var(--text-md)', fontWeight: 500 }}>{selectedMember.name}</span>
+                <button onClick={() => { setSelectedMember(null); setQuery(''); setUnavailabilityWarning(null) }} style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'var(--color-text-muted)', padding: 2 }}>
+                  <X size={16} />
+                </button>
+              </div>
+              {unavailabilityWarning && (
+                <div style={{ display: 'flex', alignItems: 'flex-start', gap: 8, marginTop: 8, padding: '10px 14px', background: 'var(--color-warning-bg, #fffbeb)', border: '1px solid var(--color-warning-border, #fcd34d)', borderRadius: 'var(--radius-sm)' }}>
+                  <AlertTriangle size={16} style={{ color: 'var(--color-warning, #d97706)', flexShrink: 0, marginTop: 1 }} />
+                  <p style={{ fontSize: 'var(--text-sm)', color: 'var(--color-warning-text, #92400e)', margin: 0 }}>
+                    {unavailabilityWarning} You can still add them if needed.
+                  </p>
+                </div>
+              )}
             </div>
           ) : (
             <div style={{ position: 'relative' }}>
@@ -118,7 +150,7 @@ export function PlanMusicianModal({ planId, churchId, onAdd, onClose }: Props) {
                   {filtered.slice(0, 5).map(m => (
                     <button
                       key={m.id}
-                      onClick={() => { setSelectedMember(m); setQuery('') }}
+                      onClick={() => selectMember(m)}
                       style={{ display: 'block', width: '100%', textAlign: 'left', padding: '10px 14px', background: 'var(--color-surface)', border: 'none', borderBottom: '1px solid var(--color-border)', cursor: 'pointer', fontSize: 'var(--text-md)' }}
                     >
                       <span style={{ fontWeight: 500 }}>{m.name}</span>
