@@ -4,6 +4,7 @@ import { useState, useEffect, useRef } from 'react'
 import Link from 'next/link'
 import { format, parseISO } from 'date-fns'
 import { CategoryBadge, KeyBadge } from '@/components/ui/badges'
+import { PlaylistIcon } from '@/components/ui/PlaylistIcon'
 import { useChurch } from '@/context/ChurchContext'
 import api from '@/lib/api'
 
@@ -17,9 +18,11 @@ export default function DashboardPage() {
   const [showAddPlaylist, setShowAddPlaylist] = useState(false)
   const [playlistName, setPlaylistName] = useState('')
   const [playlistUrl, setPlaylistUrl] = useState('')
+  const [playlistType, setPlaylistType] = useState('other')
   const [editingPlaylist, setEditingPlaylist] = useState<any | null>(null)
   const [editName, setEditName] = useState('')
   const [editUrl, setEditUrl] = useState('')
+  const [editType, setEditType] = useState('other')
   const fetchedRef = useRef(false)
 
   useEffect(() => {
@@ -36,10 +39,11 @@ export default function DashboardPage() {
   const addPlaylist = async () => {
     if (!playlistName.trim() || !playlistUrl.trim()) return
     try {
-      const { data } = await api.post('/api/playlists', { name: playlistName.trim(), url: playlistUrl.trim() })
+      const { data } = await api.post('/api/playlists', { name: playlistName.trim(), url: playlistUrl.trim(), type: playlistType })
       setPlaylists(prev => [...prev, data])
       setPlaylistName('')
       setPlaylistUrl('')
+      setPlaylistType('other')
       setShowAddPlaylist(false)
     } catch {
       alert('Failed to add playlist.')
@@ -49,9 +53,10 @@ export default function DashboardPage() {
   const saveEdit = async () => {
     if (!editingPlaylist || !editName.trim() || !editUrl.trim()) return
     try {
-      const { data } = await api.put(`/api/playlists/${editingPlaylist.id}`, { name: editName.trim(), url: editUrl.trim() })
+      const { data } = await api.put(`/api/playlists/${editingPlaylist.id}`, { name: editName.trim(), url: editUrl.trim(), type: editType })
       setPlaylists(prev => prev.map(p => p.id === data.id ? data : p))
       setEditingPlaylist(null)
+      setEditType('other')
     } catch {
       alert('Failed to save playlist.')
     }
@@ -197,6 +202,12 @@ export default function DashboardPage() {
             <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-sm)' }}>
               <input className="input" placeholder="Name" value={playlistName} onChange={e => setPlaylistName(e.target.value)} />
               <input className="input" placeholder="URL" value={playlistUrl} onChange={e => setPlaylistUrl(e.target.value)} />
+              <select className="input" value={playlistType} onChange={e => setPlaylistType(e.target.value)}>
+                <option value="youtube">YouTube</option>
+                <option value="spotify">Spotify</option>
+                <option value="apple_music">Apple Music</option>
+                <option value="other">Other</option>
+              </select>
             </div>
             <div style={{ display: 'flex', gap: 8, justifyContent: 'flex-end', marginTop: 'var(--space-md)' }}>
               <button className="btn btn-secondary" onClick={() => setShowAddPlaylist(false)}>Cancel</button>
@@ -259,6 +270,12 @@ export default function DashboardPage() {
                 <div className="dash-row-content">
                   <input className="input" value={editName} onChange={e => setEditName(e.target.value)} placeholder="Name" />
                   <input className="input" value={editUrl} onChange={e => setEditUrl(e.target.value)} placeholder="URL" style={{ marginTop: '0.4rem' }} />
+                  <select className="input" value={editType} onChange={e => setEditType(e.target.value)} style={{ marginTop: '0.4rem' }}>
+                    <option value="youtube">YouTube</option>
+                    <option value="spotify">Spotify</option>
+                    <option value="apple_music">Apple Music</option>
+                    <option value="other">Other</option>
+                  </select>
                   <div style={{ marginTop: '0.4rem', display: 'flex', gap: '0.5rem' }}>
                     <button className="btn btn-primary" onClick={saveEdit}>Save</button>
                     <button className="btn btn-ghost" onClick={() => setEditingPlaylist(null)}>Cancel</button>
@@ -266,10 +283,13 @@ export default function DashboardPage() {
                 </div>
               ) : (
                 <div className="dash-row-content">
-                <a href={p.url} target="_blank" rel="noopener noreferrer" className="dash-row-title link">{p.name}</a>
+                <a href={p.url} target="_blank" rel="noopener noreferrer" className="dash-row-title link" style={{ display: 'inline-flex', alignItems: 'center', gap: '0.4rem' }}>
+                    <PlaylistIcon type={p.type || 'other'} size={14} />
+                    {p.name}
+                  </a>
                 {canManagePlaylists && (
                   <div style={{ display: 'flex', gap: '0.5rem', marginTop: '0.4rem' }}>
-                    <button className="btn btn-ghost" onClick={() => { setEditingPlaylist(p); setEditName(p.name); setEditUrl(p.url) }}>Edit</button>
+                    <button className="btn btn-ghost" onClick={() => { setEditingPlaylist(p); setEditName(p.name); setEditUrl(p.url); setEditType(p.type || 'other') }}>Edit</button>
                     <button className="btn btn-ghost" onClick={() => deletePlaylist(p.id)}>Delete</button>
                   </div>
                 )}
