@@ -17,6 +17,7 @@ const feedbackRoutes = require('./routes/feedback');
 const mailingRoutes = require('./routes/mailing');
 const superAdminRoutes = require('./routes/superadmin');
 const unavailabilityRoutes = require('./routes/unavailability');
+const playlistRoutes = require('./routes/playlists');
 
 const app = express();
 
@@ -40,6 +41,7 @@ app.use('/api/templates', templateRoutes);
 app.use('/api/ccli', ccliRoutes);
 app.use('/api/feedback', feedbackRoutes);
 app.use('/api/unavailability', unavailabilityRoutes);
+app.use('/api/playlists', playlistRoutes);
 app.use('/api/mailing', mailingRoutes);
 app.use('/api/superadmin', superAdminRoutes);
 
