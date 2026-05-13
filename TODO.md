@@ -2,10 +2,6 @@
 
 ## Backlog
 
-### Features – General
-- [ ] Clerk major version upgrade — currently on v5.7.5, latest is v7.x; check migration guides for v5→v6 and v6→v7 before updating; test all auth flows (sign in, sign up, onboarding redirect) on a preview branch first
-platform-wide stats: number of churches, total songs, total plans, total users, storage used; no church-level data exposed
-
 ### Discover
 - [ ] Dashboard Discover block — swipeable carousel showing in_discover songs with image, title, category and description; settings toggle (`hide_discover_dashboard` on `churches` table) to hide it
 
@@ -28,28 +24,29 @@ platform-wide stats: number of churches, total songs, total plans, total users, 
 - [ ] Full offboarding process – account deletion — settings page option for users to delete their own account (Clerk backend API + DB cleanup)
 
 ### Inline style refactor
-Work through each file, one at a time, using VSCode/Cursor prompt to move all
-static inline `style={{...}}` props to named classes in `globals.css`.
+Work through each file, one at a time, using VSCode/Cursor prompt to move all static inline `style={{...}}` props to named classes in `globals.css`.
 
-- [ ] `src/app/feedback/page.tsx`
-- [ ] `src/app/layout.tsx`
-- [ ] `src/app/onboarding/page.tsx`
-- [ ] `src/app/s/[token]/page.tsx`
-- [ ] `src/app/s/[token]/set/page.tsx`
-- [ ] `src/app/s/[token]/set/view/page.tsx`
+## Components
+- [ ] `src/components/CcliAutocomplete.tsx`
+- [ ] `src/components/layout/AppNavClient.tsx`
 - [ ] `src/components/ui/AddLinkModal.tsx`
 - [ ] `src/components/ui/AddToPlanModal.tsx`
 - [ ] `src/components/ui/ArrangementBuilder.tsx`
 - [ ] `src/components/ui/ChordProViewer.tsx`
 - [ ] `src/components/ui/ConfirmModal.tsx`
 - [ ] `src/components/ui/CookieConsent.tsx`
+- [ ] `src/components/ui/CookieSettingsLink.tsx` ← new
+- [ ] `src/components/ui/FeedbackForm.tsx` ← new
 - [ ] `src/components/ui/FileRow.tsx`
 - [ ] `src/components/ui/FileUploadModal.tsx`
 - [ ] `src/components/ui/InviteMemberModal.tsx`
+- [ ] `src/components/ui/LegalNavActions.tsx` ← new
+- [ ] `src/components/ui/LyricsDisplay.tsx`
+- [ ] `src/components/ui/LyricsEditor.tsx` ← new
 - [ ] `src/components/ui/PlanEmailModal.tsx`
 - [ ] `src/components/ui/PlanMusicianModal.tsx`
-- [ ] `src/components/CcliAutocomplete.tsx`
-- [ ] `src/components/layout/AppNavClient.tsx`
+- [ ] `src/components/ui/TagInput.tsx` ← new
+- [ ] `src/components/ui/badges.tsx`
 
 ## Done
 - [x] WordPress song import (139 songs, 502 files)
@@ -97,6 +94,8 @@ static inline `style={{...}}` props to named classes in `globals.css`.
   - Depends entirely on admins populating plan musicians — will be empty/useless for churches that don't use that feature
   - Natural precursor to email reminders ("you're playing on Sunday — here's the plan"); don't design the widget in isolation from that future need
   - Consider `plan_availability` table (`plan_id`, `user_id`, `status: available|unavailable|unconfirmed`) for future unavailability/confirmation flow — design DB now even if UI comes later
+- [x] Clerk major version upgrade — currently on v5.7.5, latest is v7.x; check migration guides for v5→v6 and v6→v7 before updating; test all auth flows (sign in, sign up, onboarding redirect) on a preview branch first
+platform-wide stats: number of churches, total songs, total plans, total users, storage used; no church-level data exposed
 
 
 ### Inline style refactor
@@ -117,3 +116,19 @@ static inline `style={{...}}` props to named classes in `globals.css`.
 - [x] `src/app/(app)/stats/page.tsx`
 - [x] `src/app/(app)/settings/page.tsx`
 - [x] `src/app/admin/page.tsx`
+- [x] `src/app/(app)/help/page.tsx`
+- [x] `src/app/(app)/team/page.tsx`
+- [x] `src/app/(app)/plans/[id]/set/view/SetViewer.tsx`
+- [x] `src/app/(app)/availability/page.tsx`
+- [x] `src/app/(app)/discover/page.tsx`
+- [x] `src/app/feedback/page.tsx`
+- [x] `src/app/layout.tsx`
+- [x] `src/app/legal/page.tsx`
+- [x] `src/app/onboarding/page.tsx`
+- [x] `src/app/privacy/page.tsx`
+- [x] `src/app/s/[token]/set/view/page.tsx`
+- [x] `src/app/sign-in/[[...sign-in]]/page.tsx`
+- [x] `src/app/sign-up/[[...sign-up]]/page.tsx`
+- [x] `src/app/s/[token]/set/view/PublicSetViewer.tsx`
+- [x] `src/app/s/[token]/page.tsx`
+- [x] `src/app/s/[token]/set/page.tsx`
