@@ -48,7 +48,7 @@ function normaliseKey(key: string | null | undefined): string {
   return key
     .replace(/♭/g, 'b')
     .replace(/♯/g, '#')
-    .trim()
+    .trim();
 }
 
 interface PlanItem {

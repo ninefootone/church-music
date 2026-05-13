@@ -25,18 +25,18 @@ export const metadata: Metadata = {
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
-    <ClerkProvider
-      signInUrl="/sign-in"
-      signUpUrl="/sign-up"
-      signInFallbackRedirectUrl="/dashboard"
-      signUpFallbackRedirectUrl="/onboarding"
-    >
-      <html lang="en">
-        <head>
-          <link href="https://fonts.googleapis.com/css2?family=Figtree:ital,wght@0,300;0,400;0,500;0,600;0,700;0,800;0,900;1,400&display=swap" rel="stylesheet" />
-          <link rel="manifest" href="/site.webmanifest" />
-        </head>
-        <body>
+    <html lang="en">
+      <head>
+        <link href="https://fonts.googleapis.com/css2?family=Figtree:ital,wght@0,300;0,400;0,500;0,600;0,700;0,800;0,900;1,400&display=swap" rel="stylesheet" />
+        <link rel="manifest" href="/site.webmanifest" />
+      </head>
+      <body>
+        <ClerkProvider
+          signInUrl="/sign-in"
+          signUpUrl="/sign-up"
+          signInFallbackRedirectUrl="/dashboard"
+          signUpFallbackRedirectUrl="/onboarding"
+        >
           <Script
             src="https://www.googletagmanager.com/gtag/js?id=G-6W5HE17FKE"
             strategy="afterInteractive"
@@ -67,8 +67,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
               },
             }}
           />
-        </body>
-      </html>
-    </ClerkProvider>
-  )
+        </ClerkProvider></body>
+    </html>
+  );
 }
