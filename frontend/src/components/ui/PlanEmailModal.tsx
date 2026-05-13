@@ -6,6 +6,7 @@ import api from '@/lib/api'
 
 interface Member {
   id: string
+  user_id: string
   name: string
   email: string
 }
@@ -31,12 +32,25 @@ export function PlanEmailModal({ planId, onClose }: Props) {
   const [error, setError] = useState('')
 
   useEffect(() => {
-    api.get('/api/members').then(r => {
-      const withEmail = r.data.filter((m: Member) => m.email)
+    Promise.all([
+      api.get('/api/members'),
+      api.get(`/api/plans/${planId}/musicians`),
+    ]).then(([membersRes, musiciansRes]) => {
+      const withEmail = membersRes.data.filter((m: Member) => m.email)
       setMembers(withEmail)
-      setSelected(new Set(withEmail.map((m: Member) => m.email)))
+      const planUserIds = new Set(
+        musiciansRes.data
+          .filter((pm: { user_id: string | null }) => pm.user_id !== null)
+          .map((pm: { user_id: string }) => pm.user_id)
+      )
+      const preSelected = new Set(
+        withEmail
+          .filter((m: Member) => planUserIds.has(m.user_id))
+          .map((m: Member) => m.email)
+      )
+      setSelected(preSelected)
     }).catch(() => {})
-  }, [])
+  }, [planId])
 
   const toggleMember = (email: string) => {
     setSelected(prev => {
