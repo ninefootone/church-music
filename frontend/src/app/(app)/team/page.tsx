@@ -92,6 +92,7 @@ export default function TeamPage() {
             Invite member +
           </button>
         </div>
+        <p className="settings-section-desc">Click a team member to manage their role and permissions.</p>
 
         {loading ? (
           <p className="text-muted">Loading…</p>
