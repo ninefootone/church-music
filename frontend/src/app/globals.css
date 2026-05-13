@@ -2725,10 +2725,8 @@ select.input {
   max-width: 380px;
 }
 .not-found-icon {
-  font-size: 3.5rem;
-  color: var(--color-brand-200);
   margin-bottom: 1.25rem;
-  line-height: 1;
+  border-radius: 14px;
 }
 .not-found-title {
   font-size: 1.75rem;
