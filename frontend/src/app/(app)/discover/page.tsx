@@ -133,7 +133,7 @@ function SortableCard({
             )}
             {(importState === 'done' || importState === 'exists') && (
               <div className="discover-card__added">
-                <span className="text-muted" style={{ fontSize: '0.85rem' }}>
+                <span className="text-muted text-sm">
                   {importState === 'exists' ? 'Already in your library' : '✓ Added'}
                 </span>
                 {importedSongId && (
@@ -144,7 +144,7 @@ function SortableCard({
               </div>
             )}
             {importState === 'error' && (
-              <span style={{ fontSize: '0.85rem', color: 'var(--color-danger)' }}>
+              <span className="text-sm text-danger">
                 Failed — try again
               </span>
             )}
@@ -263,7 +263,7 @@ export default function DiscoverPage() {
         </div>
       </div>
       {isMasterLibrary && savingOrder && (
-        <p className="text-muted" style={{ fontSize: '0.85rem', marginBottom: 'var(--space-sm)' }}>Saving order…</p>
+        <p className="text-muted text-sm discover-saving">Saving order…</p>
       )}
 
       {songs.length === 0 ? (

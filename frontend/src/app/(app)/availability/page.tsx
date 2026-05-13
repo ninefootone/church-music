@@ -117,7 +117,7 @@ export default function AvailabilityPage() {
           </div>
         </div>
 
-        <div style={{ marginTop: 'var(--space-lg)' }}>
+        <div className="form-field">
           <label className="settings-label">Note <span className="label-note">(optional)</span></label>
           <input
             type="text"
@@ -128,7 +128,7 @@ export default function AvailabilityPage() {
           />
         </div>
 
-        <div className="settings-save-row" style={{ marginTop: 'var(--space-lg)' }}>
+        <div className="settings-save-row">
           <button className="btn btn-primary" onClick={handleAdd} disabled={saving}>
             {saving ? 'Saving…' : 'Add dates'}
           </button>

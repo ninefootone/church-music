@@ -106,6 +106,9 @@ body.set-viewer-active { overflow: hidden; }
   --text-3xl:  36px;
 }
 
+.text-sm     { font-size: var(--text-sm); }
+.text-danger { color: var(--color-danger); }
+
 @layer base {
   body {
     font-family: 'Figtree', 'Helvetica Neue', system-ui, sans-serif;
@@ -2262,7 +2265,7 @@ select.input {
 .settings-logo-preview     { height: 48px; max-width: 160px; object-fit: contain; border-radius: 6px; border: 1px solid var(--color-border); padding: 4px; background: var(--color-bg); }
 .visually-hidden-input     { display: none; }
 .btn-upload-label          { cursor: pointer; display: inline-flex; align-items: center; gap: 6px; }
-.settings-save-row         { display: flex; justify-content: flex-end; margin-bottom: 20px; }
+.settings-save-row         { display: flex; justify-content: flex-end; margin-bottom: 20px; margin-top: var(--space-lg) }
 .settings-footer-row       { display: flex; justify-content: flex-end; }
 .icon-mr                   { margin-right: 6px; }
 .role-chip-list            { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 12px; min-height: 36px; }
@@ -2522,6 +2525,8 @@ select.input {
     font-size: var(--text-xl);
   }
 }
+
+.discover-saving { margin-bottom: var(--space-sm); }
 
 /* ── Admin ── */
 .admin-restricted { padding: 2rem; text-align: center; }
