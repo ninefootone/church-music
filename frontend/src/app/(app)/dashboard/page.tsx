@@ -8,11 +8,17 @@ import { useChurch } from '@/context/ChurchContext'
 import api from '@/lib/api'
 
 export default function DashboardPage() {
-  const { church, loading: churchLoading, isAdmin, canManageSongs, canAddPlans } = useChurch()
+  const { church, loading: churchLoading, isAdmin, canManageSongs, canAddPlans, canManagePlaylists } = useChurch()
   const [songs, setSongs] = useState<any[]>([])
   const [plans, setPlans] = useState<any[]>([])
+  const [playlists, setPlaylists] = useState<any[]>([])
   const [myUpcoming, setMyUpcoming] = useState<any[]>([])
   const [loading, setLoading] = useState(true)
+  const [playlistName, setPlaylistName] = useState('')
+  const [playlistUrl, setPlaylistUrl] = useState('')
+  const [editingPlaylist, setEditingPlaylist] = useState<any | null>(null)
+  const [editName, setEditName] = useState('')
+  const [editUrl, setEditUrl] = useState('')
   const fetchedRef = useRef(false)
 
   useEffect(() => {
@@ -22,8 +28,42 @@ export default function DashboardPage() {
       api.get('/api/songs').then(r => setSongs(r.data.slice(0, 4))),
       api.get('/api/plans', { params: { upcoming: 'true' } }).then(r => setPlans(r.data.slice(0, 4))),
       api.get('/api/plans/my-upcoming').then(r => setMyUpcoming(r.data)),
+      api.get('/api/playlists').then(r => setPlaylists(r.data)),
     ]).finally(() => setLoading(false))
   }, [church])
+
+  const addPlaylist = async () => {
+    if (!playlistName.trim() || !playlistUrl.trim()) return
+    try {
+      const { data } = await api.post('/api/playlists', { name: playlistName.trim(), url: playlistUrl.trim() })
+      setPlaylists(prev => [...prev, data])
+      setPlaylistName('')
+      setPlaylistUrl('')
+    } catch {
+      alert('Failed to add playlist.')
+    }
+  }
+
+  const saveEdit = async () => {
+    if (!editingPlaylist || !editName.trim() || !editUrl.trim()) return
+    try {
+      const { data } = await api.put(`/api/playlists/${editingPlaylist.id}`, { name: editName.trim(), url: editUrl.trim() })
+      setPlaylists(prev => prev.map(p => p.id === data.id ? data : p))
+      setEditingPlaylist(null)
+    } catch {
+      alert('Failed to save playlist.')
+    }
+  }
+
+  const deletePlaylist = async (id: number) => {
+    if (!confirm('Delete this playlist?')) return
+    try {
+      await api.delete(`/api/playlists/${id}`)
+      setPlaylists(prev => prev.filter(p => p.id !== id))
+    } catch {
+      alert('Failed to delete playlist.')
+    }
+  }
 
   const isToday = (dateStr: string) => {
     const today = new Date()
@@ -144,6 +184,72 @@ export default function DashboardPage() {
             <Link href="/plans" className="btn btn-ghost">View all →</Link>
           </div>
         </div>
+      </div>
+
+      {/* Playlists */}
+      <div className="card">
+        <div className="card-header-row">
+          <span className="section-label">Playlists</span>
+        </div>
+        {playlists.length === 0 && !canManagePlaylists && (
+          <p className="text-muted">No playlists yet.</p>
+        )}
+        {playlists.map(p => (
+          <div key={p.id} className="dash-row">
+            {editingPlaylist?.id === p.id ? (
+              <div className="dash-row-content">
+                <input
+                  className="input"
+                  value={editName}
+                  onChange={e => setEditName(e.target.value)}
+                  placeholder="Name"
+                />
+                <input
+                  className="input"
+                  value={editUrl}
+                  onChange={e => setEditUrl(e.target.value)}
+                  placeholder="URL"
+                  style={{ marginTop: '0.4rem' }}
+                />
+                <div style={{ marginTop: '0.4rem', display: 'flex', gap: '0.5rem' }}>
+                  <button className="btn btn-primary" onClick={saveEdit}>Save</button>
+                  <button className="btn btn-ghost" onClick={() => setEditingPlaylist(null)}>Cancel</button>
+                </div>
+              </div>
+            ) : (
+              <>
+                <div className="dash-row-content">
+                  <a href={p.url} target="_blank" rel="noopener noreferrer" className="dash-row-title link">
+                    {p.name}
+                  </a>
+                </div>
+                {canManagePlaylists && (
+                  <div style={{ display: 'flex', gap: '0.5rem', flexShrink: 0 }}>
+                    <button className="btn btn-ghost" onClick={() => { setEditingPlaylist(p); setEditName(p.name); setEditUrl(p.url) }}>Edit</button>
+                    <button className="btn btn-ghost" onClick={() => deletePlaylist(p.id)}>Delete</button>
+                  </div>
+                )}
+              </>
+            )}
+          </div>
+        ))}
+        {canManagePlaylists && (
+          <div style={{ padding: '0.75rem 0 0.25rem', display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
+            <input
+              className="input"
+              placeholder="Playlist name"
+              value={playlistName}
+              onChange={e => setPlaylistName(e.target.value)}
+            />
+            <input
+              className="input"
+              placeholder="URL"
+              value={playlistUrl}
+              onChange={e => setPlaylistUrl(e.target.value)}
+            />
+            <button className="btn btn-ghost" onClick={addPlaylist}>Add playlist +</button>
+          </div>
+        )}
       </div>
 
       {/* Upcoming */}

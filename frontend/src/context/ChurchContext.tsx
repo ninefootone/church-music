@@ -17,6 +17,7 @@ interface Church {
   can_manage_songs: boolean
   can_add_plans: boolean
   can_edit_any_plan: boolean
+  can_manage_playlists: boolean
 }
 
 interface ChurchContextType {
@@ -26,11 +27,12 @@ interface ChurchContextType {
   canManageSongs: boolean
   canAddPlans: boolean
   canEditAnyPlan: boolean
+  canManagePlaylists: boolean
   refetch: () => void
 }
 
 const ChurchContext = createContext<ChurchContextType>({
-  church: null, loading: true, isAdmin: false, canManageSongs: false, canAddPlans: false, canEditAnyPlan: false, refetch: () => {},
+  church: null, loading: true, isAdmin: false, canManageSongs: false, canAddPlans: false, canEditAnyPlan: false, canManagePlaylists: false, refetch: () => {},
 })
 
 export function ChurchProvider({ children }: { children: ReactNode }) {
@@ -85,6 +87,7 @@ export function ChurchProvider({ children }: { children: ReactNode }) {
       canManageSongs: church?.role === 'admin' || !!church?.can_manage_songs,
       canAddPlans: church?.role === 'admin' || !!church?.can_add_plans,
       canEditAnyPlan: church?.role === 'admin' || !!church?.can_edit_any_plan,
+      canManagePlaylists: church?.role === 'admin' || !!church?.can_manage_playlists,
       refetch: fetchChurch,
     }}>
       {children}
