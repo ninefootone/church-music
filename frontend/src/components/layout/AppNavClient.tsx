@@ -4,17 +4,17 @@ import { useState } from 'react'
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
 import { useClerk } from '@clerk/nextjs'
-import { Menu, X, LogOut, HelpCircle, Home } from 'lucide-react'
+import { Menu, X, LogOut, HelpCircle, Home, BarChart2 } from 'lucide-react'
 import { useChurch } from '@/context/ChurchContext'
 
 const navLinks = [
-  { href: '/dashboard', label: <Home size={16} />, dropdownLabel: 'Home', adminOnly: false },
-  { href: '/songs',     label: 'Songs',            adminOnly: false },
-  { href: '/plans',     label: 'Plans',            adminOnly: false },
-  { href: '/discover',  label: 'Discover',         adminOnly: false },
-  { href: '/stats',     label: 'Stats',            adminOnly: false },
-  { href: '/team',      label: 'Team',             adminOnly: true  },
-  { href: '/settings',  label: 'Settings',         adminOnly: true  },
+  { href: '/dashboard', label: <Home size={16} />,        dropdownLabel: 'Home',  adminOnly: false },
+  { href: '/songs',     label: 'Songs',                   adminOnly: false },
+  { href: '/plans',     label: 'Plans',                   adminOnly: false },
+  { href: '/discover',  label: 'Discover',                adminOnly: false },
+  { href: '/team',      label: 'Team',                    adminOnly: true  },
+  { href: '/settings',  label: 'Settings',                adminOnly: true  },
+  { href: '/stats',     label: <BarChart2 size={16} />,   dropdownLabel: 'Stats', adminOnly: false },
 ]
 
 export function AppNavClient() {

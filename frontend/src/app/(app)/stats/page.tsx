@@ -8,7 +8,7 @@ import api from '@/lib/api'
 import { Category } from '@/types'
 
 export default function StatsPage() {
-  const { church } = useChurch()
+  const { church, isAdmin } = useChurch()
   const [stats, setStats] = useState<any>(null)
   const [loading, setLoading] = useState(true)
   const [period, setPeriod] = useState(365)
@@ -74,7 +74,7 @@ export default function StatsPage() {
               {p === 365 ? '1 year' : `${p} days`}
             </button>
           ))}
-          <button onClick={exportCCLI} className="btn btn-secondary btn-sm">Export CCLI CSV</button>
+          {isAdmin && <button onClick={exportCCLI} className="btn btn-secondary btn-sm">Export CCLI CSV</button>}
         </div>
       </div>
 
