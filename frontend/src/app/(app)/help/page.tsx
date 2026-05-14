@@ -95,7 +95,7 @@ export default function HelpPage() {
         {
           id: 'what-is-song-stack',
           title: 'What is Song Stack?',
-          content: (
+          content: () => (
             <div>
               <p className="help-content-body">
                 Song Stack is a tool for churches to manage their song library and plan worship services. It gives your whole team — musicians, band leaders, and admins — a shared space to organise music, build service plans, and share resources.
@@ -118,7 +118,7 @@ export default function HelpPage() {
         {
           id: 'signing-in',
           title: 'Signing in and your account',
-          content: (
+          content: () => (
             <div>
               <p className="help-content-body">
                 Song Stack uses your email address to sign in — no separate password needed. When you visit the site, enter your email and you&apos;ll receive a one-time sign-in link.
@@ -140,7 +140,7 @@ export default function HelpPage() {
         {
           id: 'browsing-songs',
           title: 'Browsing the song library',
-          content: (
+          content: () => (
             <div>
               <p className="help-content-body">
                 The Songs page lists every song in your church&apos;s library. You can search by title or author, and filter by tag or category using the controls at the top of the page.
@@ -157,7 +157,7 @@ export default function HelpPage() {
         {
           id: 'adding-a-song',
           title: 'Adding a new song',
-          content: (
+          content: () => (
             <div>
               <p className="help-content-body">
                 From the Songs page, click <strong>Add song</strong>. You&apos;ll need at minimum a title — everything else is optional but recommended.
@@ -192,7 +192,7 @@ export default function HelpPage() {
         {
           id: 'editing-a-song',
           title: 'Editing a song',
-          content: (
+          content: () => (
             <div>
               <p className="help-content-body">
                 Open the song from your library and click <strong>Edit</strong>. You can update any field — title, author, key, lyrics, tags, CCLI details, arrangement, and more.
@@ -206,7 +206,7 @@ export default function HelpPage() {
         {
           id: 'uploading-files',
           title: 'Uploading files (PDF & ChordPro)',
-          content: (
+          content: () => (
             <div>
               <p className="help-content-body">
                 Song Stack supports two file types for each song:
@@ -229,7 +229,7 @@ export default function HelpPage() {
         {
           id: 'retiring-a-song',
           title: 'Retiring a song',
-          content: (
+          content: () => (
             <div>
               <p className="help-content-body">
                 Retiring a song hides it from the main library and plan builder without deleting it. This is useful for songs you no longer use but want to keep for reference.
@@ -251,7 +251,7 @@ export default function HelpPage() {
         {
           id: 'creating-a-plan',
           title: 'Creating a plan',
-          content: (
+          content: () => (
             <div>
               <p className="help-content-body">
                 From the Plans page, click <strong>New plan</strong>. Give the plan a date — this is the only required field. You can also add a title (e.g. &quot;Sunday Morning&quot;) and a time.
@@ -268,7 +268,7 @@ export default function HelpPage() {
         {
           id: 'adding-songs-to-plan',
           title: 'Adding songs to a plan',
-          content: (
+          content: () => (
             <div>
               <p className="help-content-body">
                 From the plan detail page, click <strong>Add song</strong>. This opens a search picker showing your full song library. Search by title or author, then click a song to add it to the plan.
@@ -285,7 +285,7 @@ export default function HelpPage() {
         {
           id: 'custom-arrangements',
           title: 'Custom arrangements per plan',
-          content: (
+          content: () => (
             <div>
               <p className="help-content-body">
                 Each song has a default arrangement set on the song itself (e.g. Intro, Verse, Chorus, Bridge, Ending). When you add a song to a plan, it uses that default.
@@ -302,7 +302,7 @@ export default function HelpPage() {
         {
           id: 'adding-musicians',
           title: 'Adding musicians',
-          content: (
+          content: () => (
             <div>
               <p className="help-content-body">
                 From the plan detail page, click <strong>Add musician</strong>. You can search for existing church members by name, or add a guest by typing their name directly.
@@ -319,7 +319,7 @@ export default function HelpPage() {
         {
           id: 'set-viewer',
           title: 'The set viewer',
-          content: (
+          content: () => (
             <div>
               <p className="help-content-body">
                 The set viewer is a full-screen view of all the files attached to songs in a plan. Open it from the plan&apos;s set picker via <strong>View set</strong>.
@@ -339,7 +339,7 @@ export default function HelpPage() {
         {
           id: 'sharing-a-plan',
           title: 'Sharing a plan',
-          content: (
+          content: () => (
             <div>
               <p className="help-content-body">
                 Every plan has a public share link that gives read-only access to the plan details and set viewer — no account needed. This is useful for sharing with musicians who aren&apos;t on Song Stack.
@@ -356,7 +356,7 @@ export default function HelpPage() {
         {
           id: 'downloading-pdf',
           title: 'Downloading a merged PDF',
-          content: (
+          content: () => (
             <div>
               <p className="help-content-body">
                 From a plan&apos;s set picker, click <strong>Download PDF</strong>. This merges all the PDF files attached to songs in the plan into a single downloadable PDF — useful for printing a full set&apos;s worth of music.
@@ -373,7 +373,7 @@ export default function HelpPage() {
         {
           id: 'emailing-a-plan',
           title: 'Emailing a plan',
-          content: (
+          content: () => (
             <div>
               <p className="help-content-body">
                 From the plan detail page, click <strong>Email plan</strong>. This sends a formatted email with the full running order — song titles, keys, arrangements, and musicians — along with links to any attached files.
@@ -392,7 +392,7 @@ export default function HelpPage() {
         {
           id: 'availability',
           title: 'Marking yourself unavailable',
-          content: (
+          content: () => (
             <div>
               <p className="help-content-body">
                 If you know you&apos;re unavailable for a period — a holiday, a work trip, or anything else — you can log it in Song Stack so your admins know not to schedule you.
@@ -414,7 +414,7 @@ export default function HelpPage() {
         {
           id: 'playlists',
           title: 'Adding and managing playlists',
-          content: (
+          content: () => (
             <div>
               <p className="help-content-body">
                 Playlists let you save links to external music resources — a Spotify playlist, a YouTube playlist, a SoundCloud set — and keep them in one place on your dashboard.
@@ -436,7 +436,7 @@ export default function HelpPage() {
         {
           id: 'inviting-members',
           title: 'Inviting members',
-          content: (
+          content: () => (
             <div>
               <p className="help-content-body">
                 Go to the <strong>Team</strong> page and click <strong>Invite member</strong>. Enter their email address and they&apos;ll receive an invitation email with a link to join your church on Song Stack.
@@ -453,7 +453,7 @@ export default function HelpPage() {
         {
           id: 'roles-and-permissions',
           title: 'Roles and permissions',
-          content: (
+          content: () => (
             <div>
               <p className="help-content-body">
                 There are two roles in Song Stack:
@@ -488,7 +488,7 @@ export default function HelpPage() {
         {
           id: 'removing-a-member',
           title: 'Removing a member',
-          content: (
+          content: () => (
             <div>
               <p className="help-content-body">
                 Go to the <strong>Team</strong> page and click on the member you want to remove. At the bottom of their details, click <strong>Remove from church</strong>. You&apos;ll be asked to confirm before anything is deleted.
@@ -507,7 +507,7 @@ export default function HelpPage() {
         {
           id: 'church-settings',
           title: 'Church name & CCLI number',
-          content: (
+          content: () => (
             <div>
               <p className="help-content-body">
                 Go to <strong>Settings</strong> to update your church name and CCLI licence number. The church name appears across Song Stack and in exported plans and emails.
@@ -521,7 +521,7 @@ export default function HelpPage() {
         {
           id: 'logo-upload',
           title: 'Logo upload',
-          content: (
+          content: () => (
             <div>
               <p className="help-content-body">
                 You can upload your church&apos;s logo in <strong>Settings</strong>. This appears on the public plan share page, so musicians who receive a share link see your church branding.
@@ -535,7 +535,7 @@ export default function HelpPage() {
         {
           id: 'invite-link',
           title: 'Invite link',
-          content: (
+          content: () => (
             <div>
               <p className="help-content-body">
                 Your church has a unique invite link that you can share with anyone you want to join. Find it in <strong>Settings</strong> under the invite section.
