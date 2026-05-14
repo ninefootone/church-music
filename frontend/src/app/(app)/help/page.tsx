@@ -120,10 +120,10 @@ export default function HelpPage() {
                 There are two main areas:
               </p>
               <p className="help-content-body">
-                <strong>Songs</strong> — your church&apos;s full song library. Each song can hold lyrics, chord charts, PDFs, key information, tags, CCLI details, and more.
+                <strong>Songs:</strong> your church&apos;s full song library. Each song can hold lyrics, chord charts, PDFs, key information, tags, CCLI details, and more.
               </p>
               <p className="help-content-body">
-                <strong>Plans</strong> — individual service plans, each with a running order of songs, assigned musicians, a shared set viewer, and options to download or email the plan.
+                <strong>Plans:</strong> individual service plans, each with a running order of songs, assigned musicians, a shared set viewer, and options to download or email the plan.
               </p>
               <p className="help-content-body">
                 Your role determines what you can do. Admins have full access. Band leaders can create and manage plans. Members can view the library and plans they&apos;re part of. Admins can grant additional permissions to individual members from the Team page.
@@ -182,22 +182,22 @@ export default function HelpPage() {
                 Key fields to fill in:
               </p>
               <p className="help-content-body">
-                <strong>Title &amp; author</strong> — how the song appears across Song Stack and in exported plans.
+                <strong>Title &amp; author:</strong> how the song appears across Song Stack and in exported plans.
               </p>
               <p className="help-content-body">
-                <strong>Default key</strong> — the key your church typically plays the song in. This can be overridden per plan.
+                <strong>Default key:</strong> the key your church typically plays the song in. This can be overridden per plan.
               </p>
               <p className="help-content-body">
-                <strong>Tags &amp; category</strong> — used for filtering in the library and plan builder. Start typing to see existing tags, or add your own.
+                <strong>Tags &amp; category:</strong> used for filtering in the library and plan builder. Start typing to see existing tags, or add your own.
               </p>
               <p className="help-content-body">
-                <strong>CCLI number</strong> — enter the song&apos;s CCLI number for licence reporting. You can search by title using the CCLI lookup field.
+                <strong>CCLI number:</strong> enter the song&apos;s CCLI number for licence reporting. You can search by title using the CCLI lookup field.
               </p>
               <p className="help-content-body">
-                <strong>Lyrics</strong> — paste lyrics directly. These appear on the song page and public share view.
+                <strong>Lyrics:</strong> paste lyrics directly. These appear on the song page and public share view.
               </p>
               <p className="help-content-body">
-                <strong>Arrangement</strong> — set a default arrangement (e.g. Intro, Verse, Chorus, Bridge) using the arrangement builder. This can be customised per plan.
+                <strong>Arrangement:</strong> set a default arrangement (e.g. Intro, Verse, Chorus, Bridge) using the arrangement builder. This can be customised per plan.
               </p>
               <p className="help-content-body">
                 Once saved, you can upload files (chord charts, PDFs) from the song detail page.
@@ -228,10 +228,10 @@ export default function HelpPage() {
                 Song Stack supports two file types for each song:
               </p>
               <p className="help-content-body">
-                <strong>PDF</strong> — chord charts, sheet music, or any printable document. PDFs can be merged and downloaded as a single file from a plan&apos;s set picker.
+                <strong>PDF:</strong> chord charts, sheet music, or any printable document. PDFs can be merged and downloaded as a single file from a plan&apos;s set picker.
               </p>
               <p className="help-content-body">
-                <strong>ChordPro (.cho / .chordpro)</strong> — a plain-text format for chord charts that renders in the browser. ChordPro files support key transposition in the set viewer.
+                <strong>ChordPro (.cho / .chordpro):</strong> a plain-text format for chord charts that renders in the browser. ChordPro files support key transposition in the set viewer.
               </p>
               <p className="help-content-body">
                 To upload, open the song and click <strong>Add file</strong>. You can upload multiple files at once and give each one a label (e.g. &quot;Guitar chart&quot;, &quot;Full score&quot;). Labels can be edited after upload.
@@ -475,25 +475,25 @@ export default function HelpPage() {
                 There are two roles in Song Stack:
               </p>
               <p className="help-content-body">
-                <strong>Admin</strong> — full access to everything, including team management, settings, and all songs and plans.
+                <strong>Admin:</strong> full access to everything, including team management, settings, and all songs and plans.
               </p>
               <p className="help-content-body">
-                <strong>Member</strong> — read-only access by default, with specific capabilities granted individually.
+                <strong>Member:</strong> read-only access by default, with specific capabilities granted individually.
               </p>
               <p className="help-content-body">
                 Admins can grant members the following additional permissions from the Team page:
               </p>
               <p className="help-content-body">
-                <strong>Manage songs</strong> — can add and edit songs in the library.
+                <strong>Manage songs:</strong> can add and edit songs in the library.
               </p>
               <p className="help-content-body">
-                <strong>Add plans</strong> — can create new plans and edit their own plans.
+                <strong>Add plans:</strong> can create new plans and edit their own plans.
               </p>
               <p className="help-content-body">
-                <strong>Edit any plan</strong> — can edit plans created by other members.
+                <strong>Edit any plan:</strong> can edit plans created by other members.
               </p>
               <p className="help-content-body">
-                <strong>Manage playlists</strong> — can add, edit, and delete playlist links on the dashboard.
+                <strong>Manage playlists:</strong> can add, edit, and delete playlist links on the dashboard.
               </p>
               <p className="help-content-body">
                 To change a member&apos;s role or permissions, go to the <strong>Team</strong> page and click on their name.
