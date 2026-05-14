@@ -3,6 +3,7 @@
 import { useEffect, useState } from 'react'
 import Link from 'next/link'
 import { Mail } from 'lucide-react'
+import { useChurch } from '@/context/ChurchContext'
 import api from '@/lib/api'
 
 interface Member {
@@ -77,6 +78,7 @@ function GetHelpContent({ admins, loading }: { admins: Member[]; loading: boolea
 }
 
 export default function HelpPage() {
+  const { church } = useChurch()
   const [admins, setAdmins] = useState<Member[]>([])
   const [loading, setLoading] = useState(true)
   const [activeId, setActiveId] = useState('what-is-song-stack')
@@ -98,11 +100,12 @@ export default function HelpPage() {
   }
 
   useEffect(() => {
+    if (!church) return
     api.get('/api/members')
       .then(r => setAdmins(r.data.filter((m: Member) => m.role === 'admin')))
       .catch(() => {})
       .finally(() => setLoading(false))
-  }, [])
+  }, [church])
 
   const helpSections: HelpSection[] = [
     {
