@@ -210,10 +210,10 @@ export default function SongDetailPage() {
       )}
 
       {chordProEdit && (
-        <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.5)', zIndex: 50, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 16 }}>
-          <div style={{ background: '#fff', borderRadius: 8, width: '100%', maxWidth: 720, maxHeight: '90vh', display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
-            <div style={{ padding: '12px 16px', borderBottom: '1px solid var(--color-border)', display: 'flex', flexDirection: 'column', gap: 8 }}>
-              <span style={{ fontWeight: 600, fontSize: 15 }}>Edit ChordPro</span>
+        <div className="modal-overlay">
+          <div className="modal-panel modal-panel--flex" style={{ maxWidth: 720 }}>
+            <div className="modal-header--bordered" style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+              <span className="modal-title" style={{ margin: 0 }}>Edit ChordPro</span>
               <div style={{ display: 'flex', gap: 8, alignItems: 'center', flexWrap: 'wrap' }}>
                 {chordProEdit.hasEdits && (
                   <button
@@ -265,11 +265,12 @@ export default function SongDetailPage() {
             <textarea
               value={chordProEdit.content}
               onChange={e => setChordProEdit(prev => prev ? { ...prev, content: e.target.value } : null)}
-              style={{ flex: 1, fontFamily: 'monospace', fontSize: 13, lineHeight: 1.6, padding: 16, border: 'none', outline: 'none', resize: 'none', minHeight: 400 }}
+              className="modal-scroll-body"
+              style={{ fontFamily: 'monospace', fontSize: 13, lineHeight: 1.6, border: 'none', outline: 'none', resize: 'none', minHeight: 400 }}
               spellCheck={false}
             />
             {editError && (
-              <p style={{ padding: '8px 16px', color: '#c00', fontSize: 13, margin: 0, borderTop: '1px solid var(--color-border)' }}>{editError}</p>
+              <p className="modal-footer--padded" style={{ color: '#c00', fontSize: 13, margin: 0 }}>{editError}</p>
             )}
           </div>
         </div>
