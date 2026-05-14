@@ -3,7 +3,7 @@
 import { useEffect, useState, useCallback, useRef } from 'react'
 import { useParams, useRouter } from 'next/navigation'
 import { ChevronLeft, ChevronRight, X, Maximize, Minimize, Pencil, RotateCcw } from 'lucide-react'
-import { useApi } from '@/lib/api'
+import api from '@/lib/api'
 import { Document, Page, pdfjs } from 'react-pdf'
 import 'react-pdf/dist/Page/AnnotationLayer.css'
 import 'react-pdf/dist/Page/TextLayer.css'
@@ -126,7 +126,6 @@ export function SetViewerPage() {
   const [editContent, setEditContent] = useState('')
   const [editSaving, setEditSaving] = useState(false)
   const [editError, setEditError] = useState<string | null>(null)
-  const api = useApi()
 
   useEffect(() => {
     const node = containerNodeRef.current
