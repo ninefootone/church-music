@@ -29,7 +29,7 @@ interface HelpSection {
 function GetHelpContent({ admins, loading, showForm, onShowForm, onFormSuccess }: {
   admins: Member[]
   loading: boolean
-  showForm: boolean
+  showForm: boolean | 'sent'
   onShowForm: () => void
   onFormSuccess: () => void
 }) {
@@ -75,7 +75,9 @@ function GetHelpContent({ admins, loading, showForm, onShowForm, onFormSuccess }
         <p className="help-content-body">
           Found a bug, got a feature request, or just want to say hello? Get in touch with the Song Stack team below.
         </p>
-        {showForm ? (
+        {showForm === 'sent' ? (
+          <p className="help-content-body">Thanks — we&apos;ll get back to you as soon as we can.</p>
+        ) : showForm ? (
           <FeedbackForm onSuccess={onFormSuccess} />
         ) : (
           <button className="btn btn-ghost" onClick={onShowForm}>
@@ -92,7 +94,7 @@ export default function HelpPage() {
   const [admins, setAdmins] = useState<Member[]>([])
   const [loading, setLoading] = useState(true)
   const [activeId, setActiveId] = useState('what-is-song-stack')
-  const [showContactForm, setShowContactForm] = useState(false)
+  const [showContactForm, setShowContactForm] = useState<boolean | 'sent'>(false)
   const [openSections, setOpenSections] = useState<Set<string>>(
     new Set(['Getting started'])
   )
@@ -588,7 +590,7 @@ export default function HelpPage() {
         {
           id: 'get-help',
           title: 'Contact & support',
-          content: () => <GetHelpContent admins={admins} loading={loading} onShowForm={() => setShowContactForm(true)} showForm={showContactForm} onFormSuccess={() => setShowContactForm(false)} />,
+          content: () => <GetHelpContent admins={admins} loading={loading} onShowForm={() => setShowContactForm(true)} showForm={showContactForm} onFormSuccess={() => setShowContactForm('sent')} />,
         },
       ],
     },
