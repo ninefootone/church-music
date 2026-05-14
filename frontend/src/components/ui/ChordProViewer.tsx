@@ -54,20 +54,19 @@ export function ChordProViewer({ content, originalKey, songKey, label, onClose }
   }, [content, selectedKey, originalKey, songKey])
 
   return (
-    <div style={{ position: 'fixed', inset: 0, zIndex: 300, display: 'flex', flexDirection: 'column', background: 'var(--color-bg)' }}>
+    <div className="chordpro-viewer">
       {/* Toolbar */}
-      <div style={{ background: 'var(--color-surface)', borderBottom: '1px solid var(--color-border)', padding: '10px var(--space-lg)', display: 'flex', alignItems: 'center', gap: 12, flexShrink: 0 }}>
-        <span style={{ fontSize: 'var(--text-md)', fontWeight: 600, color: 'var(--color-text-primary)', flex: 1, minWidth: 0, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+      <div className="chordpro-toolbar">
+        <span className="chordpro-title">
           {label}
         </span>
 
         {/* Key selector */}
         {(originalKey || songKey) && (
-          <div style={{ display: 'flex', alignItems: 'center', gap: 6, flexShrink: 0 }}>
-            <span style={{ fontSize: 'var(--text-sm)', color: 'var(--color-text-muted)' }}>Key</span>
+          <div className="chordpro-key-group">
+            <span className="chordpro-key-label">Key</span>
             <select
-              className="input"
-              style={{ fontSize: 'var(--text-sm)', padding: '4px 8px', width: 'auto' }}
+              className="input transpose-select"
               value={selectedKey}
               onChange={e => setSelectedKey(e.target.value)}
             >
@@ -77,17 +76,17 @@ export function ChordProViewer({ content, originalKey, songKey, label, onClose }
         )}
 
         {/* Font size */}
-        <div style={{ display: 'flex', alignItems: 'center', gap: 4, flexShrink: 0 }}>
+        <div className="chordpro-font-controls">
           <button
             onClick={() => setFontSize(s => Math.max(10, s - 1))}
-            style={{ background: 'none', border: '1px solid var(--color-border)', borderRadius: 'var(--radius-sm)', cursor: 'pointer', padding: '2px 6px', color: 'var(--color-text-secondary)', display: 'flex' }}
+            className="chordpro-font-btn"
           >
             <ChevronDown size={14} />
           </button>
-          <span style={{ fontSize: 'var(--text-xs)', color: 'var(--color-text-muted)', minWidth: 28, textAlign: 'center' }}>{fontSize}px</span>
+          <span className="chordpro-font-size">{fontSize}px</span>
           <button
             onClick={() => setFontSize(s => Math.min(28, s + 1))}
-            style={{ background: 'none', border: '1px solid var(--color-border)', borderRadius: 'var(--radius-sm)', cursor: 'pointer', padding: '2px 6px', color: 'var(--color-text-secondary)', display: 'flex' }}
+            className="chordpro-font-btn"
           >
             <ChevronUp size={14} />
           </button>
@@ -95,17 +94,17 @@ export function ChordProViewer({ content, originalKey, songKey, label, onClose }
 
         <button
           onClick={onClose}
-          style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'var(--color-text-muted)', padding: 4, display: 'flex', flexShrink: 0 }}
+          className="modal-close"
         >
           <X size={20} />
         </button>
       </div>
 
       {/* Content */}
-      <div style={{ flex: 1, overflowY: 'auto', padding: 'var(--space-lg)' }}>
+      <div className="chordpro-scroll">
         <div
-          className="chordpro-render"
-          style={{ fontSize: fontSize, maxWidth: 800, margin: '0 auto' }}
+          className="chordpro-render chordpro-content"
+          style={{ fontSize: fontSize }}
           dangerouslySetInnerHTML={{ __html: rendered }}
         />
       </div>
