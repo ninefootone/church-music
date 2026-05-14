@@ -1,10 +1,10 @@
 'use client'
 
 import { useEffect, useState } from 'react'
-import Link from 'next/link'
 import { Mail } from 'lucide-react'
 import { useChurch } from '@/context/ChurchContext'
 import api from '@/lib/api'
+import FeedbackForm from '@/components/ui/FeedbackForm'
 
 interface Member {
   id: string
@@ -26,7 +26,13 @@ interface HelpSection {
   topics: HelpTopic[]
 }
 
-function GetHelpContent({ admins, loading }: { admins: Member[]; loading: boolean }) {
+function GetHelpContent({ admins, loading, showForm, onShowForm, onFormSuccess }: {
+  admins: Member[]
+  loading: boolean
+  showForm: boolean
+  onShowForm: () => void
+  onFormSuccess: () => void
+}) {
   return (
     <div>
       <div className="help-content-block">
@@ -67,11 +73,15 @@ function GetHelpContent({ admins, loading }: { admins: Member[]; loading: boolea
       <div className="help-content-block">
         <h3 className="help-content-subheading">Song Stack support</h3>
         <p className="help-content-body">
-          Found a bug, got a feature request, or just want to say hello? Use the link below to get in touch with the Song Stack team.
+          Found a bug, got a feature request, or just want to say hello? Get in touch with the Song Stack team below.
         </p>
-        <Link href="/feedback" className="btn btn-ghost">
-          Contact Song Stack →
-        </Link>
+        {showForm ? (
+          <FeedbackForm onSuccess={onFormSuccess} />
+        ) : (
+          <button className="btn btn-ghost" onClick={onShowForm}>
+            Contact Song Stack →
+          </button>
+        )}
       </div>
     </div>
   )
@@ -82,6 +92,7 @@ export default function HelpPage() {
   const [admins, setAdmins] = useState<Member[]>([])
   const [loading, setLoading] = useState(true)
   const [activeId, setActiveId] = useState('what-is-song-stack')
+  const [showContactForm, setShowContactForm] = useState(false)
   const [openSections, setOpenSections] = useState<Set<string>>(
     new Set(['Getting started'])
   )
@@ -577,7 +588,7 @@ export default function HelpPage() {
         {
           id: 'get-help',
           title: 'Contact & support',
-          content: () => <GetHelpContent admins={admins} loading={loading} />,
+          content: () => <GetHelpContent admins={admins} loading={loading} onShowForm={() => setShowContactForm(true)} showForm={showContactForm} onFormSuccess={() => setShowContactForm(false)} />,
         },
       ],
     },

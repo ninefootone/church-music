@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react'
 
-export default function FeedbackForm() {
+export default function FeedbackForm({ onSuccess }: { onSuccess?: () => void } = {}) {
   const [name, setName] = useState('')
   const [email, setEmail] = useState('')
   const [type, setType] = useState('feedback')
@@ -55,12 +55,13 @@ export default function FeedbackForm() {
         }).catch(() => {}) // Non-critical
       }
       setStatus('sent')
+      if (onSuccess) onSuccess()
     } catch {
       setStatus('error')
     }
   }
 
-  if (status === 'sent') {
+  if (status === 'sent' && !onSuccess) {
     return (
       <div className="feedback-success">
         <p>Thanks! We&apos;ll get back to you at {email} as soon as we can.</p>
