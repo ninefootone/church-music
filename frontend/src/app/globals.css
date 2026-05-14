@@ -2816,3 +2816,25 @@ select.input {
 .not-found-btn:hover {
   background-color: var(--color-brand-600);
 }
+
+/* ── CCLI Autocomplete ── */
+.ccli-wrap { position: relative; }
+.ccli-dropdown {
+  position: absolute; top: 100%; left: 0; right: 0; z-index: 50;
+  background: var(--color-surface); border: 1px solid var(--color-border);
+  border-radius: 0.5rem; margin-top: 0.25rem; padding: 0.25rem 0;
+  list-style: none; box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+  max-height: 260px; overflow-y: auto;
+}
+.ccli-option {
+  padding: 0.5rem 0.75rem; cursor: pointer;
+}
+.ccli-option:hover { background: var(--color-surface-hover, rgba(0,0,0,0.05)); }
+.ccli-option-title-row { display: flex; align-items: center; gap: 0.5rem; }
+.ccli-option-title    { font-weight: 500; font-size: 0.9rem; }
+.ccli-in-library {
+  font-size: 0.65rem; background: var(--color-brand-100, #e0f2fe);
+  color: var(--color-brand-700, #0369a1); border-radius: 999px;
+  padding: 0.1rem 0.45rem; font-weight: 600; letter-spacing: 0.02em;
+}
+.ccli-option-meta { font-size: 0.75rem; color: var(--color-text-muted); margin-top: 0.1rem; }

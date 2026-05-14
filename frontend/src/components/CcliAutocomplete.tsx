@@ -88,7 +88,7 @@ export default function CcliAutocomplete({
   }
 
   return (
-    <div ref={wrapperRef} style={{ position: 'relative' }}>
+    <div ref={wrapperRef} className="ccli-wrap">
       <input
         className="input"
         placeholder="Song title"
@@ -98,49 +98,21 @@ export default function CcliAutocomplete({
         autoComplete="off"
       />
       {open && (
-        <ul style={{
-          position: 'absolute',
-          top: '100%',
-          left: 0,
-          right: 0,
-          zIndex: 50,
-          background: 'var(--color-surface)',
-          border: '1px solid var(--color-border)',
-          borderRadius: '0.5rem',
-          marginTop: '0.25rem',
-          padding: '0.25rem 0',
-          listStyle: 'none',
-          boxShadow: '0 4px 12px rgba(0,0,0,0.15)',
-          maxHeight: '260px',
-          overflowY: 'auto',
-        }}>
+        <ul className="ccli-dropdown">
           {suggestions.map((entry, i) => (
             <li
               key={i}
               onMouseDown={() => handleSelect(entry)}
-              style={{
-                padding: '0.5rem 0.75rem',
-                cursor: 'pointer',
-                borderBottom: i < suggestions.length - 1 ? '1px solid var(--color-border)' : 'none',
-              }}
-              onMouseEnter={e => (e.currentTarget.style.background = 'var(--color-surface-hover, rgba(0,0,0,0.05))')}
-              onMouseLeave={e => (e.currentTarget.style.background = 'transparent')}
+              className="ccli-option"
+              style={{ borderBottom: i < suggestions.length - 1 ? '1px solid var(--color-border)' : 'none' }}
             >
-              <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-                <span style={{ fontWeight: 500, fontSize: '0.9rem' }}>{entry.title}</span>
+              <div className="ccli-option-title-row">
+                <span className="ccli-option-title">{entry.title}</span>
                 {entry.in_library && (
-                  <span style={{
-                    fontSize: '0.65rem',
-                    background: 'var(--color-brand-100, #e0f2fe)',
-                    color: 'var(--color-brand-700, #0369a1)',
-                    borderRadius: '999px',
-                    padding: '0.1rem 0.45rem',
-                    fontWeight: 600,
-                    letterSpacing: '0.02em',
-                  }}>In library</span>
+                  <span className="ccli-in-library">In library</span>
                 )}
               </div>
-              <div style={{ fontSize: '0.75rem', color: 'var(--color-text-muted)', marginTop: '0.1rem' }}>
+              <div className="ccli-option-meta">
                 {entry.author} · CCLI {entry.ccli_number}
                 {entry.default_key && ` · Key of ${entry.default_key}`}
               </div>
