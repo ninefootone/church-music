@@ -136,10 +136,9 @@ export default function FeedbackForm() {
       </label>
 
       <button
-        className="btn btn-primary"
+        className="btn btn-primary btn-self-start"
         onClick={handleSubmit}
         disabled={status === 'sending'}
-        className="btn-self-start"
       >
         {status === 'sending' ? 'Sending…' : 'Send message'}
       </button>
