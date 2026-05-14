@@ -76,7 +76,7 @@ function GetHelpContent({ admins, loading, showForm, onShowForm, onFormSuccess }
           Found a bug, got a feature request, or just want to say hello? Get in touch with the Song Stack team below.
         </p>
         {showForm === 'sent' ? (
-          <p className="help-content-body">Thanks — we&apos;ll get back to you as soon as we can.</p>
+          <p className="help-content-body" style={{ color: 'var(--color-brand-500)', fontWeight: 600 }}>Thanks! We&apos;ll get back to you as soon as we can.</p>
         ) : showForm ? (
           <FeedbackForm onSuccess={onFormSuccess} />
         ) : (
