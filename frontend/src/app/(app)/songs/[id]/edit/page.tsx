@@ -59,6 +59,7 @@ export default function EditSongPage() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
+    if (!form.title || !form.category) { setError('Title and category are required'); return }
     setLoading(true); setError('')
     try {
       const token = await getToken()
@@ -164,7 +165,7 @@ export default function EditSongPage() {
               </select>
             </div>
             <div>
-              <label className="label">Category</label>
+              <label className="label">Category *</label>
               <select className="input" value={form.category} onChange={e => setForm(f => ({ ...f, category: e.target.value as Category }))}>
                 <option value="">Select category…</option>
                 {CATEGORIES.map(c => <option key={c.value} value={c.value}>{c.label}</option>)}
