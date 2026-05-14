@@ -1999,17 +1999,30 @@ select.input {
     gap: var(--space-xs);
   }
   .stats-page-header .btn-secondary {
-    width: 100%;
-    justify-content: center;
+    margin-top: var(--space-sm);
+  }
+  .stats-rank {
+    width: 24px;
+    font-size: 16px;
+  }
+  .stats-song-row {
+    flex-wrap: wrap;
+    align-items: flex-start;
   }
   .stats-song-info {
+    flex: 1;
     min-width: 0;
-    overflow: hidden;
   }
-  .stats-song-info .song-title {
-    white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
+  .stats-count-col {
+    width: 100%;
+    padding-left: 38px;
+    text-align: left;
+    display: flex;
+    align-items: baseline;
+    gap: 4px;
+  }
+  .stats-count-col .stat-number--lg {
+    font-size: 16px;
   }
 }
 
