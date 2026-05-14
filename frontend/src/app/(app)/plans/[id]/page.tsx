@@ -159,6 +159,7 @@ export default function PlanDetailPage() {
   const [copied, setCopied] = useState(false)
   const [showDeletePlan, setShowDeletePlan] = useState(false)
   const [musicians, setMusicians] = useState<PlanMusician[]>([])
+  const [unavailableUserIds, setUnavailableUserIds] = useState<Set<string>>(new Set())
   const [showMusicianModal, setShowMusicianModal] = useState(false)
   const [showEmailModal, setShowEmailModal] = useState(false)
 
@@ -166,12 +167,28 @@ export default function PlanDetailPage() {
     if (!id || churchLoading) return
     setLoading(true)
     api.get(`/api/plans/${id}`)
-      .then(r => setPlan(r.data))
+      .then(r => {
+        setPlan(r.data)
+        const planDate = r.data.plan_date
+        api.get(`/api/plans/${id}/musicians`)
+          .then(async mr => {
+            setMusicians(mr.data)
+            if (planDate) {
+              const userIds = [...new Set<string>(mr.data.map((m: PlanMusician) => m.user_id).filter(Boolean))]
+              const results = await Promise.all(
+                userIds.map(uid =>
+                  api.get('/api/unavailability/check', { params: { userId: uid, date: planDate } })
+                    .then(res => res.data.unavailable ? uid : null)
+                    .catch(() => null)
+                )
+              )
+              setUnavailableUserIds(new Set(results.filter(Boolean) as string[]))
+            }
+          })
+          .catch(() => {})
+      })
       .catch(() => setNotFound(true))
       .finally(() => setLoading(false))
-    api.get(`/api/plans/${id}/musicians`)
-      .then(r => setMusicians(r.data))
-      .catch(() => {})
   }, [id, churchLoading])
 
   const handleShare = async () => {
@@ -292,7 +309,7 @@ export default function PlanDetailPage() {
                 return acc
               }, {} as Record<string, { name: string; user_id: string | null; roles: string[]; ids: string[] }>)
             ).map(group => (
-              <div key={group.ids[0]} className="musician-chip">
+              <div key={group.ids[0]} className={`musician-chip${group.user_id && unavailableUserIds.has(group.user_id) ? ' musician-chip--unavailable' : ''}`}>
                 <span className="musician-name">{group.name}</span>
                 <span className="musician-roles">{group.roles.join(', ')}</span>
                 {(isAdmin || canEditAnyPlan || plan.created_by === userId) && (

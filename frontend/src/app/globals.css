@@ -865,6 +865,8 @@ body.set-viewer-active { overflow: hidden; }
 
   /* ── Musicians ── */
   .musician-chip  { display: inline-flex; align-items: center; gap: 6px; padding: 6px 12px; background: var(--color-neutral-50); border: 1px solid var(--color-border); border-radius: var(--radius-sm); font-size: var(--text-sm); }
+  .musician-chip--unavailable { background: var(--color-error-bg, #fef2f2); border-color: var(--color-error-border, #fca5a5); }
+  .musician-chip--unavailable .musician-name { color: var(--color-error, #dc2626); }
   .musician-name  { font-weight: 600; color: var(--color-text-primary); }
   .musician-roles { color: var(--color-text-muted); }
 
