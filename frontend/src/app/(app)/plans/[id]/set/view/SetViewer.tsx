@@ -462,7 +462,6 @@ export function SetViewerPage() {
             </Document>
           </div>
         )}
-        )}
 
         {/* Next */}
         <button
