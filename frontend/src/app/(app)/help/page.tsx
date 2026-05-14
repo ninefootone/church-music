@@ -17,7 +17,7 @@ interface Member {
 interface HelpTopic {
   id: string
   title: string
-  content: React.ReactNode
+  content: () => React.ReactNode
 }
 
 interface HelpSection {
@@ -554,7 +554,7 @@ export default function HelpPage() {
         {
           id: 'get-help',
           title: 'Contact & support',
-          content: <GetHelpContent admins={admins} loading={loading} />,
+          content: () => <GetHelpContent admins={admins} loading={loading} />,
         },
       ],
     },
@@ -562,6 +562,7 @@ export default function HelpPage() {
 
   const allTopics = helpSections.flatMap(s => s.topics)
   const activeTopic = allTopics.find(t => t.id === activeId) ?? allTopics[0]
+  const activeContent = activeTopic.content()
 
   return (
     <div>
@@ -608,7 +609,7 @@ export default function HelpPage() {
         {/* Content pane */}
         <div className="help-content">
           <h2 className="help-content-title">{activeTopic.title}</h2>
-          {activeTopic.content}
+          {activeContent}
         </div>
       </div>
     </div>
