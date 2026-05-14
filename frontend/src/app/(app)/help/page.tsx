@@ -86,7 +86,11 @@ export default function HelpPage() {
     new Set(['Getting started'])
   )
 
-  const toggleSection = (section: string) => {
+  const toggleSection = (section: string, topics: HelpTopic[]) => {
+    if (topics.length === 1) {
+      selectTopic(section, topics[0].id)
+      return
+    }
     setOpenSections(prev => {
       const next = new Set(prev)
       if (next.has(section)) { next.delete(section) } else { next.add(section) }
@@ -615,7 +619,7 @@ export default function HelpPage() {
               <div key={s.section} className="help-sidebar-section">
                 <button
                   className="help-sidebar-heading-btn"
-                  onClick={() => toggleSection(s.section)}
+                  onClick={() => toggleSection(s.section, s.topics)}
                   aria-expanded={isOpen}
                 >
                   <span>{s.section}</span>
