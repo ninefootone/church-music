@@ -70,33 +70,33 @@ export function FileRow({ file, songId, defaultKey, isAdmin, downloadingId, dele
 
   if (editing) {
     return (
-      <div style={{ border: '1px solid var(--color-border)', borderRadius: 'var(--radius-md)', padding: 'var(--space-sm)', background: 'var(--color-neutral-50)', display: 'flex', flexDirection: 'column', gap: 8, minWidth: 260 }}>
-        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: 6 }}>
+      <div className="file-edit-form">
+        <div className="file-meta-grid">
           <div>
-            <label className="label" style={{ fontSize: 'var(--text-xs)' }}>Type</label>
-            <select className="input" style={{ fontSize: 'var(--text-sm)', padding: '4px 8px' }} value={editType} onChange={e => handleTypeChange(e.target.value)}>
+            <label className="label label--xs">Type</label>
+            <select className="input input--sm" value={editType} onChange={e => handleTypeChange(e.target.value)}>
               {FILE_TYPES.map(t => <option key={t.value} value={t.value}>{t.label}</option>)}
             </select>
           </div>
           <div>
-            <label className="label" style={{ fontSize: 'var(--text-xs)' }}>Label</label>
-            <input className="input" style={{ fontSize: 'var(--text-sm)', padding: '4px 8px' }} value={editLabel} onChange={e => setEditLabel(e.target.value)} />
+            <label className="label label--xs">Label</label>
+            <input className="input input--sm" value={editLabel} onChange={e => setEditLabel(e.target.value)} />
           </div>
           <div>
-            <label className="label" style={{ fontSize: 'var(--text-xs)' }}>Key</label>
-            <select className="input" style={{ fontSize: 'var(--text-sm)', padding: '4px 8px' }} value={editKey} onChange={e => setEditKey(e.target.value)}>
+            <label className="label label--xs">Key</label>
+            <select className="input input--sm" value={editKey} onChange={e => setEditKey(e.target.value)}>
               <option value="">No key</option>
               {KEYS.map(k => <option key={k} value={k}>{k}</option>)}
             </select>
           </div>
         </div>
-        <div style={{ display: 'flex', gap: 6, justifyContent: 'space-between' }}>
-          <button type="button" onClick={() => onDelete(file.id)} className="btn btn-secondary btn-sm" style={{ fontSize: 'var(--text-xs)', color: '#9a3a3a' }}>
+        <div className="link-edit-footer">
+          <button type="button" onClick={() => onDelete(file.id)} className="btn btn-secondary btn-sm btn-danger-text btn-xs-text">
             <Trash2 size={13} /> Delete
           </button>
-          <div style={{ display: 'flex', gap: 6 }}>
-            <button type="button" onClick={() => setEditing(false)} className="btn btn-secondary btn-sm" style={{ fontSize: 'var(--text-xs)' }}>Cancel</button>
-            <button type="button" onClick={handleSave} disabled={saving} className="btn btn-primary btn-sm" style={{ fontSize: 'var(--text-xs)' }}>
+          <div className="btn-group">
+            <button type="button" onClick={() => setEditing(false)} className="btn btn-secondary btn-sm btn-xs-text">Cancel</button>
+            <button type="button" onClick={handleSave} disabled={saving} className="btn btn-primary btn-sm btn-xs-text">
               {saving ? 'Saving…' : 'Save'}
             </button>
           </div>
@@ -106,7 +106,7 @@ export function FileRow({ file, songId, defaultKey, isAdmin, downloadingId, dele
   }
 
   return (
-    <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+    <div className="file-row-display">
       <button
         onClick={() => onView ? onView(file.id, file.label, file.key_of) : onDownload(file.id, file.label)}
         disabled={!onView && downloadingId === file.id}
@@ -119,7 +119,7 @@ export function FileRow({ file, songId, defaultKey, isAdmin, downloadingId, dele
       {isAdmin && (
         <button
           onClick={openEdit}
-          style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'var(--color-text-muted)', padding: 4, display: 'flex' }}
+          className="modal-close"
           title="Edit file details"
         >
           <Edit size={14} />

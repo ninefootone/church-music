@@ -168,6 +168,7 @@ body.set-viewer-active { overflow: hidden; }
   .btn-group        { display: flex; gap: 6px; flex-wrap: wrap; }
   .btn-compact-icon { padding: 7px 10px; font-size: var(--text-xs); gap: 4px; }
   .btn-xs           { font-size: var(--text-xs); padding: 5px 10px; }
+  .btn-xs-text      { font-size: var(--text-xs); }
   .btn-icon-remove  { background: none; border: none; cursor: pointer; color: var(--color-text-muted); padding: 0; display: flex; align-items: center; margin-left: 2px; }
   .btn-icon-toggle  { background: none; border: none; cursor: pointer; padding: 4px; display: flex; flex-shrink: 0; }
   .btn-flex         { display: inline-flex; align-items: center; justify-content: center; gap: 6px; flex: 1 1 auto; min-width: 120px; }
@@ -319,6 +320,7 @@ body.set-viewer-active { overflow: hidden; }
     text-transform: uppercase;
     letter-spacing: 0.06em;
   }
+  .label--xs { font-size: var(--text-xs); }
 
   /* ── Typography ── */
   .page-title {
@@ -2950,6 +2952,8 @@ select.input {
 .upload-status       { font-size: var(--text-xs); color: var(--color-text-muted); }
 .upload-status--done { font-size: var(--text-xs); color: var(--color-success); }
 .file-meta-grid      { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: var(--space-sm); }
+.file-edit-form      { border: 1px solid var(--color-border); border-radius: var(--radius-md); padding: var(--space-sm); background: var(--color-neutral-50); display: flex; flex-direction: column; gap: 8px; min-width: 260px; }
+.file-row-display    { display: flex; align-items: center; gap: 6px; }
 .ccli-notice         { font-size: var(--text-xs); color: var(--color-text-muted); padding-top: var(--space-sm); border-top: 1px solid var(--color-border); }
 
 /* ── InviteMemberModal ── */
