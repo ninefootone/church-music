@@ -313,10 +313,14 @@ export function SetViewerPage() {
                   try {
                     const res = await api.delete(`/api/uploads/songs/${current.file.songId}/files/${current.file.fileId}/chordpro-edits`)
                     // Update sessionStorage and re-fetch
+                    const revertedFile = { ...current.file, url: res.data.url, hasEdits: false }
+                    setPages(prev => prev.map(p =>
+                      p.fileIndex === current.fileIndex ? { ...p, file: revertedFile } : p
+                    ))
                     const raw = sessionStorage.getItem('setViewerFiles')
                     if (raw) {
                       const updated = (JSON.parse(raw) as SetFile[]).map(f =>
-                        f.fileId === current.file.fileId ? { ...f, url: res.data.url, hasEdits: false } : f
+                        f.fileId === current.file.fileId ? revertedFile : f
                       )
                       sessionStorage.setItem('setViewerFiles', JSON.stringify(updated))
                       setFiles(updated)
@@ -400,14 +404,15 @@ export function SetViewerPage() {
                       setChordProContents(prev => prev.map(c =>
                         c.fileIndex === current.fileIndex ? { ...c, html, rawSource: editContent } : c
                       ))
+                      const updatedFile = { ...current.file, url: res.data.url, hasEdits: true }
                       setPages(prev => prev.map(p =>
-                        p.fileIndex === current.fileIndex ? { ...p, chordProHtml: html } : p
+                        p.fileIndex === current.fileIndex ? { ...p, chordProHtml: html, file: updatedFile } : p
                       ))
                       // Update sessionStorage with new URL and hasEdits flag
                       const raw = sessionStorage.getItem('setViewerFiles')
                       if (raw) {
                         const updated = (JSON.parse(raw) as SetFile[]).map(f =>
-                          f.fileId === current.file.fileId ? { ...f, url: res.data.url, hasEdits: true } : f
+                          f.fileId === current.file.fileId ? updatedFile : f
                         )
                         sessionStorage.setItem('setViewerFiles', JSON.stringify(updated))
                         setFiles(updated)
