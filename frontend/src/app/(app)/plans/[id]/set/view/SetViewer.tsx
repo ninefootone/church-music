@@ -2,8 +2,7 @@
 
 import { useEffect, useState, useCallback, useRef } from 'react'
 import { useParams, useRouter } from 'next/navigation'
-import { ChevronLeft, ChevronRight, X, Maximize, Minimize, Pencil, RotateCcw } from 'lucide-react'
-import api from '@/lib/api'
+import { ChevronLeft, ChevronRight, X, Maximize, Minimize } from 'lucide-react'
 import { Document, Page, pdfjs } from 'react-pdf'
 import 'react-pdf/dist/Page/AnnotationLayer.css'
 import 'react-pdf/dist/Page/TextLayer.css'
@@ -92,6 +91,7 @@ export function SetViewerPage() {
       if (newPages.length > 0) { setPages(newPages); setReady(true) }
     })
   }, [measuringIndex, containerSize, files, pageCounts])
+
   const [isFullscreen, setIsFullscreen] = useState(false)
   const canFullscreen = typeof document !== 'undefined' && !!document.fullscreenEnabled && !window.matchMedia('(display-mode: standalone)').matches
 
@@ -122,10 +122,6 @@ export function SetViewerPage() {
 
   const [ready, setReady] = useState(false)
   const [controlsVisible, setControlsVisible] = useState(true)
-  const [editMode, setEditMode] = useState(false)
-  const [editContent, setEditContent] = useState('')
-  const [editSaving, setEditSaving] = useState(false)
-  const [editError, setEditError] = useState<string | null>(null)
 
   useEffect(() => {
     const node = containerNodeRef.current
@@ -135,6 +131,7 @@ export function SetViewerPage() {
     }, 350)
     return () => clearTimeout(timer)
   }, [controlsVisible])
+
   const hideTimer = useRef<ReturnType<typeof setTimeout> | null>(null)
   const touchStartX = useRef<number | null>(null)
 
@@ -174,10 +171,8 @@ export function SetViewerPage() {
           console.log('Fetch status:', response.status)
           const text = await response.text()
           console.log('ChordPro content length:', text.length, 'first 100 chars:', text.substring(0, 100))
-          console.log('About to parse...')
           const parser = new ChordSheetJS.ChordProParser()
           const song = parser.parse(text)
-          console.log('Parsed successfully, about to format...')
 
           let rendered = song
           try {
@@ -201,10 +196,8 @@ export function SetViewerPage() {
             rendered = song
           }
 
-          console.log('About to format...')
           const formatter = new ChordSheetJS.HtmlDivFormatter()
           const html = formatter.format(rendered)
-          console.log('Formatted successfully, html length:', html.length)
           contents.push({ fileIndex: i, html, rawSource: text })
         } catch (err) {
           console.error('Failed to load ChordPro file at index', i, ':', err)
@@ -217,12 +210,10 @@ export function SetViewerPage() {
     fetchChordPro()
   }, [id, router])
 
-  // Phase 1: when chordPro content arrives, trigger measurement of first unmeasured file
   useEffect(() => {
     if (files.length === 0) return
     const hasChordPro = files.some(f => f.file_type === 'chordpro')
     if (!hasChordPro) {
-      // No ChordPro — build pages immediately from PDFs
       const newPages: ViewerPage[] = []
       files.forEach((file, fileIndex) => {
         const count = pageCounts[fileIndex] || 1
@@ -235,9 +226,7 @@ export function SetViewerPage() {
     }
     const hasChordProContent = chordProContents.length > 0
     if (!hasChordProContent) return
-    // Trigger measurement of first ChordPro file
     const firstChordPro = files.findIndex(f => f.file_type === 'chordpro')
-    console.log('Phase 1: firstChordPro index:', firstChordPro)
     if (firstChordPro !== -1) setMeasuringIndex(firstChordPro)
   }, [files, chordProContents, pageCounts])
 
@@ -302,62 +291,6 @@ export function SetViewerPage() {
           </p>
         </div>
         <span style={{ color: '#666', fontSize: 12, flexShrink: 0 }}>{currentPage + 1} / {pages.length}</span>
-        {current.file.file_type === 'chordpro' && current.file.fileId && (
-          <>
-            {current.file.hasEdits && !editMode && (
-              <button
-                onClick={async e => {
-                  e.stopPropagation()
-                  if (!current.file.fileId || !current.file.songId) return
-                  if (!confirm('Revert to the original uploaded file? Your edits will be deleted.')) return
-                  try {
-                    const res = await api.delete(`/api/uploads/songs/${current.file.songId}/files/${current.file.fileId}/chordpro-edits`)
-                    // Update sessionStorage and re-fetch
-                    const revertedFile = { ...current.file, url: res.data.url, hasEdits: false }
-                    // Re-fetch original content and re-render
-                    const originalText = await fetch(res.data.url).then(r => r.text())
-                    const { default: ChordSheetJS } = await import('chordsheetjs')
-                    const parser = new ChordSheetJS.ChordProParser()
-                    const song = parser.parse(originalText)
-                    const formatter = new ChordSheetJS.HtmlDivFormatter()
-                    const revertedHtml = formatter.format(song)
-                    setChordProContents(prev => prev.map(c =>
-                      c.fileIndex === current.fileIndex ? { ...c, html: revertedHtml, rawSource: originalText } : c
-                    ))
-                    setPages(prev => prev.map(p =>
-                      p.fileIndex === current.fileIndex ? { ...p, chordProHtml: revertedHtml, file: revertedFile } : p
-                    ))
-                    const raw = sessionStorage.getItem('setViewerFiles')
-                    if (raw) {
-                      const updated = (JSON.parse(raw) as SetFile[]).map(f =>
-                        f.fileId === current.file.fileId ? revertedFile : f
-                      )
-                      sessionStorage.setItem('setViewerFiles', JSON.stringify(updated))
-                      setFiles(updated)
-                    }
-                  } catch {
-                    alert('Revert failed. Please try again.')
-                  }
-                }}
-                style={{ background: 'none', border: '1px solid #a33', borderRadius: 4, color: '#f88', cursor: 'pointer', padding: '4px 8px', display: 'flex', alignItems: 'center', gap: 4, fontSize: 12 }}
-              >
-                <RotateCcw size={12} /> Revert
-              </button>
-            )}
-            <button
-              onClick={e => {
-                e.stopPropagation()
-                const content = chordProContents.find(c => c.fileIndex === current.fileIndex)
-                setEditContent(content?.rawSource || '')
-                setEditError(null)
-                setEditMode(true)
-              }}
-              style={{ background: 'none', border: '1px solid #444', borderRadius: 4, color: '#aaa', cursor: 'pointer', padding: '4px 8px', display: 'flex', alignItems: 'center', gap: 4, fontSize: 12 }}
-            >
-              <Pencil size={12} /> Edit
-            </button>
-          </>
-        )}
         {canFullscreen && (
           <button onClick={toggleFullscreen} style={{ background: 'none', border: '1px solid #444', borderRadius: 4, color: '#aaa', cursor: 'pointer', padding: '4px 8px', display: 'flex' }}>
             {isFullscreen ? <Minimize size={14} /> : <Maximize size={14} />}
@@ -378,75 +311,11 @@ export function SetViewerPage() {
 
         {/* Page content */}
         {current.file.file_type === 'chordpro' ? (
-          editMode ? (
-            <div style={{ width: containerSize ? containerSize.width - 32 : '100%', height: containerSize ? containerSize.height - 32 : '100%', display: 'flex', flexDirection: 'column', padding: '16px', gap: 8 }} onClick={e => e.stopPropagation()}>
-              <textarea
-                value={editContent}
-                onChange={e => setEditContent(e.target.value)}
-                style={{ flex: 1, fontFamily: 'monospace', fontSize: 13, lineHeight: 1.6, padding: 12, border: '1px solid #ccc', borderRadius: 4, resize: 'none', background: '#fafafa' }}
-                spellCheck={false}
-              />
-              {editError && <p style={{ color: '#c00', fontSize: 13, margin: 0 }}>{editError}</p>}
-              <div style={{ display: 'flex', gap: 8, justifyContent: 'flex-end' }}>
-                <button
-                  onClick={() => { setEditMode(false); setEditError(null) }}
-                  style={{ padding: '6px 16px', border: '1px solid #ccc', borderRadius: 4, background: '#fff', cursor: 'pointer', fontSize: 13 }}
-                >
-                  Cancel
-                </button>
-                <button
-                  disabled={editSaving}
-                  onClick={async () => {
-                    if (!current.file.fileId || !current.file.songId) return
-                    setEditSaving(true)
-                    setEditError(null)
-                    try {
-                      const res = await api.put(
-                        `/api/uploads/songs/${current.file.songId}/files/${current.file.fileId}/chordpro`,
-                        { content: editContent }
-                      )
-                      // Re-parse and re-render the updated source
-                      const { default: ChordSheetJS } = await import('chordsheetjs')
-                      const parser = new ChordSheetJS.ChordProParser()
-                      const song = parser.parse(editContent)
-                      const formatter = new ChordSheetJS.HtmlDivFormatter()
-                      const html = formatter.format(song)
-                      setChordProContents(prev => prev.map(c =>
-                        c.fileIndex === current.fileIndex ? { ...c, html, rawSource: editContent } : c
-                      ))
-                      const updatedFile = { ...current.file, url: res.data.url, hasEdits: true }
-                      setPages(prev => prev.map(p =>
-                        p.fileIndex === current.fileIndex ? { ...p, chordProHtml: html, file: updatedFile } : p
-                      ))
-                      // Update sessionStorage with new URL and hasEdits flag
-                      const raw = sessionStorage.getItem('setViewerFiles')
-                      if (raw) {
-                        const updated = (JSON.parse(raw) as SetFile[]).map(f =>
-                          f.fileId === current.file.fileId ? updatedFile : f
-                        )
-                        sessionStorage.setItem('setViewerFiles', JSON.stringify(updated))
-                        setFiles(updated)
-                      }
-                      setEditMode(false)
-                    } catch {
-                      setEditError('Save failed. Please check your ChordPro syntax and try again.')
-                    } finally {
-                      setEditSaving(false)
-                    }
-                  }}
-                  style={{ padding: '6px 16px', border: 'none', borderRadius: 4, background: '#4b7fa5', color: '#fff', cursor: editSaving ? 'not-allowed' : 'pointer', fontSize: 13, opacity: editSaving ? 0.7 : 1 }}
-                >
-                  {editSaving ? 'Saving…' : 'Save'}
-                </button>
-              </div>
-            </div>
-          ) : (
-            <div
-              className="chordpro-render"
-              style={{ width: containerSize ? containerSize.width - 64 : '100%', height: containerSize ? containerSize.height - 32 : '100%', overflow: 'auto', padding: '16px 24px', background: '#fff', borderRadius: 4 }}
-              dangerouslySetInnerHTML={{ __html: current.chordProHtml || '' }}
-            />
-          )
+          <div
+            className="chordpro-render"
+            style={{ width: containerSize ? containerSize.width - 64 : '100%', height: containerSize ? containerSize.height - 32 : '100%', overflow: 'auto', padding: '16px 24px', background: '#fff', borderRadius: 4 }}
+            dangerouslySetInnerHTML={{ __html: current.chordProHtml || '' }}
+          />
         ) : (
           <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
             <Document
@@ -454,7 +323,6 @@ export function SetViewerPage() {
               onLoadSuccess={({ numPages }) => {
               setPageCounts(prev => {
                 const updated = { ...prev, [current.fileIndex]: numPages }
-                // Rebuild pages for this file if it has more than 1 page
                 if (numPages > 1) {
                   setPages(prevPages => {
                     const otherPages = prevPages.filter(p => p.fileIndex !== current.fileIndex)
