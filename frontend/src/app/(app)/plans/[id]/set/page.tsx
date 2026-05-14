@@ -183,7 +183,7 @@ export default function SetModePage() {
       (item: SongItem) => item.type === 'song' && item.song_id
     )
 
-    const setFiles: { url: string; label: string; file_type: string; songTitle: string; songKey: string | null }[] = []
+    const setFiles: { url: string; label: string; file_type: string; songTitle: string; songKey: string | null; fileId: string; songId: string; hasEdits: boolean }[] = []
 
     for (const item of songItems) {
       const songId = item.song_id!
@@ -198,6 +198,9 @@ export default function SetModePage() {
           file_type: f.file_type,
           songTitle: item.song_title || '',
           songKey: f.file_type === 'chordpro' ? (chordProKeys[f.id] || songKey) : songKey,
+          fileId: f.id,
+          songId: songId,
+          hasEdits: !!f.has_edits,
         })
       })
     }
