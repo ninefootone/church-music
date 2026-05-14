@@ -80,6 +80,22 @@ export default function HelpPage() {
   const [admins, setAdmins] = useState<Member[]>([])
   const [loading, setLoading] = useState(true)
   const [activeId, setActiveId] = useState('what-is-song-stack')
+  const [openSections, setOpenSections] = useState<Set<string>>(
+    new Set(['Getting started'])
+  )
+
+  const toggleSection = (section: string) => {
+    setOpenSections(prev => {
+      const next = new Set(prev)
+      if (next.has(section)) { next.delete(section) } else { next.add(section) }
+      return next
+    })
+  }
+
+  const selectTopic = (sectionName: string, topicId: string) => {
+    setActiveId(topicId)
+    setOpenSections(prev => new Set(prev).add(sectionName))
+  }
 
   useEffect(() => {
     api.get('/api/members')
@@ -590,20 +606,39 @@ export default function HelpPage() {
       <div className="help-layout">
         {/* Sidebar */}
         <nav className="help-sidebar">
-          {helpSections.map(s => (
-            <div key={s.section} className="help-sidebar-section">
-              <p className="help-sidebar-heading">{s.section}</p>
-              {s.topics.map(t => (
+          {helpSections.map(s => {
+            const isOpen = openSections.has(s.section)
+            return (
+              <div key={s.section} className="help-sidebar-section">
                 <button
-                  key={t.id}
-                  className={`help-sidebar-item${activeId === t.id ? ' help-sidebar-item--active' : ''}`}
-                  onClick={() => setActiveId(t.id)}
+                  className="help-sidebar-heading-btn"
+                  onClick={() => toggleSection(s.section)}
+                  aria-expanded={isOpen}
                 >
-                  {t.title}
+                  <span>{s.section}</span>
+                  <svg
+                    className={`help-sidebar-chevron${isOpen ? ' help-sidebar-chevron--open' : ''}`}
+                    width="12" height="12" viewBox="0 0 12 12" fill="none"
+                  >
+                    <path d="M2 4l4 4 4-4" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
+                  </svg>
                 </button>
-              ))}
-            </div>
-          ))}
+                {isOpen && (
+                  <div className="help-sidebar-items">
+                    {s.topics.map(t => (
+                      <button
+                        key={t.id}
+                        className={`help-sidebar-item${activeId === t.id ? ' help-sidebar-item--active' : ''}`}
+                        onClick={() => selectTopic(s.section, t.id)}
+                      >
+                        {t.title}
+                      </button>
+                    ))}
+                  </div>
+                )}
+              </div>
+            )
+          })}
         </nav>
 
         {/* Content pane */}
