@@ -167,13 +167,13 @@ export default function NewSongPage() {
           </div>
 
           <div className="form-field">
-            <label className="label">Author(s) *</label>
+            <label className="label">Author(s)</label>
             <input className="input" placeholder="e.g. Matt Redman" value={form.author} onChange={e => setForm(f => ({ ...f, author: e.target.value }))} />
           </div>
 
           <div className="form-grid-2 form-field">
             <div>
-              <label className="label">Default key *</label>
+              <label className="label">Default key</label>
               <select className="input" value={form.default_key} onChange={e => setForm(f => ({ ...f, default_key: e.target.value }))}>
                 <option value="">Select key…</option>
                 {keys.map(k => <option key={k} value={k}>{k}</option>)}
