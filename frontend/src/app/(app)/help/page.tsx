@@ -146,7 +146,7 @@ export default function HelpPage() {
                 <strong>Plans:</strong> individual service plans, each with a running order of songs, assigned musicians, a shared set viewer, and options to download or email the plan.
               </p>
               <p className="help-content-body">
-                Your role determines what you can do. Admins have full access. Band leaders can create and manage plans. Members can view the library and plans they&apos;re part of. Admins can grant additional permissions to individual members from the Team page.
+                Your role determines what you can do. Admins have full access. Members can view the library and plans they&apos;re part of. Admins can grant additional permissions to individual members from the Team page.
               </p>
             </div>
           ),
@@ -157,10 +157,10 @@ export default function HelpPage() {
           content: () => (
             <div>
               <p className="help-content-body">
-                Song Stack uses your email address to sign in — no separate password needed. When you visit the site, enter your email and you&apos;ll receive a one-time sign-in link.
+                You can sign in with an email and password, or with a Google account.
               </p>
               <p className="help-content-body">
-                Your account is tied to a church. If you&apos;ve been invited to join a church on Song Stack, follow the invite link in the email you received — this connects your account to that church automatically.
+                Your account is tied to a church. If you&apos;ve been invited to join a church on Song Stack, follow the invite link in the message you received — this connects your account to that church automatically.
               </p>
               <p className="help-content-body">
                 If you need to join a church and don&apos;t have an invite link, ask one of your church admins. They can find the invite link on the Team page.
@@ -179,7 +179,7 @@ export default function HelpPage() {
           content: () => (
             <div>
               <p className="help-content-body">
-                The Songs page lists every song in your church&apos;s library. You can search by title or author, and filter by tag or category using the controls at the top of the page.
+                The Songs page lists every song in your church&apos;s library. You can search by title, author, or lyric, and filter by tag or category using the controls at the top of the page.
               </p>
               <p className="help-content-body">
                 Songs can be sorted by title, most sung, least sung, recently sung, or sung long ago — useful for spotting songs that haven't been used in a while.
@@ -196,22 +196,22 @@ export default function HelpPage() {
           content: () => (
             <div>
               <p className="help-content-body">
-                From the Songs page, click <strong>Add song</strong>. You&apos;ll need at minimum a title — everything else is optional but recommended.
+                From the Songs page, click <strong>Add song</strong>. Title and category are required — everything else is optional but recommended.
               </p>
               <p className="help-content-body">
                 Key fields to fill in:
               </p>
               <p className="help-content-body">
-                <strong>Title &amp; author:</strong> how the song appears across Song Stack and in exported plans.
+                <strong>Title:</strong> how the song appears across Song Stack and in exported plans.
               </p>
               <p className="help-content-body">
                 <strong>Default key:</strong> the key your church typically plays the song in. This can be overridden per plan.
               </p>
               <p className="help-content-body">
-                <strong>Tags &amp; category:</strong> used for filtering in the library and plan builder. Start typing to see existing tags, or add your own.
+                <strong>Tags &amp; category:</strong> used for filtering in the library and plan builder. Start typing to see and select from existing tags.
               </p>
               <p className="help-content-body">
-                <strong>CCLI number:</strong> enter the song&apos;s CCLI number for licence reporting. You can search by title using the CCLI lookup field.
+                <strong>CCLI number:</strong> enter the song&apos;s CCLI number for licence reporting.s
               </p>
               <p className="help-content-body">
                 <strong>Lyrics:</strong> paste lyrics directly. These appear on the song page and public share view.
@@ -290,7 +290,7 @@ export default function HelpPage() {
           content: () => (
             <div>
               <p className="help-content-body">
-                From the Plans page, click <strong>New plan</strong>. Give the plan a date — this is the only required field. You can also add a title (e.g. &quot;Sunday Morning&quot;) and a time.
+                From the Plans page, click <strong>New plan</strong>. Give the plan a date — this is the only required field. You can also add a title (e.g. &quot;Sunday Morning&quot;) and a time. The time is helpful for ordering plans when you have more than one on a single day.
               </p>
               <p className="help-content-body">
                 Once created, you&apos;ll land on the plan detail page where you can add songs, assign musicians, and manage the running order.
@@ -307,13 +307,13 @@ export default function HelpPage() {
           content: () => (
             <div>
               <p className="help-content-body">
-                From the plan detail page, click <strong>Add song</strong>. This opens a search picker showing your full song library. Search by title or author, then click a song to add it to the plan.
+                From the plan detail page, click <strong>Edit</strong> and then add songs and other items (welcome, prayer, sermon etc.). Search songs by title then click + to add it to the plan.
               </p>
               <p className="help-content-body">
-                Songs appear in the running order in the sequence you add them. You can drag and drop to reorder them.
+                Songs appear in the running order in the sequence you add them. You can drag and drop to reorder them using the dots on the left.
               </p>
               <p className="help-content-body">
-                To remove a song from a plan, open the plan and use the remove button next to the song. This only removes it from the plan — the song stays in your library.
+                To remove a song from a plan, open the plan and use the x button next to the song. This only removes it from the plan — the song stays in your library.
               </p>
             </div>
           ),
@@ -324,10 +324,10 @@ export default function HelpPage() {
           content: () => (
             <div>
               <p className="help-content-body">
-                Each song has a default arrangement set on the song itself (e.g. Intro, Verse, Chorus, Bridge, Ending). When you add a song to a plan, it uses that default.
+                Each song has a default arrangement (if set on the song itself). When you add a song to a plan, it uses that default.
               </p>
               <p className="help-content-body">
-                You can override this for a specific plan without affecting the song&apos;s default. Click the arrangement on the plan to open the arrangement builder and customise the order and sections for that service only.
+                You can override this for a specific plan without affecting the song&apos;s default. Click the arrangement on the plan to open the arrangement builder and customise the order and sections for that plan only.
               </p>
               <p className="help-content-body">
                 Custom arrangements are shown in the set viewer and included when you email or share the plan.
@@ -358,16 +358,16 @@ export default function HelpPage() {
           content: () => (
             <div>
               <p className="help-content-body">
-                The set viewer is a full-screen view of all the files attached to songs in a plan. Open it from the plan&apos;s set picker via <strong>View set</strong>.
+                The set viewer is a full-screen view of all the files attached to songs in a plan. Open it from the plan page using the <strong>Set mode</strong> button.
               </p>
               <p className="help-content-body">
-                You can navigate between files using the arrow buttons, or with the left and right keyboard arrow keys on desktop. Controls auto-hide after a few seconds to maximise screen space.
+                You can navigate between files using the left and right keyboard arrow keys on desktop, a swipe on a touch device a Bluetooth footswitch. Controls auto-hide after a few seconds to maximise screen space.
               </p>
               <p className="help-content-body">
                 For ChordPro files, you can transpose the key directly in the viewer using the key selector in the toolbar. This only affects your current session — it doesn&apos;t change the file itself.
               </p>
               <p className="help-content-body">
-                The set viewer is also available on the public share link, so musicians without a Song Stack account can follow along.
+                The set mode viewer is also available on the public share link, so musicians without a Song Stack account can still access it.
               </p>
             </div>
           ),
@@ -378,13 +378,13 @@ export default function HelpPage() {
           content: () => (
             <div>
               <p className="help-content-body">
-                Every plan has a public share link that gives read-only access to the plan details and set viewer — no account needed. This is useful for sharing with musicians who aren&apos;t on Song Stack.
+                Every plan has a public share link that gives read-only access to the plan details and set mode — no account needed. This is useful for sharing with musicians who aren&apos;t on Song Stack.
               </p>
               <p className="help-content-body">
                 Find the share link on the plan detail page. Anyone with the link can view the running order, song keys, arrangements, and files.
               </p>
               <p className="help-content-body">
-                The link is unique to each plan and doesn&apos;t expire. If you need to revoke access, contact Song Stack support — plan-level link regeneration is not currently available in the UI.
+                The link is unique to each plan and doesn&apos;t expire.
               </p>
             </div>
           ),
@@ -395,7 +395,7 @@ export default function HelpPage() {
           content: () => (
             <div>
               <p className="help-content-body">
-                From a plan&apos;s set picker, click <strong>Download PDF</strong>. This merges all the PDF files attached to songs in the plan into a single downloadable PDF — useful for printing a full set&apos;s worth of music.
+                From a plan&apos;s set mode, click <strong>Download PDF</strong>. This merges all the PDF files attached to songs in the plan into a single downloadable PDF — useful for printing a full set&apos;s worth of music.
               </p>
               <p className="help-content-body">
                 Only PDF files are included in the merge — ChordPro files are not. If a song has multiple PDFs, all of them are included.
@@ -434,7 +434,7 @@ export default function HelpPage() {
                 If you know you&apos;re unavailable for a period — a holiday, a work trip, or anything else — you can log it in Song Stack so your admins know not to schedule you.
               </p>
               <p className="help-content-body">
-                Go to <strong>Availability</strong> in the navigation. Enter a start date, end date, and an optional note, then click <strong>Add</strong>. Your unavailability will be visible to church admins when they&apos;re building plans.
+                Go to <strong>Manage my availability</strong> on the dashboard. Enter a start date, end date, and an optional note, then click <strong>Add</strong>. Your unavailability will be visible to church admins when they&apos;re building plans.
               </p>
               <p className="help-content-body">
                 To remove an entry, click the delete button next to it. You can add as many periods as you need.
@@ -453,7 +453,7 @@ export default function HelpPage() {
           content: () => (
             <div>
               <p className="help-content-body">
-                Playlists let you save links to external music resources — a Spotify playlist, a YouTube playlist, a SoundCloud set — and keep them in one place on your dashboard.
+                Playlists let you save links to external music resources — a Spotify, YouTube or Apple Music playlist for example — and keep them in one place on your dashboard.
               </p>
               <p className="help-content-body">
                 To add a playlist, use the <strong>Playlists</strong> section on the dashboard. Give it a name, paste the URL, and save. Playlists are visible to all church members as a read-only list of links.
@@ -475,10 +475,7 @@ export default function HelpPage() {
           content: () => (
             <div>
               <p className="help-content-body">
-                Go to the <strong>Team</strong> page and click <strong>Invite member</strong>. Enter their email address and they&apos;ll receive an invitation email with a link to join your church on Song Stack.
-              </p>
-              <p className="help-content-body">
-                Alternatively, share your church&apos;s invite link directly — find it in <strong>Settings</strong>. Anyone who signs up via that link is automatically connected to your church.
+                Go to the <strong>Team</strong> page and click <strong>Invite member</strong>. Share your church&apos;s invite link directly. Anyone who signs up via that link is automatically connected to your church.
               </p>
               <p className="help-content-body">
                 New members join as standard members with no extra permissions. You can adjust their permissions after they&apos;ve joined.
@@ -574,10 +571,10 @@ export default function HelpPage() {
           content: () => (
             <div>
               <p className="help-content-body">
-                Your church has a unique invite link that you can share with anyone you want to join. Find it in <strong>Settings</strong> under the invite section.
+                Your church has a unique invite link that you can share with anyone you want to join. Find it on the <strong>Team</strong> page under the invite section.
               </p>
               <p className="help-content-body">
-                Anyone who signs up via the link is automatically connected to your church as a standard member. You can regenerate the link at any time — the old link will stop working immediately.
+                Anyone who signs up via the link is automatically connected to your church as a standard member.
               </p>
             </div>
           ),
