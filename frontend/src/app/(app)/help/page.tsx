@@ -165,7 +165,7 @@ export default function HelpPage() {
                 The Songs page lists every song in your church&apos;s library. You can search by title or author, and filter by tag or category using the controls at the top of the page.
               </p>
               <p className="help-content-body">
-                Songs can be sorted by title, most recently added, most sung, or least sung — useful for spotting songs that haven&apos;t been used in a while.
+                Songs can be sorted by title, most sung, least sung, recently sung, or sung long ago — useful for spotting songs that haven't been used in a while.
               </p>
               <p className="help-content-body">
                 Retired songs are hidden by default. Use the <strong>Show retired</strong> toggle to include them in the list.
