@@ -4,13 +4,14 @@
 
 ### Discover
 - [ ] Dashboard Discover block — swipeable carousel showing in_discover songs with image, title, category and description; settings toggle (`hide_discover_dashboard` on `churches` table) to hide it
+- [ ] Add events – Music Minsitry Conference etc.
+- [ ] Add blogs – eg. Sovereign Grace
 
 ### Features – Print/View
 - [ ] Single file viewer — route at /songs/[id]/view/[fileId] that opens a single PDF or ChordPro file in the full set viewer (same component, single file); accessible from the song page for rehearsal use; supports swipe/keyboard navigation and auto-hide controls
 
 ### Features – Songs
 - [ ] Consolidate tags — review remaining ~108 tags after initial cleanup; aim for a clean controlled vocabulary of ~20–25 tags
-- [ ] ChordPro inline editing — "Edit" button in the viewer toolbar opens a textarea with raw ChordPro text; save writes updated content back to R2 via a new PUT endpoint; admin only
 
 ### Features – Admin
 - [ ] Automated email reminders – email musicans 1 week before a plan
@@ -69,7 +70,7 @@ platform-wide stats: number of churches, total songs, total plans, total users, 
 - [x] Dashboard block — Playlists section between Plans and Feedback; admins and members with `can_manage_playlists` can add/edit/delete entries (name + URL only, no validation); read-only link list for all other members
 - [x] Dashboard reorder — Songs & Plans (top), Playlists, Feedback/Questions, Team
 - [x] Permission checkbox — add "Manage playlists" checkbox to member management modal in dashboard
-
+- [x] ChordPro inline editing — "Edit" button in the viewer toolbar opens a textarea with raw ChordPro text; save writes updated content back to R2 via a new PUT endpoint; admin only
 
 ### Inline style refactor
 - [x] `src/app/page.tsx`
