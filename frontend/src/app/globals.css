@@ -2494,6 +2494,15 @@ select.input {
 .modal-body                { font-size: 14px; color: var(--color-text-secondary); margin-bottom: 20px; line-height: 1.5; }
 .modal-footer              { display: flex; gap: 10px; justify-content: flex-end; }
 .modal-footer--bordered    { padding-top: var(--space-sm); border-top: 1px solid var(--color-border); }
+.modal-footer--end         { margin-top: var(--space-lg); }
+.modal-panel--sm           { max-width: 480px; }
+.modal-header--tight       { margin-bottom: var(--space-sm); }
+.modal-subtitle            { font-size: var(--text-sm); color: var(--color-text-muted); margin-bottom: var(--space-lg); }
+.empty-icon                { color: var(--color-text-muted); margin: 0 auto 12px; display: block; }
+.plan-picker-list          { display: flex; flex-direction: column; gap: 8px; max-height: 360px; overflow-y: auto; }
+.plan-picker-card          { display: flex; align-items: center; gap: 12px; padding: var(--space-md); background: var(--color-neutral-50); border-radius: var(--radius-md); transition: border-color var(--transition-fast); }
+.added-label               { font-size: var(--text-sm); color: var(--color-accent-dark); font-weight: 500; }
+.flex-shrink-0             { flex-shrink: 0; }
 .link-entry-card           { border-radius: var(--radius-md); padding: var(--space-md); }
 .input-success-msg         { font-size: var(--text-sm); color: var(--color-success); }
 .modal-field               { display: flex; flex-direction: column; gap: 6px; }

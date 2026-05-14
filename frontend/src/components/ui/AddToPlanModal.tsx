@@ -68,20 +68,20 @@ export function AddToPlanModal({ song, onClose }: AddToPlanModalProps) {
   }
 
   return (
-    <div style={{ position: 'fixed', inset: 0, zIndex: 200, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 'var(--space-md)' }}>
-      <div onClick={onClose} style={{ position: 'absolute', inset: 0, background: 'rgba(0,0,0,0.4)' }} />
+    <div className="modal-overlay modal-overlay--front">
+      <div onClick={onClose} className="modal-backdrop" />
 
-      <div style={{ position: 'relative', background: 'var(--color-surface)', borderRadius: 'var(--radius-lg)', padding: 'var(--space-lg)', width: '100%', maxWidth: 480, boxShadow: 'var(--shadow-md)' }}>
-        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 'var(--space-sm)' }}>
-          <h2 style={{ fontSize: 'var(--text-lg)', fontWeight: 700, color: 'var(--color-text-primary)', letterSpacing: '-0.01em' }}>
+      <div className="modal-panel modal-panel--sm">
+        <div className="modal-header modal-header--tight">
+          <h2 className="modal-title">
             Add to plan
           </h2>
-          <button onClick={onClose} style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'var(--color-text-muted)', padding: 4, display: 'flex' }}>
+          <button onClick={onClose} className="modal-close">
             <X size={20} />
           </button>
         </div>
 
-        <p style={{ fontSize: 'var(--text-sm)', color: 'var(--color-text-muted)', marginBottom: 'var(--space-lg)' }}>
+        <p className="modal-subtitle">
           Adding <strong>{song.title}</strong> to:
         </p>
 
@@ -90,9 +90,9 @@ export function AddToPlanModal({ song, onClose }: AddToPlanModalProps) {
         {loading ? (
           <p className="text-muted">Loading plans...</p>
         ) : plans.length === 0 ? (
-          <div style={{ textAlign: 'center', padding: 'var(--space-lg)' }}>
-            <Calendar size={32} style={{ color: 'var(--color-text-muted)', margin: '0 auto 12px' }} />
-            <p className="text-muted" style={{ marginBottom: 'var(--space-md)' }}>No upcoming plans.</p>
+          <div className="card-empty">
+            <Calendar size={32} className="empty-icon" />
+            <p className="text-muted empty-message">No upcoming plans.</p>
             <button
               onClick={() => { onClose(); router.push('/plans/new') }}
               className="btn btn-primary btn-sm"
@@ -101,23 +101,24 @@ export function AddToPlanModal({ song, onClose }: AddToPlanModalProps) {
             </button>
           </div>
         ) : (
-          <div style={{ display: 'flex', flexDirection: 'column', gap: 8, maxHeight: 360, overflowY: 'auto' }}>
+          <div className="plan-picker-list">
             {plans.map(plan => (
               <div
                 key={plan.id}
-                style={{ display: 'flex', alignItems: 'center', gap: 12, padding: 'var(--space-md)', background: 'var(--color-neutral-50)', border: `1px solid ${added === plan.id ? 'var(--color-accent)' : 'var(--color-border)'}`, borderRadius: 'var(--radius-md)', transition: 'border-color var(--transition-fast)' }}
+                className="plan-picker-card"
+                style={{ border: `1px solid ${added === plan.id ? 'var(--color-accent)' : 'var(--color-border)'}` }}
               >
-                <div style={{ flex: 1, minWidth: 0 }}>
+                <div className="dash-row-content">
                   <p className="dash-row-title">
                     {format(parseISO(plan.plan_date), 'd MMMM yyyy')}
-                    {plan.plan_time && <span style={{ fontWeight: 400, color: 'var(--color-text-muted)' }}> · {plan.plan_time}</span>}
+                    {plan.plan_time && <span className="plan-time-muted"> · {plan.plan_time}</span>}
                   </p>
                   {plan.title && <p className="dash-row-meta">{plan.title}</p>}
                 </div>
 
                 {added === plan.id ? (
-                  <div style={{ display: 'flex', gap: 6 }}>
-                    <span style={{ fontSize: 'var(--text-sm)', color: 'var(--color-accent-dark)', fontWeight: 500 }}>Added</span>
+                  <div className="btn-group">
+                    <span className="added-label">Added</span>
                     <button
                       onClick={() => handleViewPlan(plan.id)}
                       className="btn btn-secondary btn-sm"
@@ -129,8 +130,7 @@ export function AddToPlanModal({ song, onClose }: AddToPlanModalProps) {
                   <button
                     onClick={() => handleAdd(plan)}
                     disabled={adding === plan.id}
-                    className="btn btn-primary btn-sm"
-                    style={{ flexShrink: 0 }}
+                    className="btn btn-primary btn-sm flex-shrink-0"
                   >
                     <Plus size={14} />
                     {adding === plan.id ? 'Adding...' : 'Add'}
@@ -141,7 +141,7 @@ export function AddToPlanModal({ song, onClose }: AddToPlanModalProps) {
           </div>
         )}
 
-        <div style={{ marginTop: 'var(--space-lg)', display: 'flex', justifyContent: 'flex-end' }}>
+        <div className="modal-footer modal-footer--end">
           <button onClick={onClose} className="btn btn-secondary">Close</button>
         </div>
       </div>
