@@ -400,6 +400,9 @@ export function SetViewerPage() {
                       setChordProContents(prev => prev.map(c =>
                         c.fileIndex === current.fileIndex ? { ...c, html, rawSource: editContent } : c
                       ))
+                      setPages(prev => prev.map(p =>
+                        p.fileIndex === current.fileIndex ? { ...p, chordProHtml: html } : p
+                      ))
                       // Update sessionStorage with new URL and hasEdits flag
                       const raw = sessionStorage.getItem('setViewerFiles')
                       if (raw) {
