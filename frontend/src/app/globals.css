@@ -2967,7 +2967,7 @@ select.input {
 .role-explain-desc        { font-size: var(--text-sm); color: var(--color-text-muted); }
 
 /* ── PlanEmailModal ── */
-.modal-panel--flex      { display: flex; flex-direction: column; overflow-y: hidden; }
+.modal-panel--flex      { display: flex; flex-direction: column; overflow-y: hidden; padding: 0; }
 .modal-header--bordered { padding: var(--space-lg); margin-bottom: 0; border-bottom: 1px solid var(--color-border); }
 .modal-success-heading  { font-size: var(--text-md); font-weight: 600; color: var(--color-text-primary); margin-bottom: 4px; }
 .mt-lg                  { margin-top: var(--space-lg); }
