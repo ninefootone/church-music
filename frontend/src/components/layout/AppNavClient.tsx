@@ -28,12 +28,6 @@ export function AppNavClient() {
   const isActive = (href: string) => pathname === href || pathname.startsWith(href + '/')
   const visibleLinks = navLinks.filter(link => !link.adminOnly || isAdmin)
 
-  const avatarStyle = (size: number) => ({
-    width: size, height: size, borderRadius: '50%' as const, background: 'var(--color-brand-100)',
-    display: 'flex', alignItems: 'center', justifyContent: 'center',
-    fontSize: size * 0.4, fontWeight: 700, color: 'var(--color-brand-700)', flexShrink: 0
-  })
-
   const avatarInitial = (user?.firstName || user?.emailAddresses[0]?.emailAddress || '?').charAt(0).toUpperCase()
 
   return (
@@ -43,8 +37,8 @@ export function AppNavClient() {
           <div className="app-nav-left">
             <Link href="/dashboard" className="app-nav-brand" onClick={() => { setDesktopOpen(false); setMobileOpen(false) }}>
               {church?.logo_url
-                ? <img src={church.logo_url} alt={churchName} style={{ height: 32, maxWidth: 120, objectFit: 'contain', borderRadius: 4 }} />
-                : <><img src="/logo-icon.svg" alt="Song Stack" style={{ height: 28, width: 28, borderRadius: 4 }} />{churchName}</>
+                ? <img src={church.logo_url} alt={churchName} className="nav-church-logo" />
+                : <><img src="/logo-icon.svg" alt="Song Stack" className="nav-logo-icon" />{churchName}</>
               }
             </Link>
             <span className="app-nav-sep">·</span>
@@ -64,29 +58,29 @@ export function AppNavClient() {
             </Link>
 
             {/* Desktop avatar + dropdown */}
-            <div className="app-nav-user-desktop" style={{ position: 'relative' }}>
+            <div className="app-nav-user-desktop">
               {user && (
                 <>
-                  <button onClick={() => setDesktopOpen(!desktopOpen)} style={{ background: 'none', border: 'none', cursor: 'pointer', padding: 0 }}>
+                  <button onClick={() => setDesktopOpen(!desktopOpen)} className="nav-avatar-btn">
                     {user.imageUrl
-                      ? <img src={user.imageUrl} alt="" style={{ width: 32, height: 32, borderRadius: '50%', objectFit: 'cover', flexShrink: 0 }} />
-                      : <div style={avatarStyle(32)}>{avatarInitial}</div>
+                      ? <img src={user.imageUrl} alt="" className="nav-avatar-img nav-avatar-sm" />
+                      : <div className="nav-avatar-initials nav-avatar-sm">{avatarInitial}</div>
                     }
                   </button>
                   {desktopOpen && (
                     <>
-                      <div onClick={() => setDesktopOpen(false)} style={{ position: 'fixed', inset: 0, zIndex: 98 }} />
-                      <div style={{ position: 'absolute', top: 'calc(100% + 10px)', right: 0, width: 260, background: 'var(--color-surface)', border: '1px solid var(--color-border)', borderRadius: 'var(--radius-lg)', boxShadow: 'var(--shadow-md)', zIndex: 99, paddingBottom: 'var(--space-sm)' }}>
-                        <div style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '16px var(--space-lg)', borderBottom: '1px solid var(--color-border)', marginBottom: 'var(--space-xs)', overflow: 'hidden' }}>
+                      <div onClick={() => setDesktopOpen(false)} className="nav-backdrop" />
+                      <div className="nav-dropdown">
+                        <div className="nav-dropdown-user">
                           {user.imageUrl
-                            ? <img src={user.imageUrl} alt="" style={{ width: 40, height: 40, borderRadius: '50%', objectFit: 'cover', flexShrink: 0 }} />
-                            : <div style={avatarStyle(40)}>{avatarInitial}</div>
+                            ? <img src={user.imageUrl} alt="" className="nav-avatar-img nav-avatar-lg" />
+                            : <div className="nav-avatar-initials nav-avatar-lg">{avatarInitial}</div>
                           }
-                          <div style={{ minWidth: 0, flex: 1 }}>
-                            <p style={{ fontSize: 'var(--text-base)', fontWeight: 600, color: 'var(--color-text-primary)', lineHeight: 1.3, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                          <div className="nav-user-info">
+                            <p className="nav-user-name">
                               {user.firstName ? `${user.firstName} ${user.lastName || ''}`.trim() : 'Account'}
                             </p>
-                            <p style={{ fontSize: 'var(--text-sm)', color: 'var(--color-text-muted)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                            <p className="nav-user-email">
                               {user.emailAddresses[0]?.emailAddress}
                             </p>
                           </div>
@@ -96,8 +90,8 @@ export function AppNavClient() {
                             {'dropdownLabel' in link ? link.dropdownLabel : link.label}
                           </Link>
                         ))}
-                        <div style={{ borderTop: '1px solid var(--color-border)', marginTop: 'var(--space-xs)', padding: 'var(--space-sm) 0' }}>
-                          <button onClick={() => signOut({ redirectUrl: '/' })} className="app-nav-mobile-link" style={{ width: '100%', textAlign: 'left', background: 'none', border: 'none', cursor: 'pointer', fontFamily: 'inherit', display: 'flex', alignItems: 'center', gap: 10, color: 'var(--color-text-secondary)' }}>
+                        <div className="nav-dropdown-footer">
+                          <button onClick={() => signOut({ redirectUrl: '/' })} className="app-nav-mobile-link nav-signout-btn">
                             <LogOut size={16} /> Sign out
                           </button>
                         </div>
@@ -119,19 +113,19 @@ export function AppNavClient() {
       {/* Mobile dropdown */}
       {mobileOpen && (
         <>
-          <div onClick={() => setMobileOpen(false)} style={{ position: 'fixed', inset: 0, zIndex: 98, background: 'rgba(0,0,0,0.2)' }} />
+          <div onClick={() => setMobileOpen(false)} className="nav-backdrop nav-backdrop--dim" />
           <div className="app-nav-mobile">
             {user && (
-              <div style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '16px var(--space-lg)', borderBottom: '1px solid var(--color-border)', marginBottom: 'var(--space-xs)', overflow: 'hidden' }}>
+              <div className="nav-dropdown-user">
                 {user.imageUrl
-                  ? <img src={user.imageUrl} alt="" style={{ width: 40, height: 40, borderRadius: '50%', objectFit: 'cover', flexShrink: 0 }} />
-                  : <div style={avatarStyle(40)}>{avatarInitial}</div>
+                  ? <img src={user.imageUrl} alt="" className="nav-avatar-img nav-avatar-lg" />
+                  : <div className="nav-avatar-initials nav-avatar-lg">{avatarInitial}</div>
                 }
-                <div style={{ minWidth: 0, flex: 1 }}>
-                  <p style={{ fontSize: 'var(--text-base)', fontWeight: 600, color: 'var(--color-text-primary)', lineHeight: 1.3, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                <div className="nav-user-info">
+                  <p className="nav-user-name">
                     {user.firstName ? `${user.firstName} ${user.lastName || ''}`.trim() : 'Account'}
                   </p>
-                  <p style={{ fontSize: 'var(--text-sm)', color: 'var(--color-text-muted)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                  <p className="nav-user-email">
                     {user.emailAddresses[0]?.emailAddress}
                   </p>
                 </div>
@@ -142,8 +136,8 @@ export function AppNavClient() {
                 {'dropdownLabel' in link ? link.dropdownLabel : link.label}
               </Link>
             ))}
-            <div style={{ borderTop: '1px solid var(--color-border)', marginTop: 'var(--space-xs)', padding: 'var(--space-sm) 0' }}>
-              <button onClick={() => signOut({ redirectUrl: '/' })} className="app-nav-mobile-link" style={{ width: '100%', textAlign: 'left', background: 'none', border: 'none', cursor: 'pointer', fontFamily: 'inherit', display: 'flex', alignItems: 'center', gap: 10, color: 'var(--color-text-secondary)' }}>
+            <div className="nav-dropdown-footer">
+              <button onClick={() => signOut({ redirectUrl: '/' })} className="app-nav-mobile-link nav-signout-btn">
                 <LogOut size={16} /> Sign out
               </button>
             </div>
