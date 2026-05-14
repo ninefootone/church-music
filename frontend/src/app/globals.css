@@ -2443,6 +2443,8 @@ select.input {
   accent-color: var(--color-brand-500);
 }
 
+.btn-back-link { margin-top: 1rem; display: inline-block; color: white; text-decoration: none; }
+
 /* Settings */
 
 .settings-restricted       { max-width: 600px; margin: 0 auto; padding: 40px 24px; text-align: center; }
@@ -2910,3 +2912,19 @@ select.input {
   padding: 0.1rem 0.45rem; font-weight: 600; letter-spacing: 0.02em;
 }
 .ccli-option-meta { font-size: 0.75rem; color: var(--color-text-muted); margin-top: 0.1rem; }
+
+/* ── Lyrics Editor ── */
+.lyrics-editor-wrap    { border: 1px solid var(--color-border); border-radius: var(--radius-md); overflow: hidden; background: var(--color-surface); }
+.lyrics-editor-toolbar { display: flex; gap: 4px; padding: 8px 12px; border-bottom: 1px solid var(--color-border); background: var(--color-neutral-50); }
+.lyrics-editor-hint    { font-size: var(--text-xs); color: var(--color-text-muted); align-self: center; margin-left: 8px; }
+.lyrics-editor-input   { padding: 12px 16px; min-height: 280px; font-size: var(--text-base); line-height: 1.8; }
+
+/* ── Tag Input ── */
+.tag-input-wrap     { position: relative; }
+.tag-input-dropdown {
+  position: absolute; top: 100%; left: 0; right: 0;
+  background: var(--color-surface); border: 1px solid var(--color-border);
+  border-radius: 6px; margin-top: 4px; z-index: 50;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.15); overflow: hidden;
+}
+.tag-input-option   { padding: 8px 12px; cursor: pointer; font-size: var(--text-sm); color: var(--color-text-primary); }

@@ -114,8 +114,8 @@ export function LyricsEditor({ value, onChange }: LyricsEditorProps) {
   }
 
   return (
-    <div onPaste={handlePaste} style={{ border: '1px solid var(--color-border)', borderRadius: 'var(--radius-md)', overflow: 'hidden', background: 'var(--color-surface)' }}>
-      <div style={{ display: 'flex', gap: 4, padding: '8px 12px', borderBottom: '1px solid var(--color-border)', background: 'var(--color-neutral-50)' }}>
+    <div onPaste={handlePaste} className="lyrics-editor-wrap">
+      <div className="lyrics-editor-toolbar">
         <ToolbarButton
           onClick={() => editor.chain().focus().toggleBold().run()}
           isActive={editor.isActive('bold')}
@@ -130,13 +130,13 @@ export function LyricsEditor({ value, onChange }: LyricsEditorProps) {
         >
           <Italic size={15} />
         </ToolbarButton>
-        <span style={{ fontSize: 'var(--text-xs)', color: 'var(--color-text-muted)', alignSelf: 'center', marginLeft: 8 }}>
+        <span className="lyrics-editor-hint">
           Select text then B or I to format
         </span>
       </div>
       <EditorContent
         editor={editor}
-        style={{ padding: '12px 16px', minHeight: 280, fontSize: 'var(--text-base)', lineHeight: 1.8 }}
+        className="lyrics-editor-input"
       />
     </div>
   )

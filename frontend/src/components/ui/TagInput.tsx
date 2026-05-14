@@ -108,7 +108,7 @@ export default function TagInput({ value, onChange }: TagInputProps) {
   }, [])
 
   return (
-    <div style={{ position: 'relative' }}>
+    <div className="tag-input-wrap">
       <input
         ref={inputRef}
         className="input"
@@ -125,31 +125,14 @@ export default function TagInput({ value, onChange }: TagInputProps) {
       {showDropdown && suggestions.length > 0 && (
         <div
           ref={dropdownRef}
-          style={{
-            position: 'absolute',
-            top: '100%',
-            left: 0,
-            right: 0,
-            background: 'var(--color-surface)',
-            border: '1px solid var(--color-border)',
-            borderRadius: '6px',
-            marginTop: '4px',
-            zIndex: 50,
-            boxShadow: '0 4px 12px rgba(0,0,0,0.15)',
-            overflow: 'hidden',
-          }}
+          className="tag-input-dropdown"
         >
           {suggestions.map((tag, i) => (
             <div
               key={tag}
               onMouseDown={() => applySuggestion(tag)}
-              style={{
-                padding: '8px 12px',
-                cursor: 'pointer',
-                fontSize: '0.875rem',
-                background: i === activeIndex ? 'var(--color-brand-100)' : 'transparent',
-                color: 'var(--color-text-primary)',
-              }}
+              className="tag-input-option"
+              style={{ background: i === activeIndex ? 'var(--color-brand-100)' : 'transparent' }}
             >
               {tag}
             </div>
