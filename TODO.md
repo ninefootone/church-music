@@ -12,41 +12,9 @@
 - [ ] Consolidate tags — review remaining ~108 tags after initial cleanup; aim for a clean controlled vocabulary of ~20–25 tags
 - [ ] ChordPro inline editing — "Edit" button in the viewer toolbar opens a textarea with raw ChordPro text; save writes updated content back to R2 via a new PUT endpoint; admin only
 
-### Features – Playlists
-- [ ] DB migration — new `church_playlists` table (`id`, `church_id`, `name`, `url`, `sort_order`, `created_at`) + new `can_manage_playlists` boolean on `memberships` table
-- [ ] Backend routes — `GET/POST/PUT/DELETE /api/playlists` on Express backend
-- [ ] Dashboard block — Playlists section between Plans and Feedback; admins and members with `can_manage_playlists` can add/edit/delete entries (name + URL only, no validation); read-only link list for all other members
-- [ ] Dashboard reorder — Songs & Plans (top), Playlists, Feedback/Questions, Team
-- [ ] Permission checkbox — add "Manage playlists" checkbox to member management modal in dashboard
-
 ### Features – Admin
 - [ ] Automated email reminders – email musicans 1 week before a plan
 - [ ] Full offboarding process – account deletion — settings page option for users to delete their own account (Clerk backend API + DB cleanup)
-
-### Inline style refactor
-Work through each file, one at a time, using VSCode/Cursor prompt to move all static inline `style={{...}}` props to named classes in `globals.css`.
-
-## Components
-- [ ] `src/components/CcliAutocomplete.tsx`
-- [ ] `src/components/layout/AppNavClient.tsx`
-- [ ] `src/components/ui/AddLinkModal.tsx`
-- [ ] `src/components/ui/AddToPlanModal.tsx`
-- [ ] `src/components/ui/ArrangementBuilder.tsx`
-- [ ] `src/components/ui/ChordProViewer.tsx`
-- [ ] `src/components/ui/ConfirmModal.tsx`
-- [ ] `src/components/ui/CookieConsent.tsx`
-- [ ] `src/components/ui/CookieSettingsLink.tsx` ← new
-- [ ] `src/components/ui/FeedbackForm.tsx` ← new
-- [ ] `src/components/ui/FileRow.tsx`
-- [ ] `src/components/ui/FileUploadModal.tsx`
-- [ ] `src/components/ui/InviteMemberModal.tsx`
-- [ ] `src/components/ui/LegalNavActions.tsx` ← new
-- [ ] `src/components/ui/LyricsDisplay.tsx`
-- [ ] `src/components/ui/LyricsEditor.tsx` ← new
-- [ ] `src/components/ui/PlanEmailModal.tsx`
-- [ ] `src/components/ui/PlanMusicianModal.tsx`
-- [ ] `src/components/ui/TagInput.tsx` ← new
-- [ ] `src/components/ui/badges.tsx`
 
 ## Done
 - [x] WordPress song import (139 songs, 502 files)
@@ -96,6 +64,11 @@ Work through each file, one at a time, using VSCode/Cursor prompt to move all st
   - Consider `plan_availability` table (`plan_id`, `user_id`, `status: available|unavailable|unconfirmed`) for future unavailability/confirmation flow — design DB now even if UI comes later
 - [x] Clerk major version upgrade — currently on v5.7.5, latest is v7.x; check migration guides for v5→v6 and v6→v7 before updating; test all auth flows (sign in, sign up, onboarding redirect) on a preview branch first
 platform-wide stats: number of churches, total songs, total plans, total users, storage used; no church-level data exposed
+- [x] DB migration — new `church_playlists` table (`id`, `church_id`, `name`, `url`, `sort_order`, `created_at`) + new `can_manage_playlists` boolean on `memberships` table
+- [x] Backend routes — `GET/POST/PUT/DELETE /api/playlists` on Express backend
+- [x] Dashboard block — Playlists section between Plans and Feedback; admins and members with `can_manage_playlists` can add/edit/delete entries (name + URL only, no validation); read-only link list for all other members
+- [x] Dashboard reorder — Songs & Plans (top), Playlists, Feedback/Questions, Team
+- [x] Permission checkbox — add "Manage playlists" checkbox to member management modal in dashboard
 
 
 ### Inline style refactor
@@ -132,3 +105,23 @@ platform-wide stats: number of churches, total songs, total plans, total users, 
 - [x] `src/app/s/[token]/set/view/PublicSetViewer.tsx`
 - [x] `src/app/s/[token]/page.tsx`
 - [x] `src/app/s/[token]/set/page.tsx`
+- [x] `src/components/CcliAutocomplete.tsx`
+- [x] `src/components/layout/AppNavClient.tsx`
+- [x] `src/components/ui/AddLinkModal.tsx`
+- [x] `src/components/ui/AddToPlanModal.tsx`
+- [x] `src/components/ui/LegalNavActions.tsx` ← new
+- [x] `src/components/ui/CookieSettingsLink.tsx` ← new
+- [x] `src/components/ui/FeedbackForm.tsx` ← new
+- [x] `src/components/ui/LyricsEditor.tsx` ← new
+- [x] `src/components/ui/TagInput.tsx` ← new
+- [x] `src/components/ui/ArrangementBuilder.tsx`
+- [x] `src/components/ui/ChordProViewer.tsx`
+- [x] `src/components/ui/ConfirmModal.tsx`
+- [x] `src/components/ui/FileUploadModal.tsx`
+- [x] `src/components/ui/InviteMemberModal.tsx`
+- [x] `src/components/ui/PlanEmailModal.tsx`
+- [x] `src/components/ui/PlanMusicianModal.tsx`
+- [x] `src/components/ui/CookieConsent.tsx`
+- [x] `src/components/ui/LyricsDisplay.tsx`
+- [x] `src/components/ui/badges.tsx`
+- [x] `src/components/ui/FileRow.tsx`

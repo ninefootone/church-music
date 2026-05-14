@@ -1,7 +1,9 @@
-# Church Music App
+# Song Stack
 
-A song library and service planning tool for churches.
-Built with Next.js · Node/Express · Postgres · Clerk · Cloudflare R2.
+A song library and worship planning tool for churches.
+Built with Next.js · Node/Express · PostgreSQL · Clerk · Cloudflare R2.
+
+Live at [songstack.church](https://songstack.church)
 
 ---
 
@@ -16,8 +18,8 @@ cd ../backend && npm install
 cp frontend/.env.local.example frontend/.env.local
 cp backend/.env.example backend/.env
 
-# 3. Run database migration
-cd backend && npm run db:migrate
+# 3. Run database migrations
+DATABASE_URL=postgresql://... node backend/db/migrate.js
 
 # 4. Start both servers (two terminals)
 cd backend && npm run dev        # runs on :3001
@@ -30,15 +32,13 @@ cd frontend && npm run dev       # runs on :3000
 
 ### 1. Clerk (Authentication)
 
-1. Go to **clerk.com** → sign up with your new project Gmail
-2. Create application → name it "Church Music"
-3. Enable **Email** and **Google** sign-in methods
-4. Go to **API Keys** in the Clerk dashboard
-5. Copy keys into **frontend** `.env.local`:
-   - Publishable key → `NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY`
-   - Secret key → `CLERK_SECRET_KEY`
-6. Copy **Secret key** into **backend** `.env` → `CLERK_SECRET_KEY`
-7. In Clerk → **Redirects**, confirm these are set:
+1. Go to **clerk.com** → create a new application
+2. Enable **Email** and **Google** sign-in methods
+3. Go to **API Keys** → copy keys into `frontend/.env.local`:
+   - `NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY`
+   - `CLERK_SECRET_KEY`
+4. Copy **Secret key** into `backend/.env` → `CLERK_SECRET_KEY`
+5. In Clerk → **Redirects**, set:
    - Sign-in: `/sign-in`
    - Sign-up: `/sign-up`
    - After sign-in: `/onboarding`
@@ -46,52 +46,66 @@ cd frontend && npm run dev       # runs on :3000
 
 ### 2. Railway (Backend + Database)
 
-1. Go to **railway.app** → sign up with your project Gmail
-2. **New Project** → **Add Service** → **Database** → **PostgreSQL**
-3. Click the Postgres service → **Connect** tab → copy the `DATABASE_URL`
-   → paste into backend `.env` as `DATABASE_URL`
-4. **Add Service** → **Empty Service** → connect your GitHub repo
-5. In that service's settings:
+1. Go to **railway.app** → New Project → Add Service → Database → PostgreSQL
+2. Click the Postgres service → Connect tab → copy `DATABASE_URL` into `backend/.env`
+3. Add Service → Empty Service → connect your GitHub repo
+4. In that service's settings:
    - Root directory: `backend`
    - Start command: `node index.js`
-6. Add all backend env vars in the Railway **Variables** tab
-7. Once deployed, open a Railway shell and run: `node db/migrate.js`
-8. Copy your Railway service URL (e.g. `https://xxx.up.railway.app`)
-   → add as `NEXT_PUBLIC_API_URL` in Vercel (see below)
+5. Add all backend env vars in the Railway Variables tab
+6. Run migrations: `DATABASE_URL=postgresql://your-railway-url node backend/db/migrate.js`
+7. Copy your Railway service URL → add as `NEXT_PUBLIC_API_URL` in Vercel
 
 ### 3. Vercel (Frontend)
 
-1. Go to **vercel.com** → sign up with your project Gmail (or GitHub)
-2. **Add New Project** → import your GitHub repo
-3. Set **Root Directory** to `frontend`
-4. Framework preset will auto-detect as Next.js ✓
-5. Add these environment variables:
+1. Go to **vercel.com** → Add New Project → import your GitHub repo
+2. Set **Root Directory** to `frontend`
+3. Add environment variables:
    ```
-   NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY   = (from Clerk)
-   CLERK_SECRET_KEY                    = (from Clerk)
+   NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY
+   CLERK_SECRET_KEY
    NEXT_PUBLIC_CLERK_SIGN_IN_URL       = /sign-in
    NEXT_PUBLIC_CLERK_SIGN_UP_URL       = /sign-up
    NEXT_PUBLIC_CLERK_AFTER_SIGN_IN_URL = /onboarding
    NEXT_PUBLIC_CLERK_AFTER_SIGN_UP_URL = /onboarding
    NEXT_PUBLIC_API_URL                 = (your Railway backend URL)
+   NEXT_PUBLIC_RECAPTCHA_SITE_KEY      = (from Google reCAPTCHA)
    ```
-6. Deploy
-7. **Important:** Go back to Clerk → **Domains** → add your Vercel URL
-   as an allowed origin (e.g. `https://church-music.vercel.app`)
+4. Deploy, then go back to Clerk → **Domains** → add your Vercel URL as an allowed origin
 
 ### 4. Cloudflare R2 (File Storage)
 
-1. Log in to **cloudflare.com**
-2. Sidebar → **R2 Object Storage** → **Create bucket**
-3. Name: `church-music` · Leave access as **Private**
-4. Go to **Manage R2 API Tokens** → **Create API Token**
-5. Permissions: **Object Read & Write** on your `church-music` bucket
-6. Copy values into backend `.env`:
+1. Log in to **cloudflare.com** → R2 Object Storage → Create bucket
+2. Name: `church-music` · Access: Private
+3. Manage R2 API Tokens → Create API Token → Object Read & Write
+4. Copy values into `backend/.env`:
    ```
-   R2_ACCOUNT_ID        = (your Cloudflare Account ID — top right of dashboard)
-   R2_ACCESS_KEY_ID     = (from the token you just created)
-   R2_SECRET_ACCESS_KEY = (from the token you just created)
+   R2_ACCOUNT_ID
+   R2_ACCESS_KEY_ID
+   R2_SECRET_ACCESS_KEY
    R2_BUCKET_NAME       = church-music
+   ```
+5. Create a second bucket `songstack-backups` for automated DB backups
+
+### 5. Brevo (Transactional Email)
+
+1. Go to **brevo.com** → API Keys → generate a key
+2. Add to `backend/.env`:
+   ```
+   BREVO_API_KEY
+   BREVO_FROM_EMAIL
+   BREVO_FROM_NAME
+   ```
+
+### 6. Stripe (Billing)
+
+1. Go to **stripe.com** → Developers → API Keys
+2. Add to `backend/.env`:
+   ```
+   STRIPE_SECRET_KEY
+   STRIPE_WEBHOOK_SECRET
+   STRIPE_PRICE_ID_MONTHLY
+   STRIPE_PRICE_ID_ANNUAL
    ```
 
 ---
@@ -104,7 +118,7 @@ git commit -m "describe your change"
 git push
 ```
 
-Vercel and Railway auto-deploy on push to `main`. No manual steps needed.
+Vercel (frontend) and Railway (backend) auto-deploy on push to `main`.
 
 ---
 
@@ -112,40 +126,67 @@ Vercel and Railway auto-deploy on push to `main`. No manual steps needed.
 
 ```
 church-music/
-├── frontend/                     # Next.js 14 app (→ Vercel)
+├── frontend/                          # Next.js app (→ Vercel)
 │   └── src/
 │       ├── app/
-│       │   ├── (app)/            # Authenticated route group
-│       │   │   ├── layout.tsx    # App shell with nav
-│       │   │   ├── dashboard/    # Home dashboard
-│       │   │   ├── songs/        # Songs list + detail + add/edit
-│       │   │   ├── services/     # Services list + detail + add
-│       │   │   └── stats/        # Usage stats + CCLI export
-│       │   ├── onboarding/       # Create or join a church
-│       │   ├── sign-in/          # Clerk sign-in
-│       │   ├── sign-up/          # Clerk sign-up
-│       │   └── s/[token]/        # Public read-only service view
+│       │   ├── (app)/                 # Authenticated route group
+│       │   │   ├── layout.tsx         # App shell with nav
+│       │   │   ├── dashboard/         # Home dashboard
+│       │   │   ├── songs/             # Song library + detail + add/edit
+│       │   │   ├── plans/             # Worship plans + set mode
+│       │   │   ├── discover/          # Browse shared song library
+│       │   │   ├── team/              # Team members
+│       │   │   ├── stats/             # Usage stats + CCLI export
+│       │   │   ├── settings/          # Church settings
+│       │   │   ├── availability/      # Member availability
+│       │   │   └── help/              # Help & support
+│       │   ├── admin/                 # Super-admin dashboard (Jon only)
+│       │   ├── onboarding/            # Create or join a church
+│       │   ├── feedback/              # Feedback form
+│       │   ├── legal/                 # Legal info
+│       │   ├── privacy/               # Privacy policy
+│       │   ├── sign-in/               # Clerk sign-in
+│       │   ├── sign-up/               # Clerk sign-up
+│       │   └── s/[token]/             # Public read-only plan view + set mode
 │       ├── components/
-│       │   ├── layout/AppNav     # Top navigation
-│       │   └── ui/badges         # CategoryBadge, KeyBadge
-│       ├── lib/api.ts            # Axios instance with auth header
-│       └── types/index.ts        # All TypeScript types
+│       │   ├── layout/AppNavClient    # Top navigation
+│       │   └── ui/                    # Shared UI components
+│       │       ├── badges.tsx         # CategoryBadge, KeyBadge
+│       │       ├── ArrangementBuilder # Drag-and-drop arrangement editor
+│       │       ├── ChordProViewer     # Fullscreen ChordPro viewer
+│       │       ├── LyricsDisplay      # HTML + plaintext lyrics renderer
+│       │       ├── LyricsEditor       # Rich lyrics editor
+│       │       ├── FileRow            # Uploaded file row with inline edit
+│       │       ├── TagInput           # Tag input with autocomplete
+│       │       ├── CcliAutocomplete   # CCLI song search autocomplete
+│       │       └── [modals]           # AddLink, AddToPlan, FileUpload,
+│       │                              #   Invite, PlanEmail, PlanMusician,
+│       │                              #   Confirm, CookieConsent
+│       ├── context/ChurchContext      # Church + role state
+│       ├── lib/api.ts                 # Axios instance with auth header
+│       └── types/index.ts             # TypeScript types
 │
-└── backend/                      # Express API (→ Railway)
+└── backend/                           # Express API (→ Railway)
     ├── db/
-    │   ├── pool.js               # Postgres connection pool
-    │   └── migrate.js            # Run once to create all tables
+    │   ├── pool.js                    # PostgreSQL connection pool
+    │   └── migrate.js                 # Run to create/update tables
     ├── middleware/
-    │   └── auth.js               # requireAuth · requireMembership · requireAdmin
+    │   └── auth.js                    # requireAuth · requireMembership · requireAdmin
     ├── routes/
-    │   ├── churches.js           # Create, join, manage churches
-    │   ├── songs.js              # Song CRUD + search + usage stats
-    │   ├── services.js           # Service planning + public token view
-    │   ├── members.js            # Team management + role changes
-    │   ├── uploads.js            # R2 file upload + signed download URLs
-    │   ├── stats.js              # Top songs, CCLI export
-    │   └── templates.js          # Global song library search + import
-    └── index.js                  # Express entry point
+    │   ├── churches.js                # Create, join, manage churches
+    │   ├── songs.js                   # Song CRUD + search + usage stats
+    │   ├── plans.js                   # Plan CRUD + public token view + email
+    │   ├── members.js                 # Team management + permissions
+    │   ├── uploads.js                 # R2 file upload + signed URLs
+    │   ├── stats.js                   # Top songs, CCLI export
+    │   ├── templates.js               # Discover library search + import
+    │   ├── ccli.js                    # CCLI song lookup
+    │   ├── stripe.js                  # Billing + webhooks
+    │   ├── feedback.js                # Feedback form submissions
+    │   ├── mailing.js                 # Mailing list subscribe/unsubscribe
+    │   ├── unavailability.js          # Member availability
+    │   └── superadmin.js              # Super-admin endpoints
+    └── index.js                       # Express entry point
 ```
 
 ---
@@ -160,83 +201,96 @@ All authenticated routes require:
 GET    /health
 
 # Churches
-POST   /api/churches               Create a church
-POST   /api/churches/join          Join via invite code
-GET    /api/churches/mine          My churches
-GET    /api/churches/:id           Church details
-POST   /api/churches/:id/regenerate-invite
+POST   /api/churches                        Create a church
+POST   /api/churches/join                   Join via invite code
+GET    /api/churches/mine                   My churches
+GET    /api/churches/:id                    Church details
+POST   /api/churches/:id/regenerate-invite  New invite code
+PUT    /api/churches/:id/logo               Upload church logo
 
 # Songs
-GET    /api/songs                  List (supports ?category= ?search=)
-GET    /api/songs/:id              Detail + files + usage
-POST   /api/songs                  Create (admin)
-PUT    /api/songs/:id              Update (admin)
-DELETE /api/songs/:id              Delete (admin)
+GET    /api/songs                           List (supports ?category= ?search= ?sort=)
+GET    /api/songs/:id                       Detail + files + usage
+POST   /api/songs                           Create (admin)
+PUT    /api/songs/:id                       Update (admin)
+DELETE /api/songs/:id                       Delete (admin)
 
-# Services
-GET    /api/services               List (supports ?upcoming=true/false)
-GET    /api/services/:id           Detail with items
-GET    /api/services/public/:token Public view (no auth)
-POST   /api/services               Create (admin)
-PUT    /api/services/:id           Update (admin)
-PUT    /api/services/:id/items     Replace all items (admin)
-DELETE /api/services/:id           Delete (admin)
+# Plans
+GET    /api/plans                           List (supports ?upcoming=true/false)
+GET    /api/plans/:id                       Detail with items + musicians
+GET    /api/plans/public/:token             Public view (no auth)
+POST   /api/plans                           Create
+PUT    /api/plans/:id                       Update
+PUT    /api/plans/:id/items                 Replace all items
+DELETE /api/plans/:id                       Delete
+POST   /api/plans/:id/email                 Send plan email to recipients
+GET    /api/plans/:id/musicians             List musicians on a plan
+POST   /api/plans/:id/musicians             Add musician
+DELETE /api/plans/:id/musicians/:id         Remove musician
 
 # Members
-GET    /api/members                List church members
-PUT    /api/members/:id/role       Change role (admin)
-DELETE /api/members/:id            Revoke access (admin)
+GET    /api/members                         List church members
+PUT    /api/members/:id/role                Change role (admin)
+PUT    /api/members/:id/permissions         Update capability flags (admin)
+DELETE /api/members/:id                     Revoke access (admin)
 
 # Uploads
-POST   /api/uploads/songs/:songId              Upload file (admin)
-GET    /api/uploads/songs/:songId/files/:fileId/url  Signed download URL
-DELETE /api/uploads/songs/:songId/files/:fileId      Delete file (admin)
+POST   /api/uploads/songs/:songId                        Upload file (admin)
+GET    /api/uploads/songs/:songId/files                  List files
+GET    /api/uploads/public/songs/:songId/files           Public file list
+GET    /api/uploads/songs/:songId/files/:fileId/url      Signed download URL
+PUT    /api/uploads/songs/:songId/files/:fileId          Update file metadata
+DELETE /api/uploads/songs/:songId/files/:fileId          Delete file (admin)
 
 # Stats
-GET    /api/stats                  Top songs (supports ?period=30|90|365)
-GET    /api/stats/ccli-export      CCLI report data
+GET    /api/stats                           Top songs (supports ?period=30|90|365)
+GET    /api/stats/ccli-export               CCLI report CSV
 
-# Template library
-GET    /api/templates/search       Search global library (?q=)
-POST   /api/templates/:id/import   Import template to church
-POST   /api/templates/contribute   Submit song as template
+# Discover / Templates
+GET    /api/templates/search                Search shared library (?q= ?tag=)
+POST   /api/templates/:id/import            Import to church library
+POST   /api/templates/contribute            Submit song as template
+
+# CCLI
+GET    /api/ccli/search                     Search CCLI by title (?q=)
+
+# Availability
+GET    /api/unavailability                  My unavailability
+POST   /api/unavailability                  Add unavailable date range
+DELETE /api/unavailability/:id              Remove unavailability
+
+# Stripe
+POST   /api/stripe/create-checkout-session  Start subscription
+POST   /api/stripe/webhook                  Stripe webhook handler
+GET    /api/stripe/status                   Current subscription status
+
+# Feedback
+POST   /api/feedback                        Submit feedback form
+
+# Mailing
+POST   /api/mailing/subscribe               Subscribe to mailing list
+POST   /api/mailing/unsubscribe             Unsubscribe
+
+# Super-admin (Jon only)
+GET    /api/superadmin/churches             All churches + stats
 ```
 
 ---
 
 ## Key Design Decisions
 
-**Multi-tenancy** — every song, service, file and stat is scoped to a `church_id`. Single shared database, data never crosses between churches.
+**Multi-tenancy** — every song, plan, file and stat is scoped to a `church_id`. Single shared database, data never crosses between churches.
 
-**Template library** — songs with `church_id = null` and `is_template = true` are the global starting-point library. Importing copies all metadata to the church's own record — no shared mutable state.
+**Shared library (Discover)** — songs with `share_all_data = true` on the master library account appear in `/discover`. Importing copies all metadata into the church's own record — no shared mutable state.
 
 **Categories vs tags** — each song has exactly one category (Praise / Confession / Assurance / Communion / Lament / Response / Sending) for filtering, plus unlimited freeform tags for specifics.
 
-**File storage** — only the R2 object key is stored in Postgres. Actual files live in R2. Download URLs are signed on request and expire after 1 hour.
+**Permissions** — two roles (admin / member) with per-user capability flags (`can_manage_songs`, `can_add_plans`, `can_edit_any_plan`). Admins bypass all flag checks.
 
-**Public service view** — `/s/[token]` requires no login. Shows the running order with song titles, keys and YouTube links. Safe to share with musicians who aren't registered.
+**File storage** — only the R2 object key is stored in PostgreSQL. Files live in R2. Download URLs are signed on request and expire after 1 hour.
 
----
+**Public plan view** — `/s/[token]` requires no login. Shows the running order with song titles, keys, YouTube links and sheet music. Safe to share with musicians who aren't registered.
 
-## Connecting Frontend to Backend
+**Set mode** — `/s/[token]/set` lets musicians select which files to include for each song, then opens them in a fullscreen PDF/ChordPro viewer with keyboard and swipe navigation.
 
-All pages currently use placeholder data. To wire up a page:
-
-```tsx
-// 1. Get Clerk token and attach to API client
-import { useAuth } from '@clerk/nextjs'
-import api, { setAuthToken } from '@/lib/api'
-
-const { getToken } = useAuth()
-const token = await getToken()
-setAuthToken(token)
-
-// 2. Set church ID header (store churchId in context/localStorage after onboarding)
-api.defaults.headers.common['x-church-id'] = churchId
-
-// 3. Fetch data
-const { data } = await api.get('/api/songs')
-```
-
-A good next step is to create a `ChurchContext` that holds `churchId` and `role`,
-loads on app mount, and wraps the `(app)` layout.
+**Backups** — a Railway cron service runs nightly, dumps all PostgreSQL tables, gzip-compresses them, and uploads to `songstack-backups` R2 bucket.
