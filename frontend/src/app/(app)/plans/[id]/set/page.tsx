@@ -16,6 +16,7 @@ interface SongFile {
   file_type: string
   key_of: string | null
   url: string
+  has_edits?: boolean
 }
 
 interface SongItem {
