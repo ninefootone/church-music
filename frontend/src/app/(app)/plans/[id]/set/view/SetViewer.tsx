@@ -314,8 +314,18 @@ export function SetViewerPage() {
                     const res = await api.delete(`/api/uploads/songs/${current.file.songId}/files/${current.file.fileId}/chordpro-edits`)
                     // Update sessionStorage and re-fetch
                     const revertedFile = { ...current.file, url: res.data.url, hasEdits: false }
+                    // Re-fetch original content and re-render
+                    const originalText = await fetch(res.data.url).then(r => r.text())
+                    const { default: ChordSheetJS } = await import('chordsheetjs')
+                    const parser = new ChordSheetJS.ChordProParser()
+                    const song = parser.parse(originalText)
+                    const formatter = new ChordSheetJS.HtmlDivFormatter()
+                    const revertedHtml = formatter.format(song)
+                    setChordProContents(prev => prev.map(c =>
+                      c.fileIndex === current.fileIndex ? { ...c, html: revertedHtml, rawSource: originalText } : c
+                    ))
                     setPages(prev => prev.map(p =>
-                      p.fileIndex === current.fileIndex ? { ...p, file: revertedFile } : p
+                      p.fileIndex === current.fileIndex ? { ...p, chordProHtml: revertedHtml, file: revertedFile } : p
                     ))
                     const raw = sessionStorage.getItem('setViewerFiles')
                     if (raw) {
