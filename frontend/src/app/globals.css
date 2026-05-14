@@ -840,7 +840,7 @@ body.set-viewer-active { overflow: hidden; }
 }
 
 .help-content-body {
-  font-size: var(--text-sm);
+  font-size: var(--text-base);
   color: var(--color-text-secondary);
   line-height: 1.7;
   margin-bottom: var(--space-sm);
