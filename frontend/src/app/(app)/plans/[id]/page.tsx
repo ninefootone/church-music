@@ -160,6 +160,18 @@ export default function PlanDetailPage() {
   const [showDeletePlan, setShowDeletePlan] = useState(false)
   const [musicians, setMusicians] = useState<PlanMusician[]>([])
   const [unavailableUserIds, setUnavailableUserIds] = useState<Set<string>>(new Set())
+
+  const checkUnavailability = async (musicianList: PlanMusician[], planDate: string) => {
+    const userIds = [...new Set<string>(musicianList.map(m => m.user_id).filter(Boolean) as string[])]
+    const results = await Promise.all(
+      userIds.map(uid =>
+        api.get('/api/unavailability/check', { params: { userId: uid, date: planDate } })
+          .then(res => res.data.unavailable ? uid : null)
+          .catch(() => null)
+      )
+    )
+    setUnavailableUserIds(new Set(results.filter(Boolean) as string[]))
+  }
   const [showMusicianModal, setShowMusicianModal] = useState(false)
   const [showEmailModal, setShowEmailModal] = useState(false)
 
@@ -374,7 +386,13 @@ export default function PlanDetailPage() {
           planId={id as string}
           planDate={plan?.plan_date ?? ''}
           churchId={church!.id}
-          onAdd={musicians => setMusicians(prev => [...prev, ...musicians])}
+          onAdd={newMusicians => {
+            setMusicians(prev => {
+              const updated = [...prev, ...newMusicians]
+              if (plan?.plan_date) checkUnavailability(updated, plan.plan_date)
+              return updated
+            })
+          }}
           onClose={() => setShowMusicianModal(false)}
         />
       )}
