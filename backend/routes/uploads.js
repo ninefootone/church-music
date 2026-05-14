@@ -184,13 +184,14 @@ router.get('/songs/:songId/files/:fileId/url', requireAuth, async function(req, 
       return res.status(404).json({ error: 'File not found' });
     }
 
+    const activeKey = file.rows[0].edited_r2_key || file.rows[0].r2_key;
     const url = await getSignedUrl(
       r2,
-      new GetObjectCommand({ Bucket: BUCKET, Key: file.rows[0].r2_key }),
+      new GetObjectCommand({ Bucket: BUCKET, Key: activeKey }),
       { expiresIn: 3600 }
     );
 
-    res.json({ url: url });
+    res.json({ url: url, has_edits: !!file.rows[0].edited_r2_key });
   } catch (err) {
     next(err);
   }
@@ -204,12 +205,13 @@ router.get('/public/songs/:songId/files', async function(req, res, next) {
     );
 
     const filesWithUrls = await Promise.all(files.rows.map(async function(file) {
+      const activeKey = file.edited_r2_key || file.r2_key;
       const url = await getSignedUrl(
         r2,
-        new GetObjectCommand({ Bucket: BUCKET, Key: file.r2_key }),
+        new GetObjectCommand({ Bucket: BUCKET, Key: activeKey }),
         { expiresIn: 3600 }
       );
-      return Object.assign({}, file, { url: url });
+      return Object.assign({}, file, { url: url, has_edits: !!file.edited_r2_key });
     }));
 
     res.json(filesWithUrls);
