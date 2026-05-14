@@ -141,7 +141,7 @@ export default function EditSongPage() {
         <ArrowLeft size={13} /> Back to song
       </Link>
       <h1 className="page-title page-title--spaced">Edit song</h1>
-      {error && <div className="error-banner">{error}</div>}
+      {error && <div className="error-box">{error}</div>}
       <div className="card">
         <form id="song-edit-form" onSubmit={handleSubmit}>
           <div className="form-field"><label className="label">Song title *</label>
