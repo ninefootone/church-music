@@ -17,6 +17,9 @@ interface SetFile {
   file_type: string
   songTitle: string
   songKey: string | null
+  fileId?: string
+  songId?: string
+  hasEdits?: boolean
 }
 
 interface ViewerPage {
@@ -30,6 +33,7 @@ interface ViewerPage {
 interface ChordProContent {
   fileIndex: number
   html: string
+  rawSource: string
 }
 
 export function SetViewerPage() {
@@ -196,7 +200,7 @@ export function SetViewerPage() {
           const formatter = new ChordSheetJS.HtmlDivFormatter()
           const html = formatter.format(rendered)
           console.log('Formatted successfully, html length:', html.length)
-          contents.push({ fileIndex: i, html })
+          contents.push({ fileIndex: i, html, rawSource: text })
         } catch (err) {
           console.error('Failed to load ChordPro file at index', i, ':', err)
           console.error('File details:', JSON.stringify(file))
