@@ -480,7 +480,7 @@ export default function SongDetailPage() {
                 </p>
                 <div className="file-group">
                   {mainFiles.map(f => (
-                    <FileRow key={f.id} file={f} songId={song.id} defaultKey={song.default_key} isAdmin={canManageSongs} downloadingId={downloadingId} deletingId={deletingId} onDownload={handleDownload} onDelete={handleDelete} onSaved={fetchSong} onView={f.file_type === 'chordpro' ? handleViewChordPro : undefined} />
+                    <FileRow key={f.id} file={f} songId={song.id} defaultKey={song.default_key} isAdmin={canManageSongs} downloadingId={downloadingId} deletingId={deletingId} onDownload={handleDownload} onDelete={handleDelete} onSaved={fetchSong} onView={f.file_type === 'chordpro' ? handleViewChordPro : undefined} onEdit={canManageSongs ? handleEditChordPro : undefined} />
                   ))}
                 </div>
               </div>
@@ -492,7 +492,7 @@ export default function SongDetailPage() {
                   <p className="downloads-group-label">Other keys</p>
                   <div className="file-group">
                   {otherFiles.map(f => (
-                    <FileRow key={f.id} file={f} songId={song.id} defaultKey={song.default_key} isAdmin={canManageSongs} downloadingId={downloadingId} deletingId={deletingId} onDownload={handleDownload} onDelete={handleDelete} onSaved={fetchSong} onView={f.file_type === 'chordpro' ? handleViewChordPro : undefined} />
+                    <FileRow key={f.id} file={f} songId={song.id} defaultKey={song.default_key} isAdmin={canManageSongs} downloadingId={downloadingId} deletingId={deletingId} onDownload={handleDownload} onDelete={handleDelete} onSaved={fetchSong} onView={f.file_type === 'chordpro' ? handleViewChordPro : undefined} onEdit={canManageSongs ? handleEditChordPro : undefined} />
                   ))}
                 </div>
                 </div>

@@ -1,7 +1,7 @@
 'use client'
 
 import { useState } from 'react'
-import { Download, Edit, Trash2 } from 'lucide-react'
+import { Download, Edit, Trash2, Pencil } from 'lucide-react'
 import { KeyBadge } from '@/components/ui/badges'
 import api from '@/lib/api'
 
@@ -29,9 +29,10 @@ interface FileRowProps {
   onDelete: (fileId: string) => void
   onSaved: () => void
   onView?: (fileId: string, label: string, key: string | null) => void
+  onEdit?: (fileId: string) => void
 }
 
-export function FileRow({ file, songId, defaultKey, isAdmin, downloadingId, deletingId, onDownload, onDelete, onSaved, onView }: FileRowProps) {
+export function FileRow({ file, songId, defaultKey, isAdmin, downloadingId, deletingId, onDownload, onDelete, onSaved, onView, onEdit }: FileRowProps) {
   const [editing, setEditing] = useState(false)
   const [editType, setEditType] = useState(file.file_type || 'chords')
   const [editLabel, setEditLabel] = useState(file.label || '')
@@ -116,6 +117,15 @@ export function FileRow({ file, songId, defaultKey, isAdmin, downloadingId, dele
         {!onView && downloadingId === file.id ? 'Downloading…' : file.label}
         {file.key_of && file.key_of !== defaultKey && <KeyBadge keyOf={file.key_of} />}
       </button>
+      {isAdmin && onEdit && file.file_type === 'chordpro' && (
+        <button
+          onClick={() => onEdit(file.id)}
+          className="modal-close"
+          title="Edit ChordPro content"
+        >
+          <Pencil size={14} />
+        </button>
+      )}
       {isAdmin && (
         <button
           onClick={openEdit}
