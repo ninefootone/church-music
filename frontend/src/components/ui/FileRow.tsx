@@ -91,6 +91,16 @@ export function FileRow({ file, songId, defaultKey, isAdmin, downloadingId, dele
             </select>
           </div>
         </div>
+        {onEdit && file.file_type === 'chordpro' && (
+          <button
+            type="button"
+            onClick={() => onEdit(file.id)}
+            className="btn btn-secondary btn-sm btn-xs-text"
+            style={{ marginBottom: 8 }}
+          >
+            <Pencil size={13} /> Edit ChordPro content
+          </button>
+        )}
         <div className="link-edit-footer">
           <button type="button" onClick={() => onDelete(file.id)} className="btn btn-secondary btn-sm btn-danger-text btn-xs-text">
             <Trash2 size={13} /> Delete
@@ -117,15 +127,6 @@ export function FileRow({ file, songId, defaultKey, isAdmin, downloadingId, dele
         {!onView && downloadingId === file.id ? 'Downloading…' : file.label}
         {file.key_of && file.key_of !== defaultKey && <KeyBadge keyOf={file.key_of} />}
       </button>
-      {isAdmin && onEdit && file.file_type === 'chordpro' && (
-        <button
-          onClick={() => onEdit(file.id)}
-          className="modal-close"
-          title="Edit ChordPro content"
-        >
-          <Pencil size={14} />
-        </button>
-      )}
       {isAdmin && (
         <button
           onClick={openEdit}
