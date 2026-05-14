@@ -39,7 +39,7 @@ export default function SongDetailPage() {
   const [editingLinkForm, setEditingLinkForm] = useState<{ url: string; label: string; link_type: string }>({ url: '', label: '', link_type: 'youtube' })
   const [showDeleteLink, setShowDeleteLink] = useState<string | null>(null)
   const [discoverImageUrl, setDiscoverImageUrl] = useState<string | null>(null)
-  const [chordProEdit, setChordProEdit] = useState<{ fileId: string; content: string; hasEdits: boolean } | null>(null)
+  const [chordProEdit, setChordProEdit] = useState<{ fileId: string; content: string; originalContent: string; hasEdits: boolean } | null>(null)
   const [editSaving, setEditSaving] = useState(false)
   const [editError, setEditError] = useState<string | null>(null)
 
@@ -99,7 +99,7 @@ export default function SongDetailPage() {
       const response = await fetch(data.url)
       const text = await response.text()
       setEditError(null)
-      setChordProEdit({ fileId, content: text, hasEdits: !!data.has_edits })
+      setChordProEdit({ fileId, content: text, originalContent: text, hasEdits: !!data.has_edits })
     } catch (err) {
       console.error('Failed to load ChordPro file for editing', err)
     }
@@ -226,7 +226,7 @@ export default function SongDetailPage() {
                         const { data } = await api.get(`/api/uploads/songs/${song.id}/files/${chordProEdit.fileId}/url`)
                         const response = await fetch(data.url)
                         const text = await response.text()
-                        setChordProEdit({ fileId: chordProEdit.fileId, content: text, hasEdits: false })
+                        setChordProEdit({ fileId: chordProEdit.fileId, content: text, originalContent: text, hasEdits: false })
                       } catch {
                         alert('Revert failed. Please try again.')
                       }
@@ -238,7 +238,6 @@ export default function SongDetailPage() {
                 )}
                 <button onClick={() => { setChordProEdit(null); setEditError(null) }} className="btn btn-secondary btn-sm">Cancel</button>
                 <button
-                  disabled={editSaving}
                   onClick={async () => {
                     if (!song) return
                     setEditSaving(true)
@@ -256,6 +255,7 @@ export default function SongDetailPage() {
                       setEditSaving(false)
                     }
                   }}
+                  disabled={editSaving || chordProEdit.content === chordProEdit.originalContent}
                   className="btn btn-primary btn-sm"
                 >
                   {editSaving ? 'Saving…' : 'Save'}
