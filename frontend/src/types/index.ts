@@ -64,6 +64,7 @@ export interface SongFile {
   r2_key: string
   url?: string
   uploaded_at: string
+  has_edits?: boolean
 }
 
 export interface Song {
