@@ -2012,6 +2012,12 @@ select.input {
   .stats-song-info {
     flex: 1;
     min-width: 0;
+    overflow: visible;
+  }
+  .stats-song-info .song-title {
+    white-space: normal;
+    overflow: visible;
+    text-overflow: unset;
   }
   .stats-count-col {
     width: 100%;
