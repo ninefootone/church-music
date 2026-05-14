@@ -255,6 +255,85 @@ router.delete('/songs/:songId/files/:fileId', requireAuth, requireAdmin, async f
   }
 });
 
+// PUT /uploads/songs/:songId/files/:fileId/chordpro — save edited ChordPro content to R2
+router.put('/songs/:songId/files/:fileId/chordpro', requireAuth, requireAdmin, async function(req, res, next) {
+  try {
+    const { content } = req.body;
+    if (typeof content !== 'string' || content.trim().length === 0) {
+      return res.status(400).json({ error: 'content is required' });
+    }
+
+    const fileResult = await pool.query(
+      'SELECT * FROM song_files WHERE id = $1 AND song_id = $2',
+      [req.params.fileId, req.params.songId]
+    );
+    if (fileResult.rows.length === 0) {
+      return res.status(404).json({ error: 'File not found' });
+    }
+
+    const file = fileResult.rows[0];
+
+    // Reuse existing edited key if present, otherwise create a new one
+    const editedKey = file.edited_r2_key || ('edited/' + file.r2_key);
+
+    await r2.send(new PutObjectCommand({
+      Bucket: BUCKET,
+      Key: editedKey,
+      Body: content,
+      ContentType: 'text/plain',
+    }));
+
+    await pool.query(
+      'UPDATE song_files SET edited_r2_key = $1 WHERE id = $2',
+      [editedKey, file.id]
+    );
+
+    const url = await getSignedUrl(
+      r2,
+      new GetObjectCommand({ Bucket: BUCKET, Key: editedKey }),
+      { expiresIn: 3600 }
+    );
+
+    res.json({ success: true, url, has_edits: true });
+  } catch (err) {
+    next(err);
+  }
+});
+
+// DELETE /uploads/songs/:songId/files/:fileId/chordpro-edits — revert to original
+router.delete('/songs/:songId/files/:fileId/chordpro-edits', requireAuth, requireAdmin, async function(req, res, next) {
+  try {
+    const fileResult = await pool.query(
+      'SELECT * FROM song_files WHERE id = $1 AND song_id = $2',
+      [req.params.fileId, req.params.songId]
+    );
+    if (fileResult.rows.length === 0) {
+      return res.status(404).json({ error: 'File not found' });
+    }
+
+    const file = fileResult.rows[0];
+    if (!file.edited_r2_key) {
+      return res.status(400).json({ error: 'No edits to revert' });
+    }
+
+    await r2.send(new DeleteObjectCommand({ Bucket: BUCKET, Key: file.edited_r2_key }));
+    await pool.query(
+      'UPDATE song_files SET edited_r2_key = NULL WHERE id = $1',
+      [file.id]
+    );
+
+    const url = await getSignedUrl(
+      r2,
+      new GetObjectCommand({ Bucket: BUCKET, Key: file.r2_key }),
+      { expiresIn: 3600 }
+    );
+
+    res.json({ success: true, url, has_edits: false });
+  } catch (err) {
+    next(err);
+  }
+});
+
 module.exports = router;
 module.exports.r2 = r2;
 module.exports.BUCKET = BUCKET;
