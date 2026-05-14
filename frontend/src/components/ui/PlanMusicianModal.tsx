@@ -101,66 +101,70 @@ export function PlanMusicianModal({ planId, planDate, churchId, onAdd, onClose }
 
   return (
     <div
-      style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.5)', zIndex: 50, display: 'flex', alignItems: 'flex-end', justifyContent: 'center' }}
+      className="bottom-sheet-overlay"
       onClick={e => { if (e.target === e.currentTarget) onClose() }}
     >
-      <div style={{ background: 'var(--color-surface)', borderRadius: 'var(--radius-lg) var(--radius-lg) 0 0', width: '100%', maxWidth: 520, padding: 'var(--space-lg)', paddingBottom: 'calc(var(--space-lg) + env(safe-area-inset-bottom))' }}>
+      <div className="bottom-sheet-panel">
 
         {/* Header */}
-        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 'var(--space-md)' }}>
-          <h2 style={{ fontSize: 'var(--text-lg)', fontWeight: 700 }}>Add musician</h2>
-          <button onClick={onClose} style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'var(--color-text-muted)', padding: 4 }}>
+        <div className="modal-header">
+          <h2 className="modal-title">Add musician</h2>
+          <button onClick={onClose} className="modal-close">
             <X size={20} />
           </button>
         </div>
 
         {/* Person */}
-        <div style={{ marginBottom: 'var(--space-md)' }}>
-          <label style={{ fontSize: 'var(--text-sm)', fontWeight: 600, color: 'var(--color-text-secondary)', display: 'block', marginBottom: 6 }}>Person</label>
+        <div className="form-field">
+          <label className="settings-label">Person</label>
 
           {selectedMember ? (
             <div>
-              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '10px 14px', background: 'var(--color-neutral-50)', border: '1px solid var(--color-border)', borderRadius: 'var(--radius-sm)' }}>
-                <span style={{ fontSize: 'var(--text-md)', fontWeight: 500 }}>{selectedMember.name}</span>
-                <button onClick={() => { setSelectedMember(null); setQuery(''); setUnavailabilityWarning(null) }} style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'var(--color-text-muted)', padding: 2 }}>
+              <div className="selected-member-display">
+                <span className="selected-member-name">{selectedMember.name}</span>
+                <button
+                  onClick={() => { setSelectedMember(null); setQuery(''); setUnavailabilityWarning(null) }}
+                  className="btn-icon-remove"
+                >
                   <X size={16} />
                 </button>
               </div>
               {unavailabilityWarning && (
-                <div style={{ display: 'flex', alignItems: 'flex-start', gap: 8, marginTop: 8, padding: '10px 14px', background: 'var(--color-warning-bg, #fffbeb)', border: '1px solid var(--color-warning-border, #fcd34d)', borderRadius: 'var(--radius-sm)' }}>
-                  <AlertTriangle size={16} style={{ color: 'var(--color-warning, #d97706)', flexShrink: 0, marginTop: 1 }} />
-                  <p style={{ fontSize: 'var(--text-sm)', color: 'var(--color-warning-text, #92400e)', margin: 0 }}>
+                <div className="warning-banner">
+                  <AlertTriangle size={16} className="icon-warning" />
+                  <p className="warning-text">
                     {unavailabilityWarning} You can still add them if needed.
                   </p>
                 </div>
               )}
             </div>
           ) : (
-            <div style={{ position: 'relative' }}>
+            <div className="tag-input-wrap">
               <input
                 type="text"
                 placeholder="Search members or type a guest name…"
                 value={query}
                 onChange={e => { setQuery(e.target.value); setGuestName('') }}
-                style={{ width: '100%', padding: '10px 14px', border: '1px solid var(--color-border)', borderRadius: filtered.length > 0 ? 'var(--radius-sm) var(--radius-sm) 0 0' : 'var(--radius-sm)', fontSize: 'var(--text-md)', background: 'var(--color-surface)', color: 'var(--color-text-primary)', boxSizing: 'border-box' }}
+                className="member-search-input"
+                style={{ borderRadius: filtered.length > 0 ? 'var(--radius-sm) var(--radius-sm) 0 0' : 'var(--radius-sm)' }}
                 autoFocus
               />
               {filtered.length > 0 && (
-                <div style={{ border: '1px solid var(--color-border)', borderTop: 'none', borderRadius: '0 0 var(--radius-sm) var(--radius-sm)', overflow: 'hidden' }}>
+                <div className="member-search-dropdown">
                   {filtered.slice(0, 5).map(m => (
                     <button
                       key={m.id}
                       onClick={() => selectMember(m)}
-                      style={{ display: 'block', width: '100%', textAlign: 'left', padding: '10px 14px', background: 'var(--color-surface)', border: 'none', borderBottom: '1px solid var(--color-border)', cursor: 'pointer', fontSize: 'var(--text-md)' }}
+                      className="member-search-option"
                     >
-                      <span style={{ fontWeight: 500 }}>{m.name}</span>
-                      <span style={{ fontSize: 'var(--text-sm)', color: 'var(--color-text-muted)', marginLeft: 8 }}>{m.email}</span>
+                      <span className="member-option-name">{m.name}</span>
+                      <span className="member-option-email">{m.email}</span>
                     </button>
                   ))}
                 </div>
               )}
               {query.length > 1 && filtered.length === 0 && (
-                <p style={{ fontSize: 'var(--text-sm)', color: 'var(--color-text-muted)', marginTop: 6 }}>
+                <p className="form-empty-note">
                   No members found — <strong>{query}</strong> will be added as a guest
                 </p>
               )}
@@ -169,25 +173,20 @@ export function PlanMusicianModal({ planId, planDate, churchId, onAdd, onClose }
         </div>
 
         {/* Roles */}
-        <div style={{ marginBottom: 'var(--space-lg)' }}>
-          <label style={{ fontSize: 'var(--text-sm)', fontWeight: 600, color: 'var(--color-text-secondary)', display: 'block', marginBottom: 6 }}>
-            Role / instrument <span style={{ fontWeight: 400, color: 'var(--color-text-muted)' }}>(select one or more)</span>
+        <div className="form-field">
+          <label className="settings-label">
+            Role / instrument <span className="label-note">(select one or more)</span>
           </label>
-          <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8 }}>
+          <div className="file-group">
             {availableRoles.map(r => (
               <button
                 key={r}
                 onClick={() => toggleRole(r)}
+                className="role-chip-btn"
                 style={{
-                  padding: '6px 14px',
-                  borderRadius: 'var(--radius-sm)',
-                  border: '1px solid',
                   borderColor: selectedRoles.includes(r) ? 'var(--color-brand-600)' : 'var(--color-border)',
                   background: selectedRoles.includes(r) ? 'var(--color-brand-600)' : 'var(--color-surface)',
                   color: selectedRoles.includes(r) ? '#fff' : 'var(--color-text-secondary)',
-                  fontSize: 'var(--text-sm)',
-                  fontWeight: 500,
-                  cursor: 'pointer',
                 }}
               >
                 {r}
@@ -195,16 +194,11 @@ export function PlanMusicianModal({ planId, planDate, churchId, onAdd, onClose }
             ))}
             <button
               onClick={() => setShowCustom(v => !v)}
+              className="role-chip-btn"
               style={{
-                padding: '6px 14px',
-                borderRadius: 'var(--radius-sm)',
-                border: '1px solid',
                 borderColor: showCustom ? 'var(--color-brand-600)' : 'var(--color-border)',
                 background: showCustom ? 'var(--color-brand-600)' : 'var(--color-surface)',
                 color: showCustom ? '#fff' : 'var(--color-text-secondary)',
-                fontSize: 'var(--text-sm)',
-                fontWeight: 500,
-                cursor: 'pointer',
               }}
             >
               Other…
@@ -216,19 +210,19 @@ export function PlanMusicianModal({ planId, planDate, churchId, onAdd, onClose }
               placeholder="e.g. Cajon, Flute…"
               value={customRole}
               onChange={e => setCustomRole(e.target.value)}
-              style={{ marginTop: 10, width: '100%', padding: '10px 14px', border: '1px solid var(--color-border)', borderRadius: 'var(--radius-sm)', fontSize: 'var(--text-md)', background: 'var(--color-surface)', color: 'var(--color-text-primary)', boxSizing: 'border-box' }}
+              className="custom-role-input"
               autoFocus
             />
           )}
         </div>
 
-        {error && <p style={{ fontSize: 'var(--text-sm)', color: 'var(--color-error)', marginBottom: 'var(--space-sm)' }}>{error}</p>}
+        {error && <p className="error-text">{error}</p>}
 
         <button
           onClick={handleSubmit}
           disabled={!canSubmit || saving}
-          className="btn btn-primary"
-          style={{ width: '100%', justifyContent: 'center', opacity: canSubmit ? 1 : 0.5 }}
+          className="btn btn-primary btn-full-center"
+          style={{ opacity: canSubmit ? 1 : 0.5 }}
         >
           <UserPlus size={16} />
           {saving ? 'Adding…' : `Add${allRoles.length > 1 ? ` (${allRoles.length} roles)` : ''}`}

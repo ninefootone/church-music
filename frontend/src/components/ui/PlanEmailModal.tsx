@@ -95,56 +95,61 @@ export function PlanEmailModal({ planId, onClose }: Props) {
   }
 
   return (
-    <div style={{ position: 'fixed', inset: 0, zIndex: 300, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 'var(--space-md)' }}>
-      <div onClick={onClose} style={{ position: 'absolute', inset: 0, background: 'rgba(0,0,0,0.4)' }} />
-      <div style={{ position: 'relative', background: 'var(--color-surface)', borderRadius: 'var(--radius-lg)', width: '100%', maxWidth: 480, boxShadow: 'var(--shadow-md)', display: 'flex', flexDirection: 'column', maxHeight: '90vh' }}>
+    <div className="modal-overlay modal-overlay--front">
+      <div onClick={onClose} className="modal-backdrop" />
+      <div className="modal-panel modal-panel--sm modal-panel--flex">
 
         {/* Header */}
-        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: 'var(--space-lg)', borderBottom: '1px solid var(--color-border)' }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-            <Mail size={18} style={{ color: 'var(--color-brand-500)' }} />
-            <h2 style={{ fontSize: 'var(--text-lg)', fontWeight: 700, color: 'var(--color-text-primary)', letterSpacing: '-0.01em' }}>Send Plan Email</h2>
+        <div className="modal-header modal-header--bordered">
+          <div className="btn-group">
+            <Mail size={18} className="icon-brand" />
+            <h2 className="modal-title">Send Plan Email</h2>
           </div>
-          <button onClick={onClose} style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'var(--color-text-muted)', padding: 4, display: 'flex' }}>
+          <button onClick={onClose} className="modal-close">
             <X size={20} />
           </button>
         </div>
 
         {result ? (
           /* Success state */
-          <div style={{ padding: 'var(--space-lg)', textAlign: 'center' }}>
-            <p style={{ fontSize: 'var(--text-md)', fontWeight: 600, color: 'var(--color-text-primary)', marginBottom: 4 }}>
+          <div className="card-empty">
+            <p className="modal-success-heading">
               Email sent to {result.sent} recipient{result.sent !== 1 ? 's' : ''}
             </p>
             {result.failed > 0 && (
-              <p style={{ fontSize: 'var(--text-sm)', color: '#9a3a3a' }}>{result.failed} failed to send.</p>
+              <p className="text-danger">{result.failed} failed to send.</p>
             )}
-            <button onClick={onClose} className="btn btn-primary" style={{ marginTop: 'var(--space-lg)' }}>Done</button>
+            <button onClick={onClose} className="btn btn-primary mt-lg">Done</button>
           </div>
         ) : (
           <>
             {/* Scrollable body */}
-            <div style={{ overflowY: 'auto', padding: 'var(--space-lg)', flex: 1 }}>
+            <div className="modal-scroll-body">
 
               {/* Church members */}
-              <p style={{ fontSize: 'var(--text-sm)', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.07em', color: 'var(--color-text-muted)', marginBottom: 10 }}>
-                Church Members
-              </p>
+              <p className="sub-section-label">Church Members</p>
               {members.length === 0 ? (
-                <p style={{ fontSize: 'var(--text-sm)', color: 'var(--color-text-muted)', fontStyle: 'italic', marginBottom: 16 }}>No members with email addresses found.</p>
+                <p className="form-empty-note">No members with email addresses found.</p>
               ) : (
-                <div style={{ display: 'flex', flexDirection: 'column', gap: 6, marginBottom: 20 }}>
+                <div className="email-member-list">
                   {members.map(m => (
-                    <label key={m.email} style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '8px 10px', borderRadius: 'var(--radius-sm)', cursor: 'pointer', background: selected.has(m.email) ? 'var(--color-brand-50)' : 'var(--color-neutral-50)', border: `1px solid ${selected.has(m.email) ? 'var(--color-brand-200)' : 'var(--color-border)'}` }}>
+                    <label
+                      key={m.email}
+                      className="email-member-label"
+                      style={{
+                        background: selected.has(m.email) ? 'var(--color-brand-50)' : 'var(--color-neutral-50)',
+                        border: `1px solid ${selected.has(m.email) ? 'var(--color-brand-200)' : 'var(--color-border)'}`,
+                      }}
+                    >
                       <input
                         type="checkbox"
                         checked={selected.has(m.email)}
                         onChange={() => toggleMember(m.email)}
                         style={{ accentColor: 'var(--color-brand-500)', width: 16, height: 16, flexShrink: 0 }}
                       />
-                      <div style={{ flex: 1, minWidth: 0 }}>
-                        <p style={{ fontSize: 'var(--text-sm)', fontWeight: 600, color: 'var(--color-text-primary)', margin: 0 }}>{m.name}</p>
-                        <p style={{ fontSize: 'var(--text-xs)', color: 'var(--color-text-muted)', margin: 0 }}>{m.email}</p>
+                      <div className="dash-row-content">
+                        <p className="member-name-sm">{m.name}</p>
+                        <p className="member-email-sm">{m.email}</p>
                       </div>
                     </label>
                   ))}
@@ -152,16 +157,14 @@ export function PlanEmailModal({ planId, onClose }: Props) {
               )}
 
               {/* Custom addresses */}
-              <p style={{ fontSize: 'var(--text-sm)', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.07em', color: 'var(--color-text-muted)', marginBottom: 10 }}>
-                Additional Recipients
-              </p>
-              <div style={{ display: 'flex', gap: 8, marginBottom: 8 }}>
+              <p className="sub-section-label">Additional Recipients</p>
+              <div className="btn-group" style={{ marginBottom: 8 }}>
                 <input
                   type="text"
                   placeholder="Name (optional)"
                   value={customName}
                   onChange={e => setCustomName(e.target.value)}
-                  style={{ flex: 1, padding: '8px 10px', fontSize: 'var(--text-sm)', border: '1px solid var(--color-border)', borderRadius: 'var(--radius-sm)', background: 'var(--color-surface)', color: 'var(--color-text-primary)' }}
+                  className="extra-input"
                 />
                 <input
                   type="email"
@@ -169,21 +172,22 @@ export function PlanEmailModal({ planId, onClose }: Props) {
                   value={customEmail}
                   onChange={e => setCustomEmail(e.target.value)}
                   onKeyDown={e => e.key === 'Enter' && addExtra()}
-                  style={{ flex: 2, padding: '8px 10px', fontSize: 'var(--text-sm)', border: '1px solid var(--color-border)', borderRadius: 'var(--radius-sm)', background: 'var(--color-surface)', color: 'var(--color-text-primary)' }}
+                  className="extra-input"
+                  style={{ flex: 2 }}
                 />
-                <button onClick={addExtra} className="btn btn-secondary" style={{ padding: '8px 12px', flexShrink: 0 }}>
+                <button onClick={addExtra} className="btn btn-secondary flex-shrink-0" style={{ padding: '8px 12px' }}>
                   <Plus size={16} />
                 </button>
               </div>
               {extras.length > 0 && (
-                <div style={{ display: 'flex', flexDirection: 'column', gap: 6, marginBottom: 8 }}>
+                <div className="email-member-list">
                   {extras.map(e => (
-                    <div key={e.email} style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '6px 10px', borderRadius: 'var(--radius-sm)', background: 'var(--color-neutral-50)', border: '1px solid var(--color-border)' }}>
-                      <div style={{ flex: 1, minWidth: 0 }}>
-                        {e.name && <p style={{ fontSize: 'var(--text-sm)', fontWeight: 600, color: 'var(--color-text-primary)', margin: 0 }}>{e.name}</p>}
-                        <p style={{ fontSize: 'var(--text-sm)', color: 'var(--color-text-muted)', margin: 0 }}>{e.email}</p>
+                    <div key={e.email} className="extra-entry-row">
+                      <div className="dash-row-content">
+                        {e.name && <p className="member-name-sm">{e.name}</p>}
+                        <p className="member-email-sm">{e.email}</p>
                       </div>
-                      <button onClick={() => removeExtra(e.email)} style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'var(--color-text-muted)', padding: 2, display: 'flex' }}>
+                      <button onClick={() => removeExtra(e.email)} className="btn-icon-remove">
                         <Trash2 size={14} />
                       </button>
                     </div>
@@ -192,12 +196,12 @@ export function PlanEmailModal({ planId, onClose }: Props) {
               )}
 
               {error && (
-                <p style={{ fontSize: 'var(--text-sm)', color: '#9a3a3a', marginTop: 12 }}>{error}</p>
+                <p className="error-text">{error}</p>
               )}
             </div>
 
             {/* Footer */}
-            <div style={{ padding: 'var(--space-md) var(--space-lg)', borderTop: '1px solid var(--color-border)', display: 'flex', justifyContent: 'flex-end', gap: 8 }}>
+            <div className="modal-footer modal-footer--padded">
               <button onClick={onClose} className="btn btn-secondary" disabled={sending}>Cancel</button>
               <button onClick={handleSend} className="btn btn-primary" disabled={sending}>
                 {sending ? 'Sending…' : `Send Email`}

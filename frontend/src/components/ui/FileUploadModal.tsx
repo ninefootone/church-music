@@ -118,84 +118,62 @@ export function FileUploadModal({ songId, defaultKey, onClose, onUploaded }: Fil
   const pendingCount = entries.filter(e => e.status === 'pending' || e.status === 'error').length
 
   return (
-    <div style={{ position: 'fixed', inset: 0, zIndex: 200, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 'var(--space-md)' }}>
-      {/* Backdrop */}
-      <div onClick={onClose} style={{ position: 'absolute', inset: 0, background: 'rgba(0,0,0,0.4)' }} />
+    <div className="modal-overlay modal-overlay--front">
+      <div onClick={onClose} className="modal-backdrop" />
 
-      {/* Modal */}
-      <div style={{ position: 'relative', background: 'var(--color-surface)', borderRadius: 'var(--radius-lg)', padding: 'var(--space-lg)', width: '100%', maxWidth: 560, maxHeight: '90vh', overflowY: 'auto', boxShadow: 'var(--shadow-md)' }}>
-        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 'var(--space-lg)' }}>
-          <h2 style={{ fontSize: 'var(--text-lg)', fontWeight: 700, color: 'var(--color-text-primary)', letterSpacing: '-0.01em' }}>
-            Upload files
-          </h2>
-          <button onClick={onClose} style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'var(--color-text-muted)', padding: 4, display: 'flex' }}>
+      <div className="modal-panel">
+        <div className="modal-header">
+          <h2 className="modal-title">Upload files</h2>
+          <button onClick={onClose} className="modal-close">
             <X size={20} />
           </button>
         </div>
 
-        <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-md)' }}>
+        <form onSubmit={handleSubmit} className="modal-form">
 
           {/* Drop zone */}
-          <div
-            onClick={() => inputRef.current?.click()}
-            style={{
-              border: `2px dashed var(--color-border)`,
-              borderRadius: 'var(--radius-md)',
-              padding: 'var(--space-lg)',
-              textAlign: 'center',
-              cursor: 'pointer',
-              background: 'var(--color-neutral-50)',
-              transition: 'all var(--transition-fast)',
-            }}
-          >
+          <div onClick={() => inputRef.current?.click()} className="drop-zone">
             <input
               ref={inputRef}
               type="file"
               accept=".pdf,.cho,.chordpro,.txt"
               multiple
               onChange={handleFilesChange}
-              style={{ display: 'none' }}
+              className="visually-hidden-input"
             />
-            <Upload size={24} style={{ color: 'var(--color-text-muted)', margin: '0 auto 8px' }} />
-            <p style={{ fontSize: 'var(--text-base)', fontWeight: 500, color: 'var(--color-text-secondary)', marginBottom: 4 }}>
-              Click to choose files
-            </p>
-            <p style={{ fontSize: 'var(--text-sm)', color: 'var(--color-text-muted)' }}>
-              PDF or ChordPro · max 20MB each · multiple files supported
-            </p>
+            <Upload size={24} className="empty-icon" />
+            <p className="drop-zone-heading">Click to choose files</p>
+            <p className="drop-zone-hint">PDF or ChordPro · max 20MB each · multiple files supported</p>
           </div>
 
           {/* File rows */}
           {entries.length > 0 && (
-            <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-sm)' }}>
+            <div className="form-stack form-stack--sm">
               {entries.map(entry => (
                 <div
                   key={entry.id}
+                  className="file-entry-card"
                   style={{
                     border: `1px solid ${entry.status === 'error' ? 'var(--color-danger)' : entry.status === 'done' ? 'var(--color-success)' : 'var(--color-border)'}`,
-                    borderRadius: 'var(--radius-md)',
-                    padding: 'var(--space-md)',
                     background: entry.status === 'done' ? 'var(--color-success-bg, #f0fdf4)' : 'var(--color-surface)',
                     opacity: entry.status === 'done' ? 0.7 : 1,
                   }}
                 >
                   {/* Filename + remove */}
-                  <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 'var(--space-sm)' }}>
-                    <File size={15} style={{ color: 'var(--color-text-muted)', flexShrink: 0 }} />
-                    <span style={{ fontSize: 'var(--text-sm)', fontWeight: 500, color: 'var(--color-text-secondary)', flex: 1, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
-                      {entry.file.name}
-                    </span>
+                  <div className="file-entry-header">
+                    <File size={15} className="icon-muted" />
+                    <span className="file-entry-name">{entry.file.name}</span>
                     {entry.status === 'uploading' && (
-                      <span style={{ fontSize: 'var(--text-xs)', color: 'var(--color-text-muted)' }}>Uploading…</span>
+                      <span className="upload-status">Uploading…</span>
                     )}
                     {entry.status === 'done' && (
-                      <span style={{ fontSize: 'var(--text-xs)', color: 'var(--color-success)' }}>Done</span>
+                      <span className="upload-status--done">Done</span>
                     )}
                     {entry.status !== 'done' && entry.status !== 'uploading' && (
                       <button
                         type="button"
                         onClick={() => removeEntry(entry.id)}
-                        style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'var(--color-text-muted)', padding: 2, display: 'flex', flexShrink: 0 }}
+                        className="btn-icon-remove"
                       >
                         <Trash2 size={14} />
                       </button>
@@ -203,13 +181,12 @@ export function FileUploadModal({ songId, defaultKey, onClose, onUploaded }: Fil
                   </div>
 
                   {entry.status !== 'done' && (
-                    <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: 'var(--space-sm)' }}>
+                    <div className="file-meta-grid">
                       {/* File type */}
                       <div>
-                        <label className="label" style={{ fontSize: 'var(--text-xs)' }}>Type</label>
+                        <label className="label">Type</label>
                         <select
-                          className="input"
-                          style={{ fontSize: 'var(--text-sm)', padding: '4px 8px' }}
+                          className="input input--sm"
                           value={entry.fileType}
                           onChange={e => handleFileTypeChange(entry.id, e.target.value)}
                           disabled={entry.status === 'uploading'}
@@ -220,10 +197,9 @@ export function FileUploadModal({ songId, defaultKey, onClose, onUploaded }: Fil
 
                       {/* Label */}
                       <div>
-                        <label className="label" style={{ fontSize: 'var(--text-xs)' }}>Label</label>
+                        <label className="label">Label</label>
                         <input
-                          className="input"
-                          style={{ fontSize: 'var(--text-sm)', padding: '4px 8px' }}
+                          className="input input--sm"
                           value={entry.label}
                           onChange={e => updateEntry(entry.id, { label: e.target.value })}
                           placeholder="e.g. Chord chart — E"
@@ -233,10 +209,9 @@ export function FileUploadModal({ songId, defaultKey, onClose, onUploaded }: Fil
 
                       {/* Key */}
                       <div>
-                        <label className="label" style={{ fontSize: 'var(--text-xs)' }}>Key</label>
+                        <label className="label">Key</label>
                         <select
-                          className="input"
-                          style={{ fontSize: 'var(--text-sm)', padding: '4px 8px' }}
+                          className="input input--sm"
                           value={entry.keyOf}
                           onChange={e => updateEntry(entry.id, { keyOf: e.target.value })}
                           disabled={entry.status === 'uploading'}
@@ -249,22 +224,22 @@ export function FileUploadModal({ songId, defaultKey, onClose, onUploaded }: Fil
                   )}
 
                   {entry.error && (
-                    <p style={{ fontSize: 'var(--text-xs)', color: 'var(--color-danger)', marginTop: 6 }}>{entry.error}</p>
+                    <p className="input-error">{entry.error}</p>
                   )}
                 </div>
               ))}
             </div>
           )}
 
-          <p style={{ fontSize: 'var(--text-xs)', color: 'var(--color-text-muted)', paddingTop: 'var(--space-sm)', borderTop: '1px solid var(--color-border)' }}>
+          <p className="ccli-notice">
             Please ensure you hold a valid{' '}
-            <a href="https://ccli.com" target="_blank" rel="noopener noreferrer" style={{ color: 'var(--color-brand-600)', textDecoration: 'underline' }}>
+            <a href="https://ccli.com" target="_blank" rel="noopener noreferrer" className="link-brand">
               CCLI licence
             </a>
             {' '}that covers storing and sharing these files with your team.
           </p>
 
-          <div style={{ display: 'flex', gap: 8, justifyContent: 'flex-end', paddingTop: 'var(--space-sm)' }}>
+          <div className="modal-footer">
             <button type="button" onClick={onClose} className="btn btn-secondary">Cancel</button>
             <button
               type="submit"
