@@ -78,39 +78,37 @@ export function AddLinkModal({ songId, onClose, onSaved }: AddLinkModalProps) {
   const pendingCount = entries.filter(e => e.url.trim() && (e.status === 'pending' || e.status === 'error')).length
 
   return (
-    <div style={{ position: 'fixed', inset: 0, zIndex: 200, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 'var(--space-md)' }}>
-      <div onClick={onClose} style={{ position: 'absolute', inset: 0, background: 'rgba(0,0,0,0.4)' }} />
-      <div style={{ position: 'relative', background: 'var(--color-surface)', borderRadius: 'var(--radius-lg)', padding: 'var(--space-lg)', width: '100%', maxWidth: 560, maxHeight: '90vh', overflowY: 'auto', boxShadow: 'var(--shadow-md)' }}>
-        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 'var(--space-lg)' }}>
-          <h2 style={{ fontSize: 'var(--text-lg)', fontWeight: 700, color: 'var(--color-text-primary)', letterSpacing: '-0.01em' }}>
+    <div className="modal-overlay modal-overlay--front">
+      <div onClick={onClose} className="modal-backdrop" />
+      <div className="modal-panel">
+        <div className="modal-header">
+          <h2 className="modal-title">
             Add links
           </h2>
-          <button onClick={onClose} style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'var(--color-text-muted)', padding: 4, display: 'flex' }}>
+          <button onClick={onClose} className="modal-close">
             <X size={20} />
           </button>
         </div>
 
-        <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-md)' }}>
-          <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-sm)' }}>
+        <form onSubmit={handleSubmit} className="modal-form">
+          <div className="form-stack form-stack--sm">
             {entries.map(entry => (
               <div
                 key={entry.id}
+                className="link-entry-card"
                 style={{
                   border: `1px solid ${entry.status === 'error' ? 'var(--color-danger)' : entry.status === 'done' ? 'var(--color-success)' : 'var(--color-border)'}`,
-                  borderRadius: 'var(--radius-md)',
-                  padding: 'var(--space-md)',
                   background: entry.status === 'done' ? 'var(--color-success-bg, #f0fdf4)' : 'var(--color-surface)',
                   opacity: entry.status === 'done' ? 0.7 : 1,
                 }}
               >
                 {entry.status === 'done' ? (
-                  <span style={{ fontSize: 'var(--text-sm)', color: 'var(--color-success)' }}>✓ Saved</span>
+                  <span className="input-success-msg">✓ Saved</span>
                 ) : (
-                  <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                  <div className="modal-field">
+                    <div className="link-entry-row">
                       <select
-                        className="input"
-                        style={{ fontSize: 'var(--text-sm)', padding: '4px 8px', width: 140, flexShrink: 0 }}
+                        className="input link-type-select"
                         value={entry.link_type}
                         onChange={e => updateEntry(entry.id, { link_type: e.target.value })}
                         disabled={entry.status === 'saving'}
@@ -120,23 +118,21 @@ export function AddLinkModal({ songId, onClose, onSaved }: AddLinkModalProps) {
                       <button
                         type="button"
                         onClick={() => removeEntry(entry.id)}
-                        style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'var(--color-text-muted)', padding: 2, display: 'flex', marginLeft: 'auto' }}
+                        className="btn-icon-remove ml-auto"
                         disabled={entry.status === 'saving'}
                       >
                         <Trash2 size={14} />
                       </button>
                     </div>
                     <input
-                      className="input"
-                      style={{ fontSize: 'var(--text-sm)', padding: '4px 8px' }}
+                      className="input input--sm"
                       placeholder="URL"
                       value={entry.url}
                       onChange={e => updateEntry(entry.id, { url: e.target.value })}
                       disabled={entry.status === 'saving'}
                     />
                     <input
-                      className="input"
-                      style={{ fontSize: 'var(--text-sm)', padding: '4px 8px' }}
+                      className="input input--sm"
                       placeholder="Label (optional, e.g. Live version)"
                       value={entry.label}
                       onChange={e => updateEntry(entry.id, { label: e.target.value })}
@@ -145,17 +141,17 @@ export function AddLinkModal({ songId, onClose, onSaved }: AddLinkModalProps) {
                   </div>
                 )}
                 {entry.error && (
-                  <p style={{ fontSize: 'var(--text-xs)', color: 'var(--color-danger)', marginTop: 6 }}>{entry.error}</p>
+                  <p className="input-error">{entry.error}</p>
                 )}
               </div>
             ))}
           </div>
 
-          <button type="button" onClick={addEntry} className="btn btn-secondary btn-sm" style={{ alignSelf: 'flex-start' }}>
+          <button type="button" onClick={addEntry} className="btn btn-secondary btn-sm btn-self-start">
             <Plus size={13} /> Add another link
           </button>
 
-          <div style={{ display: 'flex', gap: 8, justifyContent: 'flex-end', paddingTop: 'var(--space-sm)', borderTop: '1px solid var(--color-border)' }}>
+          <div className="modal-footer modal-footer--bordered">
             <button type="button" onClick={onClose} className="btn btn-secondary">Cancel</button>
             <button
               type="submit"
