@@ -4,7 +4,7 @@ import { useState, useEffect, useCallback } from 'react'
 import Link from 'next/link'
 import { useParams, useRouter } from 'next/navigation'
 import { format, parseISO } from 'date-fns'
-import { ArrowLeft, Download, ExternalLink, Edit, Plus, Trash2 } from 'lucide-react'
+import { ArrowLeft, Download, ExternalLink, Edit, Plus, Trash2, Pencil, RotateCcw } from 'lucide-react'
 import { FileRow } from '@/components/ui/FileRow'
 import { ChordProViewer } from '@/components/ui/ChordProViewer'
 import { CategoryBadge, KeyBadge } from '@/components/ui/badges'
@@ -39,6 +39,9 @@ export default function SongDetailPage() {
   const [editingLinkForm, setEditingLinkForm] = useState<{ url: string; label: string; link_type: string }>({ url: '', label: '', link_type: 'youtube' })
   const [showDeleteLink, setShowDeleteLink] = useState<string | null>(null)
   const [discoverImageUrl, setDiscoverImageUrl] = useState<string | null>(null)
+  const [chordProEdit, setChordProEdit] = useState<{ fileId: string; content: string; hasEdits: boolean } | null>(null)
+  const [editSaving, setEditSaving] = useState(false)
+  const [editError, setEditError] = useState<string | null>(null)
 
   const startEditLink = (v: { id: string; url: string; label: string | null; link_type: string | null }) => {
     setEditingLinkId(v.id)
@@ -88,6 +91,19 @@ export default function SongDetailPage() {
   }, [id, churchLoading])
 
   useEffect(() => { fetchSong() }, [fetchSong])
+
+  const handleEditChordPro = async (fileId: string) => {
+    if (!song) return
+    try {
+      const { data } = await api.get(`/api/uploads/songs/${song.id}/files/${fileId}/url`)
+      const response = await fetch(data.url)
+      const text = await response.text()
+      setEditError(null)
+      setChordProEdit({ fileId, content: text, hasEdits: !!data.has_edits })
+    } catch (err) {
+      console.error('Failed to load ChordPro file for editing', err)
+    }
+  }
 
   const handleViewChordPro = async (fileId: string, label: string, key: string | null) => {
     if (!song) return
@@ -191,6 +207,72 @@ export default function SongDetailPage() {
           label={chordProFile.label}
           onClose={() => setChordProFile(null)}
         />
+      )}
+
+      {chordProEdit && (
+        <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.5)', zIndex: 50, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 16 }}>
+          <div style={{ background: '#fff', borderRadius: 8, width: '100%', maxWidth: 720, maxHeight: '90vh', display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
+            <div style={{ padding: '12px 16px', borderBottom: '1px solid var(--color-border)', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+              <span style={{ fontWeight: 600, fontSize: 15 }}>Edit ChordPro</span>
+              <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
+                {chordProEdit.hasEdits && (
+                  <button
+                    onClick={async () => {
+                      if (!song) return
+                      if (!confirm('Revert to the original uploaded file? Your edits will be deleted.')) return
+                      try {
+                        await api.delete(`/api/uploads/songs/${song.id}/files/${chordProEdit.fileId}/chordpro-edits`)
+                        // Re-fetch original to update textarea
+                        const { data } = await api.get(`/api/uploads/songs/${song.id}/files/${chordProEdit.fileId}/url`)
+                        const response = await fetch(data.url)
+                        const text = await response.text()
+                        setChordProEdit({ fileId: chordProEdit.fileId, content: text, hasEdits: false })
+                      } catch {
+                        alert('Revert failed. Please try again.')
+                      }
+                    }}
+                    className="btn btn-secondary btn-sm btn-danger-text"
+                  >
+                    <RotateCcw size={13} /> Revert to original
+                  </button>
+                )}
+                <button onClick={() => { setChordProEdit(null); setEditError(null) }} className="btn btn-secondary btn-sm">Cancel</button>
+                <button
+                  disabled={editSaving}
+                  onClick={async () => {
+                    if (!song) return
+                    setEditSaving(true)
+                    setEditError(null)
+                    try {
+                      await api.put(
+                        `/api/uploads/songs/${song.id}/files/${chordProEdit.fileId}/chordpro`,
+                        { content: chordProEdit.content }
+                      )
+                      setChordProEdit(prev => prev ? { ...prev, hasEdits: true } : null)
+                      setChordProEdit(null)
+                    } catch {
+                      setEditError('Save failed. Please check your ChordPro syntax and try again.')
+                    } finally {
+                      setEditSaving(false)
+                    }
+                  }}
+                  className="btn btn-primary btn-sm"
+                >
+                  {editSaving ? 'Saving…' : 'Save'}
+                </button>
+              </div>
+            </div>
+            <textarea
+              value={chordProEdit.content}
+              onChange={e => setChordProEdit(prev => prev ? { ...prev, content: e.target.value } : null)}
+              style={{ flex: 1, fontFamily: 'monospace', fontSize: 13, lineHeight: 1.6, padding: 16, border: 'none', outline: 'none', resize: 'none', minHeight: 400 }}
+              spellCheck={false}
+            />
+            {editError && (
+              <p style={{ padding: '8px 16px', color: '#c00', fontSize: 13, margin: 0, borderTop: '1px solid var(--color-border)' }}>{editError}</p>
+            )}
+          </div>
+        </div>
       )}
 
       {showAddLink && (
