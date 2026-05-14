@@ -66,14 +66,16 @@ export default function StatsPage() {
 
   return (
     <div>
-      <div className="page-header">
+      <div className="page-header stats-page-header">
         <h1 className="page-title">Stats</h1>
         <div className="page-header-actions">
-          {[30, 90, 365].map(p => (
-            <button key={p} className={`filter-chip ${period === p ? 'is-active' : ''}`} onClick={() => setPeriod(p)}>
-              {p === 365 ? '1 year' : `${p} days`}
-            </button>
-          ))}
+          <div className="stats-filter-chips">
+            {[30, 90, 365].map(p => (
+              <button key={p} className={`filter-chip ${period === p ? 'is-active' : ''}`} onClick={() => setPeriod(p)}>
+                {p === 365 ? '1 year' : `${p} days`}
+              </button>
+            ))}
+          </div>
           {isAdmin && <button onClick={exportCCLI} className="btn btn-secondary btn-sm">Export CCLI CSV</button>}
         </div>
       </div>

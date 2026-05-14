@@ -1981,6 +1981,38 @@ select.input {
   .plan-edit-grid .card { overflow: hidden; }
 }
 
+@media (max-width: 540px) {
+  .stats-page-header {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: var(--space-sm);
+  }
+  .stats-page-header .page-header-actions {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: var(--space-xs);
+    width: 100%;
+  }
+  .stats-page-header .stats-filter-chips {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--space-xs);
+  }
+  .stats-page-header .btn-secondary {
+    width: 100%;
+    justify-content: center;
+  }
+  .stats-song-info {
+    min-width: 0;
+    overflow: hidden;
+  }
+  .stats-song-info .song-title {
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+}
+
 @media (max-width: 480px) {
   .badge-upcoming, .badge-today, .badge-past { font-size: 10px; padding: 2px 7px; }
   .usage-stats-grid { grid-template-columns: 1fr !important; }
