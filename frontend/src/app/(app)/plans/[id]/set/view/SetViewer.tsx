@@ -2,7 +2,8 @@
 
 import { useEffect, useState, useCallback, useRef } from 'react'
 import { useParams, useRouter } from 'next/navigation'
-import { ChevronLeft, ChevronRight, X, Maximize, Minimize } from 'lucide-react'
+import { ChevronLeft, ChevronRight, X, Maximize, Minimize, Pencil, RotateCcw } from 'lucide-react'
+import { useApi } from '@/lib/api'
 import { Document, Page, pdfjs } from 'react-pdf'
 import 'react-pdf/dist/Page/AnnotationLayer.css'
 import 'react-pdf/dist/Page/TextLayer.css'
@@ -121,6 +122,11 @@ export function SetViewerPage() {
 
   const [ready, setReady] = useState(false)
   const [controlsVisible, setControlsVisible] = useState(true)
+  const [editMode, setEditMode] = useState(false)
+  const [editContent, setEditContent] = useState('')
+  const [editSaving, setEditSaving] = useState(false)
+  const [editError, setEditError] = useState<string | null>(null)
+  const api = useApi()
 
   useEffect(() => {
     const node = containerNodeRef.current
@@ -297,6 +303,48 @@ export function SetViewerPage() {
           </p>
         </div>
         <span style={{ color: '#666', fontSize: 12, flexShrink: 0 }}>{currentPage + 1} / {pages.length}</span>
+        {current.file.file_type === 'chordpro' && current.file.fileId && (
+          <>
+            {current.file.hasEdits && !editMode && (
+              <button
+                onClick={async e => {
+                  e.stopPropagation()
+                  if (!current.file.fileId || !current.file.songId) return
+                  if (!confirm('Revert to the original uploaded file? Your edits will be deleted.')) return
+                  try {
+                    const res = await api.delete(`/api/uploads/songs/${current.file.songId}/files/${current.file.fileId}/chordpro-edits`)
+                    // Update sessionStorage and re-fetch
+                    const raw = sessionStorage.getItem('setViewerFiles')
+                    if (raw) {
+                      const updated = (JSON.parse(raw) as SetFile[]).map(f =>
+                        f.fileId === current.file.fileId ? { ...f, url: res.data.url, hasEdits: false } : f
+                      )
+                      sessionStorage.setItem('setViewerFiles', JSON.stringify(updated))
+                      setFiles(updated)
+                    }
+                  } catch {
+                    alert('Revert failed. Please try again.')
+                  }
+                }}
+                style={{ background: 'none', border: '1px solid #a33', borderRadius: 4, color: '#f88', cursor: 'pointer', padding: '4px 8px', display: 'flex', alignItems: 'center', gap: 4, fontSize: 12 }}
+              >
+                <RotateCcw size={12} /> Revert
+              </button>
+            )}
+            <button
+              onClick={e => {
+                e.stopPropagation()
+                const content = chordProContents.find(c => c.fileIndex === current.fileIndex)
+                setEditContent(content?.rawSource || '')
+                setEditError(null)
+                setEditMode(true)
+              }}
+              style={{ background: 'none', border: '1px solid #444', borderRadius: 4, color: '#aaa', cursor: 'pointer', padding: '4px 8px', display: 'flex', alignItems: 'center', gap: 4, fontSize: 12 }}
+            >
+              <Pencil size={12} /> Edit
+            </button>
+          </>
+        )}
         {canFullscreen && (
           <button onClick={toggleFullscreen} style={{ background: 'none', border: '1px solid #444', borderRadius: 4, color: '#aaa', cursor: 'pointer', padding: '4px 8px', display: 'flex' }}>
             {isFullscreen ? <Minimize size={14} /> : <Maximize size={14} />}
@@ -317,11 +365,71 @@ export function SetViewerPage() {
 
         {/* Page content */}
         {current.file.file_type === 'chordpro' ? (
-          <div
-            className="chordpro-render"
-            style={{ width: containerSize ? containerSize.width - 64 : '100%', height: containerSize ? containerSize.height - 32 : '100%', overflow: 'auto', padding: '16px 24px', background: '#fff', borderRadius: 4 }}
-            dangerouslySetInnerHTML={{ __html: current.chordProHtml || '' }}
-          />
+          editMode ? (
+            <div style={{ width: containerSize ? containerSize.width - 32 : '100%', height: containerSize ? containerSize.height - 32 : '100%', display: 'flex', flexDirection: 'column', padding: '16px', gap: 8 }} onClick={e => e.stopPropagation()}>
+              <textarea
+                value={editContent}
+                onChange={e => setEditContent(e.target.value)}
+                style={{ flex: 1, fontFamily: 'monospace', fontSize: 13, lineHeight: 1.6, padding: 12, border: '1px solid #ccc', borderRadius: 4, resize: 'none', background: '#fafafa' }}
+                spellCheck={false}
+              />
+              {editError && <p style={{ color: '#c00', fontSize: 13, margin: 0 }}>{editError}</p>}
+              <div style={{ display: 'flex', gap: 8, justifyContent: 'flex-end' }}>
+                <button
+                  onClick={() => { setEditMode(false); setEditError(null) }}
+                  style={{ padding: '6px 16px', border: '1px solid #ccc', borderRadius: 4, background: '#fff', cursor: 'pointer', fontSize: 13 }}
+                >
+                  Cancel
+                </button>
+                <button
+                  disabled={editSaving}
+                  onClick={async () => {
+                    if (!current.file.fileId || !current.file.songId) return
+                    setEditSaving(true)
+                    setEditError(null)
+                    try {
+                      const res = await api.put(
+                        `/api/uploads/songs/${current.file.songId}/files/${current.file.fileId}/chordpro`,
+                        { content: editContent }
+                      )
+                      // Re-parse and re-render the updated source
+                      const { default: ChordSheetJS } = await import('chordsheetjs')
+                      const parser = new ChordSheetJS.ChordProParser()
+                      const song = parser.parse(editContent)
+                      const formatter = new ChordSheetJS.HtmlDivFormatter()
+                      const html = formatter.format(song)
+                      setChordProContents(prev => prev.map(c =>
+                        c.fileIndex === current.fileIndex ? { ...c, html, rawSource: editContent } : c
+                      ))
+                      // Update sessionStorage with new URL and hasEdits flag
+                      const raw = sessionStorage.getItem('setViewerFiles')
+                      if (raw) {
+                        const updated = (JSON.parse(raw) as SetFile[]).map(f =>
+                          f.fileId === current.file.fileId ? { ...f, url: res.data.url, hasEdits: true } : f
+                        )
+                        sessionStorage.setItem('setViewerFiles', JSON.stringify(updated))
+                        setFiles(updated)
+                      }
+                      setEditMode(false)
+                    } catch {
+                      setEditError('Save failed. Please check your ChordPro syntax and try again.')
+                    } finally {
+                      setEditSaving(false)
+                    }
+                  }}
+                  style={{ padding: '6px 16px', border: 'none', borderRadius: 4, background: '#4b7fa5', color: '#fff', cursor: editSaving ? 'not-allowed' : 'pointer', fontSize: 13, opacity: editSaving ? 0.7 : 1 }}
+                >
+                  {editSaving ? 'Saving…' : 'Save'}
+                </button>
+              </div>
+            </div>
+          ) : (
+            <div
+              className="chordpro-render"
+              style={{ width: containerSize ? containerSize.width - 64 : '100%', height: containerSize ? containerSize.height - 32 : '100%', overflow: 'auto', padding: '16px 24px', background: '#fff', borderRadius: 4 }}
+              dangerouslySetInnerHTML={{ __html: current.chordProHtml || '' }}
+            />
+          )
         ) : (
           <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
             <Document
@@ -353,6 +461,7 @@ export function SetViewerPage() {
               />
             </Document>
           </div>
+        )}
         )}
 
         {/* Next */}
