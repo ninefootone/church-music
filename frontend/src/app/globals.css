@@ -2807,6 +2807,46 @@ select.input {
   padding: 2px 8px;
 }
 
+/* Tag picker (song new/edit forms) */
+.tag-picker {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.tag-picker .tag-chip {
+  cursor: pointer;
+  border: 1px solid transparent;
+  padding: 4px 10px;
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  transition: background var(--transition-fast), border-color var(--transition-fast);
+  background: var(--color-neutral-100);
+  color: var(--color-text-secondary);
+}
+
+.tag-picker .tag-chip:hover {
+  background: var(--color-brand-50);
+  color: var(--color-brand-700);
+}
+
+.tag-picker .tag-chip--selected {
+  background: var(--color-brand-500);
+  color: #fff;
+  border-color: var(--color-brand-500);
+}
+
+.tag-picker .tag-chip--selected:hover {
+  background: var(--color-brand-600);
+  border-color: var(--color-brand-600);
+}
+
+.tag-chip-x {
+  opacity: 0.7;
+  flex-shrink: 0;
+}
+
 .discover-subtitle {
   font-weight: 400;
   padding: var(--space-sm) 0 var(--space-md);
@@ -3073,15 +3113,6 @@ select.input {
 .lyrics-editor-hint    { font-size: var(--text-xs); color: var(--color-text-muted); align-self: center; margin-left: 8px; }
 .lyrics-editor-input   { padding: 12px 16px; min-height: 280px; font-size: var(--text-base); line-height: 1.8; }
 
-/* ── Tag Input ── */
-.tag-input-wrap     { position: relative; }
-.tag-input-dropdown {
-  position: absolute; top: 100%; left: 0; right: 0;
-  background: var(--color-surface); border: 1px solid var(--color-border);
-  border-radius: 6px; margin-top: 4px; z-index: 50;
-  box-shadow: 0 4px 12px rgba(0,0,0,0.15); overflow: hidden;
-}
-
 /* ── ChordPro Viewer ── */
 .chordpro-viewer       { position: fixed; inset: 0; z-index: 300; display: flex; flex-direction: column; background: var(--color-bg); }
 .chordpro-toolbar      { background: var(--color-surface); border-bottom: 1px solid var(--color-border); padding: 10px var(--space-lg); display: flex; align-items: center; gap: 12px; flex-shrink: 0; }
@@ -3093,7 +3124,7 @@ select.input {
 .chordpro-font-size    { font-size: var(--text-xs); color: var(--color-text-muted); min-width: 28px; text-align: center; }
 .chordpro-scroll       { flex: 1; overflow-y: auto; padding: var(--space-lg); }
 .chordpro-content      { max-width: 800px; margin: 0 auto; }
-.tag-input-option   { padding: 8px 12px; cursor: pointer; font-size: var(--text-sm); color: var(--color-text-primary); }
+
 /* ── FileUploadModal ── */
 .drop-zone           { border: 2px dashed var(--color-border); border-radius: var(--radius-md); padding: var(--space-lg); text-align: center; cursor: pointer; background: var(--color-neutral-50); transition: all var(--transition-fast); }
 .drop-zone-heading   { font-size: var(--text-base); font-weight: 500; color: var(--color-text-secondary); margin-bottom: 4px; }
