@@ -54,7 +54,14 @@ function SongItem({ item, index }: { item: any; index: number }) {
             {isSong && item.song_title ? item.song_title : (item.title || item.type)}
           </p>
           {item.notes && (
-            <p className="item-notes">{item.notes}</p>
+            <p className="item-notes">{item.notes.split('\n').map((line: string, i: number) => {
+              const parts = line.split(/(\*\*[^*]+\*\*|_[^_]+_)/g).map((part: string, j: number) => {
+                if (part.startsWith('**') && part.endsWith('**')) return <strong key={j}>{part.slice(2, -2)}</strong>
+                if (part.startsWith('_') && part.endsWith('_')) return <em key={j}>{part.slice(1, -1)}</em>
+                return part
+              })
+              return <span key={i}>{parts}{i < item.notes.split('\n').length - 1 && <br />}</span>
+            })}</p>
           )}
         </div>
 
