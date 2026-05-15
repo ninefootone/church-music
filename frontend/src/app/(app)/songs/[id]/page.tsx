@@ -343,7 +343,7 @@ export default function SongDetailPage() {
             <div className="meta-row">
               <span className="meta-label">Tags</span>
               <div className="tag-list">
-                {song.tags.map((t: { id: string; name: string }) => <span key={t.id} className="tag">{t.name}</span>)}
+                {(song.tags as any[]).map((t: { id: string; name: string }) => <span key={t.id} className="tag">{t.name}</span>)}
               </div>
             </div>
           )}
