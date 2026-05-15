@@ -4,11 +4,6 @@ const categoryClasses: Record<Category, string> = {
   praise:     'cat-badge cat-praise',
   assurance:  'cat-badge cat-assurance',
   response:   'cat-badge cat-response',
-  communion:  'cat-badge cat-communion',
-  lament:     'cat-badge cat-lament',
-  easter:     'cat-badge cat-easter',
-  christmas:  'cat-badge cat-christmas',
-  all_age:    'cat-badge cat-all-age',
   other:      'cat-badge cat-other',
 }
 
