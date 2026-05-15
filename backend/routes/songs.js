@@ -3,13 +3,46 @@ const router = express.Router();
 const pool = require('../db/pool');
 const { requireAuth, requireMembership, requireAdmin, requirePermission } = require('../middleware/auth');
 
-// GET /songs/tags/all — all distinct tag names across all churches (for autocomplete)
+// GET /songs/tags/all — all global tags (church_id IS NULL = master-managed)
 router.get('/tags/all', requireAuth, async (req, res, next) => {
   try {
     const result = await pool.query(
-      `SELECT DISTINCT name FROM tags ORDER BY name ASC`
+      `SELECT id, name FROM tags WHERE church_id IS NULL ORDER BY name ASC`
     );
-    res.json(result.rows.map(r => r.name));
+    res.json(result.rows);
+  } catch (err) {
+    next(err);
+  }
+});
+
+// POST /songs/tags — master only, create a global tag
+router.post('/tags', requireAuth, requireAdmin, async (req, res, next) => {
+  try {
+    if (req.churchId !== process.env.MASTER_CHURCH_ID) {
+      return res.status(403).json({ error: 'Only the master library can manage global tags' });
+    }
+    const { name } = req.body;
+    const trimmed = name?.trim();
+    if (!trimmed) return res.status(400).json({ error: 'Tag name is required' });
+    const result = await pool.query(
+      `INSERT INTO tags (church_id, name) VALUES (NULL, $1) RETURNING id, name`,
+      [trimmed]
+    );
+    res.status(201).json(result.rows[0]);
+  } catch (err) {
+    if (err.code === '23505') return res.status(409).json({ error: 'Tag already exists' });
+    next(err);
+  }
+});
+
+// DELETE /songs/tags/:id — master only, delete a global tag
+router.delete('/tags/:id', requireAuth, requireAdmin, async (req, res, next) => {
+  try {
+    if (req.churchId !== process.env.MASTER_CHURCH_ID) {
+      return res.status(403).json({ error: 'Only the master library can manage global tags' });
+    }
+    await pool.query(`DELETE FROM tags WHERE id = $1 AND church_id IS NULL`, [req.params.id]);
+    res.json({ ok: true });
   } catch (err) {
     next(err);
   }
@@ -158,19 +191,13 @@ router.post('/', requireAuth, requirePermission('can_manage_songs'), async (req,
       [churchId, title, author, default_key, category, first_line, lyrics, ccli_number, youtube_url, notes, bible_references, suggested_arrangement, ccli_url, shareEnabled, copyright_info ?? null, copyright_link ?? null, discoverEnabled, discover_description ?? null, time_signature ?? null, tempo ? parseInt(tempo) : null]
     );
 
-    // Handle tags
+    // Handle tags — only global tags (church_id IS NULL) are permitted
     if (tags && tags.length > 0) {
-      for (const tagName of tags) {
-        const trimmed = tagName.trim();
-        if (!trimmed) continue;
-        const tag = await pool.query(
-          `INSERT INTO tags (church_id, name) VALUES ($1, $2)
-           ON CONFLICT (church_id, name) DO UPDATE SET name = EXCLUDED.name RETURNING id`,
-          [churchId, trimmed]
-        );
+      for (const tagId of tags) {
+        if (!tagId) continue;
         await pool.query(
           'INSERT INTO song_tags (song_id, tag_id) VALUES ($1, $2) ON CONFLICT DO NOTHING',
-          [song.rows[0].id, tag.rows[0].id]
+          [song.rows[0].id, tagId]
         );
       }
     }
@@ -249,20 +276,14 @@ router.put('/:id', requireAuth, requirePermission('can_manage_songs'), async (re
     );
     if (song.rows.length === 0) return res.status(404).json({ error: 'Song not found' });
 
-    // Replace tags
+    // Replace tags — only global tags (church_id IS NULL) are permitted
     await pool.query('DELETE FROM song_tags WHERE song_id = $1', [req.params.id]);
     if (tags && tags.length > 0) {
-      for (const tagName of tags) {
-        const trimmed = tagName.trim();
-        if (!trimmed) continue;
-        const tag = await pool.query(
-          `INSERT INTO tags (church_id, name) VALUES ($1, $2)
-           ON CONFLICT (church_id, name) DO UPDATE SET name = EXCLUDED.name RETURNING id`,
-          [churchId, trimmed]
-        );
+      for (const tagId of tags) {
+        if (!tagId) continue;
         await pool.query(
           'INSERT INTO song_tags (song_id, tag_id) VALUES ($1, $2) ON CONFLICT DO NOTHING',
-          [req.params.id, tag.rows[0].id]
+          [req.params.id, tagId]
         );
       }
     }
