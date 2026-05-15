@@ -7,11 +7,11 @@
 - [ ] Add events – Music Minsitry Conference etc.
 - [ ] Add blogs – eg. Sovereign Grace
 
+### Plans
+- [ ] Plan item notes — fix Cmd+B/I shortcuts for annotator role (needs requestAnimationFrame fix in plans/[id]/page.tsx inline editor); fix italic rendering (item-notes class already italicises text, making <em> invisible — remove italic from .item-notes or use underline/colour for <em> within it)
+
 ### Features – Print/View
 - [ ] Single file viewer — route at /songs/[id]/view/[fileId] that opens a single PDF or ChordPro file in the full set viewer (same component, single file); accessible from the song page for rehearsal use; supports swipe/keyboard navigation and auto-hide controls
-
-### Features – Songs
-- [ ] Consolidate tags — review remaining ~108 tags after initial cleanup; aim for a clean controlled vocabulary of ~20–25 tags
 
 ### Features – Admin
 - [ ] Automated email reminders – email musicans 1 week before a plan
@@ -71,6 +71,7 @@ platform-wide stats: number of churches, total songs, total plans, total users, 
 - [x] Dashboard reorder — Songs & Plans (top), Playlists, Feedback/Questions, Team
 - [x] Permission checkbox — add "Manage playlists" checkbox to member management modal in dashboard
 - [x] ChordPro inline editing — "Edit" button in the viewer toolbar opens a textarea with raw ChordPro text; save writes updated content back to R2 via a new PUT endpoint; admin only
+- [x] Consolidate tags — review remaining ~108 tags after initial cleanup; aim for a clean controlled vocabulary of ~20–25 tags
 
 ### Inline style refactor
 - [x] `src/app/page.tsx`
