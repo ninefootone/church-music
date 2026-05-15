@@ -214,7 +214,40 @@ router.put('/:id/items', requireAuth, requireMembership, async function(req, res
   }
 });
 
+// PATCH /:id/items/:itemId/notes — update notes only (annotators + full editors)
+router.patch('/:id/items/:itemId/notes', requireAuth, requireMembership, async function(req, res, next) {
+  try {
+    const { notes } = req.body;
+    const { id: planId, itemId } = req.params;
+    const isAdmin = req.membership.role === 'admin';
+    const canEditAny = req.membership.can_edit_any_plan;
+    const canAnnotate = req.membership.can_annotate_plans;
+
+    // Check plan belongs to this church
+    const plan = await pool.query(
+      'SELECT created_by FROM plans WHERE id=$1 AND church_id=$2',
+      [planId, req.churchId]
+    );
+    if (plan.rows.length === 0) return res.status(404).json({ error: 'Not found' });
+
+    const isOwner = plan.rows[0].created_by === req.user.clerk_id;
+    if (!isAdmin && !isOwner && !canEditAny && !canAnnotate) {
+      return res.status(403).json({ error: 'Not authorised' });
+    }
+
+    const result = await pool.query(
+      'UPDATE plan_items SET notes=$1 WHERE id=$2 AND plan_id=$3 RETURNING *',
+      [notes || null, itemId, planId]
+    );
+    if (result.rows.length === 0) return res.status(404).json({ error: 'Item not found' });
+    res.json(result.rows[0]);
+  } catch (err) {
+    next(err);
+  }
+});
+
 router.post('/:id/musicians', requireAuth, requireMembership, async function(req, res, next) {
+
   try {
     const { name, role, user_id } = req.body;
     console.log('[musicians POST] body:', req.body, 'planId:', req.params.id);
