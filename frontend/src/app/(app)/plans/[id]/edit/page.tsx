@@ -187,19 +187,25 @@ function SortableItem({
               rows={3}
               onKeyDown={e => {
                 const el = e.currentTarget
-                const start = el.selectionStart
-                const end = el.selectionEnd
+                const start = el.selectionStart ?? 0
+                const end = el.selectionEnd ?? 0
                 if ((e.metaKey || e.ctrlKey) && e.key === 'b') {
                   e.preventDefault()
-                  const wrapped = `**${el.value.slice(start, end)}**`
+                  const selected = el.value.slice(start, end)
+                  const wrapped = `**${selected}**`
                   const next = el.value.slice(0, start) + wrapped + el.value.slice(end)
                   onUpdate({ notes: next })
+                  const newCursor = start + wrapped.length
+                  requestAnimationFrame(() => { el.selectionStart = selected ? newCursor : start + 2; el.selectionEnd = selected ? newCursor : start + 2 })
                 }
                 if ((e.metaKey || e.ctrlKey) && e.key === 'i') {
                   e.preventDefault()
-                  const wrapped = `_${el.value.slice(start, end)}_`
+                  const selected = el.value.slice(start, end)
+                  const wrapped = `_${selected}_`
                   const next = el.value.slice(0, start) + wrapped + el.value.slice(end)
                   onUpdate({ notes: next })
+                  const newCursor = start + wrapped.length
+                  requestAnimationFrame(() => { el.selectionStart = selected ? newCursor : start + 1; el.selectionEnd = selected ? newCursor : start + 1 })
                 }
               }}
             />
