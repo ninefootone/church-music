@@ -177,12 +177,13 @@ router.post('/', requireAuth, requirePermission('can_manage_songs'), async (req,
 
     if (ccli_number) {
       await pool.query(`
-        INSERT INTO ccli_lookup (ccli_number, title, author, first_line, default_key, source_church_id)
-        VALUES ($1, $2, $3, $4, $5, $6)
+        INSERT INTO ccli_lookup (ccli_number, title, author, first_line, default_key, category, source_church_id)
+        VALUES ($1, $2, $3, $4, $5, $6, $7)
         ON CONFLICT (ccli_number) DO UPDATE SET
           confirmed_count = ccli_lookup.confirmed_count + 1,
+          category = COALESCE(EXCLUDED.category, ccli_lookup.category),
           updated_at = NOW()
-      `, [ccli_number, title, author, first_line, default_key, churchId]);
+      `, [ccli_number, title, author, first_line, default_key, category ?? null, churchId]);
     }
 
     res.status(201).json(song.rows[0]);
@@ -268,12 +269,13 @@ router.put('/:id', requireAuth, requirePermission('can_manage_songs'), async (re
 
     if (ccli_number) {
       await pool.query(`
-        INSERT INTO ccli_lookup (ccli_number, title, author, first_line, default_key, source_church_id)
-        VALUES ($1, $2, $3, $4, $5, $6)
+        INSERT INTO ccli_lookup (ccli_number, title, author, first_line, default_key, category, source_church_id)
+        VALUES ($1, $2, $3, $4, $5, $6, $7)
         ON CONFLICT (ccli_number) DO UPDATE SET
           confirmed_count = ccli_lookup.confirmed_count + 1,
+          category = COALESCE(EXCLUDED.category, ccli_lookup.category),
           updated_at = NOW()
-      `, [ccli_number, title, author, first_line, default_key, churchId]);
+      `, [ccli_number, title, author, first_line, default_key, category ?? null, churchId]);
     }
 
     res.json(song.rows[0]);
