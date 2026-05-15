@@ -25,6 +25,8 @@ export default function SettingsPage() {
   const { user } = useUser()
   const { church, isAdmin, refetch } = useChurch()
 
+  const isMasterLibrary = church?.id === process.env.NEXT_PUBLIC_MASTER_CHURCH_ID
+
   const [churchName, setChurchName] = useState('')
   const [ccliNumber, setCcliNumber] = useState('')
   const [saving, setSaving] = useState(false)
@@ -36,6 +38,12 @@ export default function SettingsPage() {
   const [mailingLoading, setMailingLoading] = useState(false)
   const [logoUploading, setLogoUploading] = useState(false)
   const [logoError, setLogoError] = useState('')
+
+  // Global tags (master library only)
+  const [globalTags, setGlobalTags] = useState<{ id: string; name: string }[]>([])
+  const [newTagName, setNewTagName] = useState('')
+  const [tagsSaving, setTagsSaving] = useState(false)
+  const [tagsError, setTagsError] = useState('')
 
   // Roles
   const [roles, setRoles] = useState<RoleItem[]>([])
@@ -56,6 +64,9 @@ export default function SettingsPage() {
           setRoles(r.data.map((role: { id: string; name: string }) => ({ id: role.id, name: role.name, originalName: role.name })))
           setRolesLoaded(true)
         }).catch(() => {})
+      }
+      if (church.id === process.env.NEXT_PUBLIC_MASTER_CHURCH_ID) {
+        api.get('/api/songs/tags/all').then(r => setGlobalTags(r.data)).catch(() => {})
       }
     }
   }, [church, rolesLoaded])
@@ -255,6 +266,38 @@ export default function SettingsPage() {
     dragIndex.current = null
   }
 
+  async function handleAddTag() {
+    const trimmed = newTagName.trim()
+    if (!trimmed) return
+    if (globalTags.some(t => t.name.toLowerCase() === trimmed.toLowerCase())) {
+      setTagsError('That tag already exists.')
+      return
+    }
+    setTagsSaving(true)
+    setTagsError('')
+    try {
+      const client = await getAuthenticatedApi()
+      const { data } = await client.post('/api/songs/tags', { name: trimmed })
+      setGlobalTags(prev => [...prev, data].sort((a, b) => a.name.localeCompare(b.name)))
+      setNewTagName('')
+    } catch (err: any) {
+      setTagsError(err.response?.data?.error || 'Failed to add tag.')
+    } finally {
+      setTagsSaving(false)
+    }
+  }
+
+  async function handleDeleteTag(id: string) {
+    setTagsError('')
+    try {
+      const client = await getAuthenticatedApi()
+      await client.delete(`/api/songs/tags/${id}`)
+      setGlobalTags(prev => prev.filter(t => t.id !== id))
+    } catch (err: any) {
+      setTagsError(err.response?.data?.error || 'Failed to delete tag.')
+    }
+  }
+
   if (!isAdmin) {
     return (
       <div className="settings-restricted">
@@ -452,6 +495,50 @@ export default function SettingsPage() {
           </button>
         </div>
       </div>
+
+      {/* Global tag management — master library only */}
+      {isMasterLibrary && (
+        <div className="settings-card settings-card--spaced">
+          <h2 className="settings-section-heading settings-section-heading--tight">Song tags</h2>
+          <p className="settings-section-desc">
+            Manage the approved tag vocabulary available to all churches. All churches pick from this list — none can create their own.
+          </p>
+
+          {tagsError && <div className="settings-error">{tagsError}</div>}
+
+          <div className="role-chip-list">
+            {globalTags.length === 0 && (
+              <p className="form-empty-note">No tags yet.</p>
+            )}
+            {globalTags.map(tag => (
+              <div key={tag.id} className="role-chip">
+                {tag.name}
+                <button
+                  type="button"
+                  onClick={() => handleDeleteTag(tag.id)}
+                  className="btn-icon-remove"
+                >
+                  <X size={13} />
+                </button>
+              </div>
+            ))}
+          </div>
+
+          <div className="role-add-row">
+            <input
+              type="text"
+              placeholder="e.g. God's Faithfulness"
+              value={newTagName}
+              onChange={e => setNewTagName(e.target.value)}
+              onKeyDown={e => { if (e.key === 'Enter') { e.preventDefault(); handleAddTag() } }}
+              className="role-input"
+            />
+            <button type="button" onClick={handleAddTag} disabled={tagsSaving} className="btn btn-ghost btn-icon-label">
+              <Plus size={15} />{tagsSaving ? 'Adding…' : 'Add'}
+            </button>
+          </div>
+        </div>
+      )}
 
       {/* Warning modal */}
       {warningModal && (
