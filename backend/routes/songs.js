@@ -56,7 +56,7 @@ router.get('/', requireAuth, requireMembership, async (req, res, next) => {
 
     let query = `
       SELECT s.*,
-        ARRAY_AGG(DISTINCT t.name) FILTER (WHERE t.name IS NOT NULL) AS tags,
+        COALESCE(JSON_AGG(DISTINCT jsonb_build_object('id', t.id, 'name', t.name)) FILTER (WHERE t.id IS NOT NULL), '[]') AS tags,
         COUNT(DISTINCT ss.id) FILTER (WHERE srv.plan_date <= NOW()) AS times_sung,
         COUNT(DISTINCT ss.id) FILTER (WHERE srv.plan_date > NOW()) AS times_planned,
         MAX(srv.plan_date) FILTER (WHERE srv.plan_date <= NOW()) AS last_sung,
@@ -109,7 +109,7 @@ router.get('/:id', requireAuth, requireMembership, async (req, res, next) => {
     const { churchId } = req;
     const song = await pool.query(
       `SELECT s.*,
-        ARRAY_AGG(DISTINCT t.name) FILTER (WHERE t.name IS NOT NULL) AS tags
+        COALESCE(JSON_AGG(DISTINCT jsonb_build_object('id', t.id, 'name', t.name)) FILTER (WHERE t.id IS NOT NULL), '[]') AS tags
        FROM songs s
        LEFT JOIN song_tags st ON st.song_id = s.id
        LEFT JOIN tags t ON t.id = st.tag_id
