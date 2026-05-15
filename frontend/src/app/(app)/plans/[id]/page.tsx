@@ -22,6 +22,17 @@ interface SongFile {
   url: string
 }
 
+function renderNotes(text: string) {
+  return text.split('\n').map((line, i) => {
+    const parts = line.split(/(\*\*[^*]+\*\*|_[^_]+_)/g).map((part, j) => {
+      if (part.startsWith('**') && part.endsWith('**')) return <strong key={j}>{part.slice(2, -2)}</strong>
+      if (part.startsWith('_') && part.endsWith('_')) return <em key={j}>{part.slice(1, -1)}</em>
+      return part
+    })
+    return <span key={i}>{parts}{i < text.split('\n').length - 1 && <br />}</span>
+  })
+}
+
 function SongItem({ item, index, planId, canAnnotate }: { item: any; index: number; planId: string; canAnnotate: boolean }) {
   const [expanded, setExpanded] = useState(false)
   const [files, setFiles] = useState<SongFile[] | null>(null)
@@ -97,7 +108,7 @@ function SongItem({ item, index, planId, canAnnotate }: { item: any; index: numb
             </div>
           ) : (
             <>
-              {notes && <p className="item-notes">{notes}</p>}
+              {notes && <p className="item-notes">{renderNotes(notes)}</p>}
               {canAnnotate && (
                 <button
                   className="btn-inline-link"
