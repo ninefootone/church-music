@@ -32,7 +32,7 @@ export default function EditSongPage() {
   const [loading, setLoading] = useState(false)
   const [fetching, setFetching] = useState(true)
   const [error, setError] = useState('')
-  const [form, setForm] = useState({ title: '', author: '', default_key: '', category: '' as Category | '', first_line: '', ccli_number: '', lyrics: '', tags: '', notes: '', bible_references: '', suggested_arrangement: '', share_all_data: false, copyright_info: '', copyright_link: '', in_discover: false, discover_description: '', time_signature: '', tempo: '' })
+  const [form, setForm] = useState({ title: '', author: '', default_key: '', category: '' as Category | '', first_line: '', ccli_number: '', lyrics: '', tags: [] as string[], notes: '', bible_references: '', suggested_arrangement: '', share_all_data: false, copyright_info: '', copyright_link: '', in_discover: false, discover_description: '', time_signature: '', tempo: '' })
   const [links, setLinks] = useState<SongLink[]>([])
   const [discoverImageUrl, setDiscoverImageUrl] = useState<string | null>(null)
   const [discoverImageUploading, setDiscoverImageUploading] = useState(false)
@@ -44,7 +44,7 @@ export default function EditSongPage() {
     api.get(`/api/songs/${id}`).then(r => {
       const s: Song = r.data
       const normaliseKey = (k: string | null | undefined) => k ? k.replace(/♯/g, '#').replace(/♭/g, 'b') : ''
-      setForm({ title: s.title, author: s.author || '', default_key: normaliseKey(s.default_key), category: s.category || '', first_line: s.first_line || '', ccli_number: s.ccli_number || '', lyrics: s.lyrics || '', tags: (s.tags || []).join(', '), notes: s.notes || '', bible_references: s.bible_references || '', suggested_arrangement: s.suggested_arrangement || '', share_all_data: !!s.share_all_data, copyright_info: s.copyright_info || '', copyright_link: s.copyright_link || '', in_discover: !!s.in_discover, discover_description: s.discover_description || '', time_signature: s.time_signature || '', tempo: s.tempo?.toString() || '' })
+      setForm({ title: s.title, author: s.author || '', default_key: normaliseKey(s.default_key), category: s.category || '', first_line: s.first_line || '', ccli_number: s.ccli_number || '', lyrics: s.lyrics || '', tags: (s.tags || []).map((t: { id: string }) => t.id), notes: s.notes || '', bible_references: s.bible_references || '', suggested_arrangement: s.suggested_arrangement || '', share_all_data: !!s.share_all_data, copyright_info: s.copyright_info || '', copyright_link: s.copyright_link || '', in_discover: !!s.in_discover, discover_description: s.discover_description || '', time_signature: s.time_signature || '', tempo: s.tempo?.toString() || '' })
       if (s.discover_image_key) {
         ;(async () => {
           try {
@@ -64,8 +64,7 @@ export default function EditSongPage() {
     try {
       const token = await getToken()
       setAuthToken(token)
-      const tags = form.tags.split(',').map(t => t.trim()).filter(Boolean)
-      await api.put(`/api/songs/${id}`, { ...form, tags })
+      await api.put(`/api/songs/${id}`, { ...form, tags: form.tags })
 
       // Sync links: delete removed ones, update existing, add new
       const existingLinks = links.filter(l => l.id)
@@ -222,7 +221,7 @@ export default function EditSongPage() {
                 </div>
               </div>
           </div>
-          <div className="form-field"><label className="label">Tags <span className="label-note">(comma separated)</span></label><TagInput value={form.tags} onChange={v => setForm(f => ({ ...f, tags: v }))} /></div>
+          <div className="form-field"><label className="label">Tags</label><TagInput value={form.tags} onChange={ids => setForm(f => ({ ...f, tags: ids }))} /></div>
           <div className="form-field">
             <label className="label">Suggested arrangement</label>
             <ArrangementBuilder

@@ -53,7 +53,7 @@ export default function NewSongPage() {
   const isMasterLibrary = church?.id === process.env.NEXT_PUBLIC_MASTER_CHURCH_ID
   const [form, setForm] = useState({
     title: '', author: '', default_key: '', category: '' as Category | '',
-    first_line: '', ccli_number: '', lyrics: '', tags: '',
+    first_line: '', ccli_number: '', lyrics: '', tags: [] as string[],
     notes: '', bible_references: '', suggested_arrangement: '',
     share_all_data: false, in_discover: false, discover_description: '',
     time_signature: '', tempo: '',
@@ -98,8 +98,7 @@ export default function NewSongPage() {
     try {
       const token = await getToken()
       setAuthToken(token)
-      const tags = form.tags.split(',').map(t => t.trim()).filter(Boolean)
-      const { data } = await api.post('/api/songs', { ...form, tags })
+      const { data } = await api.post('/api/songs', { ...form, tags: form.tags })
 
       for (const link of links) {
         if (link.url.trim()) {
@@ -250,7 +249,7 @@ export default function NewSongPage() {
 
           <div className="form-field">
             <label className="label">Tags <span className="label-note">(comma separated)</span></label>
-            <TagInput value={form.tags} onChange={v => setForm(f => ({ ...f, tags: v }))} />
+            <TagInput value={form.tags} onChange={ids => setForm(f => ({ ...f, tags: ids }))} />
           </div>
 
           <div className="form-field">
