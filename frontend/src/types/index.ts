@@ -6,22 +6,12 @@ export type Category =
   | 'praise'
   | 'assurance'
   | 'response'
-  | 'communion'
-  | 'lament'
-  | 'easter'
-  | 'christmas'
-  | 'all_age'
   | 'other'
 
 export const CATEGORIES: { value: Category; label: string }[] = [
   { value: 'praise',     label: 'Praise' },
   { value: 'assurance',  label: 'Assurance' },
   { value: 'response',   label: 'Response' },
-  { value: 'communion',  label: 'Communion' },
-  { value: 'lament',     label: 'Lament' },
-  { value: 'easter',     label: 'Easter' },
-  { value: 'christmas',  label: 'Christmas' },
-  { value: 'all_age',    label: 'All-age' },
   { value: 'other',      label: 'Other' },
 ]
 
