@@ -22,10 +22,26 @@ interface SongFile {
   url: string
 }
 
-function SongItem({ item, index }: { item: any; index: number }) {
+function SongItem({ item, index, planId, canAnnotate }: { item: any; index: number; planId: string; canAnnotate: boolean }) {
   const [expanded, setExpanded] = useState(false)
   const [files, setFiles] = useState<SongFile[] | null>(null)
   const [loadingFiles, setLoadingFiles] = useState(false)
+  const [editingNotes, setEditingNotes] = useState(false)
+  const [notes, setNotes] = useState(item.notes || '')
+  const [savingNotes, setSavingNotes] = useState(false)
+
+  const handleSaveNotes = async () => {
+    setSavingNotes(true)
+    try {
+      await api.patch(`/api/plans/${planId}/items/${item.id}/notes`, { notes })
+      item.notes = notes
+      setEditingNotes(false)
+    } catch {
+      // leave editing open on error
+    } finally {
+      setSavingNotes(false)
+    }
+  }
 
   const handleExpand = async () => {
     if (!expanded && item.song_id && files === null) {
@@ -57,8 +73,40 @@ function SongItem({ item, index }: { item: any; index: number }) {
           <p style={{ fontSize: 'var(--text-md)', fontWeight: isSong ? 600 : 400, color: isSong ? 'var(--color-text-primary)' : 'var(--color-text-secondary)', marginBottom: 0 }}>
             {isSong && item.song_title ? item.song_title : (item.title || item.type.charAt(0).toUpperCase() + item.type.slice(1))}
           </p>
-          {item.notes && (
-            <p className="item-notes">{item.notes}</p>
+          {editingNotes ? (
+            <div style={{ marginTop: 4 }} onClick={e => e.stopPropagation()}>
+              <textarea
+                className="input notes-input"
+                value={notes}
+                onChange={e => setNotes(e.target.value)}
+                rows={3}
+                autoFocus
+                onKeyDown={e => {
+                  if (e.key === 'Escape') { setNotes(item.notes || ''); setEditingNotes(false) }
+                  if ((e.metaKey || e.ctrlKey) && e.key === 'Enter') handleSaveNotes()
+                }}
+              />
+              <div style={{ display: 'flex', gap: 6, marginTop: 4 }}>
+                <button className="btn btn-primary btn-xs" onClick={handleSaveNotes} disabled={savingNotes}>
+                  {savingNotes ? 'Saving…' : 'Save'}
+                </button>
+                <button className="btn btn-secondary btn-xs" onClick={() => { setNotes(item.notes || ''); setEditingNotes(false) }}>
+                  Cancel
+                </button>
+              </div>
+            </div>
+          ) : (
+            <>
+              {notes && <p className="item-notes">{notes}</p>}
+              {canAnnotate && (
+                <button
+                  className="btn-inline-link"
+                  onClick={e => { e.stopPropagation(); setEditingNotes(true) }}
+                >
+                  {notes ? 'Edit note' : '+ Add note'}
+                </button>
+              )}
+            </>
           )}
         </div>
         {isSong && (
@@ -152,7 +200,7 @@ export default function PlanDetailPage() {
   const { id } = useParams()
   const router = useRouter()
   const { userId } = useAuth()
-  const { church, isAdmin, canEditAnyPlan, loading: churchLoading } = useChurch()
+  const { church, isAdmin, canEditAnyPlan, canAnnotatePlans, loading: churchLoading } = useChurch()
   const [plan, setPlan] = useState<any>(null)
   const [loading, setLoading] = useState(true)
   const [notFound, setNotFound] = useState(false)
@@ -360,7 +408,7 @@ export default function PlanDetailPage() {
               Tap a song to view sheet music
             </p>
             {plan.items.map((item: any, i: number) => (
-              <SongItem key={item.id} item={item} index={i} />
+              <SongItem key={item.id} item={item} index={i} planId={id as string} canAnnotate={canAnnotatePlans && !isAdmin && !canEditAnyPlan && plan.created_by !== userId} />
             ))}
           </>
         )}
