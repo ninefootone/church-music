@@ -94,7 +94,7 @@ export interface Song {
   created_at: string
   last_sung?: string | null
   next_planned?: string | null
-  tags?: string[]
+  tags?: { id: string; name: string }[]
   files?: SongFile[]
   usage?: {
     times_sung: number
