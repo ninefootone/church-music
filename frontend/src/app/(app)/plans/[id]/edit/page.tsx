@@ -179,11 +179,29 @@ function SortableItem({
         {/* Notes + arrangement */}
         {item.expanded && (
           <div className="item-notes-panel">
-            <input
+                        <textarea
               className="input notes-input"
               value={item.notes}
               onChange={e => onUpdate({ notes: e.target.value })}
               placeholder="Notes (e.g. Capo 2, acoustic intro…)"
+              rows={3}
+              onKeyDown={e => {
+                const el = e.currentTarget
+                const start = el.selectionStart
+                const end = el.selectionEnd
+                if ((e.metaKey || e.ctrlKey) && e.key === 'b') {
+                  e.preventDefault()
+                  const wrapped = `**${el.value.slice(start, end)}**`
+                  const next = el.value.slice(0, start) + wrapped + el.value.slice(end)
+                  onUpdate({ notes: next })
+                }
+                if ((e.metaKey || e.ctrlKey) && e.key === 'i') {
+                  e.preventDefault()
+                  const wrapped = `_${el.value.slice(start, end)}_`
+                  const next = el.value.slice(0, start) + wrapped + el.value.slice(end)
+                  onUpdate({ notes: next })
+                }
+              }}
             />
             {item.type === 'song' && (
               <div>
