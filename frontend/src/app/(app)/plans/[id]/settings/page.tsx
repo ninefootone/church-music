@@ -69,18 +69,20 @@ export default function PlanSettingsPage() {
               const formatted = val ? new Date(`1970-01-01T${val}`).toLocaleTimeString('en-GB', { hour: 'numeric', minute: '2-digit', hour12: true }) : ''
               setForm(f => ({ ...f, plan_start_time: val, plan_time: formatted }))
             }} />
-            <div className="time-btn-group">
-              {[{ label: 'Morning', value: 0 }, { label: 'Afternoon', value: 1 }, { label: 'Evening', value: 2 }].map(opt => (
-                <button
-                  key={opt.value}
-                  type="button"
-                  onClick={() => setForm(f => ({ ...f, plan_sort_order: opt.value }))}
-                  className={`${form.plan_sort_order === opt.value ? 'btn btn-primary' : 'btn btn-secondary'} btn-time`}
-                >
-                  {opt.label}
-                </button>
-              ))}
-            </div>
+            {!form.plan_start_time && (
+              <div className="time-btn-group">
+                {[{ label: 'Morning', value: 0 }, { label: 'Afternoon', value: 1 }, { label: 'Evening', value: 2 }].map(opt => (
+                  <button
+                    key={opt.value}
+                    type="button"
+                    onClick={() => setForm(f => ({ ...f, plan_sort_order: opt.value }))}
+                    className={`${form.plan_sort_order === opt.value ? 'btn btn-primary' : 'btn btn-secondary'} btn-time`}
+                  >
+                    {opt.label}
+                  </button>
+                ))}
+              </div>
+            )}
           </div>
           <div>
             <label className="label">Title <span className="label-note">(optional)</span></label>

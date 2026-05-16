@@ -33,7 +33,7 @@ function renderNotes(text: string) {
   })
 }
 
-function SongItem({ item, index, planId, canAnnotate }: { item: any; index: number; planId: string; canAnnotate: boolean }) {
+function SongItem({ item, index, planId, canAnnotate, showTimings, showDurations, calculatedStart }: { item: any; index: number; planId: string; canAnnotate: boolean; showTimings?: boolean; showDurations?: boolean; calculatedStart?: string | null }) {
   const [expanded, setExpanded] = useState(false)
   const [files, setFiles] = useState<SongFile[] | null>(null)
   const [loadingFiles, setLoadingFiles] = useState(false)
@@ -73,6 +73,16 @@ function SongItem({ item, index, planId, canAnnotate }: { item: any; index: numb
 
   return (
     <div className="song-item-card">
+      {(showTimings || showDurations) && (
+        <div className="item-timing-row">
+          {showTimings && calculatedStart && (
+            <span className="item-timing-time">{calculatedStart}</span>
+          )}
+          {showDurations && item.duration_minutes && (
+            <span className="item-timing-duration-label">{item.duration_minutes} min</span>
+          )}
+        </div>
+      )}
       <div
         className="plan-item-row" style={{ cursor: isSong ? 'pointer' : 'default' }}
         onClick={isSong ? handleExpand : undefined}
@@ -282,6 +292,15 @@ export default function PlanDetailPage() {
     }
   }
 
+  const [showTimings, setShowTimings] = useState(() => {
+    if (typeof window === 'undefined') return false
+    return localStorage.getItem('plan_show_timings') === 'true'
+  })
+  const [showDurations, setShowDurations] = useState(() => {
+    if (typeof window === 'undefined') return false
+    return localStorage.getItem('plan_show_durations') === 'true'
+  })
+
   if (loading || churchLoading) return <p className="text-muted dash-loading">Loading…</p>
   if (notFound || !plan) return (
     <div className="page-loading-wrap">
@@ -301,8 +320,28 @@ export default function PlanDetailPage() {
             <h1 className="plan-detail-title">
               {format(parseISO(plan.plan_date), 'd MMMM yyyy')}
             </h1>
-            {plan.plan_time && (
-              <p className="plan-detail-meta">{plan.plan_time}</p>
+            {(plan.plan_start_time || plan.plan_time) && (
+              <p className="plan-detail-meta">
+                {plan.plan_start_time
+                  ? new Date(`1970-01-01T${plan.plan_start_time}`).toLocaleTimeString('en-GB', { hour: 'numeric', minute: '2-digit', hour12: true })
+                  : plan.plan_time}
+              </p>
+            )}
+            {plan.items?.length > 0 && (
+              <div className="timing-toggles">
+                <label className="timing-toggle-label">
+                  <input type="checkbox" checked={showDurations} onChange={e => {
+                    setShowDurations(e.target.checked)
+                    localStorage.setItem('plan_show_durations', String(e.target.checked))
+                  }} /> Show item duration
+                </label>
+                <label className="timing-toggle-label">
+                  <input type="checkbox" checked={showTimings} onChange={e => {
+                    setShowTimings(e.target.checked)
+                    localStorage.setItem('plan_show_timings', String(e.target.checked))
+                  }} disabled={!plan.plan_start_time} title={!plan.plan_start_time ? 'No start time set for this plan' : ''} /> Show timings
+                </label>
+              </div>
             )}
             {plan.title && (
               <p className="plan-detail-meta text-muted">{plan.title}</p>
@@ -418,9 +457,28 @@ export default function PlanDetailPage() {
             <p className="plan-hint">
               Tap a song to view sheet music
             </p>
-            {plan.items.map((item: any, i: number) => (
-              <SongItem key={item.id} item={item} index={i} planId={id as string} canAnnotate={canAnnotatePlans && !isAdmin && !canEditAnyPlan && plan.created_by !== userId} />
-            ))}
+            {(() => {
+              const startTime = plan.plan_start_time ? plan.plan_start_time.slice(0, 5) : null
+              let h = startTime ? parseInt(startTime.split(':')[0]) : 0
+              let m = startTime ? parseInt(startTime.split(':')[1]) : 0
+              return plan.items.map((item: any, i: number) => {
+                const calcStart = startTime ? `${h}:${String(m).padStart(2, '0')}` : null
+                const dur = item.duration_minutes ?? 0
+                m += dur; h += Math.floor(m / 60); m = m % 60
+                return (
+                  <SongItem
+                    key={item.id}
+                    item={item}
+                    index={i}
+                    planId={id as string}
+                    canAnnotate={canAnnotatePlans && !isAdmin && !canEditAnyPlan && plan.created_by !== userId}
+                    showTimings={showTimings && !!startTime}
+                    showDurations={showDurations}
+                    calculatedStart={calcStart}
+                  />
+                )
+              })
+            })()}
           </>
         )}
       </div>
