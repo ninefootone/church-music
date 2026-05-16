@@ -3,26 +3,32 @@
 import { useState, useEffect } from 'react'
 import Link from 'next/link'
 import { format, parseISO } from 'date-fns'
-import { Plus, ChevronRight } from 'lucide-react'
+import { Plus, ChevronRight, Copy } from 'lucide-react'
 import { useChurch } from '@/context/ChurchContext'
+import { useRouter } from 'next/navigation'
 import api from '@/lib/api'
+import { DuplicatePlanModal } from '@/components/ui/DuplicatePlanModal'
 
 interface Plan {
   id: string
   plan_date: string
   plan_time: string | null
+  plan_time_start: string | null
+  plan_sort_order: number
   title: string | null
   public_token: string
   status: 'draft' | 'published'
 }
 
 export default function PlansPage() {
-  const { church, loading: churchLoading, canAddPlans } = useChurch()
+  const { church, loading: churchLoading, canAddPlans, isAdmin } = useChurch()
+  const router = useRouter()
   const [upcoming, setUpcoming] = useState<Plan[]>([])
   const [past, setPast] = useState<Plan[]>([])
   const [loading, setLoading] = useState(true)
   const PAST_PAGE_SIZE = 10
   const [visiblePast, setVisiblePast] = useState(PAST_PAGE_SIZE)
+  const [duplicatingPlan, setDuplicatingPlan] = useState<Plan | null>(null)
 
   useEffect(() => {
     if (!church || churchLoading) return
@@ -50,46 +56,68 @@ export default function PlansPage() {
   const futurePlans = upcoming.filter(s => !isToday(s.plan_date))
 
   const PlanCard = ({ plan, badge }: { plan: Plan; badge: 'today' | 'upcoming' }) => (
-    <Link href={`/plans/${plan.id}`} className="plan-card">
-      <div className="dash-row-content">
-        <p className="plan-date">
-          {format(parseISO(plan.plan_date), 'd MMMM yyyy')}
-          {plan.plan_time && (
-            <span className="plan-time"> · {plan.plan_time}</span>
+    <div className="plan-card-wrap">
+      <Link href={`/plans/${plan.id}`} className="plan-card">
+        <div className="dash-row-content">
+          <p className="plan-date">
+            {format(parseISO(plan.plan_date), 'd MMMM yyyy')}
+            {plan.plan_time && (
+              <span className="plan-time"> · {plan.plan_time}</span>
+            )}
+          </p>
+          {plan.title && <p className="dash-row-meta">{plan.title}</p>}
+        </div>
+        <div className="plan-card-right">
+          {plan.status === 'draft' && (
+            <span className="badge badge-draft">DRAFT</span>
           )}
-        </p>
-        {plan.title && <p className="dash-row-meta">{plan.title}</p>}
-      </div>
-      <div className="plan-card-right">
-        {plan.status === 'draft' && (
-          <span className="badge badge-draft">DRAFT</span>
-        )}
-        <span className={`badge badge-${badge}`}>
-          {badge === 'today' ? 'TODAY' : 'UPCOMING'}
-        </span>
-        <ChevronRight size={18} className="text-muted" />
-      </div>
-    </Link>
+          <span className={`badge badge-${badge}`}>
+            {badge === 'today' ? 'TODAY' : 'UPCOMING'}
+          </span>
+          <ChevronRight size={18} className="text-muted" />
+        </div>
+      </Link>
+      {(isAdmin || canAddPlans) && (
+        <button
+          className="plan-card-duplicate"
+          title="Duplicate plan"
+          onClick={() => setDuplicatingPlan(plan)}
+        >
+          <Copy size={14} />
+        </button>
+      )}
+    </div>
   )
 
   const PastRow = ({ plan }: { plan: Plan }) => (
-    <Link href={`/plans/${plan.id}`} className="plan-row-past">
-      <div className="dash-row-content">
-        <span className="past-plan-date">
-          {format(parseISO(plan.plan_date), 'd MMM yyyy')}
-          {plan.plan_time && (
-            <span className="plan-time-muted"> · {plan.plan_time}</span>
-          )}
-          {plan.title && (
-            <span className="plan-time-muted"> — {plan.title}</span>
-          )}
-        </span>
-      </div>
-      {plan.status === 'draft' && (
-        <span className="badge badge-draft">DRAFT</span>
+    <div className="plan-row-past-wrap">
+      <Link href={`/plans/${plan.id}`} className="plan-row-past">
+        <div className="dash-row-content">
+          <span className="past-plan-date">
+            {format(parseISO(plan.plan_date), 'd MMM yyyy')}
+            {plan.plan_time && (
+              <span className="plan-time-muted"> · {plan.plan_time}</span>
+            )}
+            {plan.title && (
+              <span className="plan-time-muted"> — {plan.title}</span>
+            )}
+          </span>
+        </div>
+        {plan.status === 'draft' && (
+          <span className="badge badge-draft">DRAFT</span>
+        )}
+        <ChevronRight size={15} className="text-muted" />
+      </Link>
+      {(isAdmin || canAddPlans) && (
+        <button
+          className="plan-card-duplicate"
+          title="Duplicate plan"
+          onClick={() => setDuplicatingPlan(plan)}
+        >
+          <Copy size={14} />
+        </button>
       )}
-      <ChevronRight size={15} className="text-muted" />
-    </Link>
+    </div>
   )
 
   const hasAny = upcoming.length > 0 || past.length > 0
@@ -150,6 +178,13 @@ export default function PlansPage() {
             </>
           )}
         </>
+      )}
+    {duplicatingPlan && (
+        <DuplicatePlanModal
+          plan={duplicatingPlan}
+          onClose={() => setDuplicatingPlan(null)}
+          onDuplicated={(newId: string) => router.push(`/plans/${newId}`)}
+        />
       )}
     </div>
   )
