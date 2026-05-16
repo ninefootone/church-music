@@ -74,6 +74,7 @@ export interface Song {
   suggested_arrangement: string | null
   time_signature: string | null
   tempo: number | null
+  default_duration: number | null
   videos?: {
     id: string
     url: string
