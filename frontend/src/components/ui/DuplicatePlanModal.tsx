@@ -18,7 +18,7 @@ interface Props {
 }
 
 export function DuplicatePlanModal({ plan, onClose, onDuplicated }: Props) {
-  const [date, setDate] = useState(plan.plan_date)
+  const [date, setDate] = useState(plan.plan_date?.slice(0, 10) ?? '')
   const [time, setTime] = useState(plan.plan_start_time ? plan.plan_start_time.slice(0, 5) : '')
   const [saving, setSaving] = useState(false)
   const [error, setError] = useState('')
