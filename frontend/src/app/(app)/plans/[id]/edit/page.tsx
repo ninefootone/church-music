@@ -265,6 +265,7 @@ export default function PlanEditPage() {
   const [saving, setSaving] = useState(false)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState('')
+  const [planStatus, setPlanStatus] = useState<'draft' | 'published'>('published')
   const [showSongPicker, setShowSongPicker] = useState(true)
   const [isMobile, setIsMobile] = useState(false)
   const [showTimings, setShowTimings] = useState(() => {
@@ -305,6 +306,7 @@ export default function PlanEditPage() {
       }
       const s = planRes.data
       setPlan(s)
+      setPlanStatus(s.status ?? 'published')
       setItems((s.items || []).map((item: any) => ({
         id: newId(),
         type: item.type,
@@ -370,20 +372,30 @@ export default function PlanEditPage() {
   const toggleExpanded = (idx: number) =>
     setItems(prev => prev.map((item, i) => i === idx ? { ...item, expanded: !item.expanded } : item))
 
-  const handleSave = async () => {
-  setSaving(true); setError('')
-  try {
-    const token = await getToken()
-    setAuthToken(token)
-    await api.put(`/api/plans/${id}/items`, {
-        items: items.map(item => ({
-          type: item.type, song_id: item.song_id || null,
-          title: item.title || null, notes: item.notes || null,
-          key_override: item.key_override || null,
-          custom_arrangement: item.custom_arrangement || null,
-          duration_minutes: item.duration_minutes || null,
-        }))
-      })
+  const handleSave = async (status: 'draft' | 'published') => {
+    setSaving(true); setError('')
+    try {
+      const token = await getToken()
+      setAuthToken(token)
+      await Promise.all([
+        api.put(`/api/plans/${id}/items`, {
+          items: items.map(item => ({
+            type: item.type, song_id: item.song_id || null,
+            title: item.title || null, notes: item.notes || null,
+            key_override: item.key_override || null,
+            custom_arrangement: item.custom_arrangement || null,
+            duration_minutes: item.duration_minutes || null,
+          }))
+        }),
+        api.put(`/api/plans/${id}`, {
+          plan_date: plan.plan_date,
+          plan_time: plan.plan_time,
+          plan_start_time: plan.plan_start_time,
+          plan_sort_order: plan.plan_sort_order ?? 0,
+          title: plan.title,
+          status,
+        }),
+      ])
       router.push(`/plans/${id}`)
     } catch (err: any) {
       setError(err.response?.data?.error || 'Failed to save')
@@ -444,8 +456,11 @@ export default function PlanEditPage() {
         </div>
         <div className="btn-group">
           <Link href={`/plans/${id}`} className="btn btn-secondary">Cancel</Link>
-          <button className="btn btn-primary" onClick={handleSave} disabled={saving}>
-            {saving ? 'Saving…' : 'Save order'}
+          <button className="btn btn-secondary" onClick={() => handleSave('draft')} disabled={saving}>
+            {saving ? 'Saving…' : planStatus === 'published' ? 'Revert to draft' : 'Save draft'}
+          </button>
+          <button className="btn btn-primary" onClick={() => handleSave('published')} disabled={saving}>
+            {saving ? 'Saving…' : 'Publish'}
           </button>
         </div>
       </div>
@@ -454,63 +469,121 @@ export default function PlanEditPage() {
 
       <div className="plan-edit-grid">
 
-        {/* Sidebar first in DOM for correct mobile Safari rendering */}
-        {/* Right — add panel */}
-        <div className="plan-edit-sidebar">
-          {/* Song picker */}
-          <div className="card card--spaced">
-            <span className="section-label">Songs</span>
-            <>
-                <div className="songs-search-wrap">
-                  <Search size={14} className="songs-search-icon" />
-                  <input
-                    className="input songs-search-input"
-                    placeholder="Search songs…"
-                    value={songSearch}
-                    onChange={e => setSongSearch(e.target.value)}
-                    autoFocus
-                  />
+        {/* Sidebar rendered above running order on mobile via isMobile, right column on desktop */}
+        {isMobile && (
+          <div className="plan-edit-sidebar">
+            {/* Song picker */}
+            <div className="card card--spaced">
+              <span className="section-label">Songs</span>
+              <>
+                  <div className="songs-search-wrap">
+                    <Search size={14} className="songs-search-icon" />
+                    <input
+                      className="input songs-search-input"
+                      placeholder="Search songs…"
+                      value={songSearch}
+                      onChange={e => setSongSearch(e.target.value)}
+                      autoFocus
+                    />
+                  </div>
+                  <div className="song-picker-list">
+                    {!songSearch ? (
+                      <p className="text-muted picker-empty">Type to search songs</p>
+                    ) : filteredSongs.length === 0 ? (
+                      <p className="text-muted picker-empty">No songs found</p>
+                    ) : filteredSongs.map(song => (
+                      <button
+                        key={song.id}
+                        type="button"
+                        onClick={() => addSong(song)}
+                        className="song-picker-btn"
+                      >
+                        <div className="dash-row-content">
+                          <p className="dash-row-title">{song.title}</p>
+                        </div>
+                        <div className="song-picker-btn-right">
+                          {song.default_key && <KeyBadge keyOf={song.default_key} />}
+                          <Plus size={15} className="text-brand" />
+                        </div>
+                      </button>
+                    ))}
                 </div>
-                <div className="song-picker-list">
-                  {isMobile && !songSearch ? (
-                    <p className="text-muted picker-empty">Type to search songs</p>
-                  ) : filteredSongs.length === 0 ? (
-                    <p className="text-muted picker-empty">No songs found</p>
-                  ) : filteredSongs.map(song => (
-                    <button
-                      key={song.id}
-                      type="button"
-                      onClick={() => addSong(song)}
-                      className="song-picker-btn"
-                    >
-                      <div className="dash-row-content">
-                        <p className="dash-row-title">{song.title}</p>
-                      </div>
-                      <div className="song-picker-btn-right">
-                        {song.default_key && <KeyBadge keyOf={song.default_key} />}
-                        <Plus size={15} className="text-brand" />
-                      </div>
-                    </button>
-                  ))}
-              </div>
-            </>
-          </div>
+              </>
+            </div>
 
-          {/* Other items */}
-          <div className="card">
-            <div className="section-label">Other items</div>
-            <div className="item-type-grid">
-              {(customItemTypes ?? DEFAULT_ITEM_TYPES).map(({ label }) => (
-                <button key={label} type="button" onClick={() => addItem('custom', label)} className="filter-chip">
-                  + {label}
+            {/* Other items */}
+            <div className="card">
+              <div className="section-label">Other items</div>
+              <div className="item-type-grid">
+                {(customItemTypes ?? DEFAULT_ITEM_TYPES).map(({ label }) => (
+                  <button key={label} type="button" onClick={() => addItem('custom', label)} className="filter-chip">
+                    + {label}
+                  </button>
+                ))}
+                <button type="button" onClick={() => addItem('custom', '')} className="filter-chip">
+                  + Other
                 </button>
-              ))}
-              <button type="button" onClick={() => addItem('custom', '')} className="filter-chip">
-                + Other
-              </button>
+              </div>
             </div>
           </div>
-        </div>
+        )}
+
+        {/* Right — add panel (desktop only, mobile rendered above) */}
+        {!isMobile && (
+          <div className="plan-edit-sidebar">
+            {/* Song picker */}
+            <div className="card card--spaced">
+              <span className="section-label">Songs</span>
+              <>
+                  <div className="songs-search-wrap">
+                    <Search size={14} className="songs-search-icon" />
+                    <input
+                      className="input songs-search-input"
+                      placeholder="Search songs…"
+                      value={songSearch}
+                      onChange={e => setSongSearch(e.target.value)}
+                      autoFocus
+                    />
+                  </div>
+                  <div className="song-picker-list">
+                    {filteredSongs.length === 0 ? (
+                      <p className="text-muted picker-empty">No songs found</p>
+                    ) : filteredSongs.map(song => (
+                      <button
+                        key={song.id}
+                        type="button"
+                        onClick={() => addSong(song)}
+                        className="song-picker-btn"
+                      >
+                        <div className="dash-row-content">
+                          <p className="dash-row-title">{song.title}</p>
+                        </div>
+                        <div className="song-picker-btn-right">
+                          {song.default_key && <KeyBadge keyOf={song.default_key} />}
+                          <Plus size={15} className="text-brand" />
+                        </div>
+                      </button>
+                    ))}
+                </div>
+              </>
+            </div>
+
+            {/* Other items */}
+            <div className="card">
+              <div className="section-label">Other items</div>
+              <div className="item-type-grid">
+                {(customItemTypes ?? DEFAULT_ITEM_TYPES).map(({ label }) => (
+                  <button key={label} type="button" onClick={() => addItem('custom', label)} className="filter-chip">
+                    + {label}
+                  </button>
+                ))}
+                <button type="button" onClick={() => addItem('custom', '')} className="filter-chip">
+                  + Other
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
 
         {/* Left — running order */}
         <div className="running-order-col">
@@ -553,8 +626,11 @@ export default function PlanEditPage() {
       {/* Fixed bottom save bar */}
       <div className="save-bar">
         <Link href={`/plans/${id}`} className="btn btn-secondary">Cancel</Link>
-        <button className="btn btn-primary" onClick={handleSave} disabled={saving}>
-          {saving ? 'Saving…' : `Save (${items.length} item${items.length !== 1 ? 's' : ''})`}
+        <button className="btn btn-secondary" onClick={() => handleSave('draft')} disabled={saving}>
+          {saving ? 'Saving…' : planStatus === 'published' ? 'Revert to draft' : 'Save draft'}
+        </button>
+        <button className="btn btn-primary" onClick={() => handleSave('published')} disabled={saving}>
+          {saving ? 'Saving…' : 'Publish'}
         </button>
       </div>
       <div className="save-bar-spacer" />
