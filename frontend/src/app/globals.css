@@ -2148,9 +2148,6 @@ select.input {
     position: static;
     order: -1;
   }
-  .plan-edit-grid > div:not(.plan-edit-sidebar) {
-    margin-top: var(--space-md);
-  }
   .hide-desktop { display: none; }
   .hide-mobile { display: none; }
 }
