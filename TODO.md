@@ -8,7 +8,10 @@
 - [ ] Add blogs – eg. Sovereign Grace
 
 ### Plans
+- [ ] Pre-service items — visual divider (injected, not stored) separates pre-service from service items; `phase` column on `plan_items` (default `'service'`); drag across divider updates phase; pre-service items show duration only, no calculated clock time
 - [ ] Plan item notes — fix Cmd+B/I shortcuts for annotator role (needs requestAnimationFrame fix in plans/[id]/page.tsx inline editor); fix italic rendering (item-notes class already italicises text, making <em> invisible — remove italic from .item-notes or use underline/colour for <em> within it)
+- [ ] Soft-delete bin — add `deleted_at` column to plans; deleted plans move to a recoverable bin visible to admins; permanent delete requires a second confirmation; bin auto-purges after 30 days
+- [ ] Audit log — `audit_log` table tracking plan created/edited/deleted events with user ID and timestamp; visible to admins only on the plan detail page or a dedicated admin view
 
 ### Features – Print/View
 - [ ] Single file viewer — route at /songs/[id]/view/[fileId] that opens a single PDF or ChordPro file in the full set viewer (same component, single file); accessible from the song page for rehearsal use; supports swipe/keyboard navigation and auto-hide controls
