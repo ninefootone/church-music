@@ -1462,7 +1462,7 @@ body.set-viewer-active { overflow: hidden; }
   .notes-input         { margin-top: 10px; margin-bottom: 12px; font-size: var(--text-sm); padding: 7px 12px; }
 
   /* ── Item timings ── */
-  .item-timing-row     { display: flex; align-items: center; gap: 8px; padding: 4px var(--space-md) 0; min-height: 24px; }
+  .item-timing-row     { display: flex; align-items: center; gap: 8px; padding: 10px var(--space-md) 2px; }
   .item-timing-time    { font-size: var(--text-xs); font-weight: 600; color: var(--color-brand-500); min-width: 40px; }
   .item-timing-duration { display: flex; align-items: center; gap: 4px; margin-left: auto; }
   .duration-input      { width: 56px; font-size: var(--text-xs); padding: 2px 6px; border: 1px solid var(--color-border); border-radius: var(--radius-sm); background: var(--color-surface); color: var(--color-text-primary); text-align: center; }
