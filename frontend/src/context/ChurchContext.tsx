@@ -16,7 +16,6 @@ interface Church {
   subscription_status: 'free' | 'active' | 'trialing' | 'past_due' | 'canceled' | null
   can_manage_songs: boolean
   can_add_plans: boolean
-  can_edit_any_plan: boolean
   can_manage_playlists: boolean
   can_annotate_plans: boolean
 }
@@ -27,14 +26,13 @@ interface ChurchContextType {
   isAdmin: boolean
   canManageSongs: boolean
   canAddPlans: boolean
-  canEditAnyPlan: boolean
   canManagePlaylists: boolean
   canAnnotatePlans: boolean
   refetch: () => void
 }
 
 const ChurchContext = createContext<ChurchContextType>({
-  church: null, loading: true, isAdmin: false, canManageSongs: false, canAddPlans: false, canEditAnyPlan: false, canManagePlaylists: false, canAnnotatePlans: false, refetch: () => {},
+  church: null, loading: true, isAdmin: false, canManageSongs: false, canAddPlans: false, canManagePlaylists: false, canAnnotatePlans: false, refetch: () => {},
 })
 
 export function ChurchProvider({ children }: { children: ReactNode }) {
@@ -88,7 +86,6 @@ export function ChurchProvider({ children }: { children: ReactNode }) {
       isAdmin: church?.role === 'admin',
       canManageSongs: church?.role === 'admin' || !!church?.can_manage_songs,
       canAddPlans: church?.role === 'admin' || !!church?.can_add_plans,
-      canEditAnyPlan: church?.role === 'admin' || !!church?.can_edit_any_plan,
       canManagePlaylists: church?.role === 'admin' || !!church?.can_manage_playlists,
       canAnnotatePlans: church?.role === 'admin' || !!church?.can_annotate_plans,
       refetch: fetchChurch,
