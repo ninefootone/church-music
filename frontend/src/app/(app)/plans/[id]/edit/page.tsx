@@ -106,27 +106,27 @@ function SortableItem({
 
   return (
     <div ref={setNodeRef} style={style}>
-      {(showTimings || showDurations) && (
-        <div className="item-timing-row">
-          {showTimings && calculatedStart && (
-            <span className="item-timing-time">{calculatedStart}</span>
-          )}
-          {showDurations && (
-            <span className="item-timing-duration">
-              <input
-                type="number"
-                min="1"
-                max="180"
-                placeholder="mins"
-                value={item.duration_minutes ?? ''}
-                onChange={e => onUpdate({ duration_minutes: e.target.value ? parseInt(e.target.value) : null })}
-                className="duration-input"
-              />
-            </span>
-          )}
-        </div>
-      )}
       <div className="card card--flush">
+        {(showTimings || showDurations) && (
+          <div className="item-timing-row">
+            {showTimings && calculatedStart && (
+              <span className="item-timing-time">{calculatedStart}</span>
+            )}
+            {showDurations && (
+              <span className="item-timing-duration">
+                <input
+                  type="number"
+                  min="1"
+                  max="180"
+                  placeholder="mins"
+                  value={item.duration_minutes ?? ''}
+                  onChange={e => onUpdate({ duration_minutes: e.target.value ? parseInt(e.target.value) : null })}
+                  className="duration-input"
+                />
+              </span>
+            )}
+          </div>
+        )}
         <div className="sortable-item-row">
 
           {/* Drag handle */}
