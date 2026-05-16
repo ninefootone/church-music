@@ -1589,6 +1589,12 @@ body.set-viewer-active { overflow: hidden; }
   .plan-edit-sidebar {
     position: sticky;
     top: 80px;
+    grid-column: 2;
+    grid-row: 1;
+  }
+  .running-order-col {
+    grid-column: 1;
+    grid-row: 1;
   }
   .hide-mobile { display: flex; }
 
