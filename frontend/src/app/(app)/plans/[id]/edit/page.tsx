@@ -130,7 +130,7 @@ function SortableItem({
                 className="input input--sm"
                 value={item.title}
                 onChange={e => onUpdate({ title: e.target.value })}
-                placeholder={ITEM_TYPES.find(t => t.type === item.type)?.label || item.type}
+                placeholder={item.title || 'Item title'}
               />
             )}
           </div>
