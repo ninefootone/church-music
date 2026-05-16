@@ -20,6 +20,11 @@ interface WarningModal {
   newName?: string
 }
 
+interface ItemType {
+  id?: string
+  name: string
+}
+
 export default function SettingsPage() {
   const { getToken } = useAuth()
   const { user } = useUser()
@@ -55,6 +60,15 @@ export default function SettingsPage() {
   const [warningModal, setWarningModal] = useState<WarningModal | null>(null)
   const dragIndex = useRef<number | null>(null)
 
+  // Plan item types
+  const [itemTypes, setItemTypes] = useState<ItemType[]>([])
+  const [itemTypesLoaded, setItemTypesLoaded] = useState(false)
+  const [newItemTypeName, setNewItemTypeName] = useState('')
+  const [itemTypesSaving, setItemTypesSaving] = useState(false)
+  const [itemTypesSaved, setItemTypesSaved] = useState(false)
+  const [itemTypesError, setItemTypesError] = useState('')
+  const itemTypeDragIndex = useRef<number | null>(null)
+
   useEffect(() => {
     if (church) {
       setChurchName(church.name)
@@ -63,6 +77,12 @@ export default function SettingsPage() {
         api.get(`/api/churches/${church.id}/roles`).then(r => {
           setRoles(r.data.map((role: { id: string; name: string }) => ({ id: role.id, name: role.name, originalName: role.name })))
           setRolesLoaded(true)
+        }).catch(() => {})
+      }
+      if (!itemTypesLoaded) {
+        api.get(`/api/churches/${church.id}/plan-item-types`).then(r => {
+          setItemTypes(r.data.map((t: { id: string; name: string }) => ({ id: t.id, name: t.name })))
+          setItemTypesLoaded(true)
         }).catch(() => {})
       }
       if (church.id === process.env.NEXT_PUBLIC_MASTER_CHURCH_ID) {
@@ -245,7 +265,7 @@ export default function SettingsPage() {
     }
   }
 
-  // Drag and drop
+  // Drag and drop (roles)
   function handleDragStart(index: number) {
     dragIndex.current = index
   }
@@ -264,6 +284,59 @@ export default function SettingsPage() {
 
   function handleDragEnd() {
     dragIndex.current = null
+  }
+
+  // Plan item types handlers
+  function handleAddItemType() {
+    const trimmed = newItemTypeName.trim()
+    if (!trimmed) return
+    if (itemTypes.some(t => t.name.toLowerCase() === trimmed.toLowerCase())) return
+    setItemTypes(prev => [...prev, { name: trimmed }])
+    setNewItemTypeName('')
+  }
+
+  function handleDeleteItemType(index: number) {
+    setItemTypes(prev => prev.filter((_, i) => i !== index))
+  }
+
+  async function handleSaveItemTypes() {
+    setItemTypesSaving(true)
+    setItemTypesError('')
+    setItemTypesSaved(false)
+    try {
+      const client = await getAuthenticatedApi()
+      const { data } = await client.put(`/api/churches/${church!.id}/plan-item-types`, {
+        types: itemTypes.map((t, i) => ({ id: t.id, name: t.name.trim(), sort_order: i }))
+      })
+      setItemTypes(data.map((t: { id: string; name: string }) => ({ id: t.id, name: t.name })))
+      setItemTypesSaved(true)
+      setTimeout(() => setItemTypesSaved(false), 3000)
+    } catch {
+      setItemTypesError('Failed to save plan item types.')
+    } finally {
+      setItemTypesSaving(false)
+    }
+  }
+
+  // Drag and drop (plan item types)
+  function handleItemTypeDragStart(index: number) {
+    itemTypeDragIndex.current = index
+  }
+
+  function handleItemTypeDragOver(e: React.DragEvent, index: number) {
+    e.preventDefault()
+    if (itemTypeDragIndex.current === null || itemTypeDragIndex.current === index) return
+    setItemTypes(prev => {
+      const next = [...prev]
+      const [moved] = next.splice(itemTypeDragIndex.current!, 1)
+      next.splice(index, 0, moved)
+      itemTypeDragIndex.current = index
+      return next
+    })
+  }
+
+  function handleItemTypeDragEnd() {
+    itemTypeDragIndex.current = null
   }
 
   async function handleAddTag() {
@@ -492,6 +565,65 @@ export default function SettingsPage() {
         <div className="settings-footer-row">
           <button type="button" onClick={handleSaveRoles} className="btn btn-primary" disabled={rolesSaving}>
             {rolesSaving ? 'Saving…' : rolesSaved ? <><Check size={15} className="icon-mr" />Saved</> : 'Save roles'}
+          </button>
+        </div>
+      </div>
+
+      {/* Plan item types */}
+      <div className="settings-card settings-card--spaced">
+        <h2 className="settings-section-heading settings-section-heading--tight">Plan item types</h2>
+        <p className="settings-section-desc">
+          Customise the item types shown when building a plan. Drag to reorder. If none are set, a default list is used. An &ldquo;Other&rdquo; option is always available.
+        </p>
+
+        {itemTypesError && (
+          <div className="settings-error">
+            {itemTypesError}
+          </div>
+        )}
+
+        <div className="role-chip-list">
+          {itemTypes.length === 0 && (
+            <p className="form-empty-note">No custom item types yet — defaults will be used.</p>
+          )}
+          {itemTypes.map((t, i) => (
+            <div
+              key={t.id || t.name}
+              draggable
+              onDragStart={() => handleItemTypeDragStart(i)}
+              onDragOver={e => handleItemTypeDragOver(e, i)}
+              onDragEnd={handleItemTypeDragEnd}
+              className="role-chip"
+            >
+              {t.name}
+              <button
+                type="button"
+                onClick={() => handleDeleteItemType(i)}
+                className="btn-icon-remove"
+              >
+                <X size={13} />
+              </button>
+            </div>
+          ))}
+        </div>
+
+        <div className="role-add-row">
+          <input
+            type="text"
+            placeholder="New item type, e.g. Offering"
+            value={newItemTypeName}
+            onChange={e => setNewItemTypeName(e.target.value)}
+            onKeyDown={e => { if (e.key === 'Enter') { e.preventDefault(); handleAddItemType() } }}
+            className="role-input"
+          />
+          <button type="button" onClick={handleAddItemType} className="btn btn-ghost btn-icon-label">
+            <Plus size={15} />Add
+          </button>
+        </div>
+
+        <div className="settings-footer-row">
+          <button type="button" onClick={handleSaveItemTypes} className="btn btn-primary" disabled={itemTypesSaving}>
+            {itemTypesSaving ? 'Saving…' : itemTypesSaved ? <><Check size={15} className="icon-mr" />Saved</> : 'Save item types'}
           </button>
         </div>
       </div>
