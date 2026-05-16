@@ -34,6 +34,9 @@ router.get('/', requireAuth, requireMembership, async function(req, res, next) {
     if (upcoming === 'true') query += ' AND s.plan_date >= CURRENT_DATE';
     if (upcoming === 'false') query += ' AND s.plan_date < CURRENT_DATE';
 
+    const canSeeDrafts = req.membership.role === 'admin' || req.membership.can_add_plans;
+    if (!canSeeDrafts) query += ` AND s.status = 'published'`;
+
     query += ' GROUP BY s.id ORDER BY s.plan_date ' + (upcoming === 'false' ? 'DESC' : 'ASC') + ', s.plan_sort_order ASC, s.plan_time ASC';
 
     const result = await pool.query(query, params);
@@ -88,6 +91,11 @@ router.get('/:id', requireAuth, requireMembership, async function(req, res, next
       [req.params.id, churchId]
     );
     if (plan.rows.length === 0) return res.status(404).json({ error: 'Plan not found' });
+
+    const canSeeDrafts = req.membership.role === 'admin' || req.membership.can_add_plans;
+    if (!canSeeDrafts && plan.rows[0].status === 'draft') {
+      return res.status(404).json({ error: 'Plan not found' });
+    }
 
     const items = await pool.query(
       `SELECT si.id, si.type, si.title, si.notes, si.key_override, si.position,
@@ -179,16 +187,19 @@ router.put('/:id', requireAuth, requireMembership, async function(req, res, next
     if (existing.rows.length === 0) return res.status(404).json({ error: 'Not found' });
     const isAdmin = req.membership.role === 'admin';
     const isOwner = existing.rows[0].created_by === req.user.clerk_id;
-    const canEditAny = req.membership.can_edit_any_plan;
+    const canEditAny = req.membership.can_add_plans;
     if (!isAdmin && !isOwner && !canEditAny) return res.status(403).json({ error: 'Not authorised' });
     const plan_date = req.body.plan_date;
     const plan_time = req.body.plan_time;
     const plan_start_time = req.body.plan_start_time || null;
     const plan_sort_order = req.body.plan_sort_order ?? 0;
     const title = req.body.title;
+    const status = ['draft', 'published'].includes(req.body.status) ? req.body.status : undefined;
     const plan = await pool.query(
-      'UPDATE plans SET plan_date=$1, plan_time=$2, plan_start_time=$3, plan_sort_order=$4, title=$5 WHERE id=$6 AND church_id=$7 RETURNING *',
-      [plan_date, plan_time, plan_start_time, plan_sort_order, title, req.params.id, req.churchId]
+      `UPDATE plans SET plan_date=$1, plan_time=$2, plan_start_time=$3, plan_sort_order=$4, title=$5${status ? ', status=$8' : ''} WHERE id=$6 AND church_id=$7 RETURNING *`,
+      status
+        ? [plan_date, plan_time, plan_start_time, plan_sort_order, title, req.params.id, req.churchId, status]
+        : [plan_date, plan_time, plan_start_time, plan_sort_order, title, req.params.id, req.churchId]
     );
     if (plan.rows.length === 0) return res.status(404).json({ error: 'Not found' });
     res.json(plan.rows[0]);
@@ -460,5 +471,55 @@ router.post('/:id/email', requireAuth, requireMembership, async function(req, re
     res.status(500).json({ error: 'Failed to send email' })
   }
 })
+
+router.post('/:id/duplicate', requireAuth, requirePermission('can_add_plans'), async function(req, res, next) {
+  try {
+    const source = await pool.query(
+      'SELECT * FROM plans WHERE id=$1 AND church_id=$2',
+      [req.params.id, req.churchId]
+    );
+    if (source.rows.length === 0) return res.status(404).json({ error: 'Plan not found' });
+
+    const orig = source.rows[0];
+    const { plan_date, plan_time, plan_start_time, plan_sort_order, title } = req.body;
+    const public_token = uuidv4().split('-')[0];
+
+    const newPlan = await pool.query(
+      `INSERT INTO plans (church_id, plan_date, plan_time, plan_start_time, plan_sort_order, title, public_token, created_by, status)
+       VALUES ($1,$2,$3,$4,$5,$6,$7,$8,'draft') RETURNING *`,
+      [req.churchId, plan_date, plan_time, plan_start_time ?? orig.plan_start_time, plan_sort_order ?? orig.plan_sort_order, title ?? orig.title, public_token, req.user.clerk_id]
+    );
+    const newId = newPlan.rows[0].id;
+
+    // Copy plan items
+    const items = await pool.query(
+      'SELECT * FROM plan_items WHERE plan_id=$1 ORDER BY position',
+      [orig.id]
+    );
+    for (const item of items.rows) {
+      await pool.query(
+        `INSERT INTO plan_items (plan_id, type, title, notes, song_id, key_override, position, custom_arrangement, duration_minutes)
+         VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9)`,
+        [newId, item.type, item.title, item.notes, item.song_id, item.key_override, item.position, item.custom_arrangement, item.duration_minutes]
+      );
+    }
+
+    // Copy musicians
+    const musicians = await pool.query(
+      'SELECT * FROM plan_musicians WHERE plan_id=$1',
+      [orig.id]
+    );
+    for (const m of musicians.rows) {
+      await pool.query(
+        `INSERT INTO plan_musicians (plan_id, name, role, user_id) VALUES ($1,$2,$3,$4)`,
+        [newId, m.name, m.role, m.user_id]
+      );
+    }
+
+    res.status(201).json(newPlan.rows[0]);
+  } catch (err) {
+    next(err);
+  }
+});
 
 module.exports = router;
