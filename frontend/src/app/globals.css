@@ -2148,6 +2148,9 @@ select.input {
     position: static;
     order: -1;
   }
+  .running-order-col {
+    padding-top: var(--space-md);
+  }
   .hide-desktop { display: none; }
   .hide-mobile { display: none; }
 }
