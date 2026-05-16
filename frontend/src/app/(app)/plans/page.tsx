@@ -13,7 +13,7 @@ interface Plan {
   id: string
   plan_date: string
   plan_time: string | null
-  plan_time_start: string | null
+  plan_start_time: string | null
   plan_sort_order: number
   title: string | null
   public_token: string
