@@ -454,43 +454,7 @@ export default function PlanEditPage() {
 
       <div className="plan-edit-grid">
 
-        {/* Left — running order */}
-        <div className="running-order-col">
-          {/* Label and count on same line, no overlap */}
-          <div className="section-header-row">
-            <span className="running-order-label">
-              Running order
-            </span>
-            <span className="running-order-count">
-              {items.length} item{items.length !== 1 ? 's' : ''}
-            </span>
-          </div>
-          {items.length === 0 ? (
-            <div className="card card-empty">
-              <p className="text-muted">Add songs and other items</p>
-            </div>
-          ) : (
-            <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={handleDragEnd}>
-              <SortableContext items={items.map(i => i.id)} strategy={verticalListSortingStrategy}>
-                {items.map((item, idx) => (
-                  <SortableItem
-                    key={item.id}
-                    item={item}
-                    idx={idx}
-                    total={items.length}
-                    onRemove={() => removeItem(idx)}
-                    onUpdate={updates => updateItem(idx, updates)}
-                    onToggleExpanded={() => toggleExpanded(idx)}
-                    showTimings={showTimings && !!planStartTime}
-                    showDurations={showDurations}
-                    calculatedStart={startTimes[idx]}
-                  />
-                ))}
-              </SortableContext>
-            </DndContext>
-          )}
-        </div>
-
+        {/* Sidebar first in DOM for correct mobile Safari rendering */}
         {/* Right — add panel */}
         <div className="plan-edit-sidebar">
           {/* Song picker */}
@@ -546,6 +510,43 @@ export default function PlanEditPage() {
               </button>
             </div>
           </div>
+        </div>
+
+        {/* Left — running order */}
+        <div className="running-order-col">
+          {/* Label and count on same line, no overlap */}
+          <div className="section-header-row">
+            <span className="running-order-label">
+              Running order
+            </span>
+            <span className="running-order-count">
+              {items.length} item{items.length !== 1 ? 's' : ''}
+            </span>
+          </div>
+          {items.length === 0 ? (
+            <div className="card card-empty">
+              <p className="text-muted">Add songs and other items</p>
+            </div>
+          ) : (
+            <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={handleDragEnd}>
+              <SortableContext items={items.map(i => i.id)} strategy={verticalListSortingStrategy}>
+                {items.map((item, idx) => (
+                  <SortableItem
+                    key={item.id}
+                    item={item}
+                    idx={idx}
+                    total={items.length}
+                    onRemove={() => removeItem(idx)}
+                    onUpdate={updates => updateItem(idx, updates)}
+                    onToggleExpanded={() => toggleExpanded(idx)}
+                    showTimings={showTimings && !!planStartTime}
+                    showDurations={showDurations}
+                    calculatedStart={startTimes[idx]}
+                  />
+                ))}
+              </SortableContext>
+            </DndContext>
+          )}
         </div>
       </div>
 

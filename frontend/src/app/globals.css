@@ -2140,16 +2140,21 @@ select.input {
   }
 }
 
+@media (min-width: 941px) {
+  .plan-edit-sidebar {
+    order: 2;
+  }
+  .running-order-col {
+    order: 1;
+  }
+}
+
 @media (max-width: 940px) {
   .plan-edit-grid {
     grid-template-columns: 1fr;
   }
   .plan-edit-sidebar {
     position: static;
-    order: -1;
-  }
-  .running-order-col {
-    padding-top: var(--space-md);
   }
   .hide-desktop { display: none; }
   .hide-mobile { display: none; }
