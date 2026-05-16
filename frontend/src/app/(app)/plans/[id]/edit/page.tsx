@@ -29,16 +29,15 @@ import { useChurch } from '@/context/ChurchContext'
 import api from '@/lib/api'
 import { ArrangementBuilder } from '@/components/ui/ArrangementBuilder'
 
-const ITEM_TYPES = [
-  { type: 'welcome',      label: 'Welcome' },
-  { type: 'prayer',       label: 'Prayer' },
-  { type: 'confession',   label: 'Confession' },
-  { type: 'assurance',    label: 'Assurance' },
-  { type: 'reading',      label: 'Reading' },
-  { type: 'sermon',       label: 'Sermon' },
-  { type: 'communion',    label: 'Communion' },
-  { type: 'announcement', label: 'Announcement' },
-  { type: 'custom',       label: 'Other' },
+const DEFAULT_ITEM_TYPES = [
+  { label: 'Welcome' },
+  { label: 'Prayer' },
+  { label: 'Confession' },
+  { label: 'Assurance' },
+  { label: 'Reading' },
+  { label: 'Sermon' },
+  { label: 'Communion' },
+  { label: 'Announcement' },
 ]
 
 const KEYS = ['C', 'C#', 'Db', 'D', 'Eb', 'E', 'F', 'F#', 'Gb', 'G', 'Ab', 'A', 'Bb', 'B', 'Cm', 'C#m', 'Dm', 'Ebm', 'Em', 'Fm', 'F#m', 'Gm', 'Abm', 'Am', 'Bbm', 'Bm']
@@ -230,9 +229,10 @@ function SortableItem({
 export default function PlanEditPage() {
   const { id } = useParams()
   const router = useRouter()
-  const { loading: churchLoading } = useChurch()
+  const { church, loading: churchLoading } = useChurch()
   const { getToken } = useAuth()
   const [plan, setPlan] = useState<any>(null)
+  const [customItemTypes, setCustomItemTypes] = useState<{ label: string }[] | null>(null)
   const [items, setItems] = useState<PlanItem[]>([])
   const [songs, setSongs] = useState<Song[]>([])
   const [songSearch, setSongSearch] = useState('')
@@ -260,11 +260,15 @@ export default function PlanEditPage() {
   )
 
   useEffect(() => {
-    if (!id || churchLoading) return
+    if (!id || churchLoading || !church) return
     Promise.all([
       api.get(`/api/plans/${id}`),
       api.get('/api/songs', { params: { include_retired: 'false' } }),
-    ]).then(([planRes, songsRes]) => {
+      api.get(`/api/churches/${church.id}/plan-item-types`),
+    ]).then(([planRes, songsRes, itemTypesRes]) => {
+      if (itemTypesRes.data.length > 0) {
+        setCustomItemTypes(itemTypesRes.data.map((t: { name: string }) => ({ label: t.name })))
+      }
       const s = planRes.data
       setPlan(s)
       setItems((s.items || []).map((item: any) => ({
@@ -285,7 +289,7 @@ export default function PlanEditPage() {
       setSongs(songsRes.data)
     }).catch(() => setError('Failed to load plan'))
       .finally(() => setLoading(false))
-  }, [id, churchLoading])
+  }, [id, churchLoading, church])
 
   const filteredSongs = songs.filter(s =>
     s.title.toLowerCase().includes(songSearch.toLowerCase()) ||
@@ -459,11 +463,14 @@ export default function PlanEditPage() {
           <div className="card">
             <div className="section-label">Other items</div>
             <div className="item-type-grid">
-              {ITEM_TYPES.map(({ type, label }) => (
-                <button key={type} type="button" onClick={() => addItem(type, label)} className="filter-chip">
+              {(customItemTypes ?? DEFAULT_ITEM_TYPES).map(({ label }) => (
+                <button key={label} type="button" onClick={() => addItem('custom', label)} className="filter-chip">
                   + {label}
                 </button>
               ))}
+              <button type="button" onClick={() => addItem('custom', '')} className="filter-chip">
+                + Other
+              </button>
             </div>
           </div>
         </div>
