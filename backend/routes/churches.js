@@ -298,4 +298,70 @@ router.get('/:churchId/roles/usage', requireAuth, requireAdmin, async (req, res,
   }
 });
 
+// Get plan item types for a church
+router.get('/:churchId/plan-item-types', requireAuth, async (req, res, next) => {
+  try {
+    const result = await pool.query(
+      'SELECT * FROM church_plan_item_types WHERE church_id = $1 ORDER BY sort_order, name',
+      [req.params.churchId]
+    );
+    res.json(result.rows);
+  } catch (err) {
+    next(err);
+  }
+});
+
+// Save plan item types for a church (admin only) — receives full array, diffs against DB
+router.put('/:churchId/plan-item-types', requireAuth, requireAdmin, async (req, res, next) => {
+  const { types } = req.body;
+  if (!Array.isArray(types)) return res.status(400).json({ error: 'types must be an array' });
+
+  const client = await pool.connect();
+  try {
+    await client.query('BEGIN');
+
+    const existing = await client.query(
+      'SELECT * FROM church_plan_item_types WHERE church_id = $1',
+      [req.params.churchId]
+    );
+
+    const incomingIds = types.filter(t => t.id).map(t => t.id);
+
+    // Delete removed types
+    for (const row of existing.rows) {
+      if (!incomingIds.includes(row.id)) {
+        await client.query('DELETE FROM church_plan_item_types WHERE id = $1', [row.id]);
+      }
+    }
+
+    // Upsert remaining/new types
+    for (let i = 0; i < types.length; i++) {
+      const { id, name } = types[i];
+      if (id) {
+        await client.query(
+          'UPDATE church_plan_item_types SET name = $1, sort_order = $2 WHERE id = $3 AND church_id = $4',
+          [name.trim(), i, id, req.params.churchId]
+        );
+      } else {
+        await client.query(
+          'INSERT INTO church_plan_item_types (church_id, name, sort_order) VALUES ($1, $2, $3)',
+          [req.params.churchId, name.trim(), i]
+        );
+      }
+    }
+
+    await client.query('COMMIT');
+    const updated = await pool.query(
+      'SELECT * FROM church_plan_item_types WHERE church_id = $1 ORDER BY sort_order, name',
+      [req.params.churchId]
+    );
+    res.json(updated.rows);
+  } catch (err) {
+    await client.query('ROLLBACK');
+    next(err);
+  } finally {
+    client.release();
+  }
+});
+
 module.exports = router;
