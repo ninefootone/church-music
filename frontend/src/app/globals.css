@@ -216,6 +216,11 @@ body.set-viewer-active { overflow: hidden; }
   .badge-key--shrink { flex-shrink: 0; }
   .badge-key--xs     { font-size: var(--text-xs); }
 
+  .badge-draft {
+    background-color: var(--color-warning-100, #fef3c7);
+    color: var(--color-warning-700, #92400e);
+  }
+
   /* ── Category badges ── */
   .cat-badge     { @apply badge; }
   .cat-praise    { background: var(--cat-praise-bg);    color: var(--cat-praise-text); }

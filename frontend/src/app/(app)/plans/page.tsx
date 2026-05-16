@@ -13,6 +13,7 @@ interface Plan {
   plan_time: string | null
   title: string | null
   public_token: string
+  status: 'draft' | 'published'
 }
 
 export default function PlansPage() {
@@ -60,6 +61,9 @@ export default function PlansPage() {
         {plan.title && <p className="dash-row-meta">{plan.title}</p>}
       </div>
       <div className="plan-card-right">
+        {plan.status === 'draft' && (
+          <span className="badge badge-draft">DRAFT</span>
+        )}
         <span className={`badge badge-${badge}`}>
           {badge === 'today' ? 'TODAY' : 'UPCOMING'}
         </span>
@@ -81,6 +85,9 @@ export default function PlansPage() {
           )}
         </span>
       </div>
+      {plan.status === 'draft' && (
+        <span className="badge badge-draft">DRAFT</span>
+      )}
       <ChevronRight size={15} className="text-muted" />
     </Link>
   )
