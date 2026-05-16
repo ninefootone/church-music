@@ -27,14 +27,13 @@ export default function NewPlanPage() {
   }, [church])
   const [form, setForm] = useState({ plan_date: '', plan_time: '', plan_start_time: '', plan_sort_order: 0, title: '' })
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault()
+  const handleSubmit = async (status: 'draft' | 'published') => {
     if (!form.plan_date) { setError('Date is required'); return }
     setLoading(true); setError('')
     try {
       const token = await getToken()
       setAuthToken(token)
-      const { data } = await api.post('/api/plans', form)
+      const { data } = await api.post('/api/plans', { ...form, status })
       router.push(`/plans/${data.id}`)
     } catch (err: any) {
       setError(err.response?.data?.error || 'Failed to create plan')
@@ -53,7 +52,7 @@ export default function NewPlanPage() {
       )}
       {error && <div className="error-box">{error}</div>}
       <div className="card">
-        <form onSubmit={handleSubmit} className="form-stack">
+        <form className="form-stack">
           <div>
             <label className="label">Date *</label>
             <input className="input" type="date" required value={form.plan_date} onChange={e => setForm(f => ({ ...f, plan_date: e.target.value }))} />
@@ -72,7 +71,12 @@ export default function NewPlanPage() {
           </div>
           <div className="form-footer">
             <Link href="/plans" className="btn btn-secondary">Cancel</Link>
-            <button type="submit" className="btn btn-primary" disabled={loading}>{loading ? 'Creating…' : 'Create plan'}</button>
+            <button type="button" className="btn btn-secondary" onClick={() => handleSubmit('draft')} disabled={loading}>
+              {loading ? 'Saving…' : 'Save as draft'}
+            </button>
+            <button type="button" className="btn btn-primary" onClick={() => handleSubmit('published')} disabled={loading}>
+              {loading ? 'Publishing…' : 'Publish'}
+            </button>
           </div>
         </form>
       </div>
