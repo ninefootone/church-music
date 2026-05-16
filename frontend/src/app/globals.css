@@ -1463,6 +1463,9 @@ body.set-viewer-active { overflow: hidden; }
 
   /* ── Item timings ── */
   .item-timing-row     { display: flex; align-items: center; gap: 8px; padding: 8px var(--space-md) 0; }
+  .item-timing-row + .plan-item-row { padding-top: 4px; }
+  .item-timing-row + .item-row      { padding-top: 4px; }
+  .item-timing-row + .sortable-item-row { padding-top: 4px; }
   .item-timing-time    { font-size: var(--text-xs); font-weight: 600; color: var(--color-brand-500); min-width: 40px; }
   .item-timing-duration { display: flex; align-items: center; gap: 4px; margin-left: auto; }
   .duration-input      { width: 56px; font-size: var(--text-xs); padding: 2px 6px; border: 1px solid var(--color-border); border-radius: var(--radius-sm); background: var(--color-surface); color: var(--color-text-primary); text-align: center; }
