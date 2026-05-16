@@ -221,7 +221,7 @@ export default function PlanDetailPage() {
   const { id } = useParams()
   const router = useRouter()
   const { userId } = useAuth()
-  const { church, isAdmin, canEditAnyPlan, canAnnotatePlans, loading: churchLoading } = useChurch()
+  const { church, isAdmin, canAddPlans, canAnnotatePlans, loading: churchLoading } = useChurch()
   const [plan, setPlan] = useState<any>(null)
   const [loading, setLoading] = useState(true)
   const [notFound, setNotFound] = useState(false)
@@ -369,7 +369,7 @@ export default function PlanDetailPage() {
             </Link>
 
             {/* Email — admin or owner */}
-            {(isAdmin || canEditAnyPlan || plan.created_by === userId) && (
+            {(isAdmin || canAddPlans || plan.created_by === userId) && (
               <button
                 onClick={() => setShowEmailModal(true)}
                 className="btn btn-secondary btn-compact-icon"
@@ -381,7 +381,7 @@ export default function PlanDetailPage() {
             )}
 
             {/* Edit — admin or owner */}
-            {(isAdmin || canEditAnyPlan || plan.created_by === userId) && (
+            {(isAdmin || canAddPlans || plan.created_by === userId) && (
               <Link href={`/plans/${id}/edit`} className="btn btn-primary btn-sm">
                 Edit
               </Link>
@@ -394,7 +394,7 @@ export default function PlanDetailPage() {
       <div className="card card--spaced">
         <div className="card-header-row">
           <div className="section-label section-label--flush">Musicians</div>
-          {(isAdmin || canEditAnyPlan || plan.created_by === userId) && (
+          {(isAdmin || canAddPlans || plan.created_by === userId) && (
             <button
               onClick={() => setShowMusicianModal(true)}
               className="btn btn-secondary btn-xs"
@@ -422,7 +422,7 @@ export default function PlanDetailPage() {
               <div key={group.ids[0]} className={`musician-chip${group.user_id && unavailableUserIds.has(group.user_id) ? ' musician-chip--unavailable' : ''}`}>
                 <span className="musician-name">{group.name}</span>
                 <span className="musician-roles">{group.roles.join(', ')}</span>
-                {(isAdmin || canEditAnyPlan || plan.created_by === userId) && (
+                {(isAdmin || canAddPlans || plan.created_by === userId) && (
                   <button
                     onClick={async () => {
                       await Promise.all(group.ids.map(rid => api.delete(`/api/plans/${id}/musicians/${rid}`)))
@@ -446,7 +446,7 @@ export default function PlanDetailPage() {
         {!plan.items || plan.items.length === 0 ? (
           <div className="card-empty">
             <p className="text-muted empty-message">No items added yet.</p>
-            {(isAdmin || canEditAnyPlan || plan.created_by === userId) && (
+            {(isAdmin || canAddPlans || plan.created_by === userId) && (
               <Link href={`/plans/${id}/edit`} className="btn btn-primary btn-sm">
                 <Plus size={14} /> Build the running order
               </Link>
@@ -471,7 +471,7 @@ export default function PlanDetailPage() {
                     item={item}
                     index={i}
                     planId={id as string}
-                    canAnnotate={canAnnotatePlans && !isAdmin && !canEditAnyPlan && plan.created_by !== userId}
+                    canAnnotate={canAnnotatePlans && !isAdmin && !canAddPlans && plan.created_by !== userId}
                     showTimings={showTimings && !!startTime}
                     showDurations={showDurations}
                     calculatedStart={calcStart}
@@ -482,7 +482,7 @@ export default function PlanDetailPage() {
           </>
         )}
       </div>
-      {(isAdmin || canEditAnyPlan || plan.created_by === userId) && (
+      {(isAdmin || canAddPlans || plan.created_by === userId) && (
         <div className="song-actions-footer">
           <button
             onClick={() => setShowDeletePlan(true)}
