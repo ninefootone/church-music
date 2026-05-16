@@ -218,11 +218,10 @@ export default function TeamPage() {
                 <label className="manage-member-label">Permissions</label>
                 {([
                   { key: 'can_manage_songs', label: 'Add & edit songs' },
-                  { key: 'can_add_plans', label: 'Add plans' },
-                  { key: 'can_edit_any_plan', label: "Edit anyone's plans" },
+                  { key: 'can_add_plans', label: 'Add & edit plans' },
                   { key: 'can_manage_playlists', label: 'Manage playlists' },
                   { key: 'can_annotate_plans', label: 'Add notes to plan items' },
-                ] as { key: 'can_manage_songs' | 'can_add_plans' | 'can_edit_any_plan' | 'can_manage_playlists' | 'can_annotate_plans', label: string }[]).map(({ key, label }) => (
+                ] as { key: 'can_manage_songs' | 'can_add_plans' | 'can_manage_playlists' | 'can_annotate_plans', label: string }[]).map(({ key, label }) => (
                   <label key={key} className="manage-member-perm-label">
                     <input
                       type="checkbox"
@@ -233,7 +232,6 @@ export default function TeamPage() {
                           await api.put(`/api/members/${manageMember.id}/permissions`, {
                             can_manage_songs: updated.can_manage_songs,
                             can_add_plans: updated.can_add_plans,
-                            can_edit_any_plan: updated.can_edit_any_plan,
                             can_manage_playlists: updated.can_manage_playlists,
                             can_annotate_plans: updated.can_annotate_plans,
                           })
