@@ -16,7 +16,7 @@ export default function PlanSettingsPage() {
   const [loading, setLoading] = useState(true)
   const [saving, setSaving] = useState(false)
   const [error, setError] = useState('')
-  const [form, setForm] = useState({ plan_date: '', plan_time: '', plan_sort_order: 0, title: '' })
+  const [form, setForm] = useState({ plan_date: '', plan_time: '', plan_start_time: '', plan_sort_order: 0, title: '' })
 
   useEffect(() => {
     if (!id || churchLoading) return
@@ -26,6 +26,7 @@ export default function PlanSettingsPage() {
         setForm({
           plan_date: s.plan_date?.slice(0, 10) ?? '',
           plan_time: s.plan_time ?? '',
+          plan_start_time: s.plan_start_time ? s.plan_start_time.slice(0, 5) : '',
           plan_sort_order: s.plan_sort_order ?? 0,
           title: s.title ?? '',
         })
@@ -62,8 +63,12 @@ export default function PlanSettingsPage() {
             <input className="input" type="date" required value={form.plan_date} onChange={e => setForm(f => ({ ...f, plan_date: e.target.value }))} />
           </div>
           <div>
-            <label className="label">Time</label>
-            <input className="input" type="text" placeholder="e.g. 9.15am" value={form.plan_time} onChange={e => setForm(f => ({ ...f, plan_time: e.target.value }))} />
+            <label className="label">Start time</label>
+            <input className="input" type="time" value={form.plan_start_time} onChange={e => {
+              const val = e.target.value
+              const formatted = val ? new Date(`1970-01-01T${val}`).toLocaleTimeString('en-GB', { hour: 'numeric', minute: '2-digit', hour12: true }) : ''
+              setForm(f => ({ ...f, plan_start_time: val, plan_time: formatted }))
+            }} />
             <div className="time-btn-group">
               {[{ label: 'Morning', value: 0 }, { label: 'Afternoon', value: 1 }, { label: 'Evening', value: 2 }].map(opt => (
                 <button
