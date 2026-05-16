@@ -2142,7 +2142,8 @@ select.input {
 
 @media (max-width: 940px) {
   .plan-edit-grid {
-    grid-template-columns: 1fr;
+    display: flex;
+    flex-direction: column;
   }
   .plan-edit-sidebar {
     position: static;
