@@ -37,7 +37,7 @@ router.get('/', requireAuth, requireMembership, async function(req, res, next) {
     const canSeeDrafts = req.membership.role === 'admin' || req.membership.can_add_plans;
     if (!canSeeDrafts) query += ` AND s.status = 'published'`;
 
-    query += ' GROUP BY s.id ORDER BY s.plan_date ' + (upcoming === 'false' ? 'DESC' : 'ASC') + ', s.plan_sort_order ASC, s.plan_time ASC';
+    query += ' GROUP BY s.id ORDER BY s.plan_date ' + (upcoming === 'false' ? 'DESC' : 'ASC') + ', s.plan_sort_order ASC, s.plan_start_time ASC';
 
     const result = await pool.query(query, params);
     res.json(result.rows);
