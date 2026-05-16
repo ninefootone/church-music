@@ -457,7 +457,7 @@ export default function PlanEditPage() {
         {/* Left — running order */}
         <div>
           {/* Label and count on same line, no overlap */}
-          <div className="section-header-row">
+          <div className="section-header-row" style={{ marginTop: 'var(--space-md)' }}>
             <span className="running-order-label">
               Running order
             </span>
