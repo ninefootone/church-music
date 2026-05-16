@@ -19,19 +19,23 @@ interface Props {
 
 export function DuplicatePlanModal({ plan, onClose, onDuplicated }: Props) {
   const [date, setDate] = useState(plan.plan_date)
-  const [time, setTime] = useState(plan.plan_time ?? '')
+  const [time, setTime] = useState(plan.plan_start_time ? plan.plan_start_time.slice(0, 5) : '')
   const [saving, setSaving] = useState(false)
   const [error, setError] = useState('')
 
   const handleSubmit = async () => {
     if (!date) { setError('Date is required'); return }
+    if (!time) { setError('Time is required'); return }
     setSaving(true)
     setError('')
     try {
+      const formatted = time
+        ? new Date(`1970-01-01T${time}`).toLocaleTimeString('en-GB', { hour: 'numeric', minute: '2-digit', hour12: true })
+        : null
       const res = await api.post(`/api/plans/${plan.id}/duplicate`, {
         plan_date: date,
-        plan_time: time || null,
-        plan_start_time: plan.plan_start_time,
+        plan_time: formatted,
+        plan_start_time: time || null,
         plan_sort_order: plan.plan_sort_order ?? 0,
         title: plan.title,
       })
@@ -65,13 +69,13 @@ export function DuplicatePlanModal({ plan, onClose, onDuplicated }: Props) {
         </div>
 
         <div className="form-group">
-          <label className="form-label">Time <span className="text-muted">(optional)</span></label>
+          <label className="form-label">Time</label>
           <input
-            type="text"
+            type="time"
             className="input"
-            placeholder="e.g. 10:30am"
             value={time}
             onChange={e => setTime(e.target.value)}
+            required
           />
         </div>
 
