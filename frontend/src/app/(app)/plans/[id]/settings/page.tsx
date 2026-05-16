@@ -16,7 +16,7 @@ export default function PlanSettingsPage() {
   const [loading, setLoading] = useState(true)
   const [saving, setSaving] = useState(false)
   const [error, setError] = useState('')
-  const [form, setForm] = useState({ plan_date: '', plan_time: '', plan_start_time: '', plan_sort_order: 0, title: '' })
+  const [form, setForm] = useState({ plan_date: '', plan_time: '', plan_start_time: '', plan_sort_order: 0, title: '', status: 'published' as 'draft' | 'published' })
 
   useEffect(() => {
     if (!id || churchLoading) return
@@ -29,19 +29,20 @@ export default function PlanSettingsPage() {
           plan_start_time: s.plan_start_time ? s.plan_start_time.slice(0, 5) : '',
           plan_sort_order: s.plan_sort_order ?? 0,
           title: s.title ?? '',
+          status: s.status ?? 'published',
         })
       })
       .catch(() => setError('Failed to load plan'))
       .finally(() => setLoading(false))
   }, [id, churchLoading])
 
-  const handleSave = async () => {
+  const handleSave = async (status: 'draft' | 'published') => {
     if (!form.plan_date) { setError('Date is required'); return }
     setSaving(true); setError('')
     try {
       const token = await getToken()
       setAuthToken(token)
-      await api.put(`/api/plans/${id}`, form)
+      await api.put(`/api/plans/${id}`, { ...form, status })
       router.push(`/plans/${id}`)
     } catch (err: any) {
       setError(err.response?.data?.error || 'Failed to save')
@@ -90,7 +91,12 @@ export default function PlanSettingsPage() {
           </div>
           <div className="form-footer">
             <Link href={`/plans/${id}`} className="btn btn-secondary">Cancel</Link>
-            <button className="btn btn-primary" onClick={handleSave} disabled={saving}>{saving ? 'Saving…' : 'Save changes'}</button>
+            <button className="btn btn-secondary" onClick={() => handleSave('draft')} disabled={saving}>
+              {saving ? 'Saving…' : form.status === 'draft' ? 'Save draft' : 'Revert to draft'}
+            </button>
+            <button className="btn btn-primary" onClick={() => handleSave('published')} disabled={saving}>
+              {saving ? 'Saving…' : form.status === 'published' ? 'Save changes' : 'Save & publish'}
+            </button>
           </div>
         </div>
       </div>
