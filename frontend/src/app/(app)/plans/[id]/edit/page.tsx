@@ -102,6 +102,8 @@ function SortableItem({
     transition,
     opacity: isDragging ? 0.5 : 1,
     marginBottom: 6,
+    isolation: 'isolate' as const,
+    willChange: 'transform',
   }
 
   return (
