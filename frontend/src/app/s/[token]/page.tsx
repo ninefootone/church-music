@@ -227,16 +227,16 @@ export default function PublicPlanPage() {
           {plan.items?.length > 0 && (
             <div className="timing-toggles">
               <label className="timing-toggle-label">
-                <input type="checkbox" checked={showDurations} onChange={e => {
-                  setShowDurations(e.target.checked)
-                  localStorage.setItem('plan_show_durations', String(e.target.checked))
-                }} /> Show item duration
-              </label>
-              <label className="timing-toggle-label">
                 <input type="checkbox" checked={showTimings} onChange={e => {
                   setShowTimings(e.target.checked)
                   localStorage.setItem('plan_show_timings', String(e.target.checked))
                 }} disabled={!plan.plan_start_time} title={!plan.plan_start_time ? 'No start time set for this plan' : ''} /> Show timings
+              </label>
+              <label className="timing-toggle-label">
+                <input type="checkbox" checked={showDurations} onChange={e => {
+                  setShowDurations(e.target.checked)
+                  localStorage.setItem('plan_show_durations', String(e.target.checked))
+                }} /> Show item duration
               </label>
             </div>
           )}
