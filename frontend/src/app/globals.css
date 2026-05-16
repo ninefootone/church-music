@@ -230,6 +230,11 @@ body.set-viewer-active { overflow: hidden; }
     color: var(--color-warning-700, #92400e);
   }
 
+  .badge-draft--header {
+    font-size: var(--text-sm);
+    padding: 4px 10px;
+  }
+
   /* ── Category badges ── */
   .cat-badge     { @apply badge; }
   .cat-praise    { background: var(--cat-praise-bg);    color: var(--cat-praise-text); }

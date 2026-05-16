@@ -4,7 +4,7 @@ import { useState, useEffect } from 'react'
 import Link from 'next/link'
 import { useParams, useRouter } from 'next/navigation'
 import { format, parseISO } from 'date-fns'
-import { ArrowLeft, Share2, Plus, Music, BookOpen, Mic2, Trash2, ChevronDown, ChevronUp, FileText, ExternalLink, X, PlayCircle, Mail, Copy } from 'lucide-react'
+import { ArrowLeft, Share2, Plus, Music, BookOpen, Mic2, Trash2, ChevronDown, ChevronUp, FileText, ExternalLink, X, PlayCircle, Mail } from 'lucide-react'
 import { KeyBadge, CategoryBadge } from '@/components/ui/badges'
 import { useAuth } from '@clerk/nextjs'
 import { useChurch } from '@/context/ChurchContext'
@@ -12,7 +12,6 @@ import api from '@/lib/api'
 import { ConfirmModal } from '@/components/ui/ConfirmModal'
 import { PlanMusicianModal } from '@/components/ui/PlanMusicianModal'
 import { PlanEmailModal } from '@/components/ui/PlanEmailModal'
-import { DuplicatePlanModal } from '@/components/ui/DuplicatePlanModal'
 import type { PlanMusician } from '@/types'
 
 interface SongFile {
@@ -245,28 +244,6 @@ export default function PlanDetailPage() {
   const [showMusicianModal, setShowMusicianModal] = useState(false)
   const [showEmailModal, setShowEmailModal] = useState(false)
   const [showDuplicateModal, setShowDuplicateModal] = useState(false)
-  const [togglingStatus, setTogglingStatus] = useState(false)
-
-  const handleToggleStatus = async () => {
-    if (!plan) return
-    const newStatus = plan.status === 'draft' ? 'published' : 'draft'
-    setTogglingStatus(true)
-    try {
-      const res = await api.put(`/api/plans/${id}`, {
-        plan_date: plan.plan_date,
-        plan_time: plan.plan_time,
-        plan_start_time: plan.plan_start_time,
-        plan_sort_order: plan.plan_sort_order ?? 0,
-        title: plan.title,
-        status: newStatus,
-      })
-      setPlan((prev: any) => ({ ...prev, status: res.data.status }))
-    } catch {
-      // leave as-is on error
-    } finally {
-      setTogglingStatus(false)
-    }
-  }
 
   useEffect(() => {
     if (!id || churchLoading) return
@@ -372,28 +349,9 @@ export default function PlanDetailPage() {
             )}
           </div>
                     <div className="plan-detail-actions">
-            {/* Draft badge + publish toggle — admins and plan editors only */}
-            {(isAdmin || canAddPlans || plan.created_by === userId) && (
-              <button
-                onClick={handleToggleStatus}
-                disabled={togglingStatus}
-                className={`btn btn-compact-icon ${plan.status === 'draft' ? 'btn-warning' : 'btn-secondary'}`}
-                title={plan.status === 'draft' ? 'This plan is a draft — click to publish' : 'Published — click to revert to draft'}
-              >
-                {plan.status === 'draft' ? 'Draft' : 'Published'}
-              </button>
-            )}
-
-            {/* Duplicate */}
-            {(isAdmin || canAddPlans || plan.created_by === userId) && (
-              <button
-                onClick={() => setShowDuplicateModal(true)}
-                className="btn btn-secondary btn-compact-icon"
-                title="Duplicate plan"
-              >
-                <Copy size={14} />
-                <span>Duplicate</span>
-              </button>
+            {/* Draft badge — visible to plan editors only */}
+            {plan.status === 'draft' && (isAdmin || canAddPlans || plan.created_by === userId) && (
+              <span className="badge badge-draft badge-draft--header">DRAFT</span>
             )}
 
             {/* Share — compact icon+label button */}
@@ -559,13 +517,6 @@ export default function PlanDetailPage() {
             })
           }}
           onClose={() => setShowMusicianModal(false)}
-        />
-      )}
-      {showDuplicateModal && (
-        <DuplicatePlanModal
-          plan={plan}
-          onClose={() => setShowDuplicateModal(false)}
-          onDuplicated={(newId: string) => router.push(`/plans/${newId}`)}
         />
       )}
       {showDeletePlan && (
