@@ -98,12 +98,10 @@ function SortableItem({
   const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({ id: item.id })
 
   const style = {
-    transform: CSS.Transform.toString(transform),
+    transform: isDragging ? CSS.Transform.toString(transform) : undefined,
     transition,
     opacity: isDragging ? 0.5 : 1,
     marginBottom: 6,
-    isolation: 'isolate' as const,
-    willChange: 'transform',
   }
 
   return (
