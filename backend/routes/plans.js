@@ -91,11 +91,12 @@ router.get('/:id', requireAuth, requireMembership, async function(req, res, next
 
     const items = await pool.query(
       `SELECT si.id, si.type, si.title, si.notes, si.key_override, si.position,
-        si.custom_arrangement,
+        si.custom_arrangement, si.duration_minutes,
         s.id AS song_id, s.title AS song_title, s.author AS song_author,
         s.default_key AS song_default_key, s.category AS song_category,
         s.ccli_number AS song_ccli_number,
-        s.suggested_arrangement AS song_suggested_arrangement
+        s.suggested_arrangement AS song_suggested_arrangement,
+        s.default_duration AS song_default_duration
        FROM plan_items si
        LEFT JOIN songs s ON s.id = si.song_id
        WHERE si.plan_id = $1
@@ -119,11 +120,12 @@ router.get('/public/:token', async function(req, res, next) {
 
     const items = await pool.query(
       `SELECT si.type, si.title, si.notes, si.key_override, si.position,
-        si.custom_arrangement,
+        si.custom_arrangement, si.duration_minutes,
         s.id AS song_id, s.title AS song_title, s.author AS song_author,
         s.default_key AS song_default_key, s.youtube_url AS song_youtube_url,
         s.ccli_number AS song_ccli_number,
-        s.suggested_arrangement AS song_suggested_arrangement
+        s.suggested_arrangement AS song_suggested_arrangement,
+        s.default_duration AS song_default_duration
        FROM plan_items si
        LEFT JOIN songs s ON s.id = si.song_id
        WHERE si.plan_id = $1
@@ -153,13 +155,14 @@ router.post('/', requireAuth, requirePermission('can_add_plans'), async function
 
     const plan_date = req.body.plan_date;
     const plan_time = req.body.plan_time;
+    const plan_start_time = req.body.plan_start_time || null;
     const plan_sort_order = req.body.plan_sort_order ?? 0;
     const title = req.body.title;
     const public_token = uuidv4().split('-')[0];
 
     const plan = await pool.query(
-      'INSERT INTO plans (church_id, plan_date, plan_time, plan_sort_order, title, public_token, created_by) VALUES ($1,$2,$3,$4,$5,$6,$7) RETURNING *',
-      [churchId, plan_date, plan_time, plan_sort_order, title, public_token, req.user.clerk_id]
+      'INSERT INTO plans (church_id, plan_date, plan_time, plan_start_time, plan_sort_order, title, public_token, created_by) VALUES ($1,$2,$3,$4,$5,$6,$7,$8) RETURNING *',
+      [churchId, plan_date, plan_time, plan_start_time, plan_sort_order, title, public_token, req.user.clerk_id]
     );
     res.status(201).json(plan.rows[0]);
   } catch (err) {
@@ -180,11 +183,12 @@ router.put('/:id', requireAuth, requireMembership, async function(req, res, next
     if (!isAdmin && !isOwner && !canEditAny) return res.status(403).json({ error: 'Not authorised' });
     const plan_date = req.body.plan_date;
     const plan_time = req.body.plan_time;
+    const plan_start_time = req.body.plan_start_time || null;
     const plan_sort_order = req.body.plan_sort_order ?? 0;
     const title = req.body.title;
     const plan = await pool.query(
-      'UPDATE plans SET plan_date=$1, plan_time=$2, plan_sort_order=$3, title=$4 WHERE id=$5 AND church_id=$6 RETURNING *',
-      [plan_date, plan_time, plan_sort_order, title, req.params.id, req.churchId]
+      'UPDATE plans SET plan_date=$1, plan_time=$2, plan_start_time=$3, plan_sort_order=$4, title=$5 WHERE id=$6 AND church_id=$7 RETURNING *',
+      [plan_date, plan_time, plan_start_time, plan_sort_order, title, req.params.id, req.churchId]
     );
     if (plan.rows.length === 0) return res.status(404).json({ error: 'Not found' });
     res.json(plan.rows[0]);
@@ -203,8 +207,8 @@ router.put('/:id/items', requireAuth, requireMembership, async function(req, res
     for (let i = 0; i < items.length; i++) {
       const item = items[i];
       await pool.query(
-        'INSERT INTO plan_items (plan_id, type, song_id, title, notes, key_override, position, custom_arrangement) VALUES ($1,$2,$3,$4,$5,$6,$7,$8)',
-        [planId, item.type, item.song_id || null, item.title || null, item.notes || null, item.key_override || null, i, item.custom_arrangement || null]
+        'INSERT INTO plan_items (plan_id, type, song_id, title, notes, key_override, position, custom_arrangement, duration_minutes) VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9)',
+        [planId, item.type, item.song_id || null, item.title || null, item.notes || null, item.key_override || null, i, item.custom_arrangement || null, item.duration_minutes ? parseInt(item.duration_minutes) : null]
       );
     }
 
