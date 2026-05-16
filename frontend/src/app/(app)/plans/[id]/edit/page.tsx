@@ -441,16 +441,16 @@ export default function PlanEditPage() {
           </Link>
           <div className="timing-toggles">
             <label className="timing-toggle-label">
-              <input type="checkbox" checked={showDurations} onChange={e => {
-                setShowDurations(e.target.checked)
-                localStorage.setItem('plan_show_durations', String(e.target.checked))
-              }} /> Show item duration
-            </label>
-            <label className="timing-toggle-label">
               <input type="checkbox" checked={showTimings} onChange={e => {
                 setShowTimings(e.target.checked)
                 localStorage.setItem('plan_show_timings', String(e.target.checked))
               }} disabled={!planStartTime} title={!planStartTime ? 'Set a start time in plan settings first' : ''} /> Show timings
+            </label>
+            <label className="timing-toggle-label">
+              <input type="checkbox" checked={showDurations} onChange={e => {
+                setShowDurations(e.target.checked)
+                localStorage.setItem('plan_show_durations', String(e.target.checked))
+              }} /> Show item duration
             </label>
           </div>
         </div>
