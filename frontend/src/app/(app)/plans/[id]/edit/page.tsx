@@ -59,11 +59,13 @@ interface PlanItem {
   song_default_key?: string
   song_category?: string
   song_suggested_arrangement?: string
+  song_default_duration?: number | null
   title: string
   notes: string
   key_override: string
   custom_arrangement: string
   expanded: boolean
+  duration_minutes: number | null
 }
 
 interface Song {
@@ -81,6 +83,7 @@ const newId = () => `item-${++idCounter}`
 function SortableItem({
   item, idx, total,
   onRemove, onUpdate, onToggleExpanded,
+  showTimings, showDurations, calculatedStart,
 }: {
   item: PlanItem
   idx: number
@@ -88,6 +91,9 @@ function SortableItem({
   onRemove: () => void
   onUpdate: (updates: Partial<PlanItem>) => void
   onToggleExpanded: () => void
+  showTimings: boolean
+  showDurations: boolean
+  calculatedStart: string | null
 }) {
   const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({ id: item.id })
 
@@ -100,6 +106,26 @@ function SortableItem({
 
   return (
     <div ref={setNodeRef} style={style}>
+      {(showTimings || showDurations) && (
+        <div className="item-timing-row">
+          {showTimings && calculatedStart && (
+            <span className="item-timing-time">{calculatedStart}</span>
+          )}
+          {showDurations && (
+            <span className="item-timing-duration">
+              <input
+                type="number"
+                min="1"
+                max="180"
+                placeholder="mins"
+                value={item.duration_minutes ?? ''}
+                onChange={e => onUpdate({ duration_minutes: e.target.value ? parseInt(e.target.value) : null })}
+                className="duration-input"
+              />
+            </span>
+          )}
+        </div>
+      )}
       <div className="card card--flush">
         <div className="sortable-item-row">
 
@@ -241,6 +267,14 @@ export default function PlanEditPage() {
   const [error, setError] = useState('')
   const [showSongPicker, setShowSongPicker] = useState(true)
   const [isMobile, setIsMobile] = useState(false)
+  const [showTimings, setShowTimings] = useState(() => {
+    if (typeof window === 'undefined') return false
+    return localStorage.getItem('plan_show_timings') === 'true'
+  })
+  const [showDurations, setShowDurations] = useState(() => {
+    if (typeof window === 'undefined') return false
+    return localStorage.getItem('plan_show_durations') === 'true'
+  })
 
   useEffect(() => {
     const check = () => setIsMobile(window.innerWidth <= 940)
@@ -279,12 +313,14 @@ export default function PlanEditPage() {
         song_author: item.song_author,
         song_default_key: item.song_default_key,
         song_category: item.song_category,
+        song_default_duration: item.song_default_duration ?? null,
         title: item.title || '',
         notes: item.notes || '',
         key_override: normaliseKey(item.key_override) || normaliseKey(item.song_default_key),
         custom_arrangement: item.custom_arrangement || '',
         song_suggested_arrangement: item.song_suggested_arrangement || '',
         expanded: false,
+        duration_minutes: item.duration_minutes ?? item.song_default_duration ?? null,
       })))
       setSongs(songsRes.data)
     }).catch(() => setError('Failed to load plan'))
@@ -312,8 +348,10 @@ export default function PlanEditPage() {
       song_title: song.title, song_author: song.author,
       song_default_key: song.default_key, song_category: song.category,
       song_suggested_arrangement: (song as any).suggested_arrangement || '',
+      song_default_duration: (song as any).default_duration ?? null,
       title: '', notes: '', key_override: normaliseKey(song.default_key),
       custom_arrangement: '', expanded: false,
+      duration_minutes: (song as any).default_duration ?? null,
     }])
     setSongSearch('')
   }
@@ -322,6 +360,7 @@ export default function PlanEditPage() {
     setItems(prev => [...prev, {
       id: newId(), type, song_id: null,
       title: label, notes: '', key_override: '', custom_arrangement: '', expanded: false,
+      duration_minutes: null,
     }])
   }
 
@@ -342,6 +381,7 @@ export default function PlanEditPage() {
           title: item.title || null, notes: item.notes || null,
           key_override: item.key_override || null,
           custom_arrangement: item.custom_arrangement || null,
+          duration_minutes: item.duration_minutes || null,
         }))
       })
       router.push(`/plans/${id}`)
@@ -354,6 +394,22 @@ export default function PlanEditPage() {
   if (loading || churchLoading) return <p className="text-muted dash-loading">Loading…</p>
   if (!plan) return <p className="text-muted dash-loading">Plan not found.</p>
 
+  const planStartTime = plan.plan_start_time ? plan.plan_start_time.slice(0, 5) : null
+
+  function calcStartTimes(): (string | null)[] {
+    if (!planStartTime) return items.map(() => null)
+    let [h, m] = planStartTime.split(':').map(Number)
+    return items.map(item => {
+      const label = `${h}:${String(m).padStart(2, '0')}`
+      const dur = item.duration_minutes ?? 0
+      m += dur
+      h += Math.floor(m / 60)
+      m = m % 60
+      return label
+    })
+  }
+  const startTimes = calcStartTimes()
+
   return (
     <div>
       {/* Header */}
@@ -364,13 +420,27 @@ export default function PlanEditPage() {
           </Link>
           <h1 className="page-title">
             {format(parseISO(plan.plan_date), 'd MMMM yyyy')}
-            {plan.plan_time && (
-              <span className="page-title-meta"> · {plan.plan_time}</span>
+            {(plan.plan_start_time || plan.plan_time) && (
+              <span className="page-title-meta"> · {plan.plan_start_time ? new Date(`1970-01-01T${plan.plan_start_time}`).toLocaleTimeString('en-GB', { hour: 'numeric', minute: '2-digit', hour12: true }) : plan.plan_time}</span>
             )}
           </h1>
           <Link href={`/plans/${id}/settings`} className="edit-details-link">
             Edit details ↗
           </Link>
+          <div className="timing-toggles">
+            <label className="timing-toggle-label">
+              <input type="checkbox" checked={showDurations} onChange={e => {
+                setShowDurations(e.target.checked)
+                localStorage.setItem('plan_show_durations', String(e.target.checked))
+              }} /> Show item duration
+            </label>
+            <label className="timing-toggle-label">
+              <input type="checkbox" checked={showTimings} onChange={e => {
+                setShowTimings(e.target.checked)
+                localStorage.setItem('plan_show_timings', String(e.target.checked))
+              }} disabled={!planStartTime} title={!planStartTime ? 'Set a start time in plan settings first' : ''} /> Show timings
+            </label>
+          </div>
         </div>
         <div className="btn-group">
           <Link href={`/plans/${id}`} className="btn btn-secondary">Cancel</Link>
@@ -411,6 +481,9 @@ export default function PlanEditPage() {
                     onRemove={() => removeItem(idx)}
                     onUpdate={updates => updateItem(idx, updates)}
                     onToggleExpanded={() => toggleExpanded(idx)}
+                    showTimings={showTimings && !!planStartTime}
+                    showDurations={showDurations}
+                    calculatedStart={startTimes[idx]}
                   />
                 ))}
               </SortableContext>
