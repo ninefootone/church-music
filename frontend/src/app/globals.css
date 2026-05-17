@@ -543,7 +543,7 @@ body.set-viewer-active { overflow: hidden; }
     gap: var(--space-md);
   }
   .dash-feedback-link { padding-bottom: 0; }
-  .member-grid { display: flex; flex-direction: column; gap: 0; }
+.member-grid { display: flex; flex-direction: column; gap: 0; }
   .member-card {
     display: flex;
     flex-direction: row;
@@ -552,27 +552,34 @@ body.set-viewer-active { overflow: hidden; }
     padding: var(--space-sm) 0;
     border-bottom: 1px solid var(--color-border);
     width: 100%;
+    cursor: pointer;
   }
   .member-card:last-child { border-bottom: none; }
-  .member-card-info { flex: 1; min-width: 0; }
-  .member-card-roles { display: flex; flex-wrap: wrap; gap: 4px; margin-top: 2px; }
-  .member-card-role-badge { font-size: 11px; color: var(--color-text-muted); background: var(--color-neutral-50); border: 1px solid var(--color-border); border-radius: var(--radius-sm); padding: 1px 6px; }
-  .member-avatar-wrap { position: relative; }
+  .member-card-info {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 0 var(--space-md);
+    flex: 1;
+    min-width: 0;
+    align-items: center;
+  }
+  .member-card-roles { display: flex; flex-wrap: wrap; gap: 4px; grid-column: 1 / -1; margin-top: 2px; }
+  .member-card-role-badge { font-size: 11px; color: var(--color-text-muted); background: var(--color-neutral-50); border: 1px solid var(--color-border); border-radius: var(--radius-sm); padding: 1px 6px; }  .member-avatar-wrap { position: relative; }
   .member-avatar-img {
-    width: 52px;
-    height: 52px;
+    width: 36px;
+    height: 36px;
     border-radius: 50%;
     object-fit: cover;
   }
   .member-avatar-placeholder {
-    width: 52px;
-    height: 52px;
+    width: 36px;
+    height: 36px;
     border-radius: 50%;
     background: var(--color-border);
     display: flex;
     align-items: center;
     justify-content: center;
-    font-size: var(--text-lg);
+    font-size: var(--text-sm);
     font-weight: 600;
     color: var(--color-text-secondary);
   }

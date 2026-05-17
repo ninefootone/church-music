@@ -100,9 +100,8 @@ export default function TeamPage() {
             {members.map((member) => (
               <div
                 key={member.id}
-                onClick={() => { setManageMember(member); setActiveTab('unavailability') }}
                 className="member-card"
-                style={{ cursor: 'pointer' }}
+                onClick={() => { setManageMember(member); setActiveTab('unavailability') }}
               >
                 <div className="member-avatar-wrap">
                   {member.image_url ? (
@@ -127,6 +126,13 @@ export default function TeamPage() {
                     </div>
                   )}
                 </div>
+                <button
+                  onClick={(e) => { e.stopPropagation(); setManageMember(member); setActiveTab('unavailability') }}
+                  className="btn btn-ghost"
+                  style={{ flexShrink: 0, fontSize: 'var(--text-xs)' }}
+                >
+                  Edit
+                </button>
               </div>
             ))}
           </div>
