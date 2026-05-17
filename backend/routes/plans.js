@@ -372,11 +372,29 @@ router.post('/:id/email', requireAuth, requireMembership, async function(req, re
       ? new Date(plan.plan_date).toLocaleDateString('en-GB', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' })
       : 'Date TBC'
 
+    // Build timing calculator
+    const hasTimings = !!plan.plan_start_time
+    const hasDurations = items.some(i => i.duration_minutes)
+    let runningMinutes = 0
+    if (hasTimings) {
+      const [h, m] = plan.plan_start_time.slice(0, 5).split(':').map(Number)
+      runningMinutes = h * 60 + m
+    }
+
     // Build song rows HTML
     const itemsHtml = items.map((item, i) => {
       if (item.type !== 'song') {
         const label = item.title || (item.type.charAt(0).toUpperCase() + item.type.slice(1))
-        return `<tr><td colspan="3" style="padding:10px 16px;background:#f8f9fa;font-size:13px;color:#666;font-style:italic;border-bottom:1px solid #e5e7eb;">${label}</td></tr>`
+        let timingCell = ''
+        if (hasTimings || hasDurations) {
+          const hh = String(Math.floor(runningMinutes / 60)).padStart(2, '0')
+          const mm = String(runningMinutes % 60).padStart(2, '0')
+          const timeStr = hasTimings ? `<span style="font-size:12px;font-weight:600;color:#4b7fa5;">${hh}:${mm}</span>` : ''
+          const durStr = item.duration_minutes ? `<span style="font-size:12px;color:#9ca3af;margin-left:4px;">${item.duration_minutes} mins</span>` : ''
+          timingCell = `<td style="padding:10px 16px;white-space:nowrap;width:80px;">${timeStr}${durStr}</td>`
+        }
+        if (item.duration_minutes) runningMinutes += item.duration_minutes
+        return `<tr style="border-bottom:1px solid #e5e7eb;">${hasTimings || hasDurations ? timingCell : `<td style="width:80px;"></td>`}<td colspan="2" style="padding:10px 16px;background:#f8f9fa;font-size:13px;color:#666;font-style:italic;">${label}</td></tr>`
       }
       const title = item.song_title || 'Untitled'
       const key = item.key_override || item.song_default_key || ''
@@ -388,8 +406,16 @@ router.post('/:id/email', requireAuth, requireMembership, async function(req, re
         const label = [f.label, f.key_of].filter(Boolean).join(' — ')
         return `<a href="${f.signedUrl}" style="display:inline-block;margin-right:6px;margin-top:4px;padding:3px 10px;background:#f3f4f6;border:1px solid #d1d5db;border-radius:4px;font-size:11px;color:#1d4ed8;text-decoration:none;">${label}</a>`
       }).join('')
+      const hh = String(Math.floor(runningMinutes / 60)).padStart(2, '0')
+      const mm = String(runningMinutes % 60).padStart(2, '0')
+      const timeStr = hasTimings ? `<span style="font-size:12px;font-weight:600;color:#4b7fa5;">${hh}:${mm}</span>` : ''
+      const durStr = item.duration_minutes ? `<span style="font-size:12px;color:#9ca3af;margin-left:4px;">${item.duration_minutes} mins</span>` : ''
+      const timingCell = (hasTimings || hasDurations)
+        ? `<td style="padding:10px 16px;white-space:nowrap;width:80px;vertical-align:top;">${timeStr}${durStr}</td>`
+        : `<td style="width:80px;"></td>`
+      if (item.duration_minutes) runningMinutes += item.duration_minutes
       return `<tr style="border-bottom:1px solid #e5e7eb;">
-        <td style="padding:10px 16px;width:28px;color:#9ca3af;font-size:13px;">${i + 1}</td>
+        ${timingCell}
         <td style="padding:10px 16px;">
           <div style="font-size:15px;font-weight:600;color:#111827;">${title}${keyBadge}</div>
           ${arrangementHtml}
