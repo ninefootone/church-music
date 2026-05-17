@@ -325,6 +325,9 @@ export default function PlanDetailPage() {
                   : plan.plan_time}
               </p>
             )}
+            {plan.title && (
+              <p className="plan-detail-meta text-muted">{plan.title}</p>
+            )}
             {plan.items?.length > 0 && (
               <div className="timing-toggles">
                 <label className="timing-toggle-label">
@@ -340,9 +343,6 @@ export default function PlanDetailPage() {
                   }} /> Show item duration
                 </label>
               </div>
-            )}
-            {plan.title && (
-              <p className="plan-detail-meta text-muted">{plan.title}</p>
             )}
           </div>
           <div className="plan-detail-actions">
