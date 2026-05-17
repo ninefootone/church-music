@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import Link from 'next/link'
 import { useParams, useRouter } from 'next/navigation'
 import { useAuth } from '@clerk/nextjs'
@@ -277,6 +277,8 @@ export default function PlanEditPage() {
     return localStorage.getItem('plan_show_durations') === 'true'
   })
   const [preServiceNotes, setPreServiceNotes] = useState('')
+  const [preServiceNotesFocused, setPreServiceNotesFocused] = useState(false)
+  const preServiceNotesRef = useRef<HTMLTextAreaElement>(null)
 
   useEffect(() => {
     const check = () => setIsMobile(window.innerWidth <= 940)
@@ -587,35 +589,53 @@ export default function PlanEditPage() {
           </div>
           {planStartTime && (
             <>
-              <div className="card card--flush" style={{ marginBottom: 6 }}>
+              <div style={{ marginBottom: 6, position: 'relative' }}>
+                {preServiceNotesFocused && (
+                  <div style={{ display: 'flex', gap: 4, marginBottom: 4 }}>
+                    <button
+                      type="button"
+                      onMouseDown={e => {
+                        e.preventDefault()
+                        const el = preServiceNotesRef.current
+                        if (!el) return
+                        const start = el.selectionStart ?? 0
+                        const end = el.selectionEnd ?? 0
+                        const selected = el.value.slice(start, end)
+                        const wrapped = `**${selected}**`
+                        const next = el.value.slice(0, start) + wrapped + el.value.slice(end)
+                        setPreServiceNotes(next)
+                        requestAnimationFrame(() => { el.focus(); el.selectionStart = selected ? start + wrapped.length : start + 2; el.selectionEnd = selected ? start + wrapped.length : start + 2 })
+                      }}
+                      className="btn btn-secondary btn-xs"
+                    ><strong>B</strong></button>
+                    <button
+                      type="button"
+                      onMouseDown={e => {
+                        e.preventDefault()
+                        const el = preServiceNotesRef.current
+                        if (!el) return
+                        const start = el.selectionStart ?? 0
+                        const end = el.selectionEnd ?? 0
+                        const selected = el.value.slice(start, end)
+                        const wrapped = `_${selected}_`
+                        const next = el.value.slice(0, start) + wrapped + el.value.slice(end)
+                        setPreServiceNotes(next)
+                        requestAnimationFrame(() => { el.focus(); el.selectionStart = selected ? start + wrapped.length : start + 1; el.selectionEnd = selected ? start + wrapped.length : start + 1 })
+                      }}
+                      className="btn btn-secondary btn-xs"
+                    ><em>I</em></button>
+                  </div>
+                )}
                 <textarea
+                  ref={preServiceNotesRef}
                   className="input notes-input"
                   value={preServiceNotes}
                   onChange={e => setPreServiceNotes(e.target.value)}
+                  onFocus={() => setPreServiceNotesFocused(true)}
+                  onBlur={() => setPreServiceNotesFocused(false)}
                   placeholder="Pre-service notes (e.g. Tech setup 8am, Band call 8:30am…)"
                   rows={2}
-                  onKeyDown={e => {
-                    const el = e.currentTarget
-                    const start = el.selectionStart ?? 0
-                    const end = el.selectionEnd ?? 0
-                    if ((e.metaKey || e.ctrlKey) && e.key === 'b') {
-                      e.preventDefault()
-                      const selected = el.value.slice(start, end)
-                      const wrapped = `**${selected}**`
-                      setPreServiceNotes(el.value.slice(0, start) + wrapped + el.value.slice(end))
-                      const newCursor = start + wrapped.length
-                      requestAnimationFrame(() => { el.selectionStart = selected ? newCursor : start + 2; el.selectionEnd = selected ? newCursor : start + 2 })
-                    }
-                    if ((e.metaKey || e.ctrlKey) && e.key === 'i') {
-                      e.preventDefault()
-                      const selected = el.value.slice(start, end)
-                      const wrapped = `_${selected}_`
-                      setPreServiceNotes(el.value.slice(0, start) + wrapped + el.value.slice(end))
-                      const newCursor = start + wrapped.length
-                      requestAnimationFrame(() => { el.selectionStart = selected ? newCursor : start + 1; el.selectionEnd = selected ? newCursor : start + 1 })
-                    }
-                  }}
-                  style={{ margin: 0, borderRadius: 'var(--radius-md)', fontSize: 'var(--text-sm)' }}
+                  style={{ margin: 0, fontSize: 'var(--text-sm)' }}
                 />
               </div>
               <div className="plan-divider">
