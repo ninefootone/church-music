@@ -194,12 +194,13 @@ router.put('/:id', requireAuth, requireMembership, async function(req, res, next
     const plan_start_time = req.body.plan_start_time || null;
     const plan_sort_order = req.body.plan_sort_order ?? 0;
     const title = req.body.title;
+    const pre_service_notes = req.body.pre_service_notes || null;
     const status = ['draft', 'published'].includes(req.body.status) ? req.body.status : undefined;
     const plan = await pool.query(
-      `UPDATE plans SET plan_date=$1, plan_time=$2, plan_start_time=$3, plan_sort_order=$4, title=$5${status ? ', status=$8' : ''} WHERE id=$6 AND church_id=$7 RETURNING *`,
+      `UPDATE plans SET plan_date=$1, plan_time=$2, plan_start_time=$3, plan_sort_order=$4, title=$5, pre_service_notes=$9${status ? ', status=$8' : ''} WHERE id=$6 AND church_id=$7 RETURNING *`,
       status
-        ? [plan_date, plan_time, plan_start_time, plan_sort_order, title, req.params.id, req.churchId, status]
-        : [plan_date, plan_time, plan_start_time, plan_sort_order, title, req.params.id, req.churchId]
+        ? [plan_date, plan_time, plan_start_time, plan_sort_order, title, req.params.id, req.churchId, status, pre_service_notes]
+        : [plan_date, plan_time, plan_start_time, plan_sort_order, title, req.params.id, req.churchId, null, pre_service_notes]
     );
     if (plan.rows.length === 0) return res.status(404).json({ error: 'Not found' });
     res.json(plan.rows[0]);
@@ -485,9 +486,9 @@ router.post('/:id/duplicate', requireAuth, requirePermission('can_add_plans'), a
     const public_token = uuidv4().split('-')[0];
 
     const newPlan = await pool.query(
-      `INSERT INTO plans (church_id, plan_date, plan_time, plan_start_time, plan_sort_order, title, public_token, created_by, status)
-       VALUES ($1,$2,$3,$4,$5,$6,$7,$8,'draft') RETURNING *`,
-      [req.churchId, plan_date, plan_time, plan_start_time ?? orig.plan_start_time, plan_sort_order ?? orig.plan_sort_order, title ?? orig.title, public_token, req.user.clerk_id]
+      `INSERT INTO plans (church_id, plan_date, plan_time, plan_start_time, plan_sort_order, title, public_token, created_by, status, pre_service_notes)
+       VALUES ($1,$2,$3,$4,$5,$6,$7,$8,'draft',$9) RETURNING *`,
+      [req.churchId, plan_date, plan_time, plan_start_time ?? orig.plan_start_time, plan_sort_order ?? orig.plan_sort_order, title ?? orig.title, public_token, req.user.clerk_id, orig.pre_service_notes ?? null]
     );
     const newId = newPlan.rows[0].id;
 
