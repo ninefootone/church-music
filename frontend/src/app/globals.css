@@ -622,7 +622,7 @@ body.set-viewer-active { overflow: hidden; }
     width: min(480px, 90vw);
     display: flex;
     flex-direction: column;
-    gap: var(--space-md);
+    gap: var(--space-sm);
   }
   .manage-member-header {
     display: flex;
@@ -1013,7 +1013,7 @@ body.set-viewer-active { overflow: hidden; }
 .team-unavail-list {
   display: flex;
   flex-direction: column;
-  gap: 0;
+  gap: 6px;
   margin-top: var(--space-md);
 }
 
