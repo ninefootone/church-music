@@ -1522,7 +1522,7 @@ body.set-viewer-active { overflow: hidden; }
   .item-timing-duration-label  { font-size: var(--text-xs); color: var(--color-text-muted); white-space: nowrap; }
   .item-timing-edit-row { display: flex; align-items: baseline; gap: 6px; padding: 8px var(--space-md) 4px; }
   .item-timing-duration { display: flex; align-items: center; gap: 4px; }
-  .duration-input      { width: 44px; font-size: var(--text-xs); padding: 2px 6px; border: 1px solid var(--color-border); border-radius: var(--radius-sm); background: var(--color-surface); color: var(--color-text-primary); text-align: center; }
+  .duration-input      { width: 44px; font-size: var(--text-xs) !important; padding: 2px 6px !important; border: 1px solid var(--color-border); border-radius: var(--radius-sm); background: var(--color-surface); color: var(--color-text-primary); text-align: center; line-height: 1.4; }
   .duration-input::placeholder { color: var(--color-text-muted); }
   .timing-toggles      { display: flex; gap: 16px; margin-top: 6px; flex-wrap: wrap; }
   .timing-toggle-label { display: flex; align-items: center; gap: 6px; font-size: var(--text-sm); color: var(--color-text-muted); cursor: pointer; user-select: none; }
@@ -2198,7 +2198,7 @@ select.input {
   }
 }
 
-@media (max-width: 940px) {
+@media (max-width: 1024px) {
   .plan-edit-grid {
     display: flex;
     flex-direction: column;
