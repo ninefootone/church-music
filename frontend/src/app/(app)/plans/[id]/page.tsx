@@ -228,6 +228,7 @@ export default function PlanDetailPage() {
   const [unavailableUserIds, setUnavailableUserIds] = useState<Set<string>>(new Set())
 
   const checkUnavailability = async (musicianList: PlanMusician[], planDate: string) => {
+    if (!isAdmin) return
     const userIds = [...new Set<string>(musicianList.map(m => m.user_id).filter(Boolean) as string[])]
     const results = await Promise.all(
       userIds.map(uid =>
@@ -254,14 +255,16 @@ export default function PlanDetailPage() {
             setMusicians(mr.data)
             if (planDate) {
               const userIds = [...new Set<string>(mr.data.map((m: PlanMusician) => m.user_id).filter(Boolean))]
-              const results = await Promise.all(
-                userIds.map(uid =>
-                  api.get('/api/unavailability/check', { params: { userId: uid, date: planDate } })
-                    .then(res => res.data.unavailable ? uid : null)
-                    .catch(() => null)
+              if (isAdmin) {
+                const results = await Promise.all(
+                  userIds.map(uid =>
+                    api.get('/api/unavailability/check', { params: { userId: uid, date: planDate } })
+                      .then(res => res.data.unavailable ? uid : null)
+                      .catch(() => null)
+                  )
                 )
-              )
-              setUnavailableUserIds(new Set(results.filter(Boolean) as string[]))
+                setUnavailableUserIds(new Set(results.filter(Boolean) as string[]))
+              }
             }
           })
           .catch(() => {})

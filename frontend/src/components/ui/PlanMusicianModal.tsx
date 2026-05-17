@@ -56,8 +56,8 @@ export function PlanMusicianModal({ planId, planDate, churchId, onAdd, onClose }
           const note = entry.note ? ` (${entry.note})` : ''
           setUnavailabilityWarning(`${member.name} has marked themselves unavailable on this date${note}.`)
         }
-      } catch {
-        // Non-critical — silently ignore check failures
+      } catch (err: any) {
+        if (err?.response?.status !== 403) console.error(err)
       }
     }
   }
