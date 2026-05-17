@@ -21,6 +21,7 @@ export default function TeamPage() {
   const { church, isAdmin } = useChurch()
   const [members, setMembers] = useState<any[]>([])
   const [unavailability, setUnavailability] = useState<UnavailabilityEntry[]>([])
+  const [availableRoles, setAvailableRoles] = useState<string[]>([])
   const [loading, setLoading] = useState(true)
   const [showInviteModal, setShowInviteModal] = useState(false)
   const [manageMember, setManageMember] = useState<any>(null)
@@ -40,6 +41,10 @@ export default function TeamPage() {
         setMembers(sorted)
       }),
       api.get('/api/unavailability/team').then(r => setUnavailability(r.data)),
+      church && api.get(`/api/churches/${church.id}/roles`).then(r => {
+        const names = r.data.map((role: { name: string }) => role.name)
+        setAvailableRoles(names)
+      }),
     ])
       .catch(() => {})
       .finally(() => setLoading(false))
@@ -190,6 +195,29 @@ export default function TeamPage() {
                 <p className="manage-member-name">{manageMember.name || manageMember.email}</p>
                 {manageMember.name && <p className="manage-member-email">{manageMember.email}</p>}
               </div>
+            </div>
+
+            <div className="manage-member-field">
+              <label className="manage-member-label">Default role</label>
+              <select
+                value={manageMember.default_role || ''}
+                onChange={async (e) => {
+                  const default_role = e.target.value || null
+                  try {
+                    await api.put(`/api/members/${manageMember.id}/default_role`, { default_role })
+                    setMembers(prev => prev.map(m => m.id === manageMember.id ? { ...m, default_role } : m))
+                    setManageMember((prev: any) => ({ ...prev, default_role }))
+                  } catch (err: any) {
+                    alert(err.response?.data?.error || 'Failed to update default role')
+                  }
+                }}
+                className="manage-member-select"
+              >
+                <option value="">— none —</option>
+                {availableRoles.map(r => (
+                  <option key={r} value={r}>{r}</option>
+                ))}
+              </select>
             </div>
 
             <div className="manage-member-field">
