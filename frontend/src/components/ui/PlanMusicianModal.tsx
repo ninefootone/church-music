@@ -9,6 +9,7 @@ interface Member {
   name: string
   email: string
   user_id: string
+  default_roles?: string[]
 }
 
 const DEFAULT_ROLES = ['Vocals', 'Keys', 'Guitar', 'Bass', 'Drums']
@@ -46,6 +47,9 @@ export function PlanMusicianModal({ planId, planDate, churchId, onAdd, onClose }
     setSelectedMember(member)
     setQuery('')
     setUnavailabilityWarning(null)
+    if (member.default_roles && member.default_roles.length > 0) {
+      setSelectedRoles(member.default_roles)
+    }
     if (member.user_id && planDate) {
       try {
         const { data } = await api.get('/api/unavailability/check', {
