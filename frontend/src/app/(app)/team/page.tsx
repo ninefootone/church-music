@@ -64,18 +64,7 @@ export default function TeamPage() {
     if (entry.start_date === entry.end_date) return format(start, 'd MMM yyyy')
     return `${format(start, 'd MMM yyyy')} – ${format(end, 'd MMM yyyy')}`
   }
-
-  // Group unavailability by member email
-  const grouped = unavailability.reduce((acc, entry) => {
-    if (!acc[entry.email]) acc[entry.email] = { name: entry.name, email: entry.email, entries: [] }
-    acc[entry.email].entries.push(entry)
-    return acc
-  }, {} as Record<string, { name: string, email: string, entries: UnavailabilityEntry[] }>)
-
-  const membersWithUnavailability = Object.values(grouped).sort((a, b) =>
-    (a.name || a.email).localeCompare(b.name || b.email)
-  )
-
+  
   return (
     <div>
       <div className="settings-page-header">
@@ -135,33 +124,6 @@ export default function TeamPage() {
                 >
                   Edit
                 </button>
-              </div>
-            ))}
-          </div>
-        )}
-      </div>
-
-      {/* Unavailability */}
-      <div className="settings-card settings-card--spaced">
-        <h2 className="settings-section-heading settings-section-heading--tight">Team unavailability</h2>
-        <p className="settings-section-desc">Dates team members have marked themselves as unavailable.</p>
-
-        {loading ? (
-          <p className="text-muted">Loading…</p>
-        ) : membersWithUnavailability.length === 0 ? (
-          <p className="text-muted">No unavailability declared yet.</p>
-        ) : (
-          <div className="team-unavail-list">
-            {membersWithUnavailability.map(member => (
-              <div key={member.email} className="team-unavail-row">
-                <div className="team-unavail-name">{member.name || member.email}</div>
-                <div className="team-unavail-dates">
-                  {member.entries.map(entry => (
-                    <span key={entry.id} className="team-unavail-badge">
-                      {formatDateRange(entry)}{entry.note ? ` · ${entry.note}` : ''}
-                    </span>
-                  ))}
-                </div>
               </div>
             ))}
           </div>
