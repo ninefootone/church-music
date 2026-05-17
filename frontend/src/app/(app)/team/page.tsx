@@ -1,7 +1,6 @@
 'use client'
 
 import { useState, useEffect, useRef } from 'react'
-import Link from 'next/link'
 import { format, parseISO } from 'date-fns'
 import { useChurch } from '@/context/ChurchContext'
 import api from '@/lib/api'
@@ -26,6 +25,7 @@ export default function TeamPage() {
   const [showInviteModal, setShowInviteModal] = useState(false)
   const [manageMember, setManageMember] = useState<any>(null)
   const [showRemoveConfirm, setShowRemoveConfirm] = useState(false)
+  const [activeTab, setActiveTab] = useState<'unavailability' | 'roles' | 'permissions'>('unavailability')
   const fetchedRef = useRef(false)
 
   useEffect(() => {
@@ -41,7 +41,7 @@ export default function TeamPage() {
         setMembers(sorted)
       }),
       api.get('/api/unavailability/team').then(r => setUnavailability(r.data)),
-      church && api.get(`/api/churches/${church.id}/roles`).then(r => {
+      api.get(`/api/churches/${church.id}/roles`).then(r => {
         const names = r.data.map((role: { name: string }) => role.name)
         setAvailableRoles(names)
       }),
@@ -100,7 +100,7 @@ export default function TeamPage() {
             {members.map((member) => (
               <div
                 key={member.id}
-                onClick={() => setManageMember(member)}
+                onClick={() => { setManageMember(member); setActiveTab('unavailability') }}
                 className="member-card"
                 style={{ cursor: 'pointer' }}
               >
@@ -183,6 +183,8 @@ export default function TeamPage() {
       {manageMember && (
         <div onClick={() => setManageMember(null)} className="manage-member-backdrop">
           <div onClick={(e) => e.stopPropagation()} className="manage-member-modal">
+
+            {/* Header */}
             <div className="manage-member-header">
               {manageMember.image_url ? (
                 <img src={manageMember.image_url} alt={manageMember.name} className="manage-member-avatar-img" />
@@ -197,85 +199,142 @@ export default function TeamPage() {
               </div>
             </div>
 
-            <div className="manage-member-field">
-              <label className="manage-member-label">Default role</label>
-              <select
-                value={manageMember.default_role || ''}
-                onChange={async (e) => {
-                  const default_role = e.target.value || null
-                  try {
-                    await api.put(`/api/members/${manageMember.id}/default_role`, { default_role })
-                    setMembers(prev => prev.map(m => m.id === manageMember.id ? { ...m, default_role } : m))
-                    setManageMember((prev: any) => ({ ...prev, default_role }))
-                  } catch (err: any) {
-                    alert(err.response?.data?.error || 'Failed to update default role')
-                  }
-                }}
-                className="manage-member-select"
-              >
-                <option value="">— none —</option>
-                {availableRoles.map(r => (
-                  <option key={r} value={r}>{r}</option>
-                ))}
-              </select>
+            {/* Tabs */}
+            <div className="manage-member-tabs">
+              {(['unavailability', 'roles', 'permissions'] as const).map(tab => (
+                <button
+                  key={tab}
+                  onClick={() => setActiveTab(tab)}
+                  className="manage-member-tab"
+                  style={{
+                    borderBottom: activeTab === tab ? '2px solid var(--color-brand-500)' : '2px solid transparent',
+                    color: activeTab === tab ? 'var(--color-brand-500)' : 'var(--color-text-secondary)',
+                    fontWeight: activeTab === tab ? 600 : 400,
+                  }}
+                >
+                  {tab.charAt(0).toUpperCase() + tab.slice(1)}
+                </button>
+              ))}
             </div>
 
-            <div className="manage-member-field">
-              <label className="manage-member-label">Access level</label>
-              <select
-                value={manageMember.role}
-                onChange={async (e) => {
-                  const newRole = e.target.value
-                  try {
-                    await api.put(`/api/members/${manageMember.id}/role`, { role: newRole })
-                    setMembers(prev => prev.map(m => m.id === manageMember.id ? { ...m, role: newRole } : m))
-                    setManageMember((prev: any) => ({ ...prev, role: newRole }))
-                  } catch (err: any) {
-                    alert(err.response?.data?.error || 'Failed to update role')
-                  }
-                }}
-                className="manage-member-select"
-              >
-                <option value="member">Member</option>
-                <option value="admin">Admin</option>
-              </select>
-            </div>
+            {/* Unavailability tab */}
+            {activeTab === 'unavailability' && (() => {
+              const memberUnavail = unavailability.filter(u => u.email === manageMember.email)
+              return memberUnavail.length === 0 ? (
+                <p className="text-muted" style={{ padding: '1rem 0' }}>No unavailability declared.</p>
+              ) : (
+                <div className="team-unavail-list" style={{ marginTop: '0.75rem' }}>
+                  {memberUnavail.map(entry => (
+                    <div key={entry.id} className="team-unavail-badge">
+                      {formatDateRange(entry)}{entry.note ? ` · ${entry.note}` : ''}
+                    </div>
+                  ))}
+                </div>
+              )
+            })()}
 
-            {manageMember.role === 'member' && (
-              <div className="manage-member-perms">
-                <label className="manage-member-label">Permissions</label>
-                {([
-                  { key: 'can_manage_songs', label: 'Add & edit songs' },
-                  { key: 'can_add_plans', label: 'Add & edit plans' },
-                  { key: 'can_manage_playlists', label: 'Manage playlists' },
-                  { key: 'can_annotate_plans', label: 'Add notes to plan items' },
-                ] as { key: 'can_manage_songs' | 'can_add_plans' | 'can_manage_playlists' | 'can_annotate_plans', label: string }[]).map(({ key, label }) => (
-                  <label key={key} className="manage-member-perm-label">
-                    <input
-                      type="checkbox"
-                      checked={!!manageMember[key]}
-                      onChange={async (e) => {
-                        const updated = { ...manageMember, [key]: e.target.checked }
-                        try {
-                          await api.put(`/api/members/${manageMember.id}/permissions`, {
-                            can_manage_songs: updated.can_manage_songs,
-                            can_add_plans: updated.can_add_plans,
-                            can_manage_playlists: updated.can_manage_playlists,
-                            can_annotate_plans: updated.can_annotate_plans,
-                          })
-                          setMembers(prev => prev.map(m => m.id === manageMember.id ? updated : m))
-                          setManageMember(updated)
-                        } catch (err: any) {
-                          alert(err.response?.data?.error || 'Failed to update permissions')
-                        }
-                      }}
-                    />
-                    {label}
-                  </label>
-                ))}
+            {/* Roles tab */}
+            {activeTab === 'roles' && (
+              <div style={{ paddingTop: '0.75rem' }}>
+                <p className="settings-section-desc" style={{ marginBottom: '0.75rem' }}>
+                  Default roles pre-fill when adding this member to a plan.
+                </p>
+                <div className="file-group">
+                  {availableRoles.map(r => {
+                    const selected = (manageMember.default_roles || []).includes(r)
+                    return (
+                      <button
+                        key={r}
+                        onClick={async () => {
+                          const current: string[] = manageMember.default_roles || []
+                          const updated = selected
+                            ? current.filter((x: string) => x !== r)
+                            : [...current, r]
+                          try {
+                            await api.put(`/api/members/${manageMember.id}/default_roles`, { default_roles: updated })
+                            setMembers(prev => prev.map(m => m.id === manageMember.id ? { ...m, default_roles: updated } : m))
+                            setManageMember((prev: any) => ({ ...prev, default_roles: updated }))
+                          } catch (err: any) {
+                            alert(err.response?.data?.error || 'Failed to update roles')
+                          }
+                        }}
+                        className="role-chip-btn"
+                        style={{
+                          borderColor: selected ? 'var(--color-brand-600)' : 'var(--color-border)',
+                          background: selected ? 'var(--color-brand-600)' : 'var(--color-surface)',
+                          color: selected ? '#fff' : 'var(--color-text-secondary)',
+                        }}
+                      >
+                        {r}
+                      </button>
+                    )
+                  })}
+                </div>
               </div>
             )}
 
+            {/* Permissions tab */}
+            {activeTab === 'permissions' && (
+              <div style={{ paddingTop: '0.75rem' }}>
+                <div className="manage-member-field">
+                  <label className="manage-member-label">Access level</label>
+                  <select
+                    value={manageMember.role}
+                    onChange={async (e) => {
+                      const newRole = e.target.value
+                      try {
+                        await api.put(`/api/members/${manageMember.id}/role`, { role: newRole })
+                        setMembers(prev => prev.map(m => m.id === manageMember.id ? { ...m, role: newRole } : m))
+                        setManageMember((prev: any) => ({ ...prev, role: newRole }))
+                      } catch (err: any) {
+                        alert(err.response?.data?.error || 'Failed to update role')
+                      }
+                    }}
+                    className="manage-member-select"
+                  >
+                    <option value="member">Member</option>
+                    <option value="admin">Admin</option>
+                  </select>
+                </div>
+
+                {manageMember.role === 'member' && (
+                  <div className="manage-member-perms">
+                    <label className="manage-member-label">Permissions</label>
+                    {([
+                      { key: 'can_manage_songs', label: 'Add & edit songs' },
+                      { key: 'can_add_plans', label: 'Add & edit plans' },
+                      { key: 'can_manage_playlists', label: 'Manage playlists' },
+                      { key: 'can_annotate_plans', label: 'Add notes to plan items' },
+                    ] as { key: 'can_manage_songs' | 'can_add_plans' | 'can_manage_playlists' | 'can_annotate_plans', label: string }[]).map(({ key, label }) => (
+                      <label key={key} className="manage-member-perm-label">
+                        <input
+                          type="checkbox"
+                          checked={!!manageMember[key]}
+                          onChange={async (e) => {
+                            const updated = { ...manageMember, [key]: e.target.checked }
+                            try {
+                              await api.put(`/api/members/${manageMember.id}/permissions`, {
+                                can_manage_songs: updated.can_manage_songs,
+                                can_add_plans: updated.can_add_plans,
+                                can_manage_playlists: updated.can_manage_playlists,
+                                can_annotate_plans: updated.can_annotate_plans,
+                              })
+                              setMembers(prev => prev.map(m => m.id === manageMember.id ? updated : m))
+                              setManageMember(updated)
+                            } catch (err: any) {
+                              alert(err.response?.data?.error || 'Failed to update permissions')
+                            }
+                          }}
+                        />
+                        {label}
+                      </label>
+                    ))}
+                  </div>
+                )}
+              </div>
+            )}
+
+            {/* Footer */}
             <div className="manage-member-footer">
               <button onClick={() => setShowRemoveConfirm(true)} className="btn-muted">
                 Remove member
@@ -284,6 +343,7 @@ export default function TeamPage() {
                 Done
               </button>
             </div>
+
           </div>
         </div>
       )}
