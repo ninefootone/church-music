@@ -2230,7 +2230,7 @@ select.input {
   .app-main-content     { padding: var(--space-lg) var(--space-md) !important; }
 
   .page-title    { font-size: var(--text-xl); }
-  .card          { padding: var(--space-md); }
+  .card:not(.card--flush) { padding: var(--space-md); }
   .page-header   { flex-direction: row; align-items: center; gap: var(--space-sm); }
   .meta-label    { width: 72px; }
   .plan-card  { padding: var(--space-md); }
