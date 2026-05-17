@@ -1859,7 +1859,7 @@ body.set-viewer-active { overflow: hidden; }
     text-decoration: none;
   }
   .public-musicians { font-size: var(--text-sm); color: var(--color-text-secondary); margin-bottom: var(--space-lg); }
-  .item-row         { display: flex; align-items: flex-start; gap: 12px; padding: 14px var(--space-md); }
+  .item-row         { display: flex; align-items: flex-start; flex-wrap: wrap; gap: 12px; padding: 14px var(--space-md); }
   .item-title       { font-size: var(--text-md); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; margin-bottom: 0; }
   .item-right       { display: flex; align-items: center; gap: 8px; flex-shrink: 0; }
   .yt-btn {
