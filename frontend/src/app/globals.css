@@ -619,7 +619,7 @@ body.set-viewer-active { overflow: hidden; }
     background: var(--color-surface);
     border-radius: var(--radius-md);
     padding: var(--space-lg);
-    width: 320px;
+    width: min(480px, 90vw);
     display: flex;
     flex-direction: column;
     gap: var(--space-md);
@@ -680,6 +680,22 @@ body.set-viewer-active { overflow: hidden; }
     gap: var(--space-sm);
     font-size: var(--text-sm);
     cursor: pointer;
+  }
+  .manage-member-tabs {
+    display: flex;
+    gap: var(--space-md);
+    border-bottom: 1px solid var(--color-border);
+    margin-bottom: var(--space-sm);
+  }
+  .manage-member-tab {
+    padding: var(--space-sm) 0;
+    background: none;
+    border: none;
+    border-bottom: 2px solid transparent;
+    font-size: var(--text-sm);
+    cursor: pointer;
+    font-family: inherit;
+    white-space: nowrap;
   }
   .manage-member-footer {
     display: flex;
@@ -3273,6 +3289,6 @@ select.input {
 .member-search-option    { display: block; width: 100%; text-align: left; padding: 10px 14px; background: var(--color-surface); border: none; border-bottom: 1px solid var(--color-border); cursor: pointer; font-size: var(--text-md); font-family: inherit; }
 .member-option-name      { font-weight: 500; }
 .member-option-email     { font-size: var(--text-sm); color: var(--color-text-muted); margin-left: 8px; }
-.role-chip-btn           { padding: 6px 14px; border-radius: var(--radius-sm); border: 1px solid; font-size: var(--text-sm); font-weight: 500; cursor: pointer; font-family: inherit; }
+.role-chip-btn           { padding: 8px 16px; border-radius: var(--radius-sm); border: 1px solid; font-size: var(--text-sm); font-weight: 500; cursor: pointer; font-family: inherit; }
 .custom-role-input       { margin-top: 10px; width: 100%; padding: 10px 14px; border: 1px solid var(--color-border); border-radius: var(--radius-sm); font-size: var(--text-md); background: var(--color-surface); color: var(--color-text-primary); box-sizing: border-box; font-family: inherit; }
 .btn-full-center         { width: 100%; justify-content: center; }
