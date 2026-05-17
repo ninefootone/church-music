@@ -103,20 +103,22 @@ export default function TeamPage() {
                 className="member-card"
                 onClick={() => { setManageMember(member); setActiveTab('unavailability') }}
               >
-                <div className="member-avatar-wrap">
-                  {member.image_url ? (
-                    <img src={member.image_url} alt={member.name || member.email} className="member-avatar-img" />
-                  ) : (
-                    <div className="member-avatar-placeholder">
-                      {(member.name || member.email || '?').charAt(0).toUpperCase()}
-                    </div>
-                  )}
-                  {member.role === 'admin' && (
-                    <span className="member-admin-badge">A</span>
-                  )}
+                <div className="member-card-row1">
+                  <div className="member-avatar-wrap">
+                    {member.image_url ? (
+                      <img src={member.image_url} alt={member.name || member.email} className="member-avatar-img" />
+                    ) : (
+                      <div className="member-avatar-placeholder">
+                        {(member.name || member.email || '?').charAt(0).toUpperCase()}
+                      </div>
+                    )}
+                    {member.role === 'admin' && (
+                      <span className="member-admin-badge">A</span>
+                    )}
+                  </div>
+                  <p className="member-name-label">{member.name || member.email}</p>
                 </div>
                 <div className="member-card-info">
-                  <p className="member-name-label">{member.name || member.email}</p>
                   <p className="member-email-label">{member.email}</p>
                   {member.default_roles?.length > 0 && (
                     <div className="member-card-roles">

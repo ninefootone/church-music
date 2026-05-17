@@ -546,23 +546,28 @@ body.set-viewer-active { overflow: hidden; }
 .member-grid { display: flex; flex-direction: column; gap: 0; }
   .member-card {
     display: flex;
-    flex-direction: row;
-    align-items: flex-start;
-    gap: var(--space-md);
+    flex-direction: column;
     padding: var(--space-sm) 0;
     border-bottom: 1px solid var(--color-border);
     width: 100%;
     cursor: pointer;
+    gap: 2px;
   }
   .member-card:last-child { border-bottom: none; }
+  .member-card-row1 { display: flex; align-items: center; gap: var(--space-sm); }
   .member-card-info {
-    display: flex;
-    flex-direction: column;
-    gap: 1px;
-    flex: 1;
-    min-width: 0;
+    display: contents;
   }
   .member-card-roles { display: flex; flex-wrap: wrap; gap: 4px; margin-top: 2px; }
+  @media (min-width: 640px) {
+    .member-card {
+      flex-direction: row;
+      align-items: center;
+      justify-content: space-between;
+      gap: var(--space-md);
+    }
+    .member-card-row1 { flex: 1; min-width: 0; }
+  }
   .member-card-role-badge { font-size: 11px; color: var(--color-text-muted); background: var(--color-neutral-50); border: 1px solid var(--color-border); border-radius: var(--radius-sm); padding: 1px 6px; }  .member-avatar-wrap { position: relative; }
   .member-avatar-img {
     width: 36px;
