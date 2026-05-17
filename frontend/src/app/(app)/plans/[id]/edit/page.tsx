@@ -253,6 +253,8 @@ function SortableItem({
   )
 }
 
+const DIVIDER_ID = 'divider--start'
+
 export default function PlanEditPage() {
   const { id } = useParams()
   const router = useRouter()
@@ -418,7 +420,6 @@ export default function PlanEditPage() {
   if (loading || churchLoading) return <p className="text-muted dash-loading">Loading…</p>
   if (!plan) return <p className="text-muted dash-loading">Plan not found.</p>
 
-  const DIVIDER_ID = 'divider--start'
   const planStartTime = plan.plan_start_time ? plan.plan_start_time.slice(0, 5) : null
 
   const allItems: PlanItem[] = planStartTime
