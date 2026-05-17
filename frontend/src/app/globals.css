@@ -543,14 +543,20 @@ body.set-viewer-active { overflow: hidden; }
     gap: var(--space-md);
   }
   .dash-feedback-link { padding-bottom: 0; }
-  .member-grid { display: flex; flex-wrap: wrap; gap: var(--space-md); }
+  .member-grid { display: flex; flex-direction: column; gap: 0; }
   .member-card {
     display: flex;
-    flex-direction: column;
+    flex-direction: row;
     align-items: center;
-    gap: 6px;
-    width: 80px;
+    gap: var(--space-md);
+    padding: var(--space-sm) 0;
+    border-bottom: 1px solid var(--color-border);
+    width: 100%;
   }
+  .member-card:last-child { border-bottom: none; }
+  .member-card-info { flex: 1; min-width: 0; }
+  .member-card-roles { display: flex; flex-wrap: wrap; gap: 4px; margin-top: 2px; }
+  .member-card-role-badge { font-size: 11px; color: var(--color-text-muted); background: var(--color-neutral-50); border: 1px solid var(--color-border); border-radius: var(--radius-sm); padding: 1px 6px; }
   .member-avatar-wrap { position: relative; }
   .member-avatar-img {
     width: 52px;
@@ -584,27 +590,25 @@ body.set-viewer-active { overflow: hidden; }
     line-height: 14px;
   }
   .member-name-label {
-    font-size: var(--text-xs);
-    text-align: center;
+    font-size: var(--text-sm);
+    font-weight: 600;
+    text-align: left;
     line-height: 1.3;
     color: var(--color-text-primary);
     margin: 0;
     overflow: hidden;
-    display: -webkit-box;
-    -webkit-line-clamp: 2;
-    -webkit-box-orient: vertical;
-    width: 100%;
+    text-overflow: ellipsis;
+    white-space: nowrap;
   }
   .member-email-label {
-    font-size: 10px;
-    text-align: center;
-    line-height: 1.2;
+    font-size: var(--text-xs);
+    text-align: left;
+    line-height: 1.4;
     color: var(--color-text-muted);
     margin: 0;
     overflow: hidden;
     text-overflow: ellipsis;
     white-space: nowrap;
-    width: 100%;
   }
   .manage-member-backdrop {
     position: fixed;

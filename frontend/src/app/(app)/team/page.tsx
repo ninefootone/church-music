@@ -116,8 +116,17 @@ export default function TeamPage() {
                     <span className="member-admin-badge">A</span>
                   )}
                 </div>
-                <p className="member-name-label">{member.name || member.email}</p>
-                <p className="member-email-label">{member.email}</p>
+                <div className="member-card-info">
+                  <p className="member-name-label">{member.name || member.email}</p>
+                  <p className="member-email-label">{member.email}</p>
+                  {member.default_roles?.length > 0 && (
+                    <div className="member-card-roles">
+                      {member.default_roles.map((r: string) => (
+                        <span key={r} className="member-card-role-badge">{r}</span>
+                      ))}
+                    </div>
+                  )}
+                </div>
               </div>
             ))}
           </div>
