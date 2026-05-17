@@ -53,6 +53,7 @@ function normaliseKey(key: string | null | undefined): string {
 interface PlanItem {
   id: string
   type: string
+  phase: 'pre_service' | 'service'
   song_id: string | null
   song_title?: string
   song_author?: string
@@ -322,6 +323,7 @@ export default function PlanEditPage() {
         custom_arrangement: item.custom_arrangement || '',
         song_suggested_arrangement: item.song_suggested_arrangement || '',
         expanded: false,
+        phase: item.phase || 'service',
         duration_minutes: item.duration_minutes ?? item.song_default_duration ?? null,
       })))
       setSongs(songsRes.data)
@@ -334,13 +336,22 @@ export default function PlanEditPage() {
     s.author.toLowerCase().includes(songSearch.toLowerCase())
   )
 
+  const DIVIDER_ID = 'divider--start'
+
   const handleDragEnd = (event: DragEndEvent) => {
     const { active, over } = event
     if (!over || active.id === over.id) return
+    if (active.id === DIVIDER_ID) return // divider is not draggable
     setItems(prev => {
       const oldIndex = prev.findIndex(i => i.id === active.id)
       const newIndex = prev.findIndex(i => i.id === over.id)
-      return arrayMove(prev, oldIndex, newIndex)
+      const reordered = arrayMove(prev, oldIndex, newIndex)
+      // Determine phase based on position relative to divider
+      const dividerIndex = reordered.findIndex(i => i.id === DIVIDER_ID)
+      return reordered.map((item, idx) => {
+        if (item.id === DIVIDER_ID) return item
+        return { ...item, phase: dividerIndex === -1 || idx >= dividerIndex ? 'service' : 'pre_service' }
+      })
     })
   }
 
@@ -353,6 +364,7 @@ export default function PlanEditPage() {
       song_default_duration: (song as any).default_duration ?? null,
       title: '', notes: '', key_override: normaliseKey(song.default_key),
       custom_arrangement: '', expanded: false,
+      phase: 'service',
       duration_minutes: (song as any).default_duration ?? null,
     }])
     setSongSearch('')
@@ -362,6 +374,7 @@ export default function PlanEditPage() {
     setItems(prev => [...prev, {
       id: newId(), type, song_id: null,
       title: label, notes: '', key_override: '', custom_arrangement: '', expanded: false,
+      phase: 'service',
       duration_minutes: null,
     }])
   }
@@ -379,12 +392,13 @@ export default function PlanEditPage() {
       setAuthToken(token)
       await Promise.all([
         api.put(`/api/plans/${id}/items`, {
-          items: items.map(item => ({
+          items: allItems.filter(item => item.id !== DIVIDER_ID).map(item => ({
             type: item.type, song_id: item.song_id || null,
             title: item.title || null, notes: item.notes || null,
             key_override: item.key_override || null,
             custom_arrangement: item.custom_arrangement || null,
             duration_minutes: item.duration_minutes || null,
+            phase: item.phase || 'service',
           }))
         }),
         api.put(`/api/plans/${id}`, {
@@ -407,11 +421,30 @@ export default function PlanEditPage() {
   if (!plan) return <p className="text-muted dash-loading">Plan not found.</p>
 
   const planStartTime = plan.plan_start_time ? plan.plan_start_time.slice(0, 5) : null
+  const DIVIDER_ID = 'divider--start'
+
+  const allItems: PlanItem[] = planStartTime
+    ? (() => {
+        const dividerIndex = items.findIndex(i => i.id === DIVIDER_ID)
+        if (dividerIndex !== -1) return items
+        // inject divider between pre_service and service items if not already present
+        const firstService = items.findIndex(i => i.phase === 'service')
+        const insertAt = firstService === -1 ? items.length : firstService
+        return [
+          ...items.slice(0, insertAt),
+          { id: DIVIDER_ID, type: 'divider', phase: 'service', song_id: null, title: '', notes: '', key_override: '', custom_arrangement: '', expanded: false, duration_minutes: null },
+          ...items.slice(insertAt),
+        ]
+      })()
+    : items
 
   function calcStartTimes(): (string | null)[] {
-    if (!planStartTime) return items.map(() => null)
+    if (!planStartTime) return allItems.map(() => null)
     let [h, m] = planStartTime.split(':').map(Number)
-    return items.map(item => {
+    let counting = false
+    return allItems.map(item => {
+      if (item.id === DIVIDER_ID) { counting = true; return null }
+      if (!counting) return null
       const label = `${h}:${String(m).padStart(2, '0')}`
       const dur = item.duration_minutes ?? 0
       m += dur
@@ -602,21 +635,35 @@ export default function PlanEditPage() {
             </div>
           ) : (
             <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={handleDragEnd}>
-              <SortableContext items={items.map(i => i.id)} strategy={verticalListSortingStrategy}>
-                {items.map((item, idx) => (
-                  <SortableItem
-                    key={item.id}
-                    item={item}
-                    idx={idx}
-                    total={items.length}
-                    onRemove={() => removeItem(idx)}
-                    onUpdate={updates => updateItem(idx, updates)}
-                    onToggleExpanded={() => toggleExpanded(idx)}
-                    showTimings={showTimings && !!planStartTime}
-                    showDurations={showDurations}
-                    calculatedStart={startTimes[idx]}
-                  />
-                ))}
+              <SortableContext items={allItems.map(i => i.id)} strategy={verticalListSortingStrategy}>
+                {allItems.map((item, idx) => {
+                  if (item.id === DIVIDER_ID) {
+                    return (
+                      <div key={DIVIDER_ID} className="plan-divider">
+                        <div className="plan-divider-line" />
+                        <span className="plan-divider-label">
+                          {new Date(`1970-01-01T${planStartTime}`).toLocaleTimeString('en-GB', { hour: 'numeric', minute: '2-digit', hour12: true })}
+                        </span>
+                        <div className="plan-divider-line" />
+                      </div>
+                    )
+                  }
+                  const realIdx = allItems.slice(0, idx).filter(i => i.id !== DIVIDER_ID).length
+                  return (
+                    <SortableItem
+                      key={item.id}
+                      item={item}
+                      idx={realIdx}
+                      total={items.length}
+                      onRemove={() => removeItem(realIdx)}
+                      onUpdate={updates => updateItem(realIdx, updates)}
+                      onToggleExpanded={() => toggleExpanded(realIdx)}
+                      showTimings={showTimings && !!planStartTime && item.phase === 'service'}
+                      showDurations={showDurations}
+                      calculatedStart={startTimes[idx]}
+                    />
+                  )
+                })}
               </SortableContext>
             </DndContext>
           )}
