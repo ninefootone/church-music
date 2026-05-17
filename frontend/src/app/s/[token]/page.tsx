@@ -221,6 +221,9 @@ export default function PublicPlanPage() {
                 : plan.plan_time}
             </p>
           )}
+          {plan.title && (
+            <p className="plan-detail-meta">{plan.title}</p>
+          )}
           {plan.items?.length > 0 && (
             <div className="timing-toggles">
               <label className="timing-toggle-label">
@@ -236,9 +239,6 @@ export default function PublicPlanPage() {
                 }} /> Show item duration
               </label>
             </div>
-          )}
-          {plan.title && (
-            <p className="plan-detail-meta">{plan.title}</p>
           )}
           <div className="public-set-cta">
             <a href={`/s/${token}/set`} className="btn-set-mode">
