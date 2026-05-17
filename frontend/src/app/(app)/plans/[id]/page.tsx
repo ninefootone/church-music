@@ -348,13 +348,10 @@ export default function PlanDetailPage() {
               <p className="plan-detail-meta text-muted">{plan.title}</p>
             )}
           </div>
-                    <div className="plan-detail-actions">
-            {/* Draft badge — visible to plan editors only */}
+          <div className="plan-detail-actions">
             {plan.status === 'draft' && (isAdmin || canAddPlans || plan.created_by === userId) && (
               <span className="badge badge-draft badge-draft--header">DRAFT</span>
             )}
-
-            {/* Share — compact icon+label button */}
             <button
               onClick={handleShare}
               className="btn btn-secondary btn-compact-icon"
@@ -363,8 +360,6 @@ export default function PlanDetailPage() {
               <Share2 size={14} />
               <span>{copied ? 'Copied!' : 'Share'}</span>
             </button>
-
-            {/* Set mode */}
             <Link
               href={`/plans/${id}/set`}
               className="btn btn-secondary btn-compact-icon"
@@ -373,8 +368,6 @@ export default function PlanDetailPage() {
               <PlayCircle size={14} />
               <span>Set mode</span>
             </Link>
-
-            {/* Email — admin or owner */}
             {(isAdmin || canAddPlans || plan.created_by === userId) && (
               <button
                 onClick={() => setShowEmailModal(true)}
@@ -385,8 +378,6 @@ export default function PlanDetailPage() {
                 <span>Email</span>
               </button>
             )}
-
-            {/* Edit — admin or owner */}
             {(isAdmin || canAddPlans || plan.created_by === userId) && (
               <Link href={`/plans/${id}/edit`} className="btn btn-primary btn-sm">
                 Edit
@@ -409,7 +400,6 @@ export default function PlanDetailPage() {
             </button>
           )}
         </div>
-
         {musicians.length === 0 ? (
           <p className="form-empty-note text-muted">
             No musicians added yet.
@@ -448,7 +438,6 @@ export default function PlanDetailPage() {
       {/* Running order */}
       <div className="card">
         <div className="section-label">Running order</div>
-
         {!plan.items || plan.items.length === 0 ? (
           <div className="card-empty">
             <p className="text-muted empty-message">No items added yet.</p>
@@ -460,60 +449,42 @@ export default function PlanDetailPage() {
           </div>
         ) : (
           <>
-            <p className="plan-hint">
-              Tap a song to view sheet music
-            </p>
+            <p className="plan-hint">Tap a song to view sheet music</p>
+            {plan.plan_start_time && (
+              <div className="plan-divider">
+                <div className="plan-divider-line" />
+                <span className="plan-divider-label">
+                  {new Date(`1970-01-01T${plan.plan_start_time}`).toLocaleTimeString('en-GB', { hour: 'numeric', minute: '2-digit', hour12: true })}
+                </span>
+                <div className="plan-divider-line" />
+              </div>
+            )}
             {(() => {
               const startTime = plan.plan_start_time ? plan.plan_start_time.slice(0, 5) : null
               let h = startTime ? parseInt(startTime.split(':')[0]) : 0
               let m = startTime ? parseInt(startTime.split(':')[1]) : 0
-              const hasPreService = startTime && plan.items.some((item: any) => item.phase === 'pre_service')
-              let dividerInserted = false
-              let serviceIndex = 0
-              let preServiceIndex = 0
               return plan.items.map((item: any, i: number) => {
-                const isPreService = item.phase === 'pre_service'
-                const elements = []
-
-                // Insert divider before first service item, if there are pre-service items
-                if (hasPreService && !isPreService && !dividerInserted) {
-                  dividerInserted = true
-                  elements.push(
-                    <div key="divider" className="plan-divider">
-                      <div className="plan-divider-line" />
-                      <span className="plan-divider-label">
-                        {new Date(`1970-01-01T${startTime}`).toLocaleTimeString('en-GB', { hour: 'numeric', minute: '2-digit', hour12: true })}
-                      </span>
-                      <div className="plan-divider-line" />
-                    </div>
-                  )
-                }
-
-                const index = isPreService ? preServiceIndex++ : serviceIndex++
-                const calcStart = (!isPreService && startTime) ? `${h}:${String(m).padStart(2, '0')}` : null
-                if (!isPreService) {
-                  const dur = item.duration_minutes ?? 0
-                  m += dur; h += Math.floor(m / 60); m = m % 60
-                }
-
-                elements.push(
+                const calcStart = startTime ? `${h}:${String(m).padStart(2, '0')}` : null
+                const dur = item.duration_minutes ?? 0
+                m += dur; h += Math.floor(m / 60); m = m % 60
+                return (
                   <SongItem
                     key={item.id}
                     item={item}
-                    index={index}
+                    index={i}
                     planId={id as string}
                     canAnnotate={canAnnotatePlans && !isAdmin && !canAddPlans && plan.created_by !== userId}
-                    showTimings={showTimings && !!startTime && !isPreService}
+                    showTimings={showTimings && !!startTime}
                     showDurations={showDurations}
                     calculatedStart={calcStart}
                   />
                 )
-                return elements
               })
             })()}
           </>
         )}
       </div>
+
       {(isAdmin || canAddPlans || plan.created_by === userId) && (
         <div className="song-actions-footer">
           <button

@@ -268,52 +268,34 @@ export default function PublicPlanPage() {
           <p className="text-muted">No items in this plan yet.</p>
         ) : (
           <>
-            <p className="plan-hint">
-              Tap a song to view sheet music
-            </p>
+            <p className="plan-hint">Tap a song to view sheet music</p>
+            {plan.plan_start_time && (
+              <div className="plan-divider">
+                <div className="plan-divider-line" />
+                <span className="plan-divider-label">
+                  {new Date(`1970-01-01T${plan.plan_start_time}`).toLocaleTimeString('en-GB', { hour: 'numeric', minute: '2-digit', hour12: true })}
+                </span>
+                <div className="plan-divider-line" />
+              </div>
+            )}
             {(() => {
               const startTime = plan.plan_start_time ? plan.plan_start_time.slice(0, 5) : null
               let h = startTime ? parseInt(startTime.split(':')[0]) : 0
               let m = startTime ? parseInt(startTime.split(':')[1]) : 0
-              const hasPreService = startTime && plan.items.some((item: any) => item.phase === 'pre_service')
-              let dividerInserted = false
-              let serviceIndex = 0
-              let preServiceIndex = 0
               return plan.items.map((item: any, i: number) => {
-                const isPreService = item.phase === 'pre_service'
-                const elements = []
-
-                if (hasPreService && !isPreService && !dividerInserted) {
-                  dividerInserted = true
-                  elements.push(
-                    <div key="divider" className="plan-divider">
-                      <div className="plan-divider-line" />
-                      <span className="plan-divider-label">
-                        {new Date(`1970-01-01T${startTime}`).toLocaleTimeString('en-GB', { hour: 'numeric', minute: '2-digit', hour12: true })}
-                      </span>
-                      <div className="plan-divider-line" />
-                    </div>
-                  )
-                }
-
-                const index = isPreService ? preServiceIndex++ : serviceIndex++
-                const calcStart = (!isPreService && startTime) ? `${h}:${String(m).padStart(2, '0')}` : null
-                if (!isPreService) {
-                  const dur = item.duration_minutes ?? 0
-                  m += dur; h += Math.floor(m / 60); m = m % 60
-                }
-
-                elements.push(
+                const calcStart = startTime ? `${h}:${String(m).padStart(2, '0')}` : null
+                const dur = item.duration_minutes ?? 0
+                m += dur; h += Math.floor(m / 60); m = m % 60
+                return (
                   <SongItem
                     key={i}
                     item={item}
-                    index={index}
-                    showTimings={showTimings && !!startTime && !isPreService}
+                    index={i}
+                    showTimings={showTimings && !!startTime}
                     showDurations={showDurations}
                     calculatedStart={calcStart}
                   />
                 )
-                return elements
               })
             })()}
           </>
