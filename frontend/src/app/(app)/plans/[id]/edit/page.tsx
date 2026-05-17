@@ -336,8 +336,6 @@ export default function PlanEditPage() {
     s.author.toLowerCase().includes(songSearch.toLowerCase())
   )
 
-  const DIVIDER_ID = 'divider--start'
-
   const handleDragEnd = (event: DragEndEvent) => {
     const { active, over } = event
     if (!over || active.id === over.id) return
@@ -420,8 +418,8 @@ export default function PlanEditPage() {
   if (loading || churchLoading) return <p className="text-muted dash-loading">Loading…</p>
   if (!plan) return <p className="text-muted dash-loading">Plan not found.</p>
 
-  const planStartTime = plan.plan_start_time ? plan.plan_start_time.slice(0, 5) : null
   const DIVIDER_ID = 'divider--start'
+  const planStartTime = plan.plan_start_time ? plan.plan_start_time.slice(0, 5) : null
 
   const allItems: PlanItem[] = planStartTime
     ? (() => {
