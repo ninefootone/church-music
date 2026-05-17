@@ -275,20 +275,45 @@ export default function PublicPlanPage() {
               const startTime = plan.plan_start_time ? plan.plan_start_time.slice(0, 5) : null
               let h = startTime ? parseInt(startTime.split(':')[0]) : 0
               let m = startTime ? parseInt(startTime.split(':')[1]) : 0
+              const hasPreService = startTime && plan.items.some((item: any) => item.phase === 'pre_service')
+              let dividerInserted = false
+              let serviceIndex = 0
+              let preServiceIndex = 0
               return plan.items.map((item: any, i: number) => {
-                const calcStart = startTime ? `${h}:${String(m).padStart(2, '0')}` : null
-                const dur = item.duration_minutes ?? 0
-                m += dur; h += Math.floor(m / 60); m = m % 60
-                return (
+                const isPreService = item.phase === 'pre_service'
+                const elements = []
+
+                if (hasPreService && !isPreService && !dividerInserted) {
+                  dividerInserted = true
+                  elements.push(
+                    <div key="divider" className="plan-divider">
+                      <div className="plan-divider-line" />
+                      <span className="plan-divider-label">
+                        {new Date(`1970-01-01T${startTime}`).toLocaleTimeString('en-GB', { hour: 'numeric', minute: '2-digit', hour12: true })}
+                      </span>
+                      <div className="plan-divider-line" />
+                    </div>
+                  )
+                }
+
+                const index = isPreService ? preServiceIndex++ : serviceIndex++
+                const calcStart = (!isPreService && startTime) ? `${h}:${String(m).padStart(2, '0')}` : null
+                if (!isPreService) {
+                  const dur = item.duration_minutes ?? 0
+                  m += dur; h += Math.floor(m / 60); m = m % 60
+                }
+
+                elements.push(
                   <SongItem
                     key={i}
                     item={item}
-                    index={i}
-                    showTimings={showTimings && !!startTime}
+                    index={index}
+                    showTimings={showTimings && !!startTime && !isPreService}
                     showDurations={showDurations}
                     calculatedStart={calcStart}
                   />
                 )
+                return elements
               })
             })()}
           </>

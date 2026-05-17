@@ -372,30 +372,48 @@ router.post('/:id/email', requireAuth, requireMembership, async function(req, re
       : 'Date TBC'
 
     // Build song rows HTML
-    const itemsHtml = items.map((item, i) => {
+    const startTime = plan.plan_start_time ? plan.plan_start_time.slice(0, 5) : null
+    const hasPreService = startTime && items.some(item => item.phase === 'pre_service')
+    let dividerInserted = false
+    let serviceIndex = 0
+    let preServiceIndex = 0
+    const itemsHtml = items.map((item) => {
+      const isPreService = item.phase === 'pre_service'
+      const rows = []
+
+      if (hasPreService && !isPreService && !dividerInserted) {
+        dividerInserted = true
+        const timeLabel = new Date(`1970-01-01T${startTime}`).toLocaleTimeString('en-GB', { hour: 'numeric', minute: '2-digit', hour12: true })
+        rows.push(`<tr><td colspan="3" style="padding:8px 16px;"><table width="100%" cellpadding="0" cellspacing="0"><tr><td style="border-top:1px solid #4b7fa5;opacity:0.4;"></td><td style="padding:0 10px;white-space:nowrap;font-size:11px;font-weight:700;color:#4b7fa5;border:1px solid #4b7fa5;border-radius:99px;">${timeLabel}</td><td style="border-top:1px solid #4b7fa5;opacity:0.4;"></td></tr></table></td></tr>`)
+      }
+
+      const index = isPreService ? ++preServiceIndex : ++serviceIndex
+
       if (item.type !== 'song') {
         const label = item.title || (item.type.charAt(0).toUpperCase() + item.type.slice(1))
-        return `<tr><td colspan="3" style="padding:10px 16px;background:#f8f9fa;font-size:13px;color:#666;font-style:italic;border-bottom:1px solid #e5e7eb;">${label}</td></tr>`
+        rows.push(`<tr><td colspan="3" style="padding:10px 16px;background:#f8f9fa;font-size:13px;color:#666;font-style:italic;border-bottom:1px solid #e5e7eb;">${label}</td></tr>`)
+      } else {
+        const title = item.song_title || 'Untitled'
+        const key = item.key_override || item.song_default_key || ''
+        const keyBadge = key ? `<span style="display:inline-block;padding:2px 8px;background:#dbeafe;color:#1e40af;border-radius:4px;font-size:11px;font-weight:600;margin-left:6px;">${key}</span>` : ''
+        const arrangement = item.custom_arrangement || ''
+        const arrangementHtml = arrangement ? `<div style="font-size:12px;color:#6b7280;margin-top:3px;">${arrangement}</div>` : ''
+        const files = filesBySongId[item.song_id] || []
+        const fileLinks = files.map(f => {
+          const label = [f.label, f.key_of].filter(Boolean).join(' — ')
+          return `<a href="${f.signedUrl}" style="display:inline-block;margin-right:6px;margin-top:4px;padding:3px 10px;background:#f3f4f6;border:1px solid #d1d5db;border-radius:4px;font-size:11px;color:#1d4ed8;text-decoration:none;">${label}</a>`
+        }).join('')
+        rows.push(`<tr style="border-bottom:1px solid #e5e7eb;">
+          <td style="padding:10px 16px;width:28px;color:#9ca3af;font-size:13px;">${index}</td>
+          <td style="padding:10px 16px;">
+            <div style="font-size:15px;font-weight:600;color:#111827;">${title}${keyBadge}</div>
+            ${arrangementHtml}
+            ${fileLinks ? `<div style="margin-top:4px;">${fileLinks}</div>` : ''}
+          </td>
+          <td style="padding:10px 16px;font-size:13px;color:#6b7280;">${item.song_category ? item.song_category.replace(/_/g, '-').replace(/\b\w/g, c => c.toUpperCase()) : ''}</td>
+        </tr>`)
       }
-      const title = item.song_title || 'Untitled'
-      const key = item.key_override || item.song_default_key || ''
-      const keyBadge = key ? `<span style="display:inline-block;padding:2px 8px;background:#dbeafe;color:#1e40af;border-radius:4px;font-size:11px;font-weight:600;margin-left:6px;">${key}</span>` : ''
-      const arrangement = item.custom_arrangement || ''
-      const arrangementHtml = arrangement ? `<div style="font-size:12px;color:#6b7280;margin-top:3px;">${arrangement}</div>` : ''
-      const files = filesBySongId[item.song_id] || []
-      const fileLinks = files.map(f => {
-        const label = [f.label, f.key_of].filter(Boolean).join(' — ')
-        return `<a href="${f.signedUrl}" style="display:inline-block;margin-right:6px;margin-top:4px;padding:3px 10px;background:#f3f4f6;border:1px solid #d1d5db;border-radius:4px;font-size:11px;color:#1d4ed8;text-decoration:none;">${label}</a>`
-      }).join('')
-      return `<tr style="border-bottom:1px solid #e5e7eb;">
-        <td style="padding:10px 16px;width:28px;color:#9ca3af;font-size:13px;">${i + 1}</td>
-        <td style="padding:10px 16px;">
-          <div style="font-size:15px;font-weight:600;color:#111827;">${title}${keyBadge}</div>
-          ${arrangementHtml}
-          ${fileLinks ? `<div style="margin-top:4px;">${fileLinks}</div>` : ''}
-        </td>
-        <td style="padding:10px 16px;font-size:13px;color:#6b7280;">${item.song_category ? item.song_category.replace(/_/g, '-').replace(/\b\w/g, c => c.toUpperCase()) : ''}</td>
-      </tr>`
+      return rows.join('')
     }).join('')
 
     // Musicians section — group roles by name
