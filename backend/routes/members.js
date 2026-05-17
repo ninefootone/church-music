@@ -6,7 +6,7 @@ const { requireAuth, requireMembership, requireAdmin } = require('../middleware/
 router.get('/', requireAuth, requireMembership, async function(req, res, next) {
   try {
     const result = await pool.query(
-      `SELECT m.id, m.role, m.can_manage_songs, m.can_add_plans, m.can_edit_any_plan, m.can_manage_playlists, m.can_annotate_plans,
+      `SELECT m.id, m.role, m.default_role, m.can_manage_songs, m.can_add_plans, m.can_edit_any_plan, m.can_manage_playlists, m.can_annotate_plans,
               m.joined_at, u.id AS user_id, u.name, u.email, u.image_url
        FROM memberships m
        JOIN users u ON u.id = m.user_id
@@ -63,6 +63,20 @@ router.put('/:membershipId/permissions', requireAuth, requireAdmin, async functi
        RETURNING *`,
       [!!can_manage_songs, !!can_add_plans, !!can_edit_any_plan, !!can_manage_playlists, !!can_annotate_plans, req.params.membershipId, req.churchId]
 
+    );
+    if (result.rows.length === 0) return res.status(404).json({ error: 'Membership not found' });
+    res.json(result.rows[0]);
+  } catch (err) {
+    next(err);
+  }
+});
+
+router.put('/:membershipId/default_role', requireAuth, requireAdmin, async function(req, res, next) {
+  try {
+    const { default_role } = req.body;
+    const result = await pool.query(
+      `UPDATE memberships SET default_role = $1 WHERE id = $2 AND church_id = $3 RETURNING *`,
+      [default_role || null, req.params.membershipId, req.churchId]
     );
     if (result.rows.length === 0) return res.status(404).json({ error: 'Membership not found' });
     res.json(result.rows[0]);
