@@ -341,18 +341,23 @@ export default function PlanEditPage() {
   const handleDragEnd = (event: DragEndEvent) => {
     const { active, over } = event
     if (!over || active.id === over.id) return
-    if (active.id === DIVIDER_ID) return // divider is not draggable
-    setItems(prev => {
-      const oldIndex = prev.findIndex(i => i.id === active.id)
-      const newIndex = prev.findIndex(i => i.id === over.id)
-      const reordered = arrayMove(prev, oldIndex, newIndex)
-      // Determine phase based on position relative to divider
-      const dividerIndex = reordered.findIndex(i => i.id === DIVIDER_ID)
-      return reordered.map((item, idx) => {
-        if (item.id === DIVIDER_ID) return item
-        return { ...item, phase: dividerIndex === -1 || idx >= dividerIndex ? 'service' : 'pre_service' }
-      })
-    })
+    if (active.id === DIVIDER_ID) return
+
+    // allItems includes the divider, so we can detect cross-divider moves
+    const oldIndex = allItems.findIndex(i => i.id === active.id)
+    const newIndex = allItems.findIndex(i => i.id === over.id)
+    const reordered = arrayMove(allItems, oldIndex, newIndex)
+    const dividerIndex = reordered.findIndex(i => i.id === DIVIDER_ID)
+
+    // Strip divider out, update phases based on position relative to it
+    const newItems = reordered
+      .filter(i => i.id !== DIVIDER_ID)
+      .map((item, idx) => ({
+        ...item,
+        phase: (dividerIndex === -1 || idx >= dividerIndex ? 'service' : 'pre_service') as 'service' | 'pre_service',
+      }))
+
+    setItems(newItems)
   }
 
   const addSong = (song: Song) => {
