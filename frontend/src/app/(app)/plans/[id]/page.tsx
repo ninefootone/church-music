@@ -73,23 +73,20 @@ function SongItem({ item, index, planId, canAnnotate, showTimings, showDurations
 
   return (
     <div className="song-item-card">
-      {(showTimings || showDurations) && (
-        <div className="item-timing-row">
-          {showTimings && calculatedStart && (
-            <span className="item-timing-time">{calculatedStart}</span>
-          )}
-          {showDurations && item.duration_minutes && (
-            <span className="item-timing-duration-label">{item.duration_minutes} min</span>
-          )}
-        </div>
-      )}
       <div
         className="plan-item-row" style={{ cursor: isSong ? 'pointer' : 'default' }}
         onClick={isSong ? handleExpand : undefined}
       >
-        <span className="item-index">
-          {index + 1}
-        </span>
+        {(showTimings || showDurations) && (
+          <div className="item-timing-col">
+            {showTimings && calculatedStart && (
+              <span className="item-timing-time">{calculatedStart}</span>
+            )}
+            {showDurations && item.duration_minutes && (
+              <span className="item-timing-duration-label">{item.duration_minutes} mins</span>
+            )}
+          </div>
+        )}
         <div className="dash-row-content">
           <p style={{ fontSize: 'var(--text-md)', fontWeight: isSong ? 600 : 400, color: isSong ? 'var(--color-text-primary)' : 'var(--color-text-secondary)', marginBottom: 0 }}>
             {isSong && item.song_title ? item.song_title : (item.title || item.type.charAt(0).toUpperCase() + item.type.slice(1))}

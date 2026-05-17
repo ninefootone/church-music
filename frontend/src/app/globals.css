@@ -1491,7 +1491,7 @@ body.set-viewer-active { overflow: hidden; }
   .empty-message   { margin-bottom: var(--space-sm); }
   .btn-load-more   { width: 100%; margin-top: var(--space-sm); justify-content: center; font-size: var(--text-sm); }
   .song-item-card    { background: var(--color-surface); border: 1px solid var(--color-border); border-radius: var(--radius-md); overflow: hidden; margin-bottom: 8px; }
-  .item-index        { font-size: var(--text-sm); color: var(--color-text-muted); width: 24px; text-align: center; flex-shrink: 0; }
+  /* .item-index        { font-size: var(--text-sm); color: var(--color-text-muted); width: 24px; text-align: center; flex-shrink: 0; } */
   .item-notes        { font-size: var(--text-sm); color: var(--color-text-muted); font-style: italic; margin-top: 2px; }
   .item-chevron      { color: var(--color-text-muted); display: flex; }
   .item-expanded     { border-top: 1px solid var(--color-border); padding: var(--space-md); background: var(--color-neutral-50); }
@@ -1517,15 +1517,13 @@ body.set-viewer-active { overflow: hidden; }
   .plan-divider-label  { font-size: var(--text-xs); font-weight: 700; color: var(--color-brand-500); white-space: nowrap; padding: 2px 10px; border: 1px solid var(--color-brand-500); border-radius: 99px; opacity: 0.8; }
 
   /* ── Item timings ── */
-  .item-timing-row     { display: flex; align-items: center; gap: 8px; padding: 8px var(--space-md) 0; }
-  .item-timing-row + .plan-item-row { padding-top: 4px; }
-  .item-timing-row + .item-row      { padding-top: 4px; }
-  .item-timing-row + .sortable-item-row { padding-top: 4px; }
-  .item-timing-time    { font-size: var(--text-xs); font-weight: 600; color: var(--color-brand-500); min-width: 40px; }
-  .item-timing-duration { display: flex; align-items: center; gap: 4px; margin-left: auto; }
-  .duration-input      { width: 56px; font-size: var(--text-xs); padding: 2px 6px; border: 1px solid var(--color-border); border-radius: var(--radius-sm); background: var(--color-surface); color: var(--color-text-primary); text-align: center; }
+  .item-timing-col     { display: flex; flex-direction: column; justify-content: center; gap: 2px; flex-shrink: 0; min-width: 72px; }
+  .item-timing-time    { font-size: var(--text-xs); font-weight: 600; color: var(--color-brand-500); white-space: nowrap; }
+  .item-timing-duration-label  { font-size: var(--text-xs); color: var(--color-text-muted); white-space: nowrap; }
+  .item-timing-edit-row { display: flex; align-items: baseline; gap: 6px; }
+  .item-timing-duration { display: flex; align-items: center; gap: 4px; }
+  .duration-input      { width: 44px; font-size: var(--text-xs); padding: 2px 6px; border: 1px solid var(--color-border); border-radius: var(--radius-sm); background: var(--color-surface); color: var(--color-text-primary); text-align: center; }
   .duration-input::placeholder { color: var(--color-text-muted); }
-  .item-timing-duration-label  { font-size: var(--text-xs); color: var(--color-text-muted); margin-left: auto; }
   .timing-toggles      { display: flex; gap: 16px; margin-top: 6px; flex-wrap: wrap; }
   .timing-toggle-label { display: flex; align-items: center; gap: 6px; font-size: var(--text-sm); color: var(--color-text-muted); cursor: pointer; user-select: none; }
   .timing-toggle-label input[type="checkbox"] { cursor: pointer; accent-color: var(--color-brand-500); }
@@ -2478,9 +2476,17 @@ select.input {
     flex-wrap: wrap;
   }
 
+  .item-timing-col {
+    width: 100%;
+    flex-direction: row;
+    gap: 6px;
+    min-width: unset;
+    padding-bottom: 2px;
+  }
+
   .plan-item-pills {
     width: 100%;
-    padding-left: 36px; /* aligns under the title, past the number */
+    padding-left: 0;
     margin-top: -4px;
   }
 }

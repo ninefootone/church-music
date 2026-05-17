@@ -108,7 +108,7 @@ function SortableItem({
     <div ref={setNodeRef} style={style}>
       <div className="card card--flush">
         {(showTimings || showDurations) && (
-          <div className="item-timing-row">
+          <div className="item-timing-edit-row">
             {showTimings && calculatedStart && (
               <span className="item-timing-time">{calculatedStart}</span>
             )}
@@ -118,11 +118,12 @@ function SortableItem({
                   type="number"
                   min="1"
                   max="180"
-                  placeholder="mins"
+                  placeholder="–"
                   value={item.duration_minutes ?? ''}
                   onChange={e => onUpdate({ duration_minutes: e.target.value ? parseInt(e.target.value) : null })}
                   className="duration-input"
                 />
+                <span className="item-timing-duration-label">mins</span>
               </span>
             )}
           </div>
@@ -136,11 +137,6 @@ function SortableItem({
             style={{ cursor: 'grab', color: 'var(--color-text-muted)', flexShrink: 0, display: 'flex', alignItems: 'center', touchAction: 'none', padding: '4px 2px', userSelect: 'none', WebkitUserSelect: 'none' }}
           >
             <GripVertical size={18} />
-          </div>
-
-          {/* Position */}
-          <div className="item-index">
-            {idx + 1}
           </div>
 
           {/* Title */}
