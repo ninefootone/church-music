@@ -276,6 +276,7 @@ export default function PlanEditPage() {
     if (typeof window === 'undefined') return false
     return localStorage.getItem('plan_show_durations') === 'true'
   })
+  const [preServiceNotes, setPreServiceNotes] = useState('')
 
   useEffect(() => {
     const check = () => setIsMobile(window.innerWidth <= 940)
@@ -306,6 +307,7 @@ export default function PlanEditPage() {
       const s = planRes.data
       setPlan(s)
       setPlanStatus(s.status ?? 'published')
+      setPreServiceNotes(s.pre_service_notes || '')
       setItems((s.items || []).map((item: any) => ({
         id: newId(),
         type: item.type,
@@ -392,6 +394,7 @@ export default function PlanEditPage() {
           plan_start_time: plan.plan_start_time,
           plan_sort_order: plan.plan_sort_order ?? 0,
           title: plan.title,
+          pre_service_notes: preServiceNotes || null,
           status,
         }),
       ])
@@ -583,13 +586,46 @@ export default function PlanEditPage() {
             <span className="running-order-count">{items.length} item{items.length !== 1 ? 's' : ''}</span>
           </div>
           {planStartTime && (
-            <div className="plan-divider">
-              <div className="plan-divider-line" />
-              <span className="plan-divider-label">
-                {new Date(`1970-01-01T${planStartTime}`).toLocaleTimeString('en-GB', { hour: 'numeric', minute: '2-digit', hour12: true })}
-              </span>
-              <div className="plan-divider-line" />
-            </div>
+            <>
+              <div className="card card--flush" style={{ marginBottom: 6 }}>
+                <textarea
+                  className="input notes-input"
+                  value={preServiceNotes}
+                  onChange={e => setPreServiceNotes(e.target.value)}
+                  placeholder="Pre-service notes (e.g. Tech setup 8am, Band call 8:30am…)"
+                  rows={2}
+                  onKeyDown={e => {
+                    const el = e.currentTarget
+                    const start = el.selectionStart ?? 0
+                    const end = el.selectionEnd ?? 0
+                    if ((e.metaKey || e.ctrlKey) && e.key === 'b') {
+                      e.preventDefault()
+                      const selected = el.value.slice(start, end)
+                      const wrapped = `**${selected}**`
+                      setPreServiceNotes(el.value.slice(0, start) + wrapped + el.value.slice(end))
+                      const newCursor = start + wrapped.length
+                      requestAnimationFrame(() => { el.selectionStart = selected ? newCursor : start + 2; el.selectionEnd = selected ? newCursor : start + 2 })
+                    }
+                    if ((e.metaKey || e.ctrlKey) && e.key === 'i') {
+                      e.preventDefault()
+                      const selected = el.value.slice(start, end)
+                      const wrapped = `_${selected}_`
+                      setPreServiceNotes(el.value.slice(0, start) + wrapped + el.value.slice(end))
+                      const newCursor = start + wrapped.length
+                      requestAnimationFrame(() => { el.selectionStart = selected ? newCursor : start + 1; el.selectionEnd = selected ? newCursor : start + 1 })
+                    }
+                  }}
+                  style={{ margin: 0, borderRadius: 'var(--radius-md)', fontSize: 'var(--text-sm)' }}
+                />
+              </div>
+              <div className="plan-divider">
+                <div className="plan-divider-line" />
+                <span className="plan-divider-label">
+                  {new Date(`1970-01-01T${planStartTime}`).toLocaleTimeString('en-GB', { hour: 'numeric', minute: '2-digit', hour12: true })}
+                </span>
+                <div className="plan-divider-line" />
+              </div>
+            </>
           )}
           {items.length === 0 ? (
             <div className="card card-empty">
