@@ -411,6 +411,9 @@ router.post('/:id/email', requireAuth, requireMembership, async function(req, re
         ).join('')
       : `<tr><td colspan="2" style="padding:10px 16px;font-size:13px;color:#9ca3af;font-style:italic;">No musicians listed</td></tr>`
 
+    const preServiceNotesHtml = plan.pre_service_notes && plan.plan_start_time
+      ? `<div style="padding:12px 16px;font-size:13px;color:#4b5563;white-space:pre-line;border-bottom:1px solid #e5e7eb;">${plan.pre_service_notes}</div>`
+      : ''
     const planTitle = plan.title ? ` — ${plan.title}` : ''
     const planTime = plan.plan_time ? `<p style="margin:4px 0 0;color:rgba(255,255,255,0.75);font-size:14px;">${plan.plan_time}</p>` : ''
     const publicUrl = `${process.env.FRONTEND_URL || 'https://songstack.church'}/s/${plan.public_token}`
@@ -430,6 +433,7 @@ router.post('/:id/email', requireAuth, requireMembership, async function(req, re
     </div>
 
     <div style="padding:24px 0;">
+      ${preServiceNotesHtml}
       <h2 style="margin:0 16px 12px;font-size:13px;font-weight:700;text-transform:uppercase;letter-spacing:0.07em;color:#9ca3af;">Songs</h2>
       <table style="width:100%;border-collapse:collapse;border-top:1px solid #e5e7eb;">
         ${itemsHtml}

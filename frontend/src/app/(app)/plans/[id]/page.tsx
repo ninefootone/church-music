@@ -450,6 +450,9 @@ export default function PlanDetailPage() {
         ) : (
           <>
             <p className="plan-hint">Tap a song to view sheet music</p>
+            {plan.pre_service_notes && plan.plan_start_time && (
+              <p className="item-notes" style={{ marginBottom: 8 }}>{plan.pre_service_notes}</p>
+            )}
             {plan.plan_start_time && (
               <div className="plan-divider">
                 <div className="plan-divider-line" />
