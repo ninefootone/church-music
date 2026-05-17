@@ -53,7 +53,6 @@ function normaliseKey(key: string | null | undefined): string {
 interface PlanItem {
   id: string
   type: string
-  phase: 'pre_service' | 'service'
   song_id: string | null
   song_title?: string
   song_author?: string
@@ -205,7 +204,7 @@ function SortableItem({
         {/* Notes + arrangement */}
         {item.expanded && (
           <div className="item-notes-panel">
-                        <textarea
+            <textarea
               className="input notes-input"
               value={item.notes}
               onChange={e => onUpdate({ notes: e.target.value })}
@@ -253,8 +252,6 @@ function SortableItem({
   )
 }
 
-const DIVIDER_ID = 'divider--start'
-
 export default function PlanEditPage() {
   const { id } = useParams()
   const router = useRouter()
@@ -287,7 +284,6 @@ export default function PlanEditPage() {
     return () => window.removeEventListener('resize', check)
   }, [])
 
-  // Support both mouse and touch
   const sensors = useSensors(
     useSensor(PointerSensor, {
       activationConstraint: { distance: 5 },
@@ -325,7 +321,6 @@ export default function PlanEditPage() {
         custom_arrangement: item.custom_arrangement || '',
         song_suggested_arrangement: item.song_suggested_arrangement || '',
         expanded: false,
-        phase: item.phase || 'service',
         duration_minutes: item.duration_minutes ?? item.song_default_duration ?? null,
       })))
       setSongs(songsRes.data)
@@ -341,23 +336,11 @@ export default function PlanEditPage() {
   const handleDragEnd = (event: DragEndEvent) => {
     const { active, over } = event
     if (!over || active.id === over.id) return
-    if (active.id === DIVIDER_ID) return
-
-    // allItems includes the divider, so we can detect cross-divider moves
-    const oldIndex = allItems.findIndex(i => i.id === active.id)
-    const newIndex = allItems.findIndex(i => i.id === over.id)
-    const reordered = arrayMove(allItems, oldIndex, newIndex)
-    const dividerIndex = reordered.findIndex(i => i.id === DIVIDER_ID)
-
-    // Strip divider out, update phases based on position relative to it
-    const newItems = reordered
-      .filter(i => i.id !== DIVIDER_ID)
-      .map((item, idx) => ({
-        ...item,
-        phase: (dividerIndex === -1 || idx >= dividerIndex ? 'service' : 'pre_service') as 'service' | 'pre_service',
-      }))
-
-    setItems(newItems)
+    setItems(prev => {
+      const oldIndex = prev.findIndex(i => i.id === active.id)
+      const newIndex = prev.findIndex(i => i.id === over.id)
+      return arrayMove(prev, oldIndex, newIndex)
+    })
   }
 
   const addSong = (song: Song) => {
@@ -369,7 +352,6 @@ export default function PlanEditPage() {
       song_default_duration: (song as any).default_duration ?? null,
       title: '', notes: '', key_override: normaliseKey(song.default_key),
       custom_arrangement: '', expanded: false,
-      phase: 'service',
       duration_minutes: (song as any).default_duration ?? null,
     }])
     setSongSearch('')
@@ -379,7 +361,6 @@ export default function PlanEditPage() {
     setItems(prev => [...prev, {
       id: newId(), type, song_id: null,
       title: label, notes: '', key_override: '', custom_arrangement: '', expanded: false,
-      phase: 'service',
       duration_minutes: null,
     }])
   }
@@ -397,13 +378,12 @@ export default function PlanEditPage() {
       setAuthToken(token)
       await Promise.all([
         api.put(`/api/plans/${id}/items`, {
-          items: allItems.filter(item => item.id !== DIVIDER_ID).map(item => ({
+          items: items.map(item => ({
             type: item.type, song_id: item.song_id || null,
             title: item.title || null, notes: item.notes || null,
             key_override: item.key_override || null,
             custom_arrangement: item.custom_arrangement || null,
             duration_minutes: item.duration_minutes || null,
-            phase: item.phase || 'service',
           }))
         }),
         api.put(`/api/plans/${id}`, {
@@ -427,28 +407,10 @@ export default function PlanEditPage() {
 
   const planStartTime = plan.plan_start_time ? plan.plan_start_time.slice(0, 5) : null
 
-  const allItems: PlanItem[] = planStartTime
-    ? (() => {
-        const dividerIndex = items.findIndex(i => i.id === DIVIDER_ID)
-        if (dividerIndex !== -1) return items
-        // inject divider between pre_service and service items if not already present
-        const firstService = items.findIndex(i => i.phase === 'service')
-        const insertAt = firstService === -1 ? items.length : firstService
-        return [
-          ...items.slice(0, insertAt),
-          { id: DIVIDER_ID, type: 'divider', phase: 'service', song_id: null, title: '', notes: '', key_override: '', custom_arrangement: '', expanded: false, duration_minutes: null },
-          ...items.slice(insertAt),
-        ]
-      })()
-    : items
-
   function calcStartTimes(): (string | null)[] {
-    if (!planStartTime) return allItems.map(() => null)
+    if (!planStartTime) return items.map(() => null)
     let [h, m] = planStartTime.split(':').map(Number)
-    let counting = false
-    return allItems.map(item => {
-      if (item.id === DIVIDER_ID) { counting = true; return null }
-      if (!counting) return null
+    return items.map(item => {
       const label = `${h}:${String(m).padStart(2, '0')}`
       const dur = item.duration_minutes ?? 0
       m += dur
@@ -506,10 +468,8 @@ export default function PlanEditPage() {
 
       <div className="plan-edit-grid">
 
-        {/* Sidebar rendered above running order on mobile via isMobile, right column on desktop */}
         {isMobile && (
           <div className="plan-edit-sidebar">
-            {/* Song picker */}
             <div className="card card--spaced">
               <span className="section-label">Songs</span>
               <>
@@ -547,8 +507,6 @@ export default function PlanEditPage() {
                 </div>
               </>
             </div>
-
-            {/* Other items */}
             <div className="card">
               <div className="section-label">Other items</div>
               <div className="item-type-grid">
@@ -565,10 +523,8 @@ export default function PlanEditPage() {
           </div>
         )}
 
-        {/* Right — add panel (desktop only, mobile rendered above) */}
         {!isMobile && (
           <div className="plan-edit-sidebar">
-            {/* Song picker */}
             <div className="card card--spaced">
               <span className="section-label">Songs</span>
               <>
@@ -604,8 +560,6 @@ export default function PlanEditPage() {
                 </div>
               </>
             </div>
-
-            {/* Other items */}
             <div className="card">
               <div className="section-label">Other items</div>
               <div className="item-type-grid">
@@ -624,50 +578,40 @@ export default function PlanEditPage() {
 
         {/* Left — running order */}
         <div className="running-order-col">
-          {/* Label and count on same line, no overlap */}
           <div className="section-header-row">
-            <span className="running-order-label">
-              Running order
-            </span>
-            <span className="running-order-count">
-              {items.length} item{items.length !== 1 ? 's' : ''}
-            </span>
+            <span className="running-order-label">Running order</span>
+            <span className="running-order-count">{items.length} item{items.length !== 1 ? 's' : ''}</span>
           </div>
+          {planStartTime && (
+            <div className="plan-divider">
+              <div className="plan-divider-line" />
+              <span className="plan-divider-label">
+                {new Date(`1970-01-01T${planStartTime}`).toLocaleTimeString('en-GB', { hour: 'numeric', minute: '2-digit', hour12: true })}
+              </span>
+              <div className="plan-divider-line" />
+            </div>
+          )}
           {items.length === 0 ? (
             <div className="card card-empty">
               <p className="text-muted">Add songs and other items</p>
             </div>
           ) : (
             <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={handleDragEnd}>
-              <SortableContext items={allItems.map(i => i.id)} strategy={verticalListSortingStrategy}>
-                {allItems.map((item, idx) => {
-                  if (item.id === DIVIDER_ID) {
-                    return (
-                      <div key={DIVIDER_ID} className="plan-divider">
-                        <div className="plan-divider-line" />
-                        <span className="plan-divider-label">
-                          {new Date(`1970-01-01T${planStartTime}`).toLocaleTimeString('en-GB', { hour: 'numeric', minute: '2-digit', hour12: true })}
-                        </span>
-                        <div className="plan-divider-line" />
-                      </div>
-                    )
-                  }
-                  const realIdx = allItems.slice(0, idx).filter(i => i.id !== DIVIDER_ID).length
-                  return (
-                    <SortableItem
-                      key={item.id}
-                      item={item}
-                      idx={realIdx}
-                      total={items.length}
-                      onRemove={() => removeItem(realIdx)}
-                      onUpdate={updates => updateItem(realIdx, updates)}
-                      onToggleExpanded={() => toggleExpanded(realIdx)}
-                      showTimings={showTimings && !!planStartTime && item.phase === 'service'}
-                      showDurations={showDurations}
-                      calculatedStart={startTimes[idx]}
-                    />
-                  )
-                })}
+              <SortableContext items={items.map(i => i.id)} strategy={verticalListSortingStrategy}>
+                {items.map((item, idx) => (
+                  <SortableItem
+                    key={item.id}
+                    item={item}
+                    idx={idx}
+                    total={items.length}
+                    onRemove={() => removeItem(idx)}
+                    onUpdate={updates => updateItem(idx, updates)}
+                    onToggleExpanded={() => toggleExpanded(idx)}
+                    showTimings={showTimings && !!planStartTime}
+                    showDurations={showDurations}
+                    calculatedStart={startTimes[idx]}
+                  />
+                ))}
               </SortableContext>
             </DndContext>
           )}
