@@ -224,7 +224,7 @@ export default function PublicPlanPage() {
           {plan.title && (
             <p className="plan-detail-meta">{plan.title}</p>
           )}
-          {plan.items?.length > 0 && (
+          {plan.items?.length > 0 && plan.items.some((item: any) => item.duration_minutes) && (
             <div className="timing-toggles">
               <label className="timing-toggle-label">
                 <input type="checkbox" checked={showTimings} onChange={e => {
