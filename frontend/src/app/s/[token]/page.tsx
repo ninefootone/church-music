@@ -280,10 +280,11 @@ export default function PublicPlanPage() {
             )}
             {(() => {
               const startTime = plan.plan_start_time ? plan.plan_start_time.slice(0, 5) : null
+              const anyDurations = plan.items.some((item: any) => item.duration_minutes)
               let h = startTime ? parseInt(startTime.split(':')[0]) : 0
               let m = startTime ? parseInt(startTime.split(':')[1]) : 0
               return plan.items.map((item: any, i: number) => {
-                const calcStart = startTime ? `${h}:${String(m).padStart(2, '0')}` : null
+                const calcStart = (startTime && anyDurations) ? `${h}:${String(m).padStart(2, '0')}` : null
                 const dur = item.duration_minutes ?? 0
                 m += dur; h += Math.floor(m / 60); m = m % 60
                 return (
@@ -291,7 +292,7 @@ export default function PublicPlanPage() {
                     key={i}
                     item={item}
                     index={i}
-                    showTimings={showTimings && !!startTime}
+                    showTimings={showTimings && !!startTime && anyDurations}
                     showDurations={showDurations}
                     calculatedStart={calcStart}
                   />
