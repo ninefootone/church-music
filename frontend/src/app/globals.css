@@ -3,15 +3,15 @@
 @tailwind utilities;
 
 /* ChordPro renderer */
-.chordpro-render { font-family: monospace; }
-.chordpro-render .paragraph { margin-bottom: 24px; }
-.chordpro-render .row { display: flex; flex-wrap: wrap; align-items: flex-end; margin-bottom: 2px; }
-.chordpro-render .column { display: inline-flex; flex-direction: column; margin-right: 2px; }
-.chordpro-render .chord { color: var(--color-brand-600); font-weight: 700; line-height: 1.4; min-width: 1ch; }
-.chordpro-render .lyrics { line-height: 1.6; white-space: pre-wrap; overflow-wrap: break-word; }
+.chordpro-render { font-family: 'Figtree', 'Helvetica Neue', system-ui, sans-serif; }
+.chordpro-render .paragraph { margin-bottom: 28px; }
+.chordpro-render .row { display: flex; flex-wrap: wrap; align-items: flex-end; margin-bottom: 4px; }
+.chordpro-render .column { display: inline-flex; flex-direction: column; margin-right: 4px; }
+.chordpro-render .chord { color: var(--color-brand-600); font-weight: 700; line-height: 1.4; min-width: 1ch; padding-right: 4px; }
+.chordpro-render .lyrics { line-height: 1.7; white-space: pre-wrap; overflow-wrap: break-word; }
 .chordpro-render { overflow-x: hidden; max-width: 100%; }
 .chordpro-render .comment { color: var(--color-text-muted); font-style: italic; margin-bottom: 6px; }
-.chordpro-render .section-label { color: var(--color-text-muted); font-style: italic; margin-bottom: 8px; font-size: 0.9em; }
+.chordpro-render .section-label { color: var(--color-text-secondary); font-weight: 600; font-style: normal; text-transform: uppercase; letter-spacing: 0.08em; font-size: 0.75em; margin-bottom: 10px; margin-top: 4px; }
 
 /* Set viewer — hide PDF canvas surrounds */
 body.set-viewer-active .react-pdf__Page { background: transparent !important; box-shadow: none !important; }
