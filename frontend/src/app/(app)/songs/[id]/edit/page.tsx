@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import Link from 'next/link'
 import { useParams, useRouter } from 'next/navigation'
 import { useAuth } from '@clerk/nextjs'
@@ -32,6 +32,13 @@ export default function EditSongPage() {
   const [loading, setLoading] = useState(false)
   const [fetching, setFetching] = useState(true)
   const [error, setError] = useState('')
+  const errorRef = useRef<HTMLDivElement>(null)
+
+  useEffect(() => {
+    if (error) {
+      errorRef.current?.scrollIntoView({ behavior: 'smooth', block: 'center' })
+    }
+  }, [error])
   const [form, setForm] = useState({ title: '', author: '', default_key: '', category: '' as Category | '', first_line: '', ccli_number: '', lyrics: '', tags: [] as string[], notes: '', bible_references: '', suggested_arrangement: '', share_all_data: false, copyright_info: '', copyright_link: '', in_discover: false, discover_description: '', time_signature: '', tempo: '', default_duration: '', is_draft: false, in_library: false })
   const [links, setLinks] = useState<SongLink[]>([])
   const [discoverImageUrl, setDiscoverImageUrl] = useState<string | null>(null)
@@ -140,7 +147,7 @@ export default function EditSongPage() {
         <ArrowLeft size={13} /> Back to song
       </Link>
       <h1 className="page-title page-title--spaced">Edit song</h1>
-      {error && <div className="error-box">{error}</div>}
+      {error && <div ref={errorRef} className="error-box">{error}</div>}
       <div className="card">
         <form id="song-edit-form" onSubmit={handleSubmit}>
           <div className="form-field"><label className="label">Song title *</label>
