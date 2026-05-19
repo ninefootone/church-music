@@ -16,6 +16,7 @@ interface ChurchRow {
   plan_count: string;
   member_count: string;
   last_plan_date: string | null;
+  free_access: boolean;
 }
 
 export default function SuperAdminPage() {
@@ -26,6 +27,31 @@ export default function SuperAdminPage() {
   const [deleting, setDeleting] = useState<string | null>(null);
 
   const isAdmin = userId === SUPER_ADMIN_CLERK_ID;
+  const [togglingFreeAccess, setTogglingFreeAccess] = useState<string | null>(null);
+
+  const handleToggleFreeAccess = async (church: ChurchRow) => {
+    const newValue = !church.free_access;
+    const confirmed = window.confirm(
+      `${newValue ? 'Grant' : 'Revoke'} lifetime free access for "${church.name}"?`
+    );
+    if (!confirmed) return;
+
+    setTogglingFreeAccess(church.id);
+    try {
+      const token = await getToken();
+      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/superadmin/churches/${church.id}/free-access`, {
+        method: 'PATCH',
+        headers: { Authorization: `Bearer ${token}`, 'Content-Type': 'application/json' },
+        body: JSON.stringify({ free_access: newValue }),
+      });
+      if (!res.ok) throw new Error('Toggle failed');
+      setChurches(prev => prev.map(c => c.id === church.id ? { ...c, free_access: newValue } : c));
+    } catch (err) {
+      alert('Failed to update free access. Check server logs.');
+    } finally {
+      setTogglingFreeAccess(null);
+    }
+  };
 
   useEffect(() => {
     if (!isAdmin) return;
@@ -115,7 +141,7 @@ export default function SuperAdminPage() {
             <table className="admin-table">
               <thead>
                 <tr className="admin-thead-row">
-                  {['Church', 'Owner', 'Songs', 'Plans', 'Members', 'Last Plan', 'Joined', ''].map(h => (
+                  {['Church', 'Owner', 'Songs', 'Plans', 'Members', 'Last Plan', 'Joined', 'Access', ''].map(h => (
                     <th key={h} className="admin-th">{h}</th>
                   ))}
                 </tr>
@@ -141,6 +167,15 @@ export default function SuperAdminPage() {
                     </td>
                     <td className="admin-td-nowrap">
                       {new Date(c.created_at).toLocaleDateString('en-GB')}
+                    </td>
+                    <td className="admin-td">
+                      <button
+                        onClick={() => handleToggleFreeAccess(c)}
+                        disabled={togglingFreeAccess === c.id}
+                        className={c.free_access ? 'admin-free-btn admin-free-btn--active' : 'admin-free-btn'}
+                      >
+                        {togglingFreeAccess === c.id ? '…' : c.free_access ? 'Free ✓' : 'Free'}
+                      </button>
                     </td>
                     <td className="admin-td">
                       <button

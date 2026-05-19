@@ -3215,6 +3215,8 @@ select.input {
 .admin-td-center  { padding: 0.6rem 0.75rem; text-align: center; }
 .admin-td-nowrap  { padding: 0.6rem 0.75rem; white-space: nowrap; }
 .admin-delete-btn { font-size: 0.75rem; padding: 0.25rem 0.6rem; border-radius: 0.25rem; border: 1px solid var(--color-danger, #dc2626); color: var(--color-danger, #dc2626); background: transparent; }
+.admin-free-btn { font-size: 0.75rem; padding: 0.25rem 0.6rem; border-radius: 0.25rem; border: 1px solid var(--color-border); color: var(--color-text-muted); background: transparent; cursor: pointer; }
+.admin-free-btn--active { border-color: var(--color-brand-primary); color: var(--color-brand-primary); font-weight: 600; }
 
 .footer-brand-link {
   color: inherit;

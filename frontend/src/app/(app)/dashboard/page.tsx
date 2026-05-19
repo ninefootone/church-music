@@ -97,7 +97,7 @@ export default function DashboardPage() {
 
   return (
     <div>
-      {isAdmin && (!church?.subscription_status || church?.subscription_status === 'free') && (
+      {isAdmin && !church?.free_access && (!church?.subscription_status || church?.subscription_status === 'free') && (
         <div className="card dash-upgrade-banner">
           <div className="dash-upgrade-inner">
             <div>

@@ -108,4 +108,27 @@ router.delete('/churches/:id', requireAuth, requireSuperAdmin, async (req, res, 
   }
 });
 
+// PATCH /api/superadmin/churches/:id/free-access
+router.patch('/churches/:id/free-access', requireAuth, requireSuperAdmin, async (req, res, next) => {
+  const { id } = req.params;
+  const { free_access } = req.body;
+
+  if (typeof free_access !== 'boolean') {
+    return res.status(400).json({ error: 'free_access must be a boolean' });
+  }
+
+  try {
+    const result = await pool.query(
+      'UPDATE churches SET free_access = $1 WHERE id = $2 RETURNING id, name, free_access',
+      [free_access, id]
+    );
+    if (result.rows.length === 0) {
+      return res.status(404).json({ error: 'Church not found' });
+    }
+    res.json(result.rows[0]);
+  } catch (err) {
+    next(err);
+  }
+});
+
 module.exports = router;

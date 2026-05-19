@@ -14,6 +14,7 @@ interface Church {
   logo_url: string | null
   role: 'admin' | 'member'
   subscription_status: 'free' | 'active' | 'trialing' | 'past_due' | 'canceled' | null
+  free_access: boolean | null
   can_manage_songs: boolean
   can_add_plans: boolean
   can_manage_playlists: boolean

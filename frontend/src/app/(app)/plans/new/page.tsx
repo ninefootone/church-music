@@ -19,7 +19,7 @@ export default function NewPlanPage() {
   useEffect(() => {
     if (!church) return
     const status = church.subscription_status
-    if (!status || status === 'free') {
+    if (!church.free_access && (!status || status === 'free')) {
       api.get('/api/plans').then(r => {
         if (r.data.length >= 1) setAtLimit(true)
       }).catch(() => {})

@@ -451,7 +451,7 @@ export default function SettingsPage() {
         <div className="settings-card">
           <h2 className="settings-section-heading settings-section-heading--tight">Billing</h2>
           <p className="settings-section-desc">Manage your Song Stack subscription.</p>
-          {(!church?.subscription_status || church?.subscription_status === 'free' || church?.subscription_status === 'canceled') ? (
+          {!church?.free_access && (!church?.subscription_status || church?.subscription_status === 'free' || church?.subscription_status === 'canceled') ? (
             <div>
               <p className="settings-body-text settings-body-text--spaced">You're on the <strong>free plan</strong> — limited to 5 songs and 1 plan.</p>
               <div className="btn-group">
