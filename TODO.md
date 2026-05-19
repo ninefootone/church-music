@@ -3,6 +3,7 @@
 ## Backlog
 
 ### Discover
+- [ ] Library song detail/preview — clicking a song in the searchable library opens a panel or modal showing available details: lyrics preview (if share_all_data), author, copyright, tags, key, bible references, suggested arrangement; helps churches evaluate a song before adding it
 - [ ] Dashboard Discover block — swipeable carousel showing in_discover songs with image, title, category and description; settings toggle (`hide_discover_dashboard` on `churches` table) to hide it
 - [ ] Add events – Music Minsitry Conference etc.
 - [ ] Add blogs – eg. Sovereign Grace
