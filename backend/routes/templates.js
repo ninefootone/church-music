@@ -73,6 +73,99 @@ router.put('/discover/order', requireAuth, requireAdmin, async (req, res, next) 
   }
 });
 
+// GET /templates/library — searchable public library (in_library = true, is_draft = false)
+router.get('/library', requireAuth, async (req, res, next) => {
+  try {
+    const { q, category, tag, page = '1' } = req.query;
+    const limit = 20;
+    const offset = (parseInt(page) - 1) * limit;
+
+    let query = `
+      SELECT s.id, s.title, s.author, s.default_key, s.category,
+             s.first_line, s.ccli_number, s.copyright_info, s.share_all_data,
+             ARRAY_AGG(DISTINCT t.name) FILTER (WHERE t.name IS NOT NULL) AS tags
+      FROM songs s
+      LEFT JOIN song_tags st ON st.song_id = s.id
+      LEFT JOIN tags t ON t.id = st.tag_id
+      WHERE s.church_id = $1
+        AND s.in_library = true
+        AND (s.is_draft = false OR s.is_draft IS NULL)
+        AND (s.retired = false OR s.retired IS NULL)
+    `;
+    const params = [process.env.MASTER_CHURCH_ID];
+    let idx = 2;
+
+    if (q) {
+      query += ` AND (s.title ILIKE $${idx} OR s.author ILIKE $${idx} OR s.first_line ILIKE $${idx})`;
+      params.push(`%${q}%`);
+      idx++;
+    }
+
+    if (category) {
+      query += ` AND s.category = $${idx++}`;
+      params.push(category);
+    }
+
+    if (tag) {
+      query += ` AND EXISTS (
+        SELECT 1 FROM song_tags st2
+        JOIN tags t2 ON t2.id = st2.tag_id
+        WHERE st2.song_id = s.id AND t2.name ILIKE $${idx++}
+      )`;
+      params.push(tag);
+    }
+
+    query += ` GROUP BY s.id ORDER BY s.title ASC LIMIT $${idx++} OFFSET $${idx++}`;
+    params.push(limit, offset);
+
+    const result = await pool.query(query, params);
+
+    // Total count for pagination
+    let countQuery = `
+      SELECT COUNT(DISTINCT s.id)
+      FROM songs s
+      LEFT JOIN song_tags st ON st.song_id = s.id
+      LEFT JOIN tags t ON t.id = st.tag_id
+      WHERE s.church_id = $1
+        AND s.in_library = true
+        AND (s.is_draft = false OR s.is_draft IS NULL)
+        AND (s.retired = false OR s.retired IS NULL)
+    `;
+    const countParams = [process.env.MASTER_CHURCH_ID];
+    let cidx = 2;
+
+    if (q) {
+      countQuery += ` AND (s.title ILIKE $${cidx} OR s.author ILIKE $${cidx} OR s.first_line ILIKE $${cidx})`;
+      countParams.push(`%${q}%`);
+      cidx++;
+    }
+    if (category) {
+      countQuery += ` AND s.category = $${cidx++}`;
+      countParams.push(category);
+    }
+    if (tag) {
+      countQuery += ` AND EXISTS (
+        SELECT 1 FROM song_tags st2
+        JOIN tags t2 ON t2.id = st2.tag_id
+        WHERE st2.song_id = s.id AND t2.name ILIKE $${cidx++}
+      )`;
+      countParams.push(tag);
+    }
+
+    const countResult = await pool.query(countQuery, countParams);
+    const total = parseInt(countResult.rows[0].count);
+
+    res.json({
+      songs: result.rows,
+      total,
+      page: parseInt(page),
+      pages: Math.ceil(total / limit),
+    });
+  } catch (err) {
+    next(err);
+  }
+});
+
 // GET /templates/search?q= — search global template library
 router.get('/search', requireAuth, async (req, res, next) => {
   try {
@@ -110,6 +203,8 @@ router.post('/:id/import', requireAuth, requireAdmin, async (req, res, next) => 
         (is_template = true AND template_status = 'approved')
         OR
         (church_id = $2 AND in_discover = true)
+        OR
+        (church_id = $2 AND in_library = true AND (is_draft = false OR is_draft IS NULL))
       )`,
       [req.params.id, process.env.MASTER_CHURCH_ID]
     );
