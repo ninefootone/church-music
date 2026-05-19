@@ -91,6 +91,8 @@ export interface Song {
   discover_description: string | null
   discover_image_key: string | null
   retired: boolean
+  is_draft: boolean
+  in_library: boolean
   contributed_by: string | null
   created_at: string
   last_sung?: string | null

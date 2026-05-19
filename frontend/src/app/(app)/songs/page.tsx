@@ -16,8 +16,10 @@ export default function SongsPage() {
   const [search, setSearch] = useState('')
   const [activeCategory, setActiveCategory] = useState<Category | 'all'>('all')
   const [showRetired, setShowRetired] = useState(false)
+  const [showDraftOnly, setShowDraftOnly] = useState(false)
   const [sort, setSort] = useState('title')
   const [showSortMenu, setShowSortMenu] = useState(false)
+  const isMasterLibrary = church?.id === process.env.NEXT_PUBLIC_MASTER_CHURCH_ID
 
   useEffect(() => {
     if (!church) return
@@ -31,6 +33,7 @@ export default function SongsPage() {
       if (search) params.search = search
       if (activeCategory !== 'all') params.category = activeCategory
       if (showRetired) params.include_retired = 'true'
+      if (showDraftOnly) params.draft_only = 'true'
       if (sort !== 'title') params.sort = sort
       const { data } = await api.get('/api/songs', { params })
       setSongs(data)
@@ -48,6 +51,14 @@ export default function SongsPage() {
       <div className="page-header">
         <h1 className="page-title">Songs</h1>
         <div className="page-header-actions">
+          {canManageSongs && isMasterLibrary && (
+            <button
+              onClick={() => setShowDraftOnly(v => !v)}
+              className={`btn-text${showDraftOnly ? ' is-active' : ''}`}
+            >
+              {showDraftOnly ? 'All songs' : 'Draft songs'}
+            </button>
+          )}
           {canManageSongs && (
             <button
               onClick={() => setShowRetired(v => !v)}

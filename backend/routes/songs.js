@@ -84,6 +84,9 @@ router.get('/', requireAuth, requireMembership, async (req, res, next) => {
     if (req.query.include_retired !== 'true') {
       query += ` AND (s.retired = FALSE OR s.retired IS NULL)`;
     }
+    if (req.query.draft_only === 'true') {
+      query += ` AND s.is_draft = TRUE`;
+    }
 
     const sort = req.query.sort || 'title';
     const orderClause = {
@@ -257,11 +260,13 @@ router.patch('/:id/retire', requireAuth, requirePermission('can_manage_songs'), 
 router.put('/:id', requireAuth, requirePermission('can_manage_songs'), async (req, res, next) => {
   try {
     const { churchId } = req;
-    const { title, author, default_key, category, first_line, lyrics, ccli_number, youtube_url, notes, bible_references, suggested_arrangement, ccli_url, share_all_data, copyright_info, copyright_link, in_discover, discover_description, tags, time_signature, tempo } = req.body;
+    const { title, author, default_key, category, first_line, lyrics, ccli_number, youtube_url, notes, bible_references, suggested_arrangement, ccli_url, share_all_data, copyright_info, copyright_link, in_discover, discover_description, tags, time_signature, tempo, is_draft, in_library } = req.body;
 
     const isMasterLibrary = churchId === process.env.MASTER_CHURCH_ID;
     const shareEnabled = isMasterLibrary && (share_all_data ?? false);
     const discoverEnabled = isMasterLibrary && (in_discover ?? false);
+    const libraryEnabled = isMasterLibrary && (in_library ?? false);
+    const draftEnabled = isMasterLibrary && (is_draft ?? false);
 
     const song = await pool.query(
       `UPDATE songs SET title=$1, author=$2, default_key=$3, category=$4,
@@ -270,9 +275,10 @@ router.put('/:id', requireAuth, requirePermission('can_manage_songs'), async (re
        share_all_data=$13, copyright_info=$14, copyright_link=$15,
        is_template=$16, template_status=$17,
        in_discover=$18, discover_description=$19,
-       time_signature=$20, tempo=$21, default_duration=$22
-       WHERE id=$23 AND church_id=$24 RETURNING *`,
-      [title, author, default_key, category, first_line, lyrics, ccli_number, youtube_url, notes, bible_references, suggested_arrangement, ccli_url, shareEnabled, copyright_info ?? null, copyright_link ?? null, shareEnabled, shareEnabled ? 'approved' : 'pending', discoverEnabled, discover_description ?? null, time_signature ?? null, tempo ? parseInt(tempo) : null, default_duration ? parseInt(default_duration) : null, req.params.id, churchId]
+       time_signature=$20, tempo=$21, default_duration=$22,
+       in_library=$23, is_draft=$24
+       WHERE id=$25 AND church_id=$26 RETURNING *`,
+      [title, author, default_key, category, first_line, lyrics, ccli_number, youtube_url, notes, bible_references, suggested_arrangement, ccli_url, shareEnabled, copyright_info ?? null, copyright_link ?? null, shareEnabled, shareEnabled ? 'approved' : 'pending', discoverEnabled, discover_description ?? null, time_signature ?? null, tempo ? parseInt(tempo) : null, default_duration ? parseInt(default_duration) : null, libraryEnabled, draftEnabled, req.params.id, churchId]
     );
     if (song.rows.length === 0) return res.status(404).json({ error: 'Song not found' });
 

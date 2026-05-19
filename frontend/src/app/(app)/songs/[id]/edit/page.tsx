@@ -32,7 +32,7 @@ export default function EditSongPage() {
   const [loading, setLoading] = useState(false)
   const [fetching, setFetching] = useState(true)
   const [error, setError] = useState('')
-  const [form, setForm] = useState({ title: '', author: '', default_key: '', category: '' as Category | '', first_line: '', ccli_number: '', lyrics: '', tags: [] as string[], notes: '', bible_references: '', suggested_arrangement: '', share_all_data: false, copyright_info: '', copyright_link: '', in_discover: false, discover_description: '', time_signature: '', tempo: '', default_duration: '' })
+  const [form, setForm] = useState({ title: '', author: '', default_key: '', category: '' as Category | '', first_line: '', ccli_number: '', lyrics: '', tags: [] as string[], notes: '', bible_references: '', suggested_arrangement: '', share_all_data: false, copyright_info: '', copyright_link: '', in_discover: false, discover_description: '', time_signature: '', tempo: '', default_duration: '', is_draft: false, in_library: false })
   const [links, setLinks] = useState<SongLink[]>([])
   const [discoverImageUrl, setDiscoverImageUrl] = useState<string | null>(null)
   const [discoverImageUploading, setDiscoverImageUploading] = useState(false)
@@ -44,7 +44,7 @@ export default function EditSongPage() {
     api.get(`/api/songs/${id}`).then(r => {
       const s: Song = r.data
       const normaliseKey = (k: string | null | undefined) => k ? k.replace(/♯/g, '#').replace(/♭/g, 'b') : ''
-      setForm({ title: s.title, author: s.author || '', default_key: normaliseKey(s.default_key), category: s.category || '', first_line: s.first_line || '', ccli_number: s.ccli_number || '', lyrics: s.lyrics || '',  tags: ((s.tags || []) as any[]).map((t: { id: string }) => t.id), notes: s.notes || '', bible_references: s.bible_references || '', suggested_arrangement: s.suggested_arrangement || '', share_all_data: !!s.share_all_data, copyright_info: s.copyright_info || '', copyright_link: s.copyright_link || '', in_discover: !!s.in_discover, discover_description: s.discover_description || '', time_signature: s.time_signature || '', tempo: s.tempo?.toString() || '', default_duration: s.default_duration?.toString() || '' })
+      setForm({ title: s.title, author: s.author || '', default_key: normaliseKey(s.default_key), category: s.category || '', first_line: s.first_line || '', ccli_number: s.ccli_number || '', lyrics: s.lyrics || '',  tags: ((s.tags || []) as any[]).map((t: { id: string }) => t.id), notes: s.notes || '', bible_references: s.bible_references || '', suggested_arrangement: s.suggested_arrangement || '', share_all_data: !!s.share_all_data, copyright_info: s.copyright_info || '', copyright_link: s.copyright_link || '', in_discover: !!s.in_discover, discover_description: s.discover_description || '', time_signature: s.time_signature || '', tempo: s.tempo?.toString() || '', default_duration: s.default_duration?.toString() || '', is_draft: !!s.is_draft, in_library: !!s.in_library })
       if (s.discover_image_key) {
         ;(async () => {
           try {
@@ -281,12 +281,34 @@ export default function EditSongPage() {
               <div className="checkbox-row" style={{ marginTop: '0.5rem' }}>
                 <input
                   type="checkbox"
+                  id="in_library"
+                  checked={form.in_library}
+                  onChange={e => setForm(f => ({ ...f, in_library: e.target.checked }))}
+                />
+                <label htmlFor="in_library" className="checkbox-label">
+                  Add to public library — show this song in the searchable Discover library
+                </label>
+              </div>
+              <div className="checkbox-row" style={{ marginTop: '0.5rem' }}>
+                <input
+                  type="checkbox"
                   id="in_discover"
                   checked={form.in_discover}
                   onChange={e => setForm(f => ({ ...f, in_discover: e.target.checked }))}
                 />
                 <label htmlFor="in_discover" className="checkbox-label">
-                  Add to Discover — feature this song in the curated Discover area
+                  Add to Discover — feature this song in the curated Discover carousel
+                </label>
+              </div>
+              <div className="checkbox-row" style={{ marginTop: '0.5rem' }}>
+                <input
+                  type="checkbox"
+                  id="is_draft"
+                  checked={form.is_draft}
+                  onChange={e => setForm(f => ({ ...f, is_draft: e.target.checked }))}
+                />
+                <label htmlFor="is_draft" className="checkbox-label">
+                  Draft — hide from public library until reviewed
                 </label>
               </div>
               {form.in_discover && (
