@@ -59,14 +59,6 @@ export default function SongsPage() {
               {showDraftOnly ? 'All songs' : 'Draft songs'}
             </button>
           )}
-          {canManageSongs && isMasterLibrary && (
-            <button
-              onClick={() => setShowDraftOnly(v => !v)}
-              className={`btn-text${showDraftOnly ? ' is-active' : ''}`}
-            >
-              {showDraftOnly ? 'All songs' : 'Draft songs'}
-            </button>
-          )}
           {canManageSongs && (
             <button
               onClick={() => setShowRetired(v => !v)}
