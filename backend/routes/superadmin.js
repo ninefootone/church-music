@@ -44,7 +44,8 @@ router.get('/churches', requireAuth, requireSuperAdmin, async (req, res, next) =
         (SELECT COUNT(*) FROM songs WHERE church_id = c.id) AS song_count,
         (SELECT COUNT(*) FROM plans WHERE church_id = c.id) AS plan_count,
         (SELECT COUNT(*) FROM memberships WHERE church_id = c.id AND role != 'revoked') AS member_count,
-        (SELECT MAX(plan_date) FROM plans WHERE church_id = c.id) AS last_plan_date
+        (SELECT MAX(plan_date) FROM plans WHERE church_id = c.id) AS last_plan_date,
+        c.free_access
       FROM churches c
       LEFT JOIN users u ON u.id = c.created_by
       ORDER BY c.created_at DESC
