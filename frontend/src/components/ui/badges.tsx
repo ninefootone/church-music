@@ -24,3 +24,7 @@ export function KeyBadge({ keyOf }: { keyOf: string }) {
 export function RetiredBadge() {
   return <span className="badge-retired">Retired</span>
 }
+
+export function DraftBadge() {
+  return <span className="badge-draft">Draft</span>
+}

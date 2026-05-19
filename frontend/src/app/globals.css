@@ -247,6 +247,18 @@ body.set-viewer-active { overflow: hidden; }
   .cat-all-age   { background: var(--cat-all-age-bg);   color: var(--cat-all-age-text); }
   .cat-other     { background: var(--cat-other-bg);     color: var(--cat-other-text); }
 
+  .badge-draft {
+  display: inline-flex;
+  align-items: center;
+  padding: 2px 8px;
+  border-radius: 999px;
+  font-size: var(--text-xs);
+  font-weight: 600;
+  background: var(--color-brand-100);
+  color: var(--color-brand-700);
+  border: 1px solid var(--color-brand-200);
+}
+
   .badge-retired {
   display: inline-flex;
   align-items: center;

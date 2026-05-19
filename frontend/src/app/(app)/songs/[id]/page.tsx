@@ -440,15 +440,21 @@ export default function SongDetailPage() {
           </div>
         )}
 
-        {isMasterLibrary && (song.in_discover || song.share_all_data) && (
+        {isMasterLibrary && (song.in_discover || song.share_all_data || song.in_library || song.is_draft) && (
           <div className="song-section--bordered">
             <span className="section-label section-label--tight">Master library</span>
             <div style={{ display: 'flex', flexDirection: 'column', gap: '0.25rem', marginTop: '0.25rem' }}>
+              {song.is_draft && (
+                <span className="text-muted" style={{ fontSize: '0.85rem' }}>⚑ Draft — not yet visible in public library</span>
+              )}
               {song.share_all_data && (
                 <span className="text-muted" style={{ fontSize: '0.85rem' }}>✓ Share all data enabled</span>
               )}
+              {song.in_library && (
+                <span className="text-muted" style={{ fontSize: '0.85rem' }}>✓ Added to public library</span>
+              )}
               {song.in_discover && (
-                <span className="text-muted" style={{ fontSize: '0.85rem' }}>✓ Added to Discover</span>
+                <span className="text-muted" style={{ fontSize: '0.85rem' }}>✓ Added to Discover carousel</span>
               )}
               {song.in_discover && discoverImageUrl && (
                 <img src={discoverImageUrl} alt="Discover artwork" style={{ width: 120, height: 120, objectFit: 'cover', borderRadius: 8, marginTop: '0.5rem', display: 'block' }} />

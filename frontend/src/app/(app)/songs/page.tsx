@@ -4,7 +4,7 @@ import { useState, useEffect } from 'react'
 import Link from 'next/link'
 import { format, parseISO } from 'date-fns'
 import { Search, Plus, ChevronRight, ArrowUpDown, X } from 'lucide-react'
-import { CategoryBadge, KeyBadge, RetiredBadge } from '@/components/ui/badges'
+import { CategoryBadge, KeyBadge, RetiredBadge, DraftBadge } from '@/components/ui/badges'
 import { CATEGORIES, Category, Song } from '@/types'
 import { useChurch } from '@/context/ChurchContext'
 import api from '@/lib/api'
@@ -24,7 +24,7 @@ export default function SongsPage() {
   useEffect(() => {
     if (!church) return
     fetchSongs()
-  }, [church, search, activeCategory, showRetired, sort])
+  }, [church, search, activeCategory, showRetired, showDraftOnly, sort])
 
   const fetchSongs = async () => {
     try {
@@ -51,6 +51,14 @@ export default function SongsPage() {
       <div className="page-header">
         <h1 className="page-title">Songs</h1>
         <div className="page-header-actions">
+          {canManageSongs && isMasterLibrary && (
+            <button
+              onClick={() => setShowDraftOnly(v => !v)}
+              className={`btn-text${showDraftOnly ? ' is-active' : ''}`}
+            >
+              {showDraftOnly ? 'All songs' : 'Draft songs'}
+            </button>
+          )}
           {canManageSongs && isMasterLibrary && (
             <button
               onClick={() => setShowDraftOnly(v => !v)}
@@ -152,6 +160,7 @@ export default function SongsPage() {
                   {song.default_key && <KeyBadge keyOf={song.default_key} />}
                   {song.category && <CategoryBadge category={song.category} />}
                   {song.retired && <RetiredBadge />}
+                  {isMasterLibrary && song.is_draft && <DraftBadge />}
                 </div>
                 <div className="dash-row-dates">
                   {song.last_sung && (
@@ -171,6 +180,7 @@ export default function SongsPage() {
               {song.default_key && <KeyBadge keyOf={song.default_key} />}
               {song.category && <CategoryBadge category={song.category} />}
               {song.retired && <RetiredBadge />}
+              {isMasterLibrary && song.is_draft && <DraftBadge />}
               <ChevronRight size={18} className="text-muted" />
             </div>
           </Link>
