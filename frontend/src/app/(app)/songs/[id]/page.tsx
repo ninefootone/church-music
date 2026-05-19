@@ -71,7 +71,7 @@ export default function SongDetailPage() {
   }
 
   const fetchSong = useCallback(() => {
-    if (!id || churchLoading) return
+    if (!id || churchLoading || !church) return
     setLoading(true)
     setNotFound(false)
     api.get(`/api/songs/${id}`)
