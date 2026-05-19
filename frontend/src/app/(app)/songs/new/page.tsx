@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 import CcliAutocomplete from '@/components/CcliAutocomplete'
@@ -28,6 +28,13 @@ export default function NewSongPage() {
   const { church } = useChurch()
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
+  const errorRef = useRef<HTMLDivElement>(null)
+
+  useEffect(() => {
+    if (error) {
+      errorRef.current?.scrollIntoView({ behavior: 'smooth', block: 'center' })
+    }
+  }, [error])
   const [atLimit, setAtLimit] = useState(false)
   const [templateSearch, setTemplateSearch] = useState<null | { id: string; title: string; author: string; ccli: string }>(null)
   const [copyrightDismissed, setCopyrightDismissed] = useState(false)
@@ -123,7 +130,7 @@ export default function NewSongPage() {
           You've reached the 5 song limit on the free plan. <Link href="/settings" className="link">Upgrade in Settings</Link> to add more songs.
         </div>
       )}
-      {error && <div className="error-box">{error}</div>}
+      {error && <div ref={errorRef} className="error-box">{error}</div>}
 
       {!copyrightDismissed && (
         <div className="copyright-notice">
