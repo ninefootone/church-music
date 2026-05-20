@@ -150,6 +150,27 @@ export default function EditSongPage() {
       {error && <div ref={errorRef} className="error-box">{error}</div>}
       <div className="card">
         <form id="song-edit-form" onSubmit={handleSubmit}>
+          {isMasterLibrary && (
+            <div className="form-field">
+              <label className="label">Master library</label>
+              <div className="checkbox-row">
+                <input type="checkbox" id="is_draft" checked={form.is_draft} onChange={e => setForm(f => ({ ...f, is_draft: e.target.checked }))} />
+                <label htmlFor="is_draft" className="checkbox-label">Draft — hide from public library until reviewed</label>
+              </div>
+              <div className="checkbox-row" style={{ marginTop: '0.5rem' }}>
+                <input type="checkbox" id="in_library" checked={form.in_library} onChange={e => setForm(f => ({ ...f, in_library: e.target.checked }))} />
+                <label htmlFor="in_library" className="checkbox-label">Add to public library — show this song in the searchable Discover library</label>
+              </div>
+              <div className="checkbox-row" style={{ marginTop: '0.5rem' }}>
+                <input type="checkbox" id="share_all_data" checked={form.share_all_data} onChange={e => setForm(f => ({ ...f, share_all_data: e.target.checked }))} />
+                <label htmlFor="share_all_data" className="checkbox-label">Share all data — this song is public domain or we have permission from the copyright holder</label>
+              </div>
+              <div className="checkbox-row" style={{ marginTop: '0.5rem' }}>
+                <input type="checkbox" id="in_discover" checked={form.in_discover} onChange={e => setForm(f => ({ ...f, in_discover: e.target.checked }))} />
+                <label htmlFor="in_discover" className="checkbox-label">Add to Discover — feature this song in the curated Discover carousel</label>
+              </div>
+            </div>
+          )}
           <div className="form-field"><label className="label">Song title *</label>
             <CcliAutocomplete
               titleValue={form.title}
@@ -179,28 +200,7 @@ export default function EditSongPage() {
             </div>
           </div>
           <div className="form-field"><label className="label">First line</label><input className="input" value={form.first_line} onChange={e => setForm(f => ({ ...f, first_line: e.target.value }))} /></div>
-          <div className="form-grid-2 form-field">
-            <div><label className="label">CCLI number</label><input className="input" value={form.ccli_number} onChange={e => setForm(f => ({ ...f, ccli_number: e.target.value }))} /></div>
-            <div className="col-span-full">
-              <div className="card-header-row">
-                <label className="label section-label--flush">Links</label>
-                <button type="button" onClick={addLink} className="btn btn-secondary btn-sm"><Plus size={13} /> Add link</button>
-              </div>
-              {links.length === 0 && (
-                <p className="text-muted form-empty-note">No links added yet.</p>
-              )}
-              {links.map((link, i) => (
-                <div key={i} className="link-input-row">
-                  <select className="input" value={link.link_type} onChange={e => updateLink(i, 'link_type', e.target.value)}>
-                    {LINK_TYPES.map(t => <option key={t.value} value={t.value}>{t.label}</option>)}
-                  </select>
-                  <input className="input" placeholder="Label (e.g. Live version)" value={link.label} onChange={e => updateLink(i, 'label', e.target.value)} />
-                  <input className="input" placeholder="URL" value={link.url} onChange={e => updateLink(i, 'url', e.target.value)} />
-                  <button type="button" onClick={() => removeLink(i)} className="btn btn-secondary btn-sm btn-danger-text"><Trash2 size={13} /></button>
-                </div>
-              ))}
-            </div>
-          </div>
+          <div className="form-field"><label className="label">CCLI number</label><input className="input" value={form.ccli_number} onChange={e => setForm(f => ({ ...f, ccli_number: e.target.value }))} /></div>
           <div className="form-field">
             <label className="label">Bible references</label>
             <input className="input" placeholder="e.g. Romans 8, Colossians 3:1-4" value={form.bible_references} onChange={e => setForm(f => ({ ...f, bible_references: e.target.value }))} />
