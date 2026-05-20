@@ -195,7 +195,6 @@ function LibraryRow({
         <div className="library-row__title">{song.title}</div>
         <div className="library-row__meta">
           {song.author && <span className="library-row__author">{song.author}</span>}
-          {song.copyright_info && <span className="library-row__copyright">{song.copyright_info}</span>}
           <div className="library-row__badges">
             {song.default_key && <KeyBadge keyOf={song.default_key} />}
             {song.category && <CategoryBadge category={song.category as any} />}
