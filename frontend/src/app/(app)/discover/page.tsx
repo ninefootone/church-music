@@ -199,7 +199,7 @@ function LibraryRow({
           <div className="library-row__badges">
             {song.default_key && <KeyBadge keyOf={song.default_key} />}
             {song.category && <CategoryBadge category={song.category as any} />}
-            {song.share_all_data && <span className="discover-card__files-badge">Files included</span>}
+            {song.share_all_data && <span className="discover-card__files-badge">Files / lyrics included</span>}
           </div>
         </div>
       </div>
