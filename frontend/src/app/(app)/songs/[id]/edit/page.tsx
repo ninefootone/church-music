@@ -165,10 +165,6 @@ export default function EditSongPage() {
                 <input type="checkbox" id="share_all_data" checked={form.share_all_data} onChange={e => setForm(f => ({ ...f, share_all_data: e.target.checked }))} />
                 <label htmlFor="share_all_data" className="checkbox-label">Share all data — this song is public domain or we have permission from the copyright holder</label>
               </div>
-              <div className="checkbox-row" style={{ marginTop: '0.5rem' }}>
-                <input type="checkbox" id="in_discover" checked={form.in_discover} onChange={e => setForm(f => ({ ...f, in_discover: e.target.checked }))} />
-                <label htmlFor="in_discover" className="checkbox-label">Add to Discover — feature this song in the curated Discover carousel</label>
-              </div>
             </div>
           )}
           <div className="form-field"><label className="label">Song title *</label>
@@ -273,30 +269,7 @@ export default function EditSongPage() {
 
           {isMasterLibrary && (
             <div className="form-field">
-              <label className="label">Master library</label>
               <div className="checkbox-row">
-                <input
-                  type="checkbox"
-                  id="share_all_data"
-                  checked={form.share_all_data}
-                  onChange={e => setForm(f => ({ ...f, share_all_data: e.target.checked }))}
-                />
-                <label htmlFor="share_all_data" className="checkbox-label">
-                  Share all data — this song is public domain or we have permission from the copyright holder
-                </label>
-              </div>
-              <div className="checkbox-row" style={{ marginTop: '0.5rem' }}>
-                <input
-                  type="checkbox"
-                  id="in_library"
-                  checked={form.in_library}
-                  onChange={e => setForm(f => ({ ...f, in_library: e.target.checked }))}
-                />
-                <label htmlFor="in_library" className="checkbox-label">
-                  Add to public library — show this song in the searchable Discover library
-                </label>
-              </div>
-              <div className="checkbox-row" style={{ marginTop: '0.5rem' }}>
                 <input
                   type="checkbox"
                   id="in_discover"
@@ -305,17 +278,6 @@ export default function EditSongPage() {
                 />
                 <label htmlFor="in_discover" className="checkbox-label">
                   Add to Discover — feature this song in the curated Discover carousel
-                </label>
-              </div>
-              <div className="checkbox-row" style={{ marginTop: '0.5rem' }}>
-                <input
-                  type="checkbox"
-                  id="is_draft"
-                  checked={form.is_draft}
-                  onChange={e => setForm(f => ({ ...f, is_draft: e.target.checked }))}
-                />
-                <label htmlFor="is_draft" className="checkbox-label">
-                  Draft — hide from public library until reviewed
                 </label>
               </div>
               {form.in_discover && (
