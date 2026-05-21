@@ -197,10 +197,12 @@ router.put('/:id', requireAuth, requireMembership, async function(req, res, next
     const pre_service_notes = req.body.pre_service_notes || null;
     const status = ['draft', 'published'].includes(req.body.status) ? req.body.status : undefined;
     const plan = await pool.query(
-      `UPDATE plans SET plan_date=$1, plan_time=$2, plan_start_time=$3, plan_sort_order=$4, title=$5, pre_service_notes=$9${status ? ', status=$8' : ''} WHERE id=$6 AND church_id=$7 RETURNING *`,
       status
-        ? [plan_date, plan_time, plan_start_time, plan_sort_order, title, req.params.id, req.churchId, status, pre_service_notes]
-        : [plan_date, plan_time, plan_start_time, plan_sort_order, title, req.params.id, req.churchId, null, pre_service_notes]
+        ? `UPDATE plans SET plan_date=$1, plan_time=$2, plan_start_time=$3, plan_sort_order=$4, title=$5, pre_service_notes=$8, status=$9 WHERE id=$6 AND church_id=$7 RETURNING *`
+        : `UPDATE plans SET plan_date=$1, plan_time=$2, plan_start_time=$3, plan_sort_order=$4, title=$5, pre_service_notes=$8 WHERE id=$6 AND church_id=$7 RETURNING *`,
+      status
+        ? [plan_date, plan_time, plan_start_time, plan_sort_order, title, req.params.id, req.churchId, pre_service_notes, status]
+        : [plan_date, plan_time, plan_start_time, plan_sort_order, title, req.params.id, req.churchId, pre_service_notes]
     );
     if (plan.rows.length === 0) return res.status(404).json({ error: 'Not found' });
     res.json(plan.rows[0]);
