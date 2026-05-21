@@ -96,6 +96,7 @@ function SortableCard({
 }: {
   song: DiscoverSong
   isMasterLibrary: boolean
+  canManageSongs: boolean
   importState: ImportState
   importedSongId: string | undefined
   onImport: (song: DiscoverSong) => void
@@ -137,12 +138,15 @@ function SortableCard({
         <VideoLinks videos={song.videos || []} />
         <div className="discover-card__footer">
           <div>
-            {importState === 'idle' && (
+            {!canManageSongs && importState !== 'done' && importState !== 'exists' && (
+              <span className="text-muted text-sm">Ask an admin to add this song</span>
+            )}
+            {canManageSongs && importState === 'idle' && (
               <button className="btn btn-primary btn-sm" onClick={() => onImport(song)}>
                 Add to library
               </button>
             )}
-            {importState === 'loading' && (
+            {canManageSongs && importState === 'loading' && (
               <button className="btn btn-primary btn-sm" disabled>Adding…</button>
             )}
             {(importState === 'done' || importState === 'exists') && (
@@ -157,7 +161,7 @@ function SortableCard({
                 )}
               </div>
             )}
-            {importState === 'error' && (
+            {canManageSongs && importState === 'error' && (
               <span className="text-sm text-danger">
                 Failed — try again
               </span>
@@ -185,6 +189,7 @@ function LibraryRow({
   onImport,
 }: {
   song: LibrarySong
+  canManageSongs: boolean
   importState: ImportState
   importedSongId: string | undefined
   onImport: (song: LibrarySong) => void
@@ -203,12 +208,15 @@ function LibraryRow({
         </div>
       </div>
       <div className="library-row__action">
-        {importState === 'idle' && (
+        {!canManageSongs && importState !== 'done' && importState !== 'exists' && (
+          <span className="text-muted text-sm">Ask an admin</span>
+        )}
+        {canManageSongs && importState === 'idle' && (
           <button className="btn btn-primary btn-sm" onClick={() => onImport(song)}>
             Add
           </button>
         )}
-        {importState === 'loading' && (
+        {canManageSongs && importState === 'loading' && (
           <button className="btn btn-primary btn-sm" disabled>Adding…</button>
         )}
         {(importState === 'done' || importState === 'exists') && (
@@ -224,7 +232,7 @@ function LibraryRow({
             )}
           </div>
         )}
-        {importState === 'error' && (
+        {canManageSongs && importState === 'error' && (
           <span className="text-sm text-danger">Failed</span>
         )}
       </div>
@@ -234,7 +242,7 @@ function LibraryRow({
 
 export default function DiscoverPage() {
   const { getToken } = useAuth()
-  const { church, loading: churchLoading } = useChurch()
+  const { church, loading: churchLoading, canManageSongs } = useChurch()
   const isMasterLibrary = church?.id === process.env.NEXT_PUBLIC_MASTER_CHURCH_ID
 
   // Carousel state
@@ -439,6 +447,7 @@ export default function DiscoverPage() {
                   key={song.id}
                   song={song}
                   isMasterLibrary={isMasterLibrary}
+                  canManageSongs={canManageSongs}
                   importState={importStates[song.id] || 'idle'}
                   importedSongId={importedIds[song.id]}
                   onImport={handleImport}
@@ -507,6 +516,7 @@ export default function DiscoverPage() {
                 <LibraryRow
                   key={song.id}
                   song={song}
+                  canManageSongs={canManageSongs}
                   importState={libraryImportStates[song.id] || 'idle'}
                   importedSongId={libraryImportedIds[song.id]}
                   onImport={handleLibraryImport}
