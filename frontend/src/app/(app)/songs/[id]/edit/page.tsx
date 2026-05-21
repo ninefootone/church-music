@@ -39,7 +39,7 @@ export default function EditSongPage() {
       errorRef.current?.scrollIntoView({ behavior: 'smooth', block: 'center' })
     }
   }, [error])
-  const [form, setForm] = useState({ title: '', author: '', default_key: '', category: '' as Category | '', first_line: '', ccli_number: '', lyrics: '', tags: [] as string[], notes: '', bible_references: '', suggested_arrangement: '', share_all_data: false, copyright_info: '', copyright_link: '', in_discover: false, discover_description: '', time_signature: '', tempo: '', default_duration: '', is_draft: false, in_library: false })
+  const [form, setForm] = useState({ title: '', author: '', default_key: '', category: '' as Category | '', first_line: '', ccli_number: '', lyrics: '', tags: [] as string[], notes: '', bible_references: '', suggested_arrangement: '', share_all_data: false, copyright_info: '', copyright_link: '', in_discover: false, discover_description: '', time_signature: '', tempo: '', is_draft: false, in_library: false })
   const [links, setLinks] = useState<SongLink[]>([])
   const [discoverImageUrl, setDiscoverImageUrl] = useState<string | null>(null)
   const [discoverImageUploading, setDiscoverImageUploading] = useState(false)
@@ -49,9 +49,9 @@ export default function EditSongPage() {
   useEffect(() => {
     if (!id) return
     api.get(`/api/songs/${id}`).then(r => {
-      const s: Song = r.data
+      const s: Song = r.data !!s
       const normaliseKey = (k: string | null | undefined) => k ? k.replace(/♯/g, '#').replace(/♭/g, 'b') : ''
-      setForm({ title: s.title, author: s.author || '', default_key: normaliseKey(s.default_key), category: s.category || '', first_line: s.first_line || '', ccli_number: s.ccli_number || '', lyrics: s.lyrics || '',  tags: ((s.tags || []) as any[]).map((t: { id: string }) => t.id), notes: s.notes || '', bible_references: s.bible_references || '', suggested_arrangement: s.suggested_arrangement || '', share_all_data: !!s.share_all_data, copyright_info: s.copyright_info || '', copyright_link: s.copyright_link || '', in_discover: !!s.in_discover, discover_description: s.discover_description || '', time_signature: s.time_signature || '', tempo: s.tempo?.toString() || '', default_duration: s.default_duration?.toString() || '', is_draft: !!s.is_draft, in_library: !!s.in_library })
+      setForm({ title: s.title, author: s.author || '', default_key: normaliseKey(s.default_key), category: s.category || '', first_line: s.first_line || '', ccli_number: s.ccli_number || '', lyrics: s.lyrics || '',  tags: ((s.tags || []) as any[]).map((t: { id: string }) => t.id), notes: s.notes || '', bible_references: s.bible_references || '', suggested_arrangement: s.suggested_arrangement || '', share_all_data: !!s.share_all_data, copyright_info: s.copyright_info || '', copyright_link: s.copyright_link || '', in_discover: !!s.in_discover, discover_description: s.discover_description || '', time_signature: s.time_signature || '', tempo: s.tempo?.toString() || '', is_draft:.is_draft, in_library: !!s.in_library })
       if (s.discover_image_key) {
         ;(async () => {
           try {
@@ -204,8 +204,8 @@ export default function EditSongPage() {
           <div className="form-field">
             <label className="label">Notes</label>
             <textarea className="input" rows={3} placeholder="Performance notes, tips for the band…" value={form.notes} onChange={e => setForm(f => ({ ...f, notes: e.target.value }))} style={{ resize: 'vertical' }} />
-              <div style={{ display: 'flex', gap: '1rem', marginTop: '1rem' }}>
-                <div style={{ flex: 1 }}>
+              <div className="form-timing-grid" style={{ marginTop: '1rem' }}>
+                <div>
                   <label className="label">Time Signature</label>
                   <select className="input" value={form.time_signature} onChange={e => setForm(f => ({ ...f, time_signature: e.target.value }))}>
                     <option value="">— select —</option>
@@ -218,13 +218,9 @@ export default function EditSongPage() {
                     <option value="7/8">7/8</option>
                   </select>
                 </div>
-                <div style={{ flex: 1 }}>
+                <div>
                   <label className="label">Tempo (BPM)</label>
                   <input className="input" type="number" min="40" max="240" placeholder="e.g. 120" value={form.tempo} onChange={e => setForm(f => ({ ...f, tempo: e.target.value }))} />
-                </div>
-                <div style={{ flex: 1 }}>
-                  <label className="label">Default duration (mins)</label>
-                  <input className="input" type="number" min="1" max="60" placeholder="e.g. 4" value={form.default_duration} onChange={e => setForm(f => ({ ...f, default_duration: e.target.value }))} />
                 </div>
               </div>
           </div>

@@ -314,6 +314,11 @@ body.set-viewer-active { overflow: hidden; }
     grid-template-columns: 1fr 1fr;
     gap: var(--space-md);
   }
+  .form-timing-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: var(--space-md);
+  }
   .col-span-full { grid-column: 1 / -1; }
   .form-empty-note { font-size: var(--text-sm); font-style: italic; }
   .link-input-row {
@@ -2284,7 +2289,7 @@ select.input {
   .song-row      { padding: 12px var(--space-sm); }
 
   .dashboard-grid, .dashboard-grid-reverse { grid-template-columns: 1fr !important; }
-  .form-grid-2     { grid-template-columns: 1fr !important; }
+  .form-grid-2, .form-timing-grid { grid-template-columns: 1fr !important; }
 
   .song-detail-header  { flex-direction: column; gap: 12px; }
   .song-detail-title   { font-size: var(--text-xl); }
