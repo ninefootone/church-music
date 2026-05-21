@@ -88,6 +88,7 @@ function VideoLinks({ videos }: { videos: DiscoverSong['videos'] }) {
 function SortableCard({
   song,
   isMasterLibrary,
+  canManageSongs,
   importState,
   importedSongId,
   onImport,
@@ -184,6 +185,7 @@ function SortableCard({
 
 function LibraryRow({
   song,
+  canManageSongs,
   importState,
   importedSongId,
   onImport,
