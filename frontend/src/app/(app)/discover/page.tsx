@@ -201,9 +201,6 @@ function LibraryRow({
       <div className="library-row__content">
         <div className="library-row__title">{song.title}</div>
         <div className="library-row__meta">
-          {!canManageSongs && importState !== 'done' && importState !== 'exists' && (
-            <span className="text-muted text-sm">Ask an admin to add</span>
-          )}
           {song.author && <span className="library-row__author">{song.author}</span>}
           <div className="library-row__badges">
             {song.default_key && <KeyBadge keyOf={song.default_key} />}
@@ -211,6 +208,9 @@ function LibraryRow({
             {song.share_all_data && <span className="discover-card__files-badge">Files / lyrics included</span>}
           </div>
         </div>
+        {!canManageSongs && importState !== 'done' && importState !== 'exists' && (
+          <span className="text-muted text-sm">Ask an admin to add</span>
+        )}
       </div>
       <div className="library-row__action">
         {canManageSongs && importState === 'idle' && (
