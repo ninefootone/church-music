@@ -415,14 +415,17 @@ body.set-viewer-active { overflow: hidden; }
   .page-error-msg { margin-bottom: var(--space-md); }
   .page-header {
     display: flex;
-    align-items: baseline;
+    align-items: center;
     justify-content: space-between;
     margin-bottom: var(--space-lg);
+    flex-wrap: wrap;
+    gap: var(--space-sm);
   }
   .page-header-actions {
     display: flex;
-    gap: var(--space-md);
+    gap: var(--space-sm);
     align-items: center;
+    flex-wrap: wrap;
   }
   .plan-edit-header {
     display: flex;
