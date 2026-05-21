@@ -325,9 +325,13 @@ body.set-viewer-active { overflow: hidden; }
   }
   .checkbox-row {
     display: flex;
-    align-items: center;
+    align-items: flex-start;
     gap: 10px;
     margin-bottom: var(--space-sm);
+  }
+  .checkbox-row input[type="checkbox"] {
+    flex-shrink: 0;
+    margin-top: 2px;
   }
   .checkbox-label { font-size: var(--text-sm); cursor: pointer; }
 
