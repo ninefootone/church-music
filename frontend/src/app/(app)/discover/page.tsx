@@ -211,7 +211,7 @@ function LibraryRow({
       </div>
       <div className="library-row__action">
         {!canManageSongs && importState !== 'done' && importState !== 'exists' && (
-          <span className="text-muted text-sm">Ask an admin</span>
+          <span className="text-muted text-sm">Ask an admin to add</span>
         )}
         {canManageSongs && importState === 'idle' && (
           <button className="btn btn-primary btn-sm" onClick={() => onImport(song)}>

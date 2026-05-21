@@ -3053,6 +3053,7 @@ select.input {
   align-items: flex-end;
   justify-content: space-between;
   gap: var(--space-sm);
+  flex-wrap: wrap;
 }
 
 .discover-card__added {
