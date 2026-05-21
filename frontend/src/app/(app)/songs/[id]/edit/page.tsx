@@ -49,7 +49,7 @@ export default function EditSongPage() {
   useEffect(() => {
     if (!id) return
     api.get(`/api/songs/${id}`).then(r => {
-      const s: Song = r.data !!s
+      const s: Song = r.data
       const normaliseKey = (k: string | null | undefined) => k ? k.replace(/♯/g, '#').replace(/♭/g, 'b') : ''
       setForm({ title: s.title, author: s.author || '', default_key: normaliseKey(s.default_key), category: s.category || '', first_line: s.first_line || '', ccli_number: s.ccli_number || '', lyrics: s.lyrics || '',  tags: ((s.tags || []) as any[]).map((t: { id: string }) => t.id), notes: s.notes || '', bible_references: s.bible_references || '', suggested_arrangement: s.suggested_arrangement || '', share_all_data: !!s.share_all_data, copyright_info: s.copyright_info || '', copyright_link: s.copyright_link || '', in_discover: !!s.in_discover, discover_description: s.discover_description || '', time_signature: s.time_signature || '', tempo: s.tempo?.toString() || '', is_draft: !!s.is_draft, in_library: !!s.in_library })
       if (s.discover_image_key) {
