@@ -3,13 +3,13 @@
 ## Backlog
 
 ### Discover
-- [ ] Library song detail/preview — clicking a song in the searchable library opens a panel or modal showing available details: lyrics preview (if share_all_data), author, copyright, tags, key, bible references, suggested arrangement; helps churches evaluate a song before adding it
 - [ ] Dashboard Discover block — swipeable carousel showing in_discover songs with image, title, category and description; settings toggle (`hide_discover_dashboard` on `churches` table) to hide it
 - [ ] Add events – Music Minsitry Conference etc.
 - [ ] Add blogs – eg. Sovereign Grace
 
 ### Plans
-- [ ] Pre-service items — visual divider (injected, not stored) separates pre-service from service items; `phase` column on `plan_items` (default `'service'`); drag across divider updates phase; pre-service items show duration only, no calculated clock time
+- [ ] Plan-mode on songs page — select target plan first, then inline add buttons per song row, no modal
+- [ ] Plans overview page — read-only /plans/overview, N upcoming plans in a grid, click-through to edit
 - [ ] Plan item notes — fix Cmd+B/I shortcuts for annotator role (needs requestAnimationFrame fix in plans/[id]/page.tsx inline editor); fix italic rendering (item-notes class already italicises text, making <em> invisible — remove italic from .item-notes or use underline/colour for <em> within it)
 - [ ] Soft-delete bin — add `deleted_at` column to plans; deleted plans move to a recoverable bin visible to admins; permanent delete requires a second confirmation; bin auto-purges after 30 days
 - [ ] Audit log — `audit_log` table tracking plan created/edited/deleted events with user ID and timestamp; visible to admins only on the plan detail page or a dedicated admin view
@@ -76,6 +76,8 @@ platform-wide stats: number of churches, total songs, total plans, total users, 
 - [x] Permission checkbox — add "Manage playlists" checkbox to member management modal in dashboard
 - [x] ChordPro inline editing — "Edit" button in the viewer toolbar opens a textarea with raw ChordPro text; save writes updated content back to R2 via a new PUT endpoint; admin only
 - [x] Consolidate tags — review remaining ~108 tags after initial cleanup; aim for a clean controlled vocabulary of ~20–25 tags
+- [x] Library song detail/preview — clicking a song in the searchable library opens a panel or modal showing available details: lyrics preview (if share_all_data), author, copyright, tags, key, bible references, suggested arrangement; helps churches evaluate a song before adding it
+- [x] Pre-service items — visual divider (injected, not stored) separates pre-service from service items; `phase` column on `plan_items` (default `'service'`); drag across divider updates phase; pre-service items show duration only, no calculated clock time
 
 ### Inline style refactor
 - [x] `src/app/page.tsx`
