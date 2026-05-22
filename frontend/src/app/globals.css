@@ -2846,6 +2846,23 @@ select.input {
   margin-top: var(--space-lg);
 }
 
+/* Discover song modal */
+.discover-modal__panel { max-width: 640px; }
+.discover-modal__body { display: flex; flex-direction: column; gap: var(--space-sm); }
+.discover-modal__meta { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: var(--space-sm); }
+.discover-modal__description { font-size: var(--text-sm); color: var(--color-text-secondary); line-height: 1.5; margin: 0; }
+.discover-modal__label { font-size: var(--text-xs, 0.75rem); font-weight: 600; color: var(--color-text-muted); text-transform: uppercase; letter-spacing: 0.04em; margin: 0 0 6px; }
+.discover-modal__value { font-size: var(--text-sm); color: var(--color-text-secondary); margin: 0; line-height: 1.5; }
+.discover-modal__value--muted { color: var(--color-text-muted); }
+.discover-modal__no-lyrics { display: flex; align-items: flex-start; gap: 8px; color: var(--color-text-muted); font-size: var(--text-sm); line-height: 1.5; }
+.discover-modal__no-lyrics p { margin: 0; }
+.discover-modal__lyrics-wrap { position: relative; }
+.discover-modal__lyrics-content { max-height: 220px; overflow: hidden; font-size: var(--text-sm); line-height: 1.7; color: var(--color-text-secondary); }
+.discover-modal__lyrics-content.is-expanded { max-height: none; overflow: visible; }
+.discover-modal__lyrics-fade { position: absolute; bottom: 24px; left: 0; right: 0; height: 64px; background: linear-gradient(transparent, var(--color-surface)); pointer-events: none; }
+.discover-modal__lyrics-toggle { margin-top: 6px; background: none; border: none; cursor: pointer; font-size: var(--text-sm); color: var(--color-brand-500); padding: 0; }
+.discover-modal__lyrics-toggle:hover { text-decoration: underline; }
+
 .discover-card {
   display: flex;
   flex-direction: row;

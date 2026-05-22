@@ -166,6 +166,53 @@ router.get('/library', requireAuth, async (req, res, next) => {
   }
 });
 
+// GET /templates/:id/detail — full detail for a single library/discover song
+router.get('/:id/detail', requireAuth, async (req, res, next) => {
+  try {
+    const masterChurchId = process.env.MASTER_CHURCH_ID;
+    const song = await pool.query(
+      `SELECT s.id, s.title, s.author, s.default_key, s.category,
+              s.first_line, s.ccli_number, s.copyright_info, s.share_all_data,
+              s.notes, s.bible_references, s.suggested_arrangement,
+              s.lyrics,
+              s.discover_description, s.discover_image_key,
+              COALESCE(JSON_AGG(DISTINCT jsonb_build_object('id', t.id, 'name', t.name)) FILTER (WHERE t.id IS NOT NULL), '[]') AS tags
+       FROM songs s
+       LEFT JOIN song_tags st ON st.song_id = s.id
+       LEFT JOIN tags t ON t.id = st.tag_id
+       WHERE s.id = $1
+         AND s.church_id = $2
+         AND (s.in_discover = true OR s.in_library = true)
+         AND (s.is_draft = false OR s.is_draft IS NULL)
+       GROUP BY s.id`,
+      [req.params.id, masterChurchId]
+    );
+
+    if (song.rows.length === 0) return res.status(404).json({ error: 'Song not found' });
+
+    const row = song.rows[0];
+
+    if (row.discover_image_key) {
+      const { GetObjectCommand } = require('@aws-sdk/client-s3');
+      const { getSignedUrl } = require('@aws-sdk/s3-request-presigner');
+      row.discover_image_url = await getSignedUrl(
+        r2,
+        new GetObjectCommand({ Bucket: BUCKET, Key: row.discover_image_key }),
+        { expiresIn: 3600 }
+      );
+    }
+    delete row.discover_image_key;
+
+    if (!row.share_all_data) {
+      row.lyrics = null;
+    }
+
+    res.json(row);
+  } catch (err) {
+    next(err);
+  }
+});
+
 // GET /templates/search?q= — search global template library
 router.get('/search', requireAuth, async (req, res, next) => {
   try {

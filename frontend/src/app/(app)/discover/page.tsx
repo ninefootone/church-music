@@ -7,6 +7,7 @@ import { CategoryBadge, KeyBadge } from '@/components/ui/badges'
 import api, { setAuthToken } from '@/lib/api'
 import { Sparkles, Youtube, Music, GripVertical, Search, X, ChevronRight } from 'lucide-react'
 import { CATEGORIES } from '@/types'
+import { DiscoverSongModal } from '@/components/ui/DiscoverSongModal'
 import {
   DndContext,
   closestCenter,
@@ -195,10 +196,11 @@ function LibraryRow({
   importState: ImportState
   importedSongId: string | undefined
   onImport: (song: LibrarySong) => void
+  onPreview: () => void
 }) {
   return (
     <div className="library-row">
-      <div className="library-row__content">
+      <div className="library-row__content" style={{ cursor: 'pointer' }} onClick={onPreview}>
         <div className="library-row__title">{song.title}</div>
         <div className="library-row__meta">
           {song.author && <span className="library-row__author">{song.author}</span>}
@@ -268,6 +270,8 @@ export default function DiscoverPage() {
   const [libraryImportedIds, setLibraryImportedIds] = useState<Record<string, string>>({})
   const [churchSongTitles, setChurchSongTitles] = useState<Record<string, string>>({})
   const librarySearchTimer = useRef<ReturnType<typeof setTimeout> | null>(null)
+
+  const [previewSongId, setPreviewSongId] = useState<string | null>(null)
 
   const sensors = useSensors(useSensor(PointerSensor))
 
@@ -522,6 +526,7 @@ export default function DiscoverPage() {
                   importState={libraryImportStates[song.id] || 'idle'}
                   importedSongId={libraryImportedIds[song.id]}
                   onImport={handleLibraryImport}
+                  onPreview={() => setPreviewSongId(song.id)}
                 />
               ))}
             </div>
@@ -544,6 +549,19 @@ export default function DiscoverPage() {
           </>
         )}
       </div>
+    {previewSongId && (
+        <DiscoverSongModal
+          songId={previewSongId}
+          onClose={() => setPreviewSongId(null)}
+          canManageSongs={canManageSongs}
+          importState={libraryImportStates[previewSongId] || 'idle'}
+          importedSongId={libraryImportedIds[previewSongId]}
+          onImport={() => {
+            const song = librarySongs.find(s => s.id === previewSongId)
+            if (song) handleLibraryImport(song)
+          }}
+        />
+      )}
     </div>
   )
 }
