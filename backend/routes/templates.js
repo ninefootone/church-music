@@ -95,10 +95,19 @@ router.get('/library', requireAuth, async (req, res, next) => {
     const params = [process.env.MASTER_CHURCH_ID];
     let idx = 2;
 
-    if (q) {
-      query += ` AND (s.title ILIKE $${idx} OR s.author ILIKE $${idx} OR s.first_line ILIKE $${idx})`;
-      params.push(`%${q}%`);
-      idx++;
+    if (q && q.trim()) {
+      // tsvector full-text search — same approach as songs route.
+      // Short strings (1-2 chars) fall back to title ILIKE prefix match.
+      const trimmed = q.trim();
+      if (trimmed.length <= 2) {
+        query += ` AND s.title ILIKE $${idx}`;
+        params.push(`${trimmed}%`);
+        idx++;
+      } else {
+        query += ` AND (s.search_vector @@ plainto_tsquery('english', $${idx}) OR s.tag_search_vector @@ plainto_tsquery('english', $${idx}))`;
+        params.push(trimmed);
+        idx++;
+      }
     }
 
     if (category) {
@@ -107,11 +116,7 @@ router.get('/library', requireAuth, async (req, res, next) => {
     }
 
     if (tag) {
-      query += ` AND EXISTS (
-        SELECT 1 FROM song_tags st2
-        JOIN tags t2 ON t2.id = st2.tag_id
-        WHERE st2.song_id = s.id AND t2.name ILIKE $${idx++}
-      )`;
+      query += ` AND s.tag_search_vector @@ plainto_tsquery('english', $${idx++})`;
       params.push(tag);
     }
 
@@ -134,21 +139,24 @@ router.get('/library', requireAuth, async (req, res, next) => {
     const countParams = [process.env.MASTER_CHURCH_ID];
     let cidx = 2;
 
-    if (q) {
-      countQuery += ` AND (s.title ILIKE $${cidx} OR s.author ILIKE $${cidx} OR s.first_line ILIKE $${cidx})`;
-      countParams.push(`%${q}%`);
-      cidx++;
+    if (q && q.trim()) {
+      const trimmed = q.trim();
+      if (trimmed.length <= 2) {
+        countQuery += ` AND s.title ILIKE $${cidx}`;
+        countParams.push(`${trimmed}%`);
+        cidx++;
+      } else {
+        countQuery += ` AND (s.search_vector @@ plainto_tsquery('english', $${cidx}) OR s.tag_search_vector @@ plainto_tsquery('english', $${cidx}))`;
+        countParams.push(trimmed);
+        cidx++;
+      }
     }
     if (category) {
       countQuery += ` AND s.category = $${cidx++}`;
       countParams.push(category);
     }
     if (tag) {
-      countQuery += ` AND EXISTS (
-        SELECT 1 FROM song_tags st2
-        JOIN tags t2 ON t2.id = st2.tag_id
-        WHERE st2.song_id = s.id AND t2.name ILIKE $${cidx++}
-      )`;
+      countQuery += ` AND s.tag_search_vector @@ plainto_tsquery('english', $${cidx++})`;
       countParams.push(tag);
     }
 

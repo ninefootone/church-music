@@ -53,6 +53,8 @@ router.get('/', requireAuth, requireMembership, async (req, res, next) => {
   try {
     const { churchId } = req;
     const { category, search } = req.query;
+    // tags param accepts comma-separated tag IDs: ?tags=1,2,3
+    const tagIds = req.query.tags ? req.query.tags.split(',').map(Number).filter(Boolean) : [];
 
     let query = `
       SELECT s.*,
@@ -75,10 +77,29 @@ router.get('/', requireAuth, requireMembership, async (req, res, next) => {
       query += ` AND s.category = $${idx++}`;
       params.push(category);
     }
-    if (search) {
-      query += ` AND (s.title ILIKE $${idx} OR s.author ILIKE $${idx} OR s.lyrics ILIKE $${idx} OR s.first_line ILIKE $${idx} OR s.bible_references ILIKE $${idx} OR s.notes ILIKE $${idx})`;
-      params.push(`%${search}%`);
-      idx++;
+    if (search && search.trim()) {
+      // Use tsvector full-text search across song fields and tags.
+      // plainto_tsquery handles plain user input safely (no special syntax required).
+      // Falls back to ILIKE on title for very short strings (1-2 chars) where tsvector
+      // won't produce useful tokens.
+      const trimmed = search.trim();
+      if (trimmed.length <= 2) {
+        query += ` AND s.title ILIKE $${idx}`;
+        params.push(`${trimmed}%`);
+        idx++;
+      } else {
+        query += ` AND (s.search_vector @@ plainto_tsquery('english', $${idx}) OR s.tag_search_vector @@ plainto_tsquery('english', $${idx}))`;
+        params.push(trimmed);
+        idx++;
+      }
+    }
+    if (tagIds.length > 0) {
+      // Each selected tag must be present — AND logic (song must have ALL chosen tags).
+      // Swap to ANY/array overlap for OR logic when building the tag filter UI.
+      for (const tagId of tagIds) {
+        query += ` AND EXISTS (SELECT 1 FROM song_tags WHERE song_id = s.id AND tag_id = $${idx++})`;
+        params.push(tagId);
+      }
     }
 
     if (req.query.include_retired !== 'true') {
