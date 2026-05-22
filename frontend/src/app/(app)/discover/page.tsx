@@ -95,6 +95,7 @@ function SortableCard({
   onImport,
   onDiscoverToggle,
   togglingDiscover,
+  onPreview,
 }: {
   song: DiscoverSong
   isMasterLibrary: boolean
@@ -104,6 +105,7 @@ function SortableCard({
   onImport: (song: DiscoverSong) => void
   onDiscoverToggle: (song: DiscoverSong) => void
   togglingDiscover: boolean
+  onPreview: () => void
 }) {
   const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({ id: song.id })
   const style = {
@@ -123,9 +125,17 @@ function SortableCard({
         src={song.discover_image_url || '/discover-fallback.jpg'}
         alt={song.title}
         className="discover-card__image"
+        style={!isMasterLibrary ? { cursor: 'pointer' } : undefined}
+        onClick={!isMasterLibrary ? onPreview : undefined}
       />
       <div className="discover-card__body">
-        <h2 className="discover-card__title">{song.title}</h2>
+        <h2
+          className="discover-card__title"
+          style={!isMasterLibrary ? { cursor: 'pointer' } : undefined}
+          onClick={!isMasterLibrary ? onPreview : undefined}
+        >
+          {song.title}
+        </h2>
         {song.author && <p className="discover-card__author">{song.author}</p>}
         {song.discover_description && (
           <p className="discover-card__description">{song.discover_description}</p>
@@ -460,6 +470,7 @@ export default function DiscoverPage() {
                   onImport={handleImport}
                   onDiscoverToggle={handleDiscoverToggle}
                   togglingDiscover={!!togglingDiscover[song.id]}
+                  onPreview={() => setPreviewSongId(song.id)}
                 />
               ))}
             </div>
