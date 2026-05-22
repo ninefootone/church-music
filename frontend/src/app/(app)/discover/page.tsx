@@ -190,6 +190,7 @@ function LibraryRow({
   importState,
   importedSongId,
   onImport,
+  onPreview,
 }: {
   song: LibrarySong
   canManageSongs: boolean
