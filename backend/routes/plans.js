@@ -232,6 +232,37 @@ router.put('/:id/items', requireAuth, requireMembership, async function(req, res
   }
 });
 
+// PATCH /:id/items/:itemId/arrangement — update custom arrangement only (annotators + full editors)
+router.patch('/:id/items/:itemId/arrangement', requireAuth, requireMembership, async function(req, res, next) {
+  try {
+    const { custom_arrangement } = req.body;
+    const { id: planId, itemId } = req.params;
+    const isAdmin = req.membership.role === 'admin';
+    const canEditAny = req.membership.can_edit_any_plan;
+    const canAnnotate = req.membership.can_annotate_plans;
+
+    const plan = await pool.query(
+      'SELECT created_by FROM plans WHERE id=$1 AND church_id=$2',
+      [planId, req.churchId]
+    );
+    if (plan.rows.length === 0) return res.status(404).json({ error: 'Not found' });
+
+    const isOwner = plan.rows[0].created_by === req.user.clerk_id;
+    if (!isAdmin && !isOwner && !canEditAny && !canAnnotate) {
+      return res.status(403).json({ error: 'Not authorised' });
+    }
+
+    const result = await pool.query(
+      'UPDATE plan_items SET custom_arrangement=$1 WHERE id=$2 AND plan_id=$3 RETURNING *',
+      [custom_arrangement || null, itemId, planId]
+    );
+    if (result.rows.length === 0) return res.status(404).json({ error: 'Item not found' });
+    res.json(result.rows[0]);
+  } catch (err) {
+    next(err);
+  }
+});
+
 // PATCH /:id/items/:itemId/notes — update notes only (annotators + full editors)
 router.patch('/:id/items/:itemId/notes', requireAuth, requireMembership, async function(req, res, next) {
   try {
