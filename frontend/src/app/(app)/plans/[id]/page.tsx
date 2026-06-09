@@ -13,6 +13,7 @@ import { ConfirmModal } from '@/components/ui/ConfirmModal'
 import { PlanMusicianModal } from '@/components/ui/PlanMusicianModal'
 import { PlanEmailModal } from '@/components/ui/PlanEmailModal'
 import type { PlanMusician } from '@/types'
+import { ArrangementBuilder } from '@/components/ui/ArrangementBuilder'
 
 interface SongFile {
   id: string
@@ -40,6 +41,22 @@ function SongItem({ item, index, planId, canAnnotate, showTimings, showDurations
   const [editingNotes, setEditingNotes] = useState(false)
   const [notes, setNotes] = useState(item.notes || '')
   const [savingNotes, setSavingNotes] = useState(false)
+  const [editingArrangement, setEditingArrangement] = useState(false)
+  const [customArrangement, setCustomArrangement] = useState(item.custom_arrangement || '')
+  const [savingArrangement, setSavingArrangement] = useState(false)
+
+  const handleSaveArrangement = async () => {
+    setSavingArrangement(true)
+    try {
+      await api.patch(`/api/plans/${planId}/items/${item.id}/arrangement`, { custom_arrangement: customArrangement })
+      item.custom_arrangement = customArrangement
+      setEditingArrangement(false)
+    } catch {
+      // leave editing open on error
+    } finally {
+      setSavingArrangement(false)
+    }
+  }
 
   const handleSaveNotes = async () => {
     setSavingNotes(true)
@@ -173,29 +190,53 @@ function SongItem({ item, index, planId, canAnnotate, showTimings, showDurations
               No sheet music uploaded for this song yet.
             </p>
           )}
-          {(item.custom_arrangement || item.song_suggested_arrangement) && (() => {
-            const raw = item.custom_arrangement || item.song_suggested_arrangement
-            try {
-              const parts: string[] = JSON.parse(raw)
-              if (Array.isArray(parts)) return (
-                <div className="song-section">
-                  <p className="sub-section-label">
-                    Arrangement{item.custom_arrangement ? <span className="label-note-inline"> (custom)</span> : ''}
-                  </p>
-                  <div className="pill-row">
-                    {parts.map((label: string, i: number) => (
-                      <span key={i} className="arrangement-pill arrangement-pill-sm">{label}</span>
-                    ))}
-                  </div>
-                </div>
-              )
-            } catch {}
-            return (
-              <p className="item-detail-xs">
-                {raw}
-              </p>
-            )
-          })()}
+          {editingArrangement ? (
+            <div className="song-section" onClick={e => e.stopPropagation()}>
+              <p className="sub-section-label">Custom arrangement</p>
+              <ArrangementBuilder
+                value={customArrangement}
+                onChange={setCustomArrangement}
+              />
+              <div style={{ display: 'flex', gap: 6, marginTop: 8 }}>
+                <button className="btn btn-primary btn-xs" onClick={handleSaveArrangement} disabled={savingArrangement}>
+                  {savingArrangement ? 'Saving…' : 'Save'}
+                </button>
+                <button className="btn btn-secondary btn-xs" onClick={() => { setCustomArrangement(item.custom_arrangement || ''); setEditingArrangement(false) }}>
+                  Cancel
+                </button>
+              </div>
+            </div>
+          ) : (
+            <>
+              {(customArrangement || item.song_suggested_arrangement) && (() => {
+                const raw = customArrangement || item.song_suggested_arrangement
+                try {
+                  const parts: string[] = JSON.parse(raw)
+                  if (Array.isArray(parts)) return (
+                    <div className="song-section">
+                      <p className="sub-section-label">
+                        Arrangement{customArrangement ? <span className="label-note-inline"> (custom)</span> : ''}
+                      </p>
+                      <div className="pill-row">
+                        {parts.map((label: string, i: number) => (
+                          <span key={i} className="arrangement-pill arrangement-pill-sm">{label}</span>
+                        ))}
+                      </div>
+                    </div>
+                  )
+                } catch {}
+                return <p className="item-detail-xs">{raw}</p>
+              })()}
+              {canAnnotate && (
+                <button
+                  className="btn-inline-link"
+                  onClick={e => { e.stopPropagation(); setEditingArrangement(true) }}
+                >
+                  {customArrangement ? 'Edit arrangement' : '+ Add arrangement'}
+                </button>
+              )}
+            </>
+          )}
           {item.song_ccli_number && (
             <p className="item-detail-xs">
               CCLI {item.song_ccli_number}
