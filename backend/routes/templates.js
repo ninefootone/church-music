@@ -104,9 +104,9 @@ router.get('/library', requireAuth, async (req, res, next) => {
         params.push(`${trimmed}%`);
         idx++;
       } else {
-        query += ` AND (s.search_vector @@ plainto_tsquery('english', $${idx}) OR s.tag_search_vector @@ plainto_tsquery('english', $${idx}))`;
-        params.push(trimmed);
-        idx++;
+        query += ` AND (s.search_vector @@ plainto_tsquery('english', $${idx}) OR s.tag_search_vector @@ plainto_tsquery('english', $${idx}) OR s.title ILIKE $${idx + 1})`;
+        params.push(trimmed, `%${trimmed}%`);
+        idx += 2;
       }
     }
 
@@ -146,9 +146,9 @@ router.get('/library', requireAuth, async (req, res, next) => {
         countParams.push(`${trimmed}%`);
         cidx++;
       } else {
-        countQuery += ` AND (s.search_vector @@ plainto_tsquery('english', $${cidx}) OR s.tag_search_vector @@ plainto_tsquery('english', $${cidx}))`;
-        countParams.push(trimmed);
-        cidx++;
+        countQuery += ` AND (s.search_vector @@ plainto_tsquery('english', $${cidx}) OR s.tag_search_vector @@ plainto_tsquery('english', $${cidx}) OR s.title ILIKE $${cidx + 1})`;
+        countParams.push(trimmed, `%${trimmed}%`);
+        cidx += 2;
       }
     }
     if (category) {

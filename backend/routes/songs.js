@@ -88,9 +88,9 @@ router.get('/', requireAuth, requireMembership, async (req, res, next) => {
         params.push(`${trimmed}%`);
         idx++;
       } else {
-        query += ` AND (s.search_vector @@ plainto_tsquery('english', $${idx}) OR s.tag_search_vector @@ plainto_tsquery('english', $${idx}))`;
-        params.push(trimmed);
-        idx++;
+        query += ` AND (s.search_vector @@ plainto_tsquery('english', $${idx}) OR s.tag_search_vector @@ plainto_tsquery('english', $${idx}) OR s.title ILIKE $${idx + 1})`;
+        params.push(trimmed, `%${trimmed}%`);
+        idx += 2;
       }
     }
     if (tagIds.length > 0) {
