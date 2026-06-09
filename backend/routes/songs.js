@@ -118,7 +118,20 @@ router.get('/', requireAuth, requireMembership, async (req, res, next) => {
       oldest:     'last_sung ASC NULLS LAST, s.title ASC',
     }[sort] || 's.title ASC';
 
-    query += ` GROUP BY s.id ORDER BY ${orderClause}`;
+    if (search && search.trim().length > 2) {
+      const trimmed = search.trim();
+      // $idx = exact title, $idx+1 = partial title, $idx+2 = tsquery for ranking
+      params.push(trimmed, `%${trimmed}%`, trimmed);
+      query += `
+        GROUP BY s.id
+        ORDER BY
+          (CASE WHEN s.title ILIKE $${idx} THEN 2 WHEN s.title ILIKE $${idx + 1} THEN 1 ELSE 0 END) DESC,
+          ts_rank(s.search_vector, plainto_tsquery('english', $${idx + 2})) DESC,
+          s.title ASC`;
+      idx += 3;
+    } else {
+      query += ` GROUP BY s.id ORDER BY ${orderClause}`;
+    }
 
     const result = await pool.query(query, params);
     res.json(result.rows);
