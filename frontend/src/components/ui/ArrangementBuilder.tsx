@@ -3,7 +3,7 @@
 import { useState, useRef } from 'react'
 import { GripVertical, X, Plus } from 'lucide-react'
 
-const PRESET_ELEMENTS = ['Intro', 'Verse', 'Pre-Chorus', 'Chorus', 'Bridge', 'Tag', 'Instrumental', 'Ending']
+const PRESET_ELEMENTS = ['Intro', 'Verse', 'Pre-Chorus', 'Chorus', 'Bridge', 'Tag', 'Link', 'Turnaround', 'Instrumental', 'Ending']
 
 type Item = { id: string; label: string }
 
