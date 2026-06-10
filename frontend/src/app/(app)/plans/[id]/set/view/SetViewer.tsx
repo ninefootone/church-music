@@ -231,8 +231,8 @@ export function SetViewerPage() {
 
           // Strip the original h1/h2 from the html and prepend our wrapped version
           const html = titleBlock + rawHtml
-            .replace(/<h1 class="title">.*?<\/h1>\s*/s, '')
-            .replace(/<h2 class="subtitle">.*?<\/h2>\s*/s, '')
+            .replace(/<h1 class="title">[^<]*<\/h1>\s*/g, '')
+            .replace(/<h2 class="subtitle">[^<]*<\/h2>\s*/g, '')
 
           contents.push({ fileIndex: i, html, rawSource: text })
         } catch (err) {
