@@ -46,6 +46,8 @@ export function SetViewerPage() {
   const [containerSize, setContainerSize] = useState<{ width: number; height: number } | null>(null)
   const [chordProContents, setChordProContents] = useState<ChordProContent[]>([])
   const [measuringIndex, setMeasuringIndex] = useState<number | null>(null)
+  const measuredChordProPages = useRef<Record<number, string[]>>({})
+
   const measureDivRef = useCallback((div: HTMLDivElement | null) => {
     if (!div || measuringIndex === null) return
 
@@ -69,16 +71,31 @@ export function SetViewerPage() {
       })
       if (currentHtml) chordProPages.push(currentHtml)
 
-      const total = chordProPages.length || 1
-      const newPages: ViewerPage[] = []
+      // Store this file's paginated pages
+      measuredChordProPages.current = {
+        ...measuredChordProPages.current,
+        [measuringIndex]: chordProPages.length > 0 ? chordProPages : ['']
+      }
 
+      // Find the next ChordPro file that hasn't been measured yet
+      const nextIndex = files.findIndex(
+        (f, i) => f.file_type === 'chordpro' && i > measuringIndex && !measuredChordProPages.current[i]
+      )
+
+      if (nextIndex !== -1) {
+        // More ChordPro files to measure — trigger next
+        setMeasuringIndex(nextIndex)
+        return
+      }
+
+      // All ChordPro files measured — build final pages array
+      const newPages: ViewerPage[] = []
       files.forEach((f, fileIndex) => {
         if (f.file_type === 'chordpro') {
-          if (fileIndex === measuringIndex) {
-            chordProPages.forEach((html, p) => {
-              newPages.push({ fileIndex, pageIndex: p, totalPages: total, file: f, chordProHtml: html })
-            })
-          }
+          const pages = measuredChordProPages.current[fileIndex] || ['']
+          pages.forEach((html, p) => {
+            newPages.push({ fileIndex, pageIndex: p, totalPages: pages.length, file: f, chordProHtml: html })
+          })
         } else {
           const count = pageCounts[fileIndex] || 1
           for (let p = 0; p < count; p++) {
@@ -227,7 +244,10 @@ export function SetViewerPage() {
     const hasChordProContent = chordProContents.length > 0
     if (!hasChordProContent) return
     const firstChordPro = files.findIndex(f => f.file_type === 'chordpro')
-    if (firstChordPro !== -1) setMeasuringIndex(firstChordPro)
+    if (firstChordPro !== -1) {
+      measuredChordProPages.current = {}
+      setMeasuringIndex(firstChordPro)
+    }
   }, [files, chordProContents, pageCounts])
 
   const goTo = useCallback((n: number) => {
