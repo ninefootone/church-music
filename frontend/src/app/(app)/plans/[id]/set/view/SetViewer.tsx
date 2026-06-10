@@ -214,7 +214,26 @@ export function SetViewerPage() {
           }
 
           const formatter = new ChordSheetJS.HtmlDivFormatter()
-          const html = formatter.format(rendered)
+          const rawHtml = formatter.format(rendered)
+
+          // HtmlDivFormatter puts <h1 class="title"> and <h2 class="subtitle"> outside
+          // the .paragraph divs, so the paginator skips them. Extract them and wrap
+          // them in a .paragraph so they flow correctly into page 1.
+          const titleMatch = rawHtml.match(/<h1 class="title">(.*?)<\/h1>/)
+          const subtitleMatch = rawHtml.match(/<h2 class="subtitle">(.*?)<\/h2>/)
+          let titleBlock = ''
+          if (titleMatch || subtitleMatch) {
+            titleBlock = `<div class="paragraph chordpro-title-block">`
+            if (titleMatch) titleBlock += `<div class="chordpro-song-title">${titleMatch[1]}</div>`
+            if (subtitleMatch) titleBlock += `<div class="chordpro-song-subtitle">${subtitleMatch[1]}</div>`
+            titleBlock += `</div>`
+          }
+
+          // Strip the original h1/h2 from the html and prepend our wrapped version
+          const html = titleBlock + rawHtml
+            .replace(/<h1 class="title">.*?<\/h1>\s*/s, '')
+            .replace(/<h2 class="subtitle">.*?<\/h2>\s*/s, '')
+
           contents.push({ fileIndex: i, html, rawSource: text })
         } catch (err) {
           console.error('Failed to load ChordPro file at index', i, ':', err)
