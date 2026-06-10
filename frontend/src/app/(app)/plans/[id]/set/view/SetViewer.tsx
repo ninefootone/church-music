@@ -45,6 +45,15 @@ export function SetViewerPage() {
   const [pageCounts, setPageCounts] = useState<Record<number, number>>({})
   const [containerSize, setContainerSize] = useState<{ width: number; height: number } | null>(null)
   const [chordProContents, setChordProContents] = useState<ChordProContent[]>([])
+  const [fontSize, setFontSize] = useState(15)
+
+  const remeasure = useCallback(() => {
+    const firstChordPro = files.findIndex(f => f.file_type === 'chordpro')
+    if (firstChordPro === -1) return
+    measuredChordProPages.current = {}
+    setReady(false)
+    setMeasuringIndex(firstChordPro)
+  }, [files])
   const [measuringIndex, setMeasuringIndex] = useState<number | null>(null)
   const measuredChordProPages = useRef<Record<number, string[]>>({})
 
@@ -291,7 +300,7 @@ export function SetViewerPage() {
         <div
           ref={measureDivRef}
           className="chordpro-render"
-          style={{ position: 'absolute', left: -9999, top: 0, width: (containerSize?.width ?? window.innerWidth) - 64, fontFamily: 'monospace', fontSize: 15, lineHeight: 1.6, pointerEvents: 'none' }}
+          style={{ position: 'absolute', left: -9999, top: 0, width: (containerSize?.width ?? window.innerWidth) - 64, fontFamily: 'monospace', fontSize, lineHeight: 1.6, pointerEvents: 'none' }}
           dangerouslySetInnerHTML={{ __html: chordProContents.find(c => c.fileIndex === measuringIndex)!.html }}
         />
       )}
@@ -330,6 +339,19 @@ export function SetViewerPage() {
           </p>
         </div>
         <span style={{ color: '#666', fontSize: 12, flexShrink: 0 }}>{currentPage + 1} / {pages.length}</span>
+        {current.file.file_type === 'chordpro' && (
+          <div style={{ display: 'flex', alignItems: 'center', gap: 4, flexShrink: 0 }}>
+            <button
+              onClick={e => { e.stopPropagation(); setFontSize(s => { const n = Math.max(10, s - 1); setTimeout(remeasure, 0); return n }) }}
+              style={{ background: 'none', border: '1px solid #444', borderRadius: 4, color: '#aaa', cursor: 'pointer', padding: '2px 8px', fontSize: 16, lineHeight: 1 }}
+            >−</button>
+            <span style={{ color: '#666', fontSize: 11, minWidth: 28, textAlign: 'center' }}>{fontSize}px</span>
+            <button
+              onClick={e => { e.stopPropagation(); setFontSize(s => { const n = Math.min(28, s + 1); setTimeout(remeasure, 0); return n }) }}
+              style={{ background: 'none', border: '1px solid #444', borderRadius: 4, color: '#aaa', cursor: 'pointer', padding: '2px 8px', fontSize: 16, lineHeight: 1 }}
+            >+</button>
+          </div>
+        )}
         {canFullscreen && (
           <button onClick={toggleFullscreen} style={{ background: 'none', border: '1px solid #444', borderRadius: 4, color: '#aaa', cursor: 'pointer', padding: '4px 8px', display: 'flex' }}>
             {isFullscreen ? <Minimize size={14} /> : <Maximize size={14} />}
@@ -352,7 +374,7 @@ export function SetViewerPage() {
         {current.file.file_type === 'chordpro' ? (
           <div
             className="chordpro-render"
-            style={{ width: containerSize ? containerSize.width - 64 : '100%', height: containerSize ? containerSize.height - 32 : '100%', overflow: 'auto', padding: '16px 24px', background: '#fff', borderRadius: 4 }}
+            style={{ width: containerSize ? containerSize.width - 64 : '100%', height: containerSize ? containerSize.height - 32 : '100%', overflow: 'auto', padding: '16px 24px', background: '#fff', borderRadius: 4, fontSize }}
             dangerouslySetInnerHTML={{ __html: current.chordProHtml || '' }}
           />
         ) : (
