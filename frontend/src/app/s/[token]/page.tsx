@@ -16,7 +16,7 @@ interface SongFile {
   url: string
 }
 
-function SongItem({ item, index, token, showTimings, showDurations, calculatedStart }: { item: any; index: number; token: string | string[]; showTimings?: boolean; showDurations?: boolean; calculatedStart?: string | null }) {
+function SongItem({ item, index, token, showTimings, showDurations, calculatedStart }: { item: any; index: number; token: string | string[] | undefined; showTimings?: boolean; showDurations?: boolean; calculatedStart?: string | null }) {
   const [expanded, setExpanded] = useState(false)
   const [files, setFiles] = useState<SongFile[] | null>(null)
   const [loadingFiles, setLoadingFiles] = useState(false)
