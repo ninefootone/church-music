@@ -1,7 +1,7 @@
 const express = require('express');
 const router = express.Router();
 const pool = require('../db/pool');
-const { requireAuth, requireAdmin } = require('../middleware/auth');
+const { requireAuth, requireAdmin, requireMembership } = require('../middleware/auth');
 const multer = require('multer');
 const { S3Client, PutObjectCommand } = require('@aws-sdk/client-s3');
 const { v4: uuidv4 } = require('uuid');
@@ -132,7 +132,8 @@ router.get('/mine', requireAuth, async (req, res, next) => {
 // Remove a member (admin only)
 router.delete('/:churchId/members/:memberId', requireAuth, requireAdmin, async (req, res, next) => {
   try {
-    const { churchId, memberId } = req.params
+    const { churchId } = req
+    const { memberId } = req.params
     await pool.query(
       'UPDATE memberships SET role = $1 WHERE church_id = $2 AND user_id = $3',
       ['revoked', churchId, memberId]
@@ -144,9 +145,9 @@ router.delete('/:churchId/members/:memberId', requireAuth, requireAdmin, async (
 })
 
 // Get church details
-router.get('/:churchId', requireAuth, async (req, res, next) => {
+router.get('/:churchId', requireAuth, requireMembership, async (req, res, next) => {
   try {
-    const church = await pool.query('SELECT * FROM churches WHERE id = $1', [req.params.churchId]);
+    const church = await pool.query('SELECT * FROM churches WHERE id = $1', [req.churchId]);
     if (church.rows.length === 0) return res.status(404).json({ error: 'Not found' });
     res.json(church.rows[0]);
   } catch (err) {
@@ -160,7 +161,7 @@ router.patch('/:churchId', requireAuth, requireAdmin, async (req, res, next) => 
     const { name, ccli_number } = req.body;
     const church = await pool.query(
       'UPDATE churches SET name = COALESCE($1, name), ccli_number = $2 WHERE id = $3 RETURNING *',
-      [name || null, ccli_number || null, req.params.churchId]
+      [name || null, ccli_number || null, req.churchId]
     );
     if (church.rows.length === 0) return res.status(404).json({ error: 'Not found' });
     res.json(church.rows[0]);
@@ -189,7 +190,7 @@ router.post('/:churchId/logo', requireAuth, requireAdmin, upload.single('logo'),
     const logo_url = `${process.env.R2_PUBLIC_URL}/${key}`;
     const church = await pool.query(
       'UPDATE churches SET logo_url = $1 WHERE id = $2 RETURNING *',
-      [logo_url, req.params.churchId]
+      [logo_url, req.churchId]
     );
 
     res.json(church.rows[0]);
@@ -199,12 +200,12 @@ router.post('/:churchId/logo', requireAuth, requireAdmin, upload.single('logo'),
 });
 
 // Regenerate invite code (admin only)
-router.post('/:churchId/regenerate-invite', requireAuth, async (req, res, next) => {
+router.post('/:churchId/regenerate-invite', requireAuth, requireAdmin, async (req, res, next) => {
   try {
     const invite_code = generateInviteCode();
     const church = await pool.query(
       'UPDATE churches SET invite_code = $1 WHERE id = $2 RETURNING *',
-      [invite_code, req.params.churchId]
+      [invite_code, req.churchId]
     );
     res.json(church.rows[0]);
   } catch (err) {
@@ -213,11 +214,11 @@ router.post('/:churchId/regenerate-invite', requireAuth, async (req, res, next) 
 });
 
 // Get roles for a church
-router.get('/:churchId/roles', requireAuth, async (req, res, next) => {
+router.get('/:churchId/roles', requireAuth, requireMembership, async (req, res, next) => {
   try {
     const result = await pool.query(
       'SELECT * FROM church_roles WHERE church_id = $1 ORDER BY sort_order, name',
-      [req.params.churchId]
+      [req.churchId]
     );
     res.json(result.rows);
   } catch (err) {
@@ -230,7 +231,7 @@ router.put('/:churchId/roles', requireAuth, requireAdmin, async (req, res, next)
   const { roles } = req.body; // [{ id?, name, sort_order }]
   if (!Array.isArray(roles)) return res.status(400).json({ error: 'roles must be an array' });
 
-  const churchId = req.params.churchId;
+  const churchId = req.churchId;
   const client = await pool.connect();
 
   try {
@@ -290,7 +291,7 @@ router.get('/:churchId/roles/usage', requireAuth, requireAdmin, async (req, res,
       `SELECT COUNT(*) FROM plan_musicians pm
        JOIN plans p ON p.id = pm.plan_id
        WHERE p.church_id = $1 AND pm.role = $2`,
-      [req.params.churchId, name]
+      [req.churchId, name]
     );
     res.json({ count: parseInt(result.rows[0].count, 10) });
   } catch (err) {
@@ -299,11 +300,11 @@ router.get('/:churchId/roles/usage', requireAuth, requireAdmin, async (req, res,
 });
 
 // Get plan item types for a church
-router.get('/:churchId/plan-item-types', requireAuth, async (req, res, next) => {
+router.get('/:churchId/plan-item-types', requireAuth, requireMembership, async (req, res, next) => {
   try {
     const result = await pool.query(
       'SELECT * FROM church_plan_item_types WHERE church_id = $1 ORDER BY sort_order, name',
-      [req.params.churchId]
+      [req.churchId]
     );
     res.json(result.rows);
   } catch (err) {
@@ -316,13 +317,14 @@ router.put('/:churchId/plan-item-types', requireAuth, requireAdmin, async (req, 
   const { types } = req.body;
   if (!Array.isArray(types)) return res.status(400).json({ error: 'types must be an array' });
 
+  const churchId = req.churchId;
   const client = await pool.connect();
   try {
     await client.query('BEGIN');
 
     const existing = await client.query(
       'SELECT * FROM church_plan_item_types WHERE church_id = $1',
-      [req.params.churchId]
+      [churchId]
     );
 
     const incomingIds = types.filter(t => t.id).map(t => t.id);
@@ -340,12 +342,12 @@ router.put('/:churchId/plan-item-types', requireAuth, requireAdmin, async (req, 
       if (id) {
         await client.query(
           'UPDATE church_plan_item_types SET name = $1, sort_order = $2 WHERE id = $3 AND church_id = $4',
-          [name.trim(), i, id, req.params.churchId]
+          [name.trim(), i, id, churchId]
         );
       } else {
         await client.query(
           'INSERT INTO church_plan_item_types (church_id, name, sort_order) VALUES ($1, $2, $3)',
-          [req.params.churchId, name.trim(), i]
+          [churchId, name.trim(), i]
         );
       }
     }
@@ -353,7 +355,7 @@ router.put('/:churchId/plan-item-types', requireAuth, requireAdmin, async (req, 
     await client.query('COMMIT');
     const updated = await pool.query(
       'SELECT * FROM church_plan_item_types WHERE church_id = $1 ORDER BY sort_order, name',
-      [req.params.churchId]
+      [churchId]
     );
     res.json(updated.rows);
   } catch (err) {
