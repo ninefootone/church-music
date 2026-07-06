@@ -4,7 +4,7 @@ const multer = require('multer');
 const { S3Client, PutObjectCommand, GetObjectCommand, DeleteObjectCommand } = require('@aws-sdk/client-s3');
 const { getSignedUrl } = require('@aws-sdk/s3-request-presigner');
 const pool = require('../db/pool');
-const { requireAuth, requireAdmin } = require('../middleware/auth');
+const { requireAuth, requireAdmin, requireMembership } = require('../middleware/auth');
 const { v4: uuidv4 } = require('uuid');
 
 const endpoint = process.env.R2_ENDPOINT ||
@@ -149,6 +149,11 @@ router.post('/songs/:songId', requireAuth, requireAdmin, upload.single('file'), 
     const key_of = req.body.key_of;
     const churchId = req.churchId;
 
+    const owningSong = await pool.query('SELECT id FROM songs WHERE id = $1 AND church_id = $2', [songId, churchId]);
+    if (owningSong.rows.length === 0) {
+      return res.status(404).json({ error: 'Song not found' });
+    }
+
     if (!req.file) {
       return res.status(400).json({ error: 'No file provided' });
     }
@@ -174,11 +179,13 @@ router.post('/songs/:songId', requireAuth, requireAdmin, upload.single('file'), 
   }
 });
 
-router.get('/songs/:songId/files/:fileId/url', requireAuth, async function(req, res, next) {
+router.get('/songs/:songId/files/:fileId/url', requireAuth, requireMembership, async function(req, res, next) {
   try {
     const file = await pool.query(
-      'SELECT * FROM song_files WHERE id = $1 AND song_id = $2',
-      [req.params.fileId, req.params.songId]
+      `SELECT sf.* FROM song_files sf
+       JOIN songs s ON s.id = sf.song_id
+       WHERE sf.id = $1 AND sf.song_id = $2 AND s.church_id = $3`,
+      [req.params.fileId, req.params.songId, req.churchId]
     );
     if (file.rows.length === 0) {
       return res.status(404).json({ error: 'File not found' });
@@ -224,8 +231,11 @@ router.patch('/songs/:songId/files/:fileId', requireAuth, requireAdmin, async fu
   try {
     const { file_type, label, key_of } = req.body;
     const result = await pool.query(
-      'UPDATE song_files SET file_type = COALESCE($1, file_type), label = COALESCE($2, label), key_of = $3 WHERE id = $4 AND song_id = $5 RETURNING *',
-      [file_type, label, key_of || null, req.params.fileId, req.params.songId]
+      `UPDATE song_files sf SET file_type = COALESCE($1, sf.file_type), label = COALESCE($2, sf.label), key_of = $3
+       FROM songs s
+       WHERE sf.id = $4 AND sf.song_id = $5 AND sf.song_id = s.id AND s.church_id = $6
+       RETURNING sf.*`,
+      [file_type, label, key_of || null, req.params.fileId, req.params.songId, req.churchId]
     );
     if (result.rows.length === 0) {
       return res.status(404).json({ error: 'File not found' });
@@ -239,8 +249,10 @@ router.patch('/songs/:songId/files/:fileId', requireAuth, requireAdmin, async fu
 router.delete('/songs/:songId/files/:fileId', requireAuth, requireAdmin, async function(req, res, next) {
   try {
     const file = await pool.query(
-      'SELECT * FROM song_files WHERE id = $1 AND song_id = $2',
-      [req.params.fileId, req.params.songId]
+      `SELECT sf.* FROM song_files sf
+       JOIN songs s ON s.id = sf.song_id
+       WHERE sf.id = $1 AND sf.song_id = $2 AND s.church_id = $3`,
+      [req.params.fileId, req.params.songId, req.churchId]
     );
     if (file.rows.length === 0) {
       return res.status(404).json({ error: 'File not found' });
@@ -264,8 +276,10 @@ router.put('/songs/:songId/files/:fileId/chordpro', requireAuth, requireAdmin, a
     }
 
     const fileResult = await pool.query(
-      'SELECT * FROM song_files WHERE id = $1 AND song_id = $2',
-      [req.params.fileId, req.params.songId]
+      `SELECT sf.* FROM song_files sf
+       JOIN songs s ON s.id = sf.song_id
+       WHERE sf.id = $1 AND sf.song_id = $2 AND s.church_id = $3`,
+      [req.params.fileId, req.params.songId, req.churchId]
     );
     if (fileResult.rows.length === 0) {
       return res.status(404).json({ error: 'File not found' });
@@ -304,8 +318,10 @@ router.put('/songs/:songId/files/:fileId/chordpro', requireAuth, requireAdmin, a
 router.delete('/songs/:songId/files/:fileId/chordpro-edits', requireAuth, requireAdmin, async function(req, res, next) {
   try {
     const fileResult = await pool.query(
-      'SELECT * FROM song_files WHERE id = $1 AND song_id = $2',
-      [req.params.fileId, req.params.songId]
+      `SELECT sf.* FROM song_files sf
+       JOIN songs s ON s.id = sf.song_id
+       WHERE sf.id = $1 AND sf.song_id = $2 AND s.church_id = $3`,
+      [req.params.fileId, req.params.songId, req.churchId]
     );
     if (fileResult.rows.length === 0) {
       return res.status(404).json({ error: 'File not found' });
