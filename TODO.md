@@ -2,6 +2,9 @@
 
 ## Backlog
 
+- [ ] Clerk major version upgrade — STILL ON v5.7.5 (confirmed via `npm list @clerk/nextjs` in frontend, July 2026). Previously marked done in error — commits under "Clerk v7 upgrade" only touched app code (ClerkProvider placement in layout.tsx, middleware syntax), package.json/package-lock were never actually bumped. A known CRITICAL CVE affects the current @clerk/shared version (route-protection/authorization bypass, via npm audit on backend). Needs: bump @clerk/backend (API) and @clerk/nextjs (frontend) to current major versions; check v5→v6 and v6→v7 migration guides; test sign in, sign up, and onboarding redirect on a preview branch before merging to main.
+
+
 ### Discover
 - [ ] Dashboard Discover block — swipeable carousel showing in_discover songs with image, title, category and description; settings toggle (`hide_discover_dashboard` on `churches` table) to hide it
 - [ ] Add events – Music Minsitry Conference etc.
@@ -67,7 +70,6 @@
   - Depends entirely on admins populating plan musicians — will be empty/useless for churches that don't use that feature
   - Natural precursor to email reminders ("you're playing on Sunday — here's the plan"); don't design the widget in isolation from that future need
   - Consider `plan_availability` table (`plan_id`, `user_id`, `status: available|unavailable|unconfirmed`) for future unavailability/confirmation flow — design DB now even if UI comes later
-- [x] Clerk major version upgrade — currently on v5.7.5, latest is v7.x; check migration guides for v5→v6 and v6→v7 before updating; test all auth flows (sign in, sign up, onboarding redirect) on a preview branch first
 platform-wide stats: number of churches, total songs, total plans, total users, storage used; no church-level data exposed
 - [x] DB migration — new `church_playlists` table (`id`, `church_id`, `name`, `url`, `sort_order`, `created_at`) + new `can_manage_playlists` boolean on `memberships` table
 - [x] Backend routes — `GET/POST/PUT/DELETE /api/playlists` on Express backend
