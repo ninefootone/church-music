@@ -166,7 +166,7 @@ router.post('/', requireAuth, requirePermission('can_add_plans'), async function
     const plan_start_time = req.body.plan_start_time || null;
     const plan_sort_order = req.body.plan_sort_order ?? 0;
     const title = req.body.title;
-    const public_token = uuidv4().split('-')[0];
+    const public_token = uuidv4();
 
     const plan = await pool.query(
       'INSERT INTO plans (church_id, plan_date, plan_time, plan_start_time, plan_sort_order, title, public_token, created_by) VALUES ($1,$2,$3,$4,$5,$6,$7,$8) RETURNING *',
@@ -546,7 +546,7 @@ router.post('/:id/duplicate', requireAuth, requirePermission('can_add_plans'), a
 
     const orig = source.rows[0];
     const { plan_date, plan_time, plan_start_time, plan_sort_order, title } = req.body;
-    const public_token = uuidv4().split('-')[0];
+    const public_token = uuidv4();
 
     const newPlan = await pool.query(
       `INSERT INTO plans (church_id, plan_date, plan_time, plan_start_time, plan_sort_order, title, public_token, created_by, status, pre_service_notes)
