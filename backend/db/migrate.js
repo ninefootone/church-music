@@ -147,10 +147,6 @@ const migrate = async () => {
         ADD COLUMN IF NOT EXISTS subscription_price_id TEXT,
         ADD COLUMN IF NOT EXISTS subscription_current_period_end TIMESTAMPTZ;
 
-      ALTER TABLE ccli_lookup
-        ADD COLUMN IF NOT EXISTS category TEXT,
-        ADD COLUMN IF NOT EXISTS first_line TEXT;
-
       CREATE TABLE IF NOT EXISTS ccli_lookup (
         id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
         ccli_number TEXT NOT NULL,
@@ -165,6 +161,10 @@ const migrate = async () => {
         updated_at TIMESTAMPTZ DEFAULT NOW(),
         UNIQUE(ccli_number)
       );
+
+      ALTER TABLE ccli_lookup
+        ADD COLUMN IF NOT EXISTS category TEXT,
+        ADD COLUMN IF NOT EXISTS first_line TEXT;
     `);
     console.log('Migration complete');
   } catch (err) {

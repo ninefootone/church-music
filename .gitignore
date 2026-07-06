@@ -11,9 +11,12 @@ node_modules/
 .next/
 dist/
 out/
+next-env.d.ts
+*.tsbuildinfo
 
 # Misc
 .DS_Store
 *.log
 .vercel
 .env.import
+backend/scripts/*.csv
