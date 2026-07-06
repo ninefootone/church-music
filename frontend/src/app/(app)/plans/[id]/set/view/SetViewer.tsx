@@ -6,6 +6,7 @@ import { ChevronLeft, ChevronRight, X, Maximize, Minimize } from 'lucide-react'
 import { Document, Page, pdfjs } from 'react-pdf'
 import 'react-pdf/dist/Page/AnnotationLayer.css'
 import 'react-pdf/dist/Page/TextLayer.css'
+import DOMPurify from 'dompurify'
 
 if (typeof window !== 'undefined') {
   pdfjs.GlobalWorkerOptions.workerSrc = `//unpkg.com/pdfjs-dist@${pdfjs.version}/build/pdf.worker.min.mjs`
@@ -239,9 +240,9 @@ export function SetViewerPage() {
           }
 
           // Strip the original h1/h2 from the html and prepend our wrapped version
-          const html = titleBlock + rawHtml
+          const html = DOMPurify.sanitize(titleBlock + rawHtml
             .replace(/<h1 class="title">[^<]*<\/h1>\s*/g, '')
-            .replace(/<h2 class="subtitle">[^<]*<\/h2>\s*/g, '')
+            .replace(/<h2 class="subtitle">[^<]*<\/h2>\s*/g, ''))
 
           contents.push({ fileIndex: i, html, rawSource: text })
         } catch (err) {

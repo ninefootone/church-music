@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from 'react'
 import { X, ChevronUp, ChevronDown } from 'lucide-react'
+import DOMPurify from 'dompurify'
 
 const KEYS = ['C', 'C#', 'Db', 'D', 'Eb', 'E', 'F', 'F#', 'Gb', 'G', 'Ab', 'A', 'Bb', 'B']
 
@@ -37,17 +38,21 @@ export function ChordProViewer({ content, originalKey, songKey, label, onClose }
               let semitones = toIdx - fromIdx
               if (semitones < 0) semitones += 12
               const transposed = song.transpose(semitones)
-              setRendered(formatter.format(transposed))
+              setRendered(DOMPurify.sanitize(formatter.format(transposed)))
               return
             }
           }
         }
 
-        setRendered(formatter.format(song))
+        setRendered(DOMPurify.sanitize(formatter.format(song)))
       } catch (err) {
         console.error('ChordPro render error:', err)
-        // Fallback: show raw content
-        setRendered(`<pre style="font-family: monospace; white-space: pre-wrap;">${content}</pre>`)
+        // Fallback: show raw content, escaped — never trust unparsed ChordPro as HTML
+        const escaped = content
+          .replace(/&/g, '&amp;')
+          .replace(/</g, '&lt;')
+          .replace(/>/g, '&gt;')
+        setRendered(`<pre style="font-family: monospace; white-space: pre-wrap;">${escaped}</pre>`)
       }
     }
     render()

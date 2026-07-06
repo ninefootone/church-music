@@ -1,5 +1,7 @@
 'use client'
 
+import DOMPurify from 'dompurify'
+
 interface LyricsDisplayProps {
   lyrics: string
   className?: string
@@ -38,11 +40,12 @@ export function LyricsDisplay({ lyrics, className }: LyricsDisplayProps) {
   if (!lyrics) return null
 
   const html = isHTML(lyrics) ? normaliseHTML(lyrics) : markersToHTML(lyrics)
+  const safeHtml = DOMPurify.sanitize(html)
 
   return (
     <div
       className={`lyrics-text ${className || ''}`}
-      dangerouslySetInnerHTML={{ __html: html }}
+      dangerouslySetInnerHTML={{ __html: safeHtml }}
     />
   )
 }

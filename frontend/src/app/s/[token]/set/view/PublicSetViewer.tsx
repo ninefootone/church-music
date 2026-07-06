@@ -6,6 +6,7 @@ import { ChevronLeft, ChevronRight, X, Maximize, Minimize } from 'lucide-react'
 import { Document, Page, pdfjs } from 'react-pdf'
 import 'react-pdf/dist/Page/AnnotationLayer.css'
 import 'react-pdf/dist/Page/TextLayer.css'
+import DOMPurify from 'dompurify'
 
 if (typeof window !== 'undefined') {
   pdfjs.GlobalWorkerOptions.workerSrc = `//unpkg.com/pdfjs-dist@${pdfjs.version}/build/pdf.worker.min.mjs`
@@ -196,7 +197,7 @@ export function PublicSetViewerPage() {
           }
 
           const formatter = new ChordSheetJS.HtmlDivFormatter()
-          const html = formatter.format(rendered)
+          const html = DOMPurify.sanitize(formatter.format(rendered))
           contents.push({ fileIndex: i, html })
         } catch (err) {
           console.error('Failed to load ChordPro file at index', i, ':', err)

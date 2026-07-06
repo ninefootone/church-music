@@ -4,6 +4,7 @@ import { useEffect, useState } from 'react'
 import { X, Music } from 'lucide-react'
 import { CategoryBadge, KeyBadge } from '@/components/ui/badges'
 import api from '@/lib/api'
+import DOMPurify from 'dompurify'
 
 type SongDetail = {
   id: string
@@ -43,12 +44,13 @@ function LyricsPreview({ lyrics }: { lyrics: string }) {
   const processed = isHtml
     ? lyrics
     : lyrics.replace(/\n/g, '<br />')
+  const safeProcessed = DOMPurify.sanitize(processed)
 
   return (
     <div className="discover-modal__lyrics-wrap">
       <div
         className={`lyrics-text discover-modal__lyrics-content${expanded ? ' is-expanded' : ''}`}
-        dangerouslySetInnerHTML={{ __html: processed }}
+        dangerouslySetInnerHTML={{ __html: safeProcessed }}
       />
       {!expanded && <div className="discover-modal__lyrics-fade" />}
       <button
