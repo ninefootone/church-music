@@ -16,7 +16,7 @@ interface SongFile {
   url: string
 }
 
-function SongItem({ item, index, showTimings, showDurations, calculatedStart }: { item: any; index: number; showTimings?: boolean; showDurations?: boolean; calculatedStart?: string | null }) {
+function SongItem({ item, index, token, showTimings, showDurations, calculatedStart }: { item: any; index: number; token: string | string[]; showTimings?: boolean; showDurations?: boolean; calculatedStart?: string | null }) {
   const [expanded, setExpanded] = useState(false)
   const [files, setFiles] = useState<SongFile[] | null>(null)
   const [loadingFiles, setLoadingFiles] = useState(false)
@@ -25,7 +25,7 @@ function SongItem({ item, index, showTimings, showDurations, calculatedStart }: 
     if (!expanded && item.song_id && files === null) {
       setLoadingFiles(true)
       try {
-        const res = await axios.get(`${API}/api/uploads/public/songs/${item.song_id}/files`)
+        const res = await axios.get(`${API}/api/uploads/public/songs/${item.song_id}/files?token=${token}`)
         setFiles(res.data)
       } catch (err) {
         setFiles([])
@@ -292,6 +292,7 @@ export default function PublicPlanPage() {
                     key={i}
                     item={item}
                     index={i}
+                    token={token}
                     showTimings={showTimings && !!startTime && anyDurations}
                     showDurations={showDurations}
                     calculatedStart={calcStart}

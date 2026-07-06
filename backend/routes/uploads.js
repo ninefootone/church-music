@@ -204,8 +204,55 @@ router.get('/songs/:songId/files/:fileId/url', requireAuth, requireMembership, a
   }
 });
 
+// GET /songs/:songId/files — authenticated: all files for a song, scoped to the caller's church
+router.get('/songs/:songId/files', requireAuth, requireMembership, async function(req, res, next) {
+  try {
+    const owningSong = await pool.query('SELECT id FROM songs WHERE id = $1 AND church_id = $2', [req.params.songId, req.churchId]);
+    if (owningSong.rows.length === 0) {
+      return res.status(404).json({ error: 'Song not found' });
+    }
+
+    const files = await pool.query(
+      'SELECT * FROM song_files WHERE song_id = $1 ORDER BY key_of, file_type',
+      [req.params.songId]
+    );
+
+    const filesWithUrls = await Promise.all(files.rows.map(async function(file) {
+      const activeKey = file.edited_r2_key || file.r2_key;
+      const url = await getSignedUrl(
+        r2,
+        new GetObjectCommand({ Bucket: BUCKET, Key: activeKey }),
+        { expiresIn: 3600 }
+      );
+      return Object.assign({}, file, { url: url, has_edits: !!file.edited_r2_key });
+    }));
+
+    res.json(filesWithUrls);
+  } catch (err) {
+    next(err);
+  }
+});
+
+// GET /public/songs/:songId/files — public: requires the plan's share token, and the song
+// must actually be an item on that specific shared plan. Prevents guessing arbitrary song IDs.
 router.get('/public/songs/:songId/files', async function(req, res, next) {
   try {
+    const { token } = req.query;
+    if (!token) {
+      return res.status(400).json({ error: 'token is required' });
+    }
+
+    const authorized = await pool.query(
+      `SELECT 1 FROM plans p
+       JOIN plan_items pi ON pi.plan_id = p.id
+       WHERE p.public_token = $1 AND pi.song_id = $2
+       LIMIT 1`,
+      [token, req.params.songId]
+    );
+    if (authorized.rows.length === 0) {
+      return res.status(404).json({ error: 'Not found' });
+    }
+
     const files = await pool.query(
       'SELECT * FROM song_files WHERE song_id = $1 ORDER BY key_of, file_type',
       [req.params.songId]

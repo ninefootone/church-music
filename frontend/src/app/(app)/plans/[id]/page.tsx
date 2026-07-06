@@ -75,7 +75,7 @@ function SongItem({ item, index, planId, canAnnotate, showTimings, showDurations
     if (!expanded && item.song_id && files === null) {
       setLoadingFiles(true)
       try {
-        const res = await api.get(`/api/uploads/public/songs/${item.song_id}/files`)
+        const res = await api.get(`/api/uploads/songs/${item.song_id}/files`)
         setFiles(res.data)
       } catch {
         setFiles([])

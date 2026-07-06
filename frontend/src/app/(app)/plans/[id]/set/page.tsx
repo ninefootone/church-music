@@ -74,7 +74,7 @@ export default function SetModePage() {
 
         const results = await Promise.allSettled(
           songItems.map((item: SongItem) =>
-            api.get(`/api/uploads/public/songs/${item.song_id}/files`)
+            api.get(`/api/uploads/songs/${item.song_id}/files`)
               .then(res => ({ songId: item.song_id!, files: res.data as SongFile[] }))
           )
         )
