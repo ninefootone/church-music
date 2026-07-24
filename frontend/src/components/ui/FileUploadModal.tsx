@@ -1,8 +1,9 @@
 'use client'
 
 import { useState, useRef } from 'react'
+import { useAuth } from '@clerk/nextjs'
 import { X, Upload, File, Trash2 } from 'lucide-react'
-import api from '@/lib/api'
+import api, { setAuthToken } from '@/lib/api'
 
 const FILE_TYPES = [
   { value: 'chords',     label: 'Chord chart' },
@@ -33,6 +34,7 @@ interface FileUploadModalProps {
 }
 
 export function FileUploadModal({ songId, defaultKey, onClose, onUploaded }: FileUploadModalProps) {
+  const { getToken } = useAuth()
   const [entries, setEntries] = useState<FileEntry[]>([])
   const [uploading, setUploading] = useState(false)
   const inputRef = useRef<HTMLInputElement>(null)
@@ -85,6 +87,9 @@ export function FileUploadModal({ songId, defaultKey, onClose, onUploaded }: Fil
     for (const entry of entries) {
       updateEntry(entry.id, { status: 'uploading', error: undefined })
       try {
+        const token = await getToken()
+        setAuthToken(token)
+
         const formData = new FormData()
         formData.append('file', entry.file)
         formData.append('file_type', entry.fileType)
@@ -92,11 +97,7 @@ export function FileUploadModal({ songId, defaultKey, onClose, onUploaded }: Fil
         formData.append('key_of', entry.keyOf)
 
         await api.post(`/api/uploads/songs/${songId}`, formData, {
-          headers: {
-            'Content-Type': 'multipart/form-data',
-            'Authorization': api.defaults.headers.common['Authorization'] as string,
-            'x-church-id': api.defaults.headers.common['x-church-id'] as string,
-          },
+          headers: { 'Content-Type': 'multipart/form-data' },
         })
 
         updateEntry(entry.id, { status: 'done' })
