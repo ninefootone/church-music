@@ -24,6 +24,22 @@ export function registerTokenRefresher(fn: () => Promise<string | null>) {
   tokenRefresher = fn
 }
 
+// Request interceptor: mint a fresh token before every request so no call site
+// can send a stale one. getToken() is cheap — Clerk returns its cached token and
+// only hits the network when it's actually near expiry. Skipped when no refresher
+// is registered (signed-out/public pages), so those requests go through unauthenticated.
+api.interceptors.request.use(async config => {
+  if (tokenRefresher) {
+    try {
+      const token = await tokenRefresher()
+      if (token) config.headers['Authorization'] = `Bearer ${token}`
+    } catch (err) {
+      console.error('Token refresh (request interceptor) failed:', err)
+    }
+  }
+  return config
+})
+
 // Interceptor: on 401, try refreshing the token once then retry
 api.interceptors.response.use(
   response => response,
