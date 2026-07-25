@@ -4,7 +4,9 @@
 
 - [ ] Database schema migrations — adopt a migration runner (e.g. node-pg-migrate) or at minimum a `schema_migrations` table, so "has this migration run?" is recorded in the database rather than remembered. The one-off scripts in `backend/db/` and `backend/scripts/` are currently applied by hand with no record of what's been run — this is the ambiguity that made syncing across machines uncertain. Keep the existing scripts as history; route new schema changes through the runner.
 
-- [ ] Clerk major version upgrade — STILL ON v5.7.5 (confirmed via `npm list @clerk/nextjs` in frontend, July 2026). Previously marked done in error — commits under "Clerk v7 upgrade" only touched app code (ClerkProvider placement in layout.tsx, middleware syntax), package.json/package-lock were never actually bumped. A known CRITICAL CVE affects the current @clerk/shared version (route-protection/authorization bypass, via npm audit on backend). Needs: bump @clerk/backend (API) and @clerk/nextjs (frontend) to current major versions; check v5→v6 and v6→v7 migration guides; test sign in, sign up, and onboarding redirect on a preview branch before merging to main.
+- [ ] Backend/frontend gate parity audit — the UI gates some actions on flags (`free_access`, `subscription_status`) that the backend must independently enforce. Two divergences found and fixed (song limit, plan limit). Audit remaining tier-gated actions (file uploads, member/invite count, any Stripe-gated feature) to confirm the backend applies the same exemptions the frontend implies. Backend is the source of truth; frontend checks are UX only.
+
+- [ ] Clerk major version upgrade- [ ] Clerk major version upgrade — STILL ON v5.7.5 (confirmed via `npm list @clerk/nextjs` in frontend, July 2026). Previously marked done in error — commits under "Clerk v7 upgrade" only touched app code (ClerkProvider placement in layout.tsx, middleware syntax), package.json/package-lock were never actually bumped. A known CRITICAL CVE affects the current @clerk/shared version (route-protection/authorization bypass, via npm audit on backend). Needs: bump @clerk/backend (API) and @clerk/nextjs (frontend) to current major versions; check v5→v6 and v6→v7 migration guides; test sign in, sign up, and onboarding redirect on a preview branch before merging to main.
 
 
 ### Discover
@@ -27,6 +29,7 @@
 - [ ] Full offboarding process – account deletion — settings page option for users to delete their own account (Clerk backend API + DB cleanup)
 
 ## Done
+- [x] Free-access gate fix — `free_access` churches were still blocked by the backend song (5) and plan (1) limits because the gates in `backend/routes/songs.js` and `backend/routes/plans.js` only checked `subscription_status`, ignoring `free_access` (which the frontend already honoured). Backend gates now exempt `free_access` churches, matching the UI.
 - [x] WordPress song import (139 songs, 502 files)
 - [x] New song fields — notes, bible_references, suggested_arrangement, ccli_url, song_videos
 - [x] Today badge on plans list and dashboard
