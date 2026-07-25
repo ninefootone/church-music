@@ -151,10 +151,11 @@ router.post('/', requireAuth, requirePermission('can_add_plans'), async function
   try {
     const churchId = req.churchId;
 
-    // Free tier gate — max 1 plan
-    const church = await pool.query('SELECT subscription_status FROM churches WHERE id = $1', [churchId]);
+    // Free tier gate — max 1 plan (free_access churches are exempt)
+    const church = await pool.query('SELECT subscription_status, free_access FROM churches WHERE id = $1', [churchId]);
     const status = church.rows[0]?.subscription_status;
-    if (!status || status === 'free') {
+    const freeAccess = church.rows[0]?.free_access;
+    if (!freeAccess && (!status || status === 'free')) {
       const count = await pool.query('SELECT COUNT(*) FROM plans WHERE church_id = $1', [churchId]);
       if (parseInt(count.rows[0].count) >= 1) {
         return res.status(403).json({ error: 'You have reached the 1 plan limit on the free plan. Upgrade in Settings to add more.' });
