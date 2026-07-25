@@ -2,6 +2,8 @@
 
 ## Backlog
 
+- [ ] Database schema migrations — adopt a migration runner (e.g. node-pg-migrate) or at minimum a `schema_migrations` table, so "has this migration run?" is recorded in the database rather than remembered. The one-off scripts in `backend/db/` and `backend/scripts/` are currently applied by hand with no record of what's been run — this is the ambiguity that made syncing across machines uncertain. Keep the existing scripts as history; route new schema changes through the runner.
+
 - [ ] Clerk major version upgrade — STILL ON v5.7.5 (confirmed via `npm list @clerk/nextjs` in frontend, July 2026). Previously marked done in error — commits under "Clerk v7 upgrade" only touched app code (ClerkProvider placement in layout.tsx, middleware syntax), package.json/package-lock were never actually bumped. A known CRITICAL CVE affects the current @clerk/shared version (route-protection/authorization bypass, via npm audit on backend). Needs: bump @clerk/backend (API) and @clerk/nextjs (frontend) to current major versions; check v5→v6 and v6→v7 migration guides; test sign in, sign up, and onboarding redirect on a preview branch before merging to main.
 
 
