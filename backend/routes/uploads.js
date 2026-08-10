@@ -4,7 +4,7 @@ const multer = require('multer');
 const { S3Client, PutObjectCommand, GetObjectCommand, DeleteObjectCommand } = require('@aws-sdk/client-s3');
 const { getSignedUrl } = require('@aws-sdk/s3-request-presigner');
 const pool = require('../db/pool');
-const { requireAuth, requireAdmin, requireMembership } = require('../middleware/auth');
+const { requireAuth, requireAdmin, requireMembership, requirePermission } = require('../middleware/auth');
 const { v4: uuidv4 } = require('uuid');
 
 const endpoint = process.env.R2_ENDPOINT ||
@@ -141,7 +141,7 @@ router.get('/songs/:songId/discover-image-url', requireAuth, async function(req,
   }
 });
 
-router.post('/songs/:songId', requireAuth, requireAdmin, upload.single('file'), async function(req, res, next) {
+router.post('/songs/:songId', requireAuth, requirePermission('can_manage_songs'), upload.single('file'), async function(req, res, next) {
   try {
     const songId = req.params.songId;
     const file_type = req.body.file_type;
@@ -274,7 +274,7 @@ router.get('/public/songs/:songId/files', async function(req, res, next) {
   }
 });
 
-router.patch('/songs/:songId/files/:fileId', requireAuth, requireAdmin, async function(req, res, next) {
+router.patch('/songs/:songId/files/:fileId', requireAuth, requirePermission('can_manage_songs'), async function(req, res, next) {
   try {
     const { file_type, label, key_of } = req.body;
     const result = await pool.query(
@@ -293,7 +293,7 @@ router.patch('/songs/:songId/files/:fileId', requireAuth, requireAdmin, async fu
   }
 });
 
-router.delete('/songs/:songId/files/:fileId', requireAuth, requireAdmin, async function(req, res, next) {
+router.delete('/songs/:songId/files/:fileId', requireAuth, requirePermission('can_manage_songs'), async function(req, res, next) {
   try {
     const file = await pool.query(
       `SELECT sf.* FROM song_files sf
@@ -315,7 +315,7 @@ router.delete('/songs/:songId/files/:fileId', requireAuth, requireAdmin, async f
 });
 
 // PUT /uploads/songs/:songId/files/:fileId/chordpro — save edited ChordPro content to R2
-router.put('/songs/:songId/files/:fileId/chordpro', requireAuth, requireAdmin, async function(req, res, next) {
+router.put('/songs/:songId/files/:fileId/chordpro', requireAuth, requirePermission('can_manage_songs'), async function(req, res, next) {
   try {
     const { content } = req.body;
     if (typeof content !== 'string' || content.trim().length === 0) {
@@ -362,7 +362,7 @@ router.put('/songs/:songId/files/:fileId/chordpro', requireAuth, requireAdmin, a
 });
 
 // DELETE /uploads/songs/:songId/files/:fileId/chordpro-edits — revert to original
-router.delete('/songs/:songId/files/:fileId/chordpro-edits', requireAuth, requireAdmin, async function(req, res, next) {
+router.delete('/songs/:songId/files/:fileId/chordpro-edits', requireAuth, requirePermission('can_manage_songs'), async function(req, res, next) {
   try {
     const fileResult = await pool.query(
       `SELECT sf.* FROM song_files sf
