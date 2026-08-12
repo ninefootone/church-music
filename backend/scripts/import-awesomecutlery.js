@@ -78,7 +78,7 @@ function extractCcliNumber(raw) {
 // "Copyright © 2016 Dan Adams and Gareth Loh" -> "Dan Adams and Gareth Loh"
 function extractAuthor(copyrightRaw) {
   if (!copyrightRaw) return null;
-  const m = copyrightRaw.match(/copyright\s*[©]\s*\d{4}\s+(.+)/i);
+  const m = copyrightRaw.match(/copyright\s*(?:©|&copy;)\s*\d{4}\s+(.+)/i);
   if (m) return m[1].trim();
   return null;
 }
