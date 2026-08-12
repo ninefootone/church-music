@@ -1,5 +1,42 @@
 # Song Stack — TODO
 
+## Native apps (iOS + Android via Capacitor)
+
+Decision log:
+- Route: **Capacitor** wrapping the existing app — NOT a Swift/Kotlin rewrite. Reuses the current backend, API, auth and data model; ships one codebase for both stores plus web. Swift stays a someday-maybe (only justified later for native Apple Pencil drawing, and even then as a PencilKit *plugin* inside the same Capacitor app, not a rewrite).
+- Why native over the PWA: App Store / Play Store install beats PWA install friction (the real barrier for average users), plus offline as insurance.
+- v1 scope: **service player**. Find plans added on desktop → cache for offline → play in the set viewer with no signal → solo on-screen annotations stored locally. Mostly-online use assumed; offline is the safety net.
+- Deferred on purpose: shared annotations (only ever *eventual* sync when online — live co-annotation is impossible in a no-signal room and is the highest-risk feature; solo-first), practice/ad-hoc setlists, full web-app parity, push notifications for plan reminders.
+- Build it as the real, kept product — not throwaway scaffolding. Under-investing is what makes a wrapper feel "webby" and triggers a needless rewrite.
+
+### Phase 1 — Offline bundling decision (the crux)
+- [ ] Decide how the Next.js frontend is packaged for Capacitor to serve **offline** inside the app (client-rendered mobile bundle talking to the existing API vs pointing at the live URL). This single decision determines whether the app feels native or like a webview, and whether offline works at all. Server components + Clerk server-side auth make this non-trivial — resolve before scaffolding.
+
+### Phase 2 — Developer accounts (has approval lag — start early)
+- [ ] Apple Developer Program — $99/yr, identity verification can take a day+
+- [ ] Google Play Console — $25 one-off
+
+### Phase 3 — Capacitor scaffolding
+- [ ] Add Capacitor to the repo; get the app running in the iOS simulator and Android emulator
+
+### Phase 4 — Offline plan cache (the real engineering)
+- [ ] Fetch and cache plans, songs and files (PDF + ChordPro) locally so a plan plays with no connection
+
+### Phase 5 — Solo annotation layer
+- [ ] Canvas overlay on the set viewer; finger + Apple Pencil via pointer events; annotations stored locally (IndexedDB), scoped per plan/file
+
+### Phase 6 — Native-feel polish
+- [ ] Touch target sizes, momentum scrolling, disable text-select and tap-highlight, set-viewer gestures, locked orientation, splash screen
+
+### Phase 7 — Store assets & listings
+- [ ] App icons, splash, store descriptions, screenshots, privacy declarations
+
+### Phase 8 — Testing tracks
+- [ ] TestFlight (iOS) + Play internal testing; real device testing in a church setting
+
+### Phase 9 — Submit & publish
+- [ ] Submit both stores; handle Apple review (the usual first-timer trap — build with its rules in mind from Phase 3 on)
+
 ## Backlog
 
 - [ ] Database schema migrations — adopt a migration runner (e.g. node-pg-migrate) or at minimum a `schema_migrations` table, so "has this migration run?" is recorded in the database rather than remembered. The one-off scripts in `backend/db/` and `backend/scripts/` are currently applied by hand with no record of what's been run — this is the ambiguity that made syncing across machines uncertain. Keep the existing scripts as history; route new schema changes through the runner.
