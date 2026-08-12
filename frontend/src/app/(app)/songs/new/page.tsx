@@ -25,7 +25,7 @@ const LINK_TYPES = [
 export default function NewSongPage() {
   const router = useRouter()
   const { getToken } = useAuth()
-  const { church } = useChurch()
+  const { church, canManageSongs, loading: churchLoading } = useChurch()
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
   const errorRef = useRef<HTMLDivElement>(null)
@@ -118,6 +118,15 @@ export default function NewSongPage() {
       setError(err.response?.data?.error || 'Failed to save song')
       setLoading(false)
     }
+  }
+
+  if (churchLoading) return null
+  if (!canManageSongs) {
+    return (
+      <div className="settings-restricted">
+        <p className="settings-restricted-text">You don&apos;t have permission to add songs.</p>
+      </div>
+    )
   }
 
   return (

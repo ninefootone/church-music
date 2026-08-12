@@ -206,10 +206,11 @@ router.post('/', requireAuth, requirePermission('can_manage_songs'), async (req,
   try {
     const { churchId } = req;
 
-    // Free tier gate — max 5 songs
-    const church = await pool.query('SELECT subscription_status FROM churches WHERE id = $1', [churchId]);
+    // Free tier gate — max 5 songs (free_access churches are exempt)
+    const church = await pool.query('SELECT subscription_status, free_access FROM churches WHERE id = $1', [churchId]);
     const status = church.rows[0]?.subscription_status;
-    if (!status || status === 'free') {
+    const freeAccess = church.rows[0]?.free_access;
+    if (!freeAccess && (!status || status === 'free')) {
       const count = await pool.query('SELECT COUNT(*) FROM songs WHERE church_id = $1', [churchId]);
       if (parseInt(count.rows[0].count) >= 5) {
         return res.status(403).json({ error: 'You have reached the 5 song limit on the free plan. Upgrade in Settings to add more.' });

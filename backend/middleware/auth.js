@@ -96,7 +96,10 @@ const requirePermission = (flag) => async (req, res, next) => {
     if (m.role === 'admin') return next();
 
     // Members need the specific flag
-    if (!m[flag]) return res.status(403).json({ error: 'Permission denied' });
+    if (!m[flag]) {
+      req.resume(); // drain any pending upload body so HTTP/2 returns the 403 instead of resetting the stream
+      return res.status(403).json({ error: 'You don\'t have permission to do that' });
+    }
 
     next();
   } catch (err) {
