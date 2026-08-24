@@ -108,8 +108,13 @@ router.get('/', requireAuth, requireMembership, async (req, res, next) => {
   try {
     const { churchId } = req;
     const { category, search } = req.query;
-    // tags param accepts comma-separated tag IDs: ?tags=1,2,3
-    const tagIds = req.query.tags ? req.query.tags.split(',').map(Number).filter(Boolean) : [];
+    // tags param accepts comma-separated tag UUIDs: ?tags=<uuid>,<uuid>
+    // Keep only well-formed UUIDs so a malformed param can't cause a Postgres
+    // uuid-cast error, and so filtering actually works (tag ids are UUIDs, not ints).
+    const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+    const tagIds = req.query.tags
+      ? req.query.tags.split(',').map(s => s.trim()).filter(s => UUID_RE.test(s))
+      : [];
 
     let query = `
       SELECT s.*,
