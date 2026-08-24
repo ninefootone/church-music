@@ -313,10 +313,16 @@ router.post('/', requireAuth, requirePermission('can_manage_songs'), async (req,
       [churchId, title, author, default_key, category, first_line, lyrics, ccli_number, youtube_url, notes, bible_references, suggested_arrangement, ccli_url, shareEnabled, copyright_info ?? null, copyright_link ?? null, discoverEnabled, discover_description ?? null, time_signature ?? null, tempo ? parseInt(tempo) : null, default_duration ? parseInt(default_duration) : null]
     );
 
-    // Handle tags — only global tags (church_id IS NULL) are permitted
-    if (tags && tags.length > 0) {
-      for (const tagId of tags) {
-        if (!tagId) continue;
+    // Handle tags — insert only tags that exist and are global or this church's own.
+    // Filtering here means one stale/foreign tag id can't FK-error the whole save,
+    // and enforces that a church can only attach global or its own tags.
+    if (Array.isArray(tags) && tags.length > 0) {
+      const { rows: validTags } = await pool.query(
+        `SELECT id FROM tags
+         WHERE id::text = ANY($1::text[]) AND (church_id IS NULL OR church_id = $2)`,
+        [tags, churchId]
+      );
+      for (const { id: tagId } of validTags) {
         await pool.query(
           'INSERT INTO song_tags (song_id, tag_id) VALUES ($1, $2) ON CONFLICT DO NOTHING',
           [song.rows[0].id, tagId]
@@ -401,11 +407,17 @@ router.put('/:id', requireAuth, requirePermission('can_manage_songs'), async (re
     );
     if (song.rows.length === 0) return res.status(404).json({ error: 'Song not found' });
 
-    // Replace tags — only global tags (church_id IS NULL) are permitted
+    // Replace tags — insert only tags that exist and are global or this church's own.
+    // Filtering here means one stale/foreign tag id can't FK-error the whole save,
+    // and enforces that a church can only attach global or its own tags.
     await pool.query('DELETE FROM song_tags WHERE song_id = $1', [req.params.id]);
-    if (tags && tags.length > 0) {
-      for (const tagId of tags) {
-        if (!tagId) continue;
+    if (Array.isArray(tags) && tags.length > 0) {
+      const { rows: validTags } = await pool.query(
+        `SELECT id FROM tags
+         WHERE id::text = ANY($1::text[]) AND (church_id IS NULL OR church_id = $2)`,
+        [tags, churchId]
+      );
+      for (const { id: tagId } of validTags) {
         await pool.query(
           'INSERT INTO song_tags (song_id, tag_id) VALUES ($1, $2) ON CONFLICT DO NOTHING',
           [req.params.id, tagId]
