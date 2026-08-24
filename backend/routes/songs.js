@@ -3,11 +3,18 @@ const router = express.Router();
 const pool = require('../db/pool');
 const { requireAuth, requireMembership, requireAdmin, requirePermission } = require('../middleware/auth');
 
-// GET /songs/tags/all — all global tags (church_id IS NULL = master-managed)
-router.get('/tags/all', requireAuth, async (req, res, next) => {
+// GET /songs/tags/all — global tags (master-managed) + this church's own tags.
+// `scope` is 'global' (church_id IS NULL) or 'church' (this church's own).
+router.get('/tags/all', requireAuth, requireMembership, async (req, res, next) => {
   try {
+    const { churchId } = req;
     const result = await pool.query(
-      `SELECT id, name FROM tags WHERE church_id IS NULL ORDER BY name ASC`
+      `SELECT id, name,
+              CASE WHEN church_id IS NULL THEN 'global' ELSE 'church' END AS scope
+       FROM tags
+       WHERE church_id IS NULL OR church_id = $1
+       ORDER BY (church_id IS NOT NULL), name ASC`,
+      [churchId]
     );
     res.json(result.rows);
   } catch (err) {
