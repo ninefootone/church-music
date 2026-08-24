@@ -4,7 +4,8 @@ import { useState, useEffect } from 'react'
 import api, { setAuthToken } from '@/lib/api'
 import { useAuth } from '@clerk/nextjs'
 import { useChurch } from '@/context/ChurchContext'
-import { X } from 'lucide-react'
+import { X, Trash2 } from 'lucide-react'
+import { ConfirmModal } from './ConfirmModal'
 
 interface Tag { id: string; name: string; scope: 'global' | 'church' }
 
@@ -20,6 +21,7 @@ export default function TagInput({ value, onChange }: TagInputProps) {
   const [newTag, setNewTag] = useState('')
   const [adding, setAdding] = useState(false)
   const [error, setError] = useState<string | null>(null)
+  const [pendingDelete, setPendingDelete] = useState<Tag | null>(null)
 
   useEffect(() => {
     getToken().then(token => {
@@ -54,6 +56,23 @@ export default function TagInput({ value, onChange }: TagInputProps) {
       setError(err?.response?.data?.error || 'Could not add tag')
     } finally {
       setAdding(false)
+    }
+  }
+
+  async function confirmDelete() {
+    if (!pendingDelete) return
+    const tag = pendingDelete
+    setError(null)
+    try {
+      const token = await getToken()
+      setAuthToken(token)
+      await api.delete(`/api/songs/tags/church/${tag.id}`)
+      setAllTags(prev => prev.filter(t => t.id !== tag.id))
+      if (value.includes(tag.id)) onChange(value.filter(v => v !== tag.id))
+    } catch (err: any) {
+      setError(err?.response?.data?.error || 'Could not delete tag')
+    } finally {
+      setPendingDelete(null)
     }
   }
 
@@ -94,7 +113,23 @@ export default function TagInput({ value, onChange }: TagInputProps) {
       {churchTags.length > 0 && (
         <div className="tag-group">
           <p className="tag-group-label">Your church&apos;s tags</p>
-          <div className="tag-picker">{churchTags.map(chip)}</div>
+          <div className="tag-picker">
+            {churchTags.map(tag => (
+              <span key={tag.id} className="tag-chip-wrap">
+                {chip(tag)}
+                {canManageSongs && (
+                  <button
+                    type="button"
+                    className="tag-chip-delete"
+                    title={`Delete "${tag.name}"`}
+                    onClick={() => setPendingDelete(tag)}
+                  >
+                    <Trash2 size={12} />
+                  </button>
+                )}
+              </span>
+            ))}
+          </div>
         </div>
       )}
 
@@ -125,6 +160,17 @@ export default function TagInput({ value, onChange }: TagInputProps) {
       )}
 
       {error && <p className="settings-hint settings-hint--error">{error}</p>}
+
+      {pendingDelete && (
+        <ConfirmModal
+          title="Delete tag"
+          message={`Delete "${pendingDelete.name}"? It will be removed from any songs in your church that use it. This can't be undone.`}
+          confirmLabel="Delete"
+          danger
+          onConfirm={confirmDelete}
+          onCancel={() => setPendingDelete(null)}
+        />
+      )}
     </div>
   )
 }

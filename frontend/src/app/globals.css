@@ -3067,6 +3067,29 @@ select.input {
   cursor: not-allowed;
 }
 
+.tag-chip-wrap {
+  display: inline-flex;
+  align-items: center;
+  gap: 2px;
+}
+
+.tag-chip-delete {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 2px;
+  border: none;
+  background: transparent;
+  color: var(--color-text-muted);
+  cursor: pointer;
+  border-radius: 4px;
+}
+
+.tag-chip-delete:hover {
+  color: var(--color-error, #d9534f);
+  background: var(--color-neutral-100);
+}
+
 .discover-subtitle {
   font-weight: 400;
   padding: var(--space-sm) 0 var(--space-md);

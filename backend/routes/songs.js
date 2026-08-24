@@ -103,6 +103,30 @@ router.post('/tags/church', requireAuth, requirePermission('can_manage_songs'), 
   }
 });
 
+// DELETE /songs/tags/church/:id — a church deletes one of its OWN tags.
+// Gated by can_manage_songs. The `church_id = $2` clause makes it impossible to
+// delete a global tag or another church's tag. song_tags rows cascade-delete, so
+// the tag is removed from any songs in this church that used it.
+router.delete('/tags/church/:id', requireAuth, requirePermission('can_manage_songs'), async (req, res, next) => {
+  try {
+    const { churchId } = req;
+    const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+    if (!UUID_RE.test(req.params.id)) {
+      return res.status(404).json({ error: 'Tag not found' });
+    }
+    const result = await pool.query(
+      `DELETE FROM tags WHERE id = $1 AND church_id = $2 RETURNING id`,
+      [req.params.id, churchId]
+    );
+    if (result.rowCount === 0) {
+      return res.status(404).json({ error: 'Tag not found, or not one your church can delete' });
+    }
+    res.json({ ok: true });
+  } catch (err) {
+    next(err);
+  }
+});
+
 // GET /songs — list church songs
 router.get('/', requireAuth, requireMembership, async (req, res, next) => {
   try {
