@@ -48,9 +48,57 @@ router.delete('/tags/:id', requireAuth, requireAdmin, async (req, res, next) => 
     if (req.churchId !== process.env.MASTER_CHURCH_ID) {
       return res.status(403).json({ error: 'Only the master library can manage global tags' });
     }
-    await pool.query(`DELETE FROM tags WHERE id = $1 AND church_id IS NULL`, [req.params.id]);
+        await pool.query(`DELETE FROM tags WHERE id = $1 AND church_id IS NULL`, [req.params.id]);
     res.json({ ok: true });
   } catch (err) {
+    next(err);
+  }
+});
+
+// POST /songs/tags/church — a church creates its own local tag.
+// Gated by can_manage_songs (admins auto-pass via requirePermission).
+// Normalises the name and dedups case-insensitively against BOTH global tags and
+// this church's own tags, reusing the existing tag instead of creating a variant.
+router.post('/tags/church', requireAuth, requirePermission('can_manage_songs'), async (req, res, next) => {
+  const { churchId } = req;
+  const name = (req.body.name || '')
+    .replace(/[‘’]/g, "'")   // curly single quotes/apostrophes → straight
+    .replace(/[“”]/g, '"')   // curly double quotes → straight
+    .replace(/\s+/g, ' ')              // collapse internal whitespace
+    .trim();
+  if (!name) return res.status(400).json({ error: 'Tag name is required' });
+  if (name.length > 40) return res.status(400).json({ error: 'Tag name is too long (max 40 characters)' });
+
+  try {
+    // Reuse an existing global or own-church tag if one matches (case-insensitive).
+    // Prefer a global match over a church one when both somehow exist.
+    const existing = await pool.query(
+      `SELECT id, name,
+              CASE WHEN church_id IS NULL THEN 'global' ELSE 'church' END AS scope
+       FROM tags
+       WHERE (church_id IS NULL OR church_id = $1)
+         AND lower(name) = lower($2)
+       ORDER BY (church_id IS NOT NULL)
+       LIMIT 1`,
+      [churchId, name]
+    );
+    if (existing.rows.length) return res.json(existing.rows[0]);
+
+    const result = await pool.query(
+      `INSERT INTO tags (church_id, name) VALUES ($1, $2) RETURNING id, name, 'church' AS scope`,
+      [churchId, name]
+    );
+    res.status(201).json(result.rows[0]);
+  } catch (err) {
+    if (err.code === '23505') {
+      // Lost a race to a concurrent insert — return the winning row.
+      const row = await pool.query(
+        `SELECT id, name, 'church' AS scope FROM tags WHERE church_id = $1 AND lower(name) = lower($2) LIMIT 1`,
+        [churchId, name]
+      );
+      if (row.rows.length) return res.json(row.rows[0]);
+      return res.status(409).json({ error: 'Tag already exists' });
+    }
     next(err);
   }
 });
