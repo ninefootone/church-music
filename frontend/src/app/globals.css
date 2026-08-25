@@ -3008,6 +3008,7 @@ select.input {
 .tag-picker .tag-chip--selected:hover {
   background: var(--color-brand-600);
   border-color: var(--color-brand-600);
+  color: #fff;
 }
 
 .tag-chip-x {
