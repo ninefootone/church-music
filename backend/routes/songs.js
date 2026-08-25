@@ -137,11 +137,59 @@ router.get('/categories/all', requireAuth, requireMembership, async (req, res, n
               CASE WHEN church_id IS NULL THEN 'global' ELSE 'church' END AS scope
        FROM categories
        WHERE church_id IS NULL OR church_id = $1
-       ORDER BY (church_id IS NOT NULL), label ASC`,
+      ORDER BY (church_id IS NOT NULL), label ASC`,
       [churchId]
     );
     res.json(result.rows);
   } catch (err) {
+    next(err);
+  }
+});
+
+// POST /songs/categories/church — a church creates its own category.
+// Gated by can_manage_songs. `value` (stored on songs) is the lowercased label, so
+// UNIQUE(church_id, value) enforces case-insensitive uniqueness. Dedups against
+// global + own categories, reusing a match instead of creating a variant.
+router.post('/categories/church', requireAuth, requirePermission('can_manage_songs'), async (req, res, next) => {
+  const { churchId } = req;
+  const label = (req.body.label || '')
+    .replace(/[‘’]/g, "'")   // curly single quotes/apostrophes → straight
+    .replace(/[“”]/g, '"')   // curly double quotes → straight
+    .replace(/\s+/g, ' ')              // collapse internal whitespace
+    .trim();
+  if (!label) return res.status(400).json({ error: 'Category name is required' });
+  if (label.length > 40) return res.status(400).json({ error: 'Category name is too long (max 40 characters)' });
+  const value = label.toLowerCase();
+
+  try {
+    // Reuse an existing global or own-church category matching by value (case-insensitive).
+    const existing = await pool.query(
+      `SELECT id, value, label,
+              CASE WHEN church_id IS NULL THEN 'global' ELSE 'church' END AS scope
+       FROM categories
+       WHERE (church_id IS NULL OR church_id = $1) AND value = $2
+       ORDER BY (church_id IS NOT NULL)
+       LIMIT 1`,
+      [churchId, value]
+    );
+    if (existing.rows.length) return res.json(existing.rows[0]);
+
+    const result = await pool.query(
+      `INSERT INTO categories (church_id, value, label) VALUES ($1, $2, $3)
+       RETURNING id, value, label, 'church' AS scope`,
+      [churchId, value, label]
+    );
+    res.status(201).json(result.rows[0]);
+  } catch (err) {
+    if (err.code === '23505') {
+      // Lost a race to a concurrent insert — return the winning row.
+      const row = await pool.query(
+        `SELECT id, value, label, 'church' AS scope FROM categories WHERE church_id = $1 AND value = $2 LIMIT 1`,
+        [churchId, value]
+      );
+      if (row.rows.length) return res.json(row.rows[0]);
+      return res.status(409).json({ error: 'Category already exists' });
+    }
     next(err);
   }
 });
