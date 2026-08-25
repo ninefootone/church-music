@@ -3,7 +3,7 @@
 import { useState, useEffect } from 'react'
 import Link from 'next/link'
 import { format, parseISO } from 'date-fns'
-import { Search, Plus, ChevronRight, ArrowUpDown, X } from 'lucide-react'
+import { Search, Plus, ChevronRight, ArrowUpDown, X, Tag } from 'lucide-react'
 import { CategoryBadge, KeyBadge, RetiredBadge, DraftBadge } from '@/components/ui/badges'
 import { CATEGORIES, Category, Song } from '@/types'
 import { useChurch } from '@/context/ChurchContext'
@@ -19,12 +19,20 @@ export default function SongsPage() {
   const [showDraftOnly, setShowDraftOnly] = useState(false)
   const [sort, setSort] = useState('title')
   const [showSortMenu, setShowSortMenu] = useState(false)
+  const [allTags, setAllTags] = useState<{ id: string; name: string; scope: 'global' | 'church' }[]>([])
+  const [selectedTags, setSelectedTags] = useState<string[]>([])
+  const [showTagFilter, setShowTagFilter] = useState(false)
   const isMasterLibrary = church?.id === process.env.NEXT_PUBLIC_MASTER_CHURCH_ID
 
   useEffect(() => {
     if (!church) return
     fetchSongs()
-  }, [church, search, activeCategory, showRetired, showDraftOnly, sort])
+  }, [church, search, activeCategory, selectedTags, showRetired, showDraftOnly, sort])
+
+  useEffect(() => {
+    if (!church) return
+    api.get('/api/songs/tags/all').then(res => setAllTags(res.data)).catch(() => {})
+  }, [church])
 
   const fetchSongs = async () => {
     try {
@@ -32,6 +40,7 @@ export default function SongsPage() {
       const params: Record<string, string> = {}
       if (search) params.search = search
       if (activeCategory !== 'all') params.category = activeCategory
+      if (selectedTags.length > 0) params.tags = selectedTags.join(',')
       if (showRetired) params.include_retired = 'true'
       if (showDraftOnly) params.draft_only = 'true'
       if (sort !== 'title') params.sort = sort
@@ -131,6 +140,42 @@ export default function SongsPage() {
             {cat.label}
           </button>
         ))}
+      </div>
+
+      <div className="songs-tagfilter">
+        <button
+          className={`btn btn-secondary songs-tagfilter-toggle${selectedTags.length ? ' is-active' : ''}`}
+          onClick={() => setShowTagFilter(v => !v)}
+        >
+          <Tag size={15} /> Tags{selectedTags.length > 0 ? ` (${selectedTags.length})` : ''}
+        </button>
+        {selectedTags.length > 0 && (
+          <button className="btn-text" onClick={() => setSelectedTags([])}>Clear tags</button>
+        )}
+        {showTagFilter && (
+          <div className="songs-tagfilter-panel">
+            {allTags.length === 0 ? (
+              <p className="settings-hint">No tags yet.</p>
+            ) : (
+              <div className="tag-picker">
+                {allTags.map(tag => {
+                  const sel = selectedTags.includes(tag.id)
+                  return (
+                    <button
+                      key={tag.id}
+                      type="button"
+                      className={`tag-chip ${sel ? 'tag-chip--selected' : ''}`}
+                      onClick={() => setSelectedTags(prev => sel ? prev.filter(t => t !== tag.id) : [...prev, tag.id])}
+                    >
+                      {tag.name}
+                      {sel && <X size={11} className="tag-chip-x" />}
+                    </button>
+                  )
+                })}
+              </div>
+            )}
+          </div>
+        )}
       </div>
 
       <div className="songs-table">

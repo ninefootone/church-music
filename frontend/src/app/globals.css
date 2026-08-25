@@ -3090,6 +3090,28 @@ select.input {
   background: var(--color-neutral-100);
 }
 
+.songs-tagfilter {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+  margin: 0 0 16px;
+}
+
+.songs-tagfilter-toggle {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.songs-tagfilter-panel {
+  flex-basis: 100%;
+  padding: 12px;
+  border: 1px solid var(--color-border);
+  border-radius: 10px;
+  background: var(--color-surface);
+}
+
 .discover-subtitle {
   font-weight: 400;
   padding: var(--space-sm) 0 var(--space-md);
