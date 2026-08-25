@@ -6,7 +6,8 @@ import { useParams, useRouter } from 'next/navigation'
 import { useAuth } from '@clerk/nextjs'
 import { useChurch } from '@/context/ChurchContext'
 import { ArrowLeft } from 'lucide-react'
-import { CATEGORIES, Category, Song } from '@/types'
+import { Category, Song } from '@/types'
+import CategorySelect from '@/components/ui/CategorySelect'
 import { Plus, Trash2 } from 'lucide-react'
 import CcliAutocomplete from '@/components/CcliAutocomplete'
 import api, { setAuthToken } from '@/lib/api'
@@ -189,10 +190,7 @@ export default function EditSongPage() {
             </div>
             <div>
               <label className="label">Category *</label>
-              <select className="input" value={form.category} onChange={e => setForm(f => ({ ...f, category: e.target.value as Category }))}>
-                <option value="">Select category…</option>
-                {CATEGORIES.map(c => <option key={c.value} value={c.value}>{c.label}</option>)}
-              </select>
+              <CategorySelect value={form.category} onChange={val => setForm(f => ({ ...f, category: val as Category }))} />
             </div>
           </div>
           <div className="form-field"><label className="label">First line</label><input className="input" value={form.first_line} onChange={e => setForm(f => ({ ...f, first_line: e.target.value }))} /></div>

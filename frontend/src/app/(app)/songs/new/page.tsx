@@ -8,7 +8,8 @@ import TagInput from '@/components/ui/TagInput'
 import { useAuth } from '@clerk/nextjs'
 import { useChurch } from '@/context/ChurchContext'
 import { ArrowLeft, Plus, Trash2 } from 'lucide-react'
-import { CATEGORIES, Category } from '@/types'
+import { Category } from '@/types'
+import CategorySelect from '@/components/ui/CategorySelect'
 import api, { setAuthToken } from '@/lib/api'
 import { LyricsEditor } from '@/components/ui/LyricsEditor'
 import { ArrangementBuilder } from '@/components/ui/ArrangementBuilder'
@@ -196,10 +197,7 @@ export default function NewSongPage() {
             </div>
             <div>
               <label className="label">Category *</label>
-              <select className="input" value={form.category} onChange={e => setForm(f => ({ ...f, category: e.target.value as Category }))}>
-                <option value="">Select category…</option>
-                {CATEGORIES.map(c => <option key={c.value} value={c.value}>{c.label}</option>)}
-              </select>
+              <CategorySelect value={form.category} onChange={val => setForm(f => ({ ...f, category: val as Category }))} />
             </div>
           </div>
 
