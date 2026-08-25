@@ -68,6 +68,11 @@ export default function SettingsPage() {
   const [itemTypesSaved, setItemTypesSaved] = useState(false)
   const [itemTypesError, setItemTypesError] = useState('')
   const itemTypeDragIndex = useRef<number | null>(null)
+  const [categories, setCategories] = useState<{ id: string; value: string; label: string; scope: 'global' | 'church' }[]>([])
+  const [categoriesLoaded, setCategoriesLoaded] = useState(false)
+  const [newCategoryName, setNewCategoryName] = useState('')
+  const [categorySaving, setCategorySaving] = useState(false)
+  const [categoryError, setCategoryError] = useState('')
 
   useEffect(() => {
     if (church) {
@@ -83,6 +88,12 @@ export default function SettingsPage() {
         api.get(`/api/churches/${church.id}/plan-item-types`).then(r => {
           setItemTypes(r.data.map((t: { id: string; name: string }) => ({ id: t.id, name: t.name })))
           setItemTypesLoaded(true)
+        }).catch(() => {})
+      }
+      if (!categoriesLoaded) {
+        api.get('/api/songs/categories/all').then(r => {
+          setCategories(r.data)
+          setCategoriesLoaded(true)
         }).catch(() => {})
       }
       if (church.id === process.env.NEXT_PUBLIC_MASTER_CHURCH_ID) {
@@ -287,6 +298,23 @@ export default function SettingsPage() {
   }
 
   // Plan item types handlers
+  async function handleAddCategory() {
+    const label = newCategoryName.trim()
+    if (!label || categorySaving) return
+    setCategorySaving(true)
+    setCategoryError('')
+    try {
+      const client = await getAuthenticatedApi()
+      const { data } = await client.post('/api/songs/categories/church', { label })
+      setCategories(prev => prev.some(c => c.id === data.id) ? prev : [...prev, data])
+      setNewCategoryName('')
+    } catch (err: any) {
+      setCategoryError(err?.response?.data?.error || 'Could not add category.')
+    } finally {
+      setCategorySaving(false)
+    }
+  }
+
   function handleAddItemType() {
     const trimmed = newItemTypeName.trim()
     if (!trimmed) return
@@ -624,6 +652,44 @@ export default function SettingsPage() {
         <div className="settings-footer-row">
           <button type="button" onClick={handleSaveItemTypes} className="btn btn-primary" disabled={itemTypesSaving}>
             {itemTypesSaving ? 'Saving…' : itemTypesSaved ? <><Check size={15} className="icon-mr" />Saved</> : 'Save item types'}
+          </button>
+        </div>
+      </div>
+
+      {/* Categories */}
+      <div className="settings-card settings-card--spaced">
+        <h2 className="settings-section-heading settings-section-heading--tight">Categories</h2>
+        <p className="settings-section-desc">
+          Every song has one category. Praise, Assurance, Response and Other are provided for all churches; add your own below to suit how your church organises its songs.
+        </p>
+
+        {categoryError && (
+          <div className="settings-error">
+            {categoryError}
+          </div>
+        )}
+
+        <div className="role-chip-list">
+          {categories.filter(c => c.scope === 'church').length === 0 && (
+            <p className="form-empty-note">No custom categories yet.</p>
+          )}
+          {categories.filter(c => c.scope === 'church').map(c => (
+            <div key={c.id} className="role-chip">{c.label}</div>
+          ))}
+        </div>
+
+        <div className="role-add-row">
+          <input
+            type="text"
+            placeholder="New category, e.g. Youth"
+            value={newCategoryName}
+            maxLength={40}
+            onChange={e => setNewCategoryName(e.target.value)}
+            onKeyDown={e => { if (e.key === 'Enter') { e.preventDefault(); handleAddCategory() } }}
+            className="role-input"
+          />
+          <button type="button" onClick={handleAddCategory} className="btn btn-ghost btn-icon-label" disabled={categorySaving}>
+            <Plus size={15} />{categorySaving ? 'Adding…' : 'Add'}
           </button>
         </div>
       </div>
