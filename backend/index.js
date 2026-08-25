@@ -117,6 +117,14 @@ const runMigration = async () => {
         PRIMARY KEY (song_id, tag_id)
       );
 
+      CREATE TABLE IF NOT EXISTS categories (
+        id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+        church_id UUID REFERENCES churches(id) ON DELETE CASCADE,
+        value TEXT NOT NULL,
+        label TEXT NOT NULL,
+        UNIQUE (church_id, value)
+      );
+
       CREATE TABLE IF NOT EXISTS song_files (
         id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
         song_id UUID NOT NULL REFERENCES songs(id) ON DELETE CASCADE,
