@@ -127,6 +127,25 @@ router.delete('/tags/church/:id', requireAuth, requirePermission('can_manage_son
   }
 });
 
+// GET /songs/categories/all — global categories (master-managed) + this church's own.
+// `scope` is 'global' (church_id IS NULL) or 'church' (this church's own).
+router.get('/categories/all', requireAuth, requireMembership, async (req, res, next) => {
+  try {
+    const { churchId } = req;
+    const result = await pool.query(
+      `SELECT id, value, label,
+              CASE WHEN church_id IS NULL THEN 'global' ELSE 'church' END AS scope
+       FROM categories
+       WHERE church_id IS NULL OR church_id = $1
+       ORDER BY (church_id IS NOT NULL), label ASC`,
+      [churchId]
+    );
+    res.json(result.rows);
+  } catch (err) {
+    next(err);
+  }
+});
+
 // GET /songs — list church songs
 router.get('/', requireAuth, requireMembership, async (req, res, next) => {
   try {
