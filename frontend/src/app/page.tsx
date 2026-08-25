@@ -34,7 +34,7 @@ export default async function HomePage() {
               <strong>Free to try</strong> &mdash; no payment required. Test with up to 5 songs and 1 plan.
             </p>
             <p className="landing-pricing-text">
-              Then just <strong>£5&thinsp;/&thinsp;month</strong> or <strong>£50&thinsp;/&thinsp;year</strong> per church.
+              Then just <strong>£10&thinsp;/&thinsp;month</strong> or <strong>£100&thinsp;/&thinsp;year</strong> per church.
             </p>
           </section>
           <div className="landing-hero-actions">

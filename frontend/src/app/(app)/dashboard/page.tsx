@@ -106,10 +106,10 @@ export default function DashboardPage() {
             </div>
             <div className="dash-upgrade-actions">
               <button onClick={() => handleUpgrade(process.env.NEXT_PUBLIC_STRIPE_PRICE_MONTHLY!)} className="btn btn-ghost">
-                £5 / month
+                £10 / month
               </button>
               <button onClick={() => handleUpgrade(process.env.NEXT_PUBLIC_STRIPE_PRICE_ANNUAL!)} className="btn btn-primary">
-                £50 / year
+                £100 / year
               </button>
             </div>
           </div>

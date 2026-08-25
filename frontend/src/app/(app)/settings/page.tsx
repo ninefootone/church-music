@@ -455,8 +455,8 @@ export default function SettingsPage() {
             <div>
               <p className="settings-body-text settings-body-text--spaced">You're on the <strong>free plan</strong> — limited to 5 songs and 1 plan.</p>
               <div className="btn-group">
-                <button onClick={() => handleUpgrade(process.env.NEXT_PUBLIC_STRIPE_PRICE_MONTHLY!)} className="btn btn-ghost">£5 / month</button>
-                <button onClick={() => handleUpgrade(process.env.NEXT_PUBLIC_STRIPE_PRICE_ANNUAL!)} className="btn btn-primary">£50 / year</button>
+                <button onClick={() => handleUpgrade(process.env.NEXT_PUBLIC_STRIPE_PRICE_MONTHLY!)} className="btn btn-ghost">£10 / month</button>
+                <button onClick={() => handleUpgrade(process.env.NEXT_PUBLIC_STRIPE_PRICE_ANNUAL!)} className="btn btn-primary">£100 / year</button>
               </div>
             </div>
           ) : (
