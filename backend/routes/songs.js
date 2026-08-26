@@ -187,10 +187,70 @@ router.post('/categories/church', requireAuth, requirePermission('can_manage_son
         `SELECT id, value, label, 'church' AS scope FROM categories WHERE church_id = $1 AND value = $2 LIMIT 1`,
         [churchId, value]
       );
-      if (row.rows.length) return res.json(row.rows[0]);
+            if (row.rows.length) return res.json(row.rows[0]);
       return res.status(409).json({ error: 'Category already exists' });
     }
     next(err);
+  }
+});
+
+// GET /songs/categories/usage — global + church categories with THIS church's song
+// count for each. Used by the Settings block so delete can warn how many songs a
+// category is on.
+router.get('/categories/usage', requireAuth, requireMembership, async (req, res, next) => {
+  try {
+    const { churchId } = req;
+    const result = await pool.query(
+      `SELECT c.id, c.value, c.label,
+              CASE WHEN c.church_id IS NULL THEN 'global' ELSE 'church' END AS scope,
+              COUNT(s.id)::int AS count
+       FROM categories c
+       LEFT JOIN songs s ON s.category = c.value AND s.church_id = $1
+       WHERE c.church_id IS NULL OR c.church_id = $1
+       GROUP BY c.id
+       ORDER BY (c.church_id IS NOT NULL), c.label ASC`,
+      [churchId]
+    );
+    res.json(result.rows);
+  } catch (err) {
+    next(err);
+  }
+});
+
+// DELETE /songs/categories/church/:id — delete a church's OWN category.
+// Gated by can_manage_songs. `church_id = $2` makes it impossible to delete a global
+// or another church's category. Songs using it are uncategorised (category → NULL),
+// since there is no FK cascade on the text value.
+router.delete('/categories/church/:id', requireAuth, requirePermission('can_manage_songs'), async (req, res, next) => {
+  const { churchId } = req;
+  const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+  if (!UUID_RE.test(req.params.id)) {
+    return res.status(404).json({ error: 'Category not found' });
+  }
+  const client = await pool.connect();
+  try {
+    await client.query('BEGIN');
+    const cat = await client.query(
+      `SELECT value FROM categories WHERE id = $1 AND church_id = $2`,
+      [req.params.id, churchId]
+    );
+    if (cat.rows.length === 0) {
+      await client.query('ROLLBACK');
+      return res.status(404).json({ error: 'Category not found, or not one your church can delete' });
+    }
+    const { value } = cat.rows[0];
+    const upd = await client.query(
+      `UPDATE songs SET category = NULL WHERE church_id = $1 AND category = $2`,
+      [churchId, value]
+    );
+    await client.query(`DELETE FROM categories WHERE id = $1 AND church_id = $2`, [req.params.id, churchId]);
+    await client.query('COMMIT');
+    res.json({ ok: true, uncategorised: upd.rowCount });
+  } catch (err) {
+    await client.query('ROLLBACK');
+    next(err);
+  } finally {
+    client.release();
   }
 });
 
