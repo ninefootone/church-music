@@ -14,6 +14,7 @@ import { PlanMusicianModal } from '@/components/ui/PlanMusicianModal'
 import { PlanEmailModal } from '@/components/ui/PlanEmailModal'
 import type { PlanMusician } from '@/types'
 import { ArrangementBuilder } from '@/components/ui/ArrangementBuilder'
+import { LyricsDisplay } from '@/components/ui/LyricsDisplay'
 
 interface SongFile {
   id: string
@@ -44,6 +45,7 @@ function SongItem({ item, index, planId, canAnnotate, showTimings, showDurations
   const [editingArrangement, setEditingArrangement] = useState(false)
   const [customArrangement, setCustomArrangement] = useState(item.custom_arrangement || '')
   const [savingArrangement, setSavingArrangement] = useState(false)
+  const [showLyrics, setShowLyrics] = useState(false)
 
   const handleSaveArrangement = async () => {
     setSavingArrangement(true)
@@ -241,6 +243,21 @@ function SongItem({ item, index, planId, canAnnotate, showTimings, showDurations
             <p className="item-detail-xs">
               CCLI {item.song_ccli_number}
             </p>
+          )}
+          {item.song_lyrics && (
+            <div className="song-section" onClick={e => e.stopPropagation()}>
+              <button
+                className="btn-inline-link"
+                onClick={() => setShowLyrics(v => !v)}
+              >
+                {showLyrics ? 'Hide lyrics' : 'Show lyrics'}
+              </button>
+              {showLyrics && (
+                <div className="lyrics-wrap" style={{ marginTop: 8 }}>
+                  <LyricsDisplay lyrics={item.song_lyrics} />
+                </div>
+              )}
+            </div>
           )}
         </div>
       )}

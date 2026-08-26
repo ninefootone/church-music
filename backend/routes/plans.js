@@ -104,6 +104,7 @@ router.get('/:id', requireAuth, requireMembership, async function(req, res, next
         s.default_key AS song_default_key, s.category AS song_category,
         s.ccli_number AS song_ccli_number,
         s.suggested_arrangement AS song_suggested_arrangement,
+        s.lyrics AS song_lyrics,
         s.default_duration AS song_default_duration
        FROM plan_items si
        LEFT JOIN songs s ON s.id = si.song_id
