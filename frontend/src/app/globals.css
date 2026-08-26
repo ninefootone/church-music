@@ -2760,6 +2760,9 @@ select.input {
 .settings-error            { background: #fdf0f0; border: 1px solid #f5c0c0; border-radius: 10px; padding: 12px 16px; margin-bottom: 20px; font-size: 14px; color: #9a3a3a; }
 .settings-card             { background: var(--color-surface); border: 1px solid var(--color-border); border-radius: 14px; padding: 24px; }
 .settings-card--spaced     { margin-bottom: 20px; }
+/* Inside the tabbed settings panel, sections sit flush — the panel provides the frame */
+.help-content .settings-card { background: none; border: none; border-radius: 0; padding: 0; }
+.help-content .settings-card--spaced { margin-bottom: 0; }
 .settings-section-heading        { font-size: 16px; font-weight: 600; color: var(--color-text-primary); margin-bottom: 20px; }
 .settings-section-heading--tight { margin-bottom: 4px; }
 .settings-section-desc     { font-size: 13px; color: var(--color-text-muted); margin-bottom: 16px; }
