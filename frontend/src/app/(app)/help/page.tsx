@@ -315,6 +315,9 @@ export default function HelpPage() {
               <p className="help-content-body">
                 To remove a song from a plan, open the plan and use the x button next to the song. This only removes it from the plan — the song stays in your library.
               </p>
+              <p className="help-content-body">
+                Click a song in the running order to expand it. This reveals its sheet music, arrangement and CCLI details. If the song has lyrics saved in the library, a <strong>Show lyrics</strong> button appears here too — handy for checking the words while planning, without opening the song separately.
+              </p>
             </div>
           ),
         },
