@@ -171,6 +171,7 @@ export function ArrangementBuilder({ value, onChange }: Props) {
 
   return (
     <div className="arrangement-builder">
+      <p className="arrangement-hint">Tap to add — these build the arrangement below.</p>
       <div className="arrangement-presets">
         {PRESET_ELEMENTS.map(el => (
           <button
