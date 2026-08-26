@@ -2,18 +2,9 @@ export type Role = 'admin' | 'member'
 export type TemplateStatus = 'pending' | 'approved' | 'rejected'
 export type FileType = 'chords' | 'lead' | 'vocal' | 'full_score' | 'chordpro' | 'other'
 
-export type Category =
-  | 'praise'
-  | 'assurance'
-  | 'response'
-  | 'other'
-
-export const CATEGORIES: { value: Category; label: string }[] = [
-  { value: 'praise',     label: 'Praise' },
-  { value: 'assurance',  label: 'Assurance' },
-  { value: 'response',   label: 'Response' },
-  { value: 'other',      label: 'Other' },
-]
+// A song's category value. The valid categories live in the database
+// (the `categories` table — global + per-church), not hardcoded here.
+export type Category = string
 
 export interface Church {
   id: string
