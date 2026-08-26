@@ -50,6 +50,11 @@ export default function SettingsPage() {
   const [newTagName, setNewTagName] = useState('')
   const [tagsSaving, setTagsSaving] = useState(false)
   const [tagsError, setTagsError] = useState('')
+  // Church's own tags (all admins) — view + delete
+  const [churchTags, setChurchTags] = useState<{ id: string; name: string; scope: 'global' | 'church'; count: number }[]>([])
+  const [churchTagsLoaded, setChurchTagsLoaded] = useState(false)
+  const [churchTagsError, setChurchTagsError] = useState('')
+  const [pendingDeleteTag, setPendingDeleteTag] = useState<{ id: string; name: string; count: number } | null>(null)
 
   // Roles
   const [roles, setRoles] = useState<RoleItem[]>([])
@@ -96,6 +101,12 @@ export default function SettingsPage() {
         api.get('/api/songs/categories/usage').then(r => {
           setCategories(r.data)
           setCategoriesLoaded(true)
+        }).catch(() => {})
+      }
+      if (!churchTagsLoaded) {
+        api.get('/api/songs/tags/usage').then(r => {
+          setChurchTags(r.data)
+          setChurchTagsLoaded(true)
         }).catch(() => {})
       }
       if (church.id === process.env.NEXT_PUBLIC_MASTER_CHURCH_ID) {
@@ -416,6 +427,21 @@ export default function SettingsPage() {
     }
   }
 
+  async function handleDeleteChurchTag() {
+    if (!pendingDeleteTag) return
+    const tag = pendingDeleteTag
+    setChurchTagsError('')
+    try {
+      const client = await getAuthenticatedApi()
+      await client.delete(`/api/songs/tags/church/${tag.id}`)
+      setChurchTags(prev => prev.filter(t => t.id !== tag.id))
+    } catch (err: any) {
+      setChurchTagsError(err?.response?.data?.error || 'Could not delete tag.')
+    } finally {
+      setPendingDeleteTag(null)
+    }
+  }
+
   const [activeTab, setActiveTab] = useState('church')
   const TABS: { id: string; label: string; masterOnly?: boolean }[] = [
     { id: 'church', label: 'Church' },
@@ -425,7 +451,7 @@ export default function SettingsPage() {
     { id: 'roles', label: 'Roles' },
     { id: 'itemtypes', label: 'Item types' },
     { id: 'categories', label: 'Categories' },
-    { id: 'tags', label: 'Tags', masterOnly: true },
+    { id: 'tags', label: 'Tags' },
   ]
 
   if (!isAdmin) {
@@ -775,8 +801,54 @@ export default function SettingsPage() {
       </div>
       )}
 
-      {/* Song tags — master library only */}
-      {activeTab === 'tags' && isMasterLibrary && (
+      {/* Tags */}
+      {activeTab === 'tags' && (
+      <>
+        <div className="settings-card settings-card--spaced">
+          <h2 className="settings-section-heading settings-section-heading--tight">Your church&apos;s tags</h2>
+          <p className="settings-section-desc">
+            Tags your church has added. Add new ones while editing a song; here you can review them and remove any you no longer need. The number shows how many songs use each.
+          </p>
+
+          {churchTagsError && (
+            <div className="settings-error">{churchTagsError}</div>
+          )}
+
+          <div className="role-chip-list">
+            {churchTags.filter(t => t.scope === 'church').length === 0 && (
+              <p className="form-empty-note">No custom tags yet — add them while editing a song.</p>
+            )}
+            {churchTags.filter(t => t.scope === 'church').map(t => (
+              <div key={t.id} className="role-chip">
+                {t.name} · {t.count}
+                <button
+                  type="button"
+                  onClick={() => setPendingDeleteTag({ id: t.id, name: t.name, count: t.count })}
+                  className="btn-icon-remove"
+                >
+                  <X size={13} />
+                </button>
+              </div>
+            ))}
+          </div>
+
+          {pendingDeleteTag && (
+            <ConfirmModal
+              title="Delete tag"
+              message={
+                pendingDeleteTag.count > 0
+                  ? `Delete "${pendingDeleteTag.name}"? It will be removed from ${pendingDeleteTag.count} song${pendingDeleteTag.count === 1 ? '' : 's'}. This can't be undone.`
+                  : `Delete "${pendingDeleteTag.name}"? This can't be undone.`
+              }
+              confirmLabel="Delete"
+              danger
+              onConfirm={handleDeleteChurchTag}
+              onCancel={() => setPendingDeleteTag(null)}
+            />
+          )}
+        </div>
+
+        {isMasterLibrary && (
         <div className="settings-card settings-card--spaced">
           <h2 className="settings-section-heading settings-section-heading--tight">Song tags</h2>
           <p className="settings-section-desc">
@@ -817,6 +889,8 @@ export default function SettingsPage() {
             </button>
           </div>
         </div>
+        )}
+      </>
       )}
 
         </div>
