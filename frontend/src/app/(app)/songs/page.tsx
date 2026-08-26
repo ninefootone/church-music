@@ -5,7 +5,7 @@ import Link from 'next/link'
 import { format, parseISO } from 'date-fns'
 import { Search, Plus, ChevronRight, ArrowUpDown, X, Tag } from 'lucide-react'
 import { CategoryBadge, KeyBadge, RetiredBadge, DraftBadge } from '@/components/ui/badges'
-import { CATEGORIES, Category, Song } from '@/types'
+import { Song } from '@/types'
 import { useChurch } from '@/context/ChurchContext'
 import api from '@/lib/api'
 
@@ -14,7 +14,7 @@ export default function SongsPage() {
   const [songs, setSongs] = useState<Song[]>([])
   const [loading, setLoading] = useState(true)
   const [search, setSearch] = useState('')
-  const [activeCategory, setActiveCategory] = useState<Category | 'all'>('all')
+  const [activeCategory, setActiveCategory] = useState<string>('all')
   const [showRetired, setShowRetired] = useState(false)
   const [showDraftOnly, setShowDraftOnly] = useState(false)
   const [sort, setSort] = useState('title')
@@ -22,6 +22,7 @@ export default function SongsPage() {
   const [allTags, setAllTags] = useState<{ id: string; name: string; scope: 'global' | 'church' }[]>([])
   const [selectedTags, setSelectedTags] = useState<string[]>([])
   const [showTagFilter, setShowTagFilter] = useState(false)
+  const [allCategories, setAllCategories] = useState<{ id: string; value: string; label: string; scope: 'global' | 'church' }[]>([])
   const isMasterLibrary = church?.id === process.env.NEXT_PUBLIC_MASTER_CHURCH_ID
 
   useEffect(() => {
@@ -32,6 +33,7 @@ export default function SongsPage() {
   useEffect(() => {
     if (!church) return
     api.get('/api/songs/tags/all').then(res => setAllTags(res.data)).catch(() => {})
+    api.get('/api/songs/categories/all').then(res => setAllCategories(res.data)).catch(() => {})
   }, [church])
 
   const fetchSongs = async () => {
@@ -135,8 +137,8 @@ export default function SongsPage() {
 
       <div className="songs-filter-row">
         <button className={`filter-chip ${activeCategory === 'all' ? 'is-active' : ''}`} onClick={() => setActiveCategory('all')}>All</button>
-        {CATEGORIES.map(cat => (
-          <button key={cat.value} className={`filter-chip ${activeCategory === cat.value ? 'is-active' : ''}`} onClick={() => setActiveCategory(cat.value)}>
+        {allCategories.map(cat => (
+          <button key={cat.id} className={`filter-chip ${activeCategory === cat.value ? 'is-active' : ''}`} onClick={() => setActiveCategory(cat.value)}>
             {cat.label}
           </button>
         ))}
