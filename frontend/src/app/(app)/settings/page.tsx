@@ -416,6 +416,18 @@ export default function SettingsPage() {
     }
   }
 
+  const [activeTab, setActiveTab] = useState('church')
+  const TABS: { id: string; label: string; masterOnly?: boolean }[] = [
+    { id: 'church', label: 'Church' },
+    { id: 'billing', label: 'Billing' },
+    { id: 'invite', label: 'Invite' },
+    { id: 'notifications', label: 'Notifications' },
+    { id: 'roles', label: 'Roles' },
+    { id: 'itemtypes', label: 'Item types' },
+    { id: 'categories', label: 'Categories' },
+    { id: 'tags', label: 'Tags', masterOnly: true },
+  ]
+
   if (!isAdmin) {
     return (
       <div className="settings-restricted">
@@ -437,7 +449,27 @@ export default function SettingsPage() {
         </div>
       )}
 
+      <div className="help-mobile-select-wrap">
+        <select className="input help-mobile-select" value={activeTab} onChange={e => setActiveTab(e.target.value)}>
+          {TABS.filter(t => !t.masterOnly || isMasterLibrary).map(t => (
+            <option key={t.id} value={t.id}>{t.label}</option>
+          ))}
+        </select>
+      </div>
+
+      <div className="help-layout">
+        <nav className="help-sidebar">
+          {TABS.filter(t => !t.masterOnly || isMasterLibrary).map(t => (
+            <button key={t.id} type="button" className={`help-sidebar-item${activeTab === t.id ? ' help-sidebar-item--active' : ''}`} onClick={() => setActiveTab(t.id)}>
+              {t.label}
+            </button>
+          ))}
+        </nav>
+
+        <div className="help-content">
+
       {/* Church details */}
+      {activeTab === 'church' && (
       <form onSubmit={handleSave}>
         <div className="settings-card settings-card--spaced">
           <h2 className="settings-section-heading">Church details</h2>
@@ -488,11 +520,10 @@ export default function SettingsPage() {
           </div>
         </div>
       </form>
+      )}
 
-      {/* Settings grid — billing, invite, mailing */}
-      <div className="settings-grid">
-
-        {/* Billing */}
+      {/* Billing */}
+      {activeTab === 'billing' && (
         <div className="settings-card">
           <h2 className="settings-section-heading settings-section-heading--tight">Billing</h2>
           <p className="settings-section-desc">Manage your Song Stack subscription.</p>
@@ -513,8 +544,10 @@ export default function SettingsPage() {
             </div>
           )}
         </div>
+      )}
 
-        {/* Invite code */}
+      {/* Invite code */}
+      {activeTab === 'invite' && (
         <div className="settings-card">
           <h2 className="settings-section-heading settings-section-heading--tight">Invite code</h2>
           <p className="settings-section-desc">Share this code with people you want to join your church.</p>
@@ -532,8 +565,10 @@ export default function SettingsPage() {
             </div>
           </div>
         </div>
+      )}
 
-        {/* Mailing preferences */}
+      {/* Email updates */}
+      {activeTab === 'notifications' && (
         <div className="settings-grid-mailing settings-card">
           <h2 className="settings-section-heading settings-section-heading--tight">Email updates</h2>
           <p className="settings-section-desc">Occasional news and updates about Song Stack. No spam, unsubscribe any time.</p>
@@ -552,10 +587,10 @@ export default function SettingsPage() {
             </div>
           )}
         </div>
-
-      </div>
+      )}
 
       {/* Musician roles */}
+      {activeTab === 'roles' && (
       <div className="settings-card settings-card--spaced">
         <h2 className="settings-section-heading settings-section-heading--tight">Musician roles</h2>
         <p className="settings-section-desc">
@@ -613,8 +648,10 @@ export default function SettingsPage() {
           </button>
         </div>
       </div>
+      )}
 
       {/* Plan item types */}
+      {activeTab === 'itemtypes' && (
       <div className="settings-card settings-card--spaced">
         <h2 className="settings-section-heading settings-section-heading--tight">Plan item types</h2>
         <p className="settings-section-desc">
@@ -672,8 +709,10 @@ export default function SettingsPage() {
           </button>
         </div>
       </div>
+      )}
 
       {/* Categories */}
+      {activeTab === 'categories' && (
       <div className="settings-card settings-card--spaced">
         <h2 className="settings-section-heading settings-section-heading--tight">Categories</h2>
         <p className="settings-section-desc">
@@ -734,9 +773,10 @@ export default function SettingsPage() {
           />
         )}
       </div>
+      )}
 
-      {/* Global tag management — master library only */}
-      {isMasterLibrary && (
+      {/* Song tags — master library only */}
+      {activeTab === 'tags' && isMasterLibrary && (
         <div className="settings-card settings-card--spaced">
           <h2 className="settings-section-heading settings-section-heading--tight">Song tags</h2>
           <p className="settings-section-desc">
@@ -778,6 +818,9 @@ export default function SettingsPage() {
           </div>
         </div>
       )}
+
+        </div>
+      </div>
 
       {/* Warning modal */}
       {warningModal && (
