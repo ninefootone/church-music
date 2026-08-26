@@ -127,6 +127,29 @@ router.delete('/tags/church/:id', requireAuth, requirePermission('can_manage_son
   }
 });
 
+// GET /songs/tags/usage — global + church tags with THIS church's song count for each.
+// Used by the Settings tags block so a church can view (and delete) its own tags.
+router.get('/tags/usage', requireAuth, requireMembership, async (req, res, next) => {
+  try {
+    const { churchId } = req;
+    const result = await pool.query(
+      `SELECT t.id, t.name,
+              CASE WHEN t.church_id IS NULL THEN 'global' ELSE 'church' END AS scope,
+              COUNT(DISTINCT s.id)::int AS count
+       FROM tags t
+       LEFT JOIN song_tags st ON st.tag_id = t.id
+       LEFT JOIN songs s ON s.id = st.song_id AND s.church_id = $1
+       WHERE t.church_id IS NULL OR t.church_id = $1
+       GROUP BY t.id
+       ORDER BY (t.church_id IS NOT NULL), t.name ASC`,
+      [churchId]
+    );
+    res.json(result.rows);
+  } catch (err) {
+    next(err);
+  }
+});
+
 // GET /songs/categories/all — global categories (master-managed) + this church's own.
 // `scope` is 'global' (church_id IS NULL) or 'church' (this church's own).
 router.get('/categories/all', requireAuth, requireMembership, async (req, res, next) => {
