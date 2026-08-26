@@ -1,23 +1,23 @@
-import { Category, CATEGORIES } from '@/types'
+import { Category } from '@/types'
 
-const categoryClasses: Record<Category, string> = {
+// Colour styling per known category value. Presentation only — the list of which
+// categories exist lives in the database, not here. Unknown values get the neutral pill.
+const categoryClasses: Record<string, string> = {
   praise:     'cat-badge cat-praise',
   assurance:  'cat-badge cat-assurance',
   response:   'cat-badge cat-response',
   other:      'cat-badge cat-other',
 }
 
-// Custom (church-added) categories aren't in the static list: title-case their
-// value for display, and give them the neutral grey pill so they still look styled.
+// Display label is the title-cased value (e.g. 'youth praise' → 'Youth Praise').
 function titleCase(s: string) {
   return s.replace(/\b\w/g, ch => ch.toUpperCase())
 }
 
 export function CategoryBadge({ category }: { category: Category }) {
-  const label = CATEGORIES.find(c => c.value === category)?.label ?? titleCase(category)
   return (
     <span className={categoryClasses[category] ?? 'cat-badge cat-other'}>
-      {label}
+      {titleCase(category)}
     </span>
   )
 }
