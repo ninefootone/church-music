@@ -191,6 +191,26 @@ export default function HelpPage() {
           ),
         },
         {
+          id: 'categories-and-tags',
+          title: 'Categories and tags',
+          content: () => (
+            <div>
+              <p className="help-content-body">
+                <strong>Categories</strong> and <strong>tags</strong> organise your library in two different ways. Each song has exactly <strong>one category</strong> (chosen from a dropdown) and can carry <strong>any number of tags</strong>. Categories are broad buckets like Praise, Assurance or Response; tags describe themes like Grace, Advent or Communion, so songs are findable by subject.
+              </p>
+              <p className="help-content-body">
+                Both come in two kinds: a set of <strong>suggested</strong> options shared across Song Stack, plus your church&apos;s <strong>own</strong> options. Your church&apos;s categories and tags are private to your church — they never appear in Discover or in other churches&apos; libraries.
+              </p>
+              <p className="help-content-body">
+                On the Songs page, use the category chips and the <strong>Tags</strong> filter to narrow the list. You can pick one category and combine it with several tags at once.
+              </p>
+              <p className="help-content-body">
+                Admins can add and remove the church&apos;s own categories and tags in <strong>Settings</strong>, where each shows how many songs use it. Deleting a tag removes it from those songs; deleting a category leaves those songs uncategorised. The suggested (shared) categories and tags can&apos;t be edited or deleted.
+              </p>
+            </div>
+          ),
+        },
+        {
           id: 'adding-a-song',
           title: 'Adding a new song',
           content: () => (
@@ -208,10 +228,10 @@ export default function HelpPage() {
                 <strong>Default key:</strong> the key your church typically plays the song in. This can be overridden per plan.
               </p>
               <p className="help-content-body">
-                <strong>Tags &amp; category:</strong> used for filtering in the library and plan builder. Start typing to see and select from existing tags.
+                <strong>Category:</strong> pick one from the dropdown — a broad bucket like Praise or Response (required). <strong>Tags:</strong> add as many as you like to describe the song&apos;s themes. Both drive filtering across the library and plan builder. See <em>Categories and tags</em> for how your church adds its own.
               </p>
               <p className="help-content-body">
-                <strong>CCLI number:</strong> enter the song&apos;s CCLI number for licence reporting.s
+                <strong>CCLI number:</strong> enter the song&apos;s CCLI number for licence reporting.
               </p>
               <p className="help-content-body">
                 <strong>Lyrics:</strong> paste lyrics directly. These appear on the song page and public share view.
