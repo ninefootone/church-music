@@ -2763,8 +2763,8 @@ select.input {
 /* Inside the tabbed settings panel, sections sit flush — the panel provides the frame */
 .help-content .settings-card { background: none; border: none; border-radius: 0; padding: 0; }
 .help-content .settings-card--spaced { margin-bottom: 0; }
-.settings-section-heading        { font-size: 16px; font-weight: 600; color: var(--color-text-primary); margin-bottom: 20px; }
-.settings-section-heading--tight { margin-bottom: 4px; }
+.settings-section-heading        { font-size: var(--text-2xl); font-weight: 700; color: var(--color-text-primary); letter-spacing: -0.02em; margin-bottom: var(--space-lg); padding-bottom: var(--space-md); border-bottom: 1px solid var(--color-border); }
+.settings-section-heading--tight { margin-bottom: var(--space-md); }
 .settings-section-desc     { font-size: 13px; color: var(--color-text-muted); margin-bottom: 16px; }
 .settings-form-grid        { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(280px, 100%), 1fr)); gap: 16px; }
 .settings-label            { display: block; font-size: 12px; font-weight: 600; color: var(--color-text-secondary); margin-bottom: 6px; text-transform: uppercase; letter-spacing: 0.05em; }
