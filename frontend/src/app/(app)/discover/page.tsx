@@ -6,7 +6,6 @@ import { useChurch } from '@/context/ChurchContext'
 import { CategoryBadge, KeyBadge } from '@/components/ui/badges'
 import api, { setAuthToken } from '@/lib/api'
 import { Sparkles, Youtube, Music, GripVertical, Search, X, ChevronRight } from 'lucide-react'
-import { CATEGORIES } from '@/types'
 import { DiscoverSongModal } from '@/components/ui/DiscoverSongModal'
 import {
   DndContext,
@@ -271,7 +270,8 @@ export default function DiscoverPage() {
 
   // Library state
   const [librarySearch, setLibrarySearch] = useState('')
-  const [libraryCategory, setLibraryCategory] = useState<string>('all')
+    const [libraryCategory, setLibraryCategory] = useState<string>('all')
+  const [categories, setCategories] = useState<{ id: string; value: string; label: string; scope: 'global' | 'church' }[]>([])
   const [librarySongs, setLibrarySongs] = useState<LibrarySong[]>([])
   const [libraryLoading, setLibraryLoading] = useState(false)
   const [libraryPage, setLibraryPage] = useState(1)
@@ -287,6 +287,11 @@ export default function DiscoverPage() {
   const sensors = useSensors(useSensor(PointerSensor))
 
   // Load carousel + church songs on mount
+  useEffect(() => {
+    if (!church) return
+    api.get('/api/songs/categories/all').then(res => setCategories(res.data)).catch(() => {})
+  }, [church])
+
   useEffect(() => {
     if (!church || fetchedRef.current) return
     fetchedRef.current = true
@@ -512,9 +517,9 @@ export default function DiscoverPage() {
           >
             All
           </button>
-          {CATEGORIES.map(cat => (
+          {categories.filter(c => c.scope === 'global').map(cat => (
             <button
-              key={cat.value}
+              key={cat.id}
               className={`filter-chip ${libraryCategory === cat.value ? 'is-active' : ''}`}
               onClick={() => setLibraryCategory(cat.value)}
             >
