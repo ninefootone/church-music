@@ -20,6 +20,7 @@ interface Props {
 export function DuplicatePlanModal({ plan, onClose, onDuplicated }: Props) {
   const [date, setDate] = useState(plan.plan_date?.slice(0, 10) ?? '')
   const [time, setTime] = useState(plan.plan_start_time ? plan.plan_start_time.slice(0, 5) : '')
+  const [title, setTitle] = useState(plan.title ?? '')
   const [saving, setSaving] = useState(false)
   const [error, setError] = useState('')
 
@@ -37,7 +38,7 @@ export function DuplicatePlanModal({ plan, onClose, onDuplicated }: Props) {
         plan_time: formatted,
         plan_start_time: time || null,
         plan_sort_order: plan.plan_sort_order ?? 0,
-        title: plan.title,
+        title: title.trim() || null,
       })
       onDuplicated(res.data.id)
     } catch (err: any) {
@@ -57,6 +58,17 @@ export function DuplicatePlanModal({ plan, onClose, onDuplicated }: Props) {
         <p className="text-muted" style={{ marginBottom: 'var(--space-md)', fontSize: 'var(--text-sm)' }}>
           The new plan will be saved as a draft with the same running order and musicians. Update the date and time for the new service.
         </p>
+
+        <div className="form-group">
+          <label className="form-label">Title <span className="text-muted">(optional)</span></label>
+          <input
+            type="text"
+            className="input"
+            value={title}
+            onChange={e => setTitle(e.target.value)}
+            placeholder="e.g. Easter Sunday"
+          />
+        </div>
 
         <div className="form-group">
           <label className="form-label">Date</label>
