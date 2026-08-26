@@ -4,6 +4,7 @@ import { useState, useEffect, useRef } from 'react'
 import { useAuth, useUser } from '@clerk/nextjs'
 import { useChurch } from '@/context/ChurchContext'
 import api, { setAuthToken } from '@/lib/api'
+import { ConfirmModal } from '@/components/ui/ConfirmModal'
 import { Copy, Check, RefreshCw, Plus, X } from 'lucide-react'
 
 interface RoleItem {
@@ -68,11 +69,12 @@ export default function SettingsPage() {
   const [itemTypesSaved, setItemTypesSaved] = useState(false)
   const [itemTypesError, setItemTypesError] = useState('')
   const itemTypeDragIndex = useRef<number | null>(null)
-  const [categories, setCategories] = useState<{ id: string; value: string; label: string; scope: 'global' | 'church' }[]>([])
+  const [categories, setCategories] = useState<{ id: string; value: string; label: string; scope: 'global' | 'church'; count: number }[]>([])
   const [categoriesLoaded, setCategoriesLoaded] = useState(false)
   const [newCategoryName, setNewCategoryName] = useState('')
   const [categorySaving, setCategorySaving] = useState(false)
   const [categoryError, setCategoryError] = useState('')
+  const [pendingDeleteCategory, setPendingDeleteCategory] = useState<{ id: string; label: string; count: number } | null>(null)
 
   useEffect(() => {
     if (church) {
@@ -91,7 +93,7 @@ export default function SettingsPage() {
         }).catch(() => {})
       }
       if (!categoriesLoaded) {
-        api.get('/api/songs/categories/all').then(r => {
+        api.get('/api/songs/categories/usage').then(r => {
           setCategories(r.data)
           setCategoriesLoaded(true)
         }).catch(() => {})
@@ -306,12 +308,27 @@ export default function SettingsPage() {
     try {
       const client = await getAuthenticatedApi()
       const { data } = await client.post('/api/songs/categories/church', { label })
-      setCategories(prev => prev.some(c => c.id === data.id) ? prev : [...prev, data])
+      setCategories(prev => prev.some(c => c.id === data.id) ? prev : [...prev, { ...data, count: 0 }])
       setNewCategoryName('')
     } catch (err: any) {
       setCategoryError(err?.response?.data?.error || 'Could not add category.')
     } finally {
       setCategorySaving(false)
+    }
+  }
+
+  async function handleDeleteCategory() {
+    if (!pendingDeleteCategory) return
+    const cat = pendingDeleteCategory
+    setCategoryError('')
+    try {
+      const client = await getAuthenticatedApi()
+      await client.delete(`/api/songs/categories/church/${cat.id}`)
+      setCategories(prev => prev.filter(c => c.id !== cat.id))
+    } catch (err: any) {
+      setCategoryError(err?.response?.data?.error || 'Could not delete category.')
+    } finally {
+      setPendingDeleteCategory(null)
     }
   }
 
@@ -674,7 +691,16 @@ export default function SettingsPage() {
             <p className="form-empty-note">No custom categories yet.</p>
           )}
           {categories.filter(c => c.scope === 'church').map(c => (
-            <div key={c.id} className="role-chip">{c.label}</div>
+            <div key={c.id} className="role-chip">
+              {c.label}
+              <button
+                type="button"
+                onClick={() => setPendingDeleteCategory({ id: c.id, label: c.label, count: c.count })}
+                className="btn-icon-remove"
+              >
+                <X size={13} />
+              </button>
+            </div>
           ))}
         </div>
 
@@ -692,6 +718,21 @@ export default function SettingsPage() {
             <Plus size={15} />{categorySaving ? 'Adding…' : 'Add'}
           </button>
         </div>
+
+        {pendingDeleteCategory && (
+          <ConfirmModal
+            title="Delete category"
+            message={
+              pendingDeleteCategory.count > 0
+                ? `Delete "${pendingDeleteCategory.label}"? ${pendingDeleteCategory.count} song${pendingDeleteCategory.count === 1 ? '' : 's'} will become uncategorised. This can't be undone.`
+                : `Delete "${pendingDeleteCategory.label}"? This can't be undone.`
+            }
+            confirmLabel="Delete"
+            danger
+            onConfirm={handleDeleteCategory}
+            onCancel={() => setPendingDeleteCategory(null)}
+          />
+        )}
       </div>
 
       {/* Global tag management — master library only */}
