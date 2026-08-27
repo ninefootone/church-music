@@ -191,6 +191,26 @@ export default function HelpPage() {
           ),
         },
         {
+          id: 'finding-songs-in-discover',
+          title: 'Finding songs in Discover',
+          content: () => (
+            <div>
+              <p className="help-content-body">
+                <strong>Discover</strong> is a shared library of songs — public-domain hymns and songs Song Stack has permission to share — kept separate from your church&apos;s own library. It&apos;s where you find new material and add it to your library in one tap.
+              </p>
+              <p className="help-content-body">
+                The page has two parts: a short list of <strong>curated highlights</strong> at the top, and a searchable <strong>Song library</strong> below. In the Song library you can search by title or author, filter by category, and filter by <strong>tag</strong> to browse by theme.
+              </p>
+              <p className="help-content-body">
+                Open the <strong>Tags</strong> filter and pick one or more tags — the list narrows to songs carrying every tag you choose, so combine tags to focus in, and use <strong>Clear tags</strong> to start over. Only tags that appear on songs in the shared library are shown, so every tag returns results.
+              </p>
+              <p className="help-content-body">
+                To add a song, use <strong>Add to library</strong> — this copies it into your church&apos;s library. Some songs include lyrics and files ready to use; others you&apos;ll complete yourself or access through SongSelect. Adding songs needs the <strong>Manage songs</strong> permission; members without it see a note to ask an admin.
+              </p>
+            </div>
+          ),
+        },
+        {
           id: 'categories-and-tags',
           title: 'Categories and tags',
           content: () => (
