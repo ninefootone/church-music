@@ -5,7 +5,7 @@ import { useAuth } from '@clerk/nextjs'
 import { useChurch } from '@/context/ChurchContext'
 import { CategoryBadge, KeyBadge } from '@/components/ui/badges'
 import api, { setAuthToken } from '@/lib/api'
-import { Sparkles, Youtube, Music, GripVertical, Search, X, ChevronRight } from 'lucide-react'
+import { Sparkles, Youtube, Music, GripVertical, Search, X, ChevronRight, Tag } from 'lucide-react'
 import { DiscoverSongModal } from '@/components/ui/DiscoverSongModal'
 import {
   DndContext,
@@ -270,8 +270,11 @@ export default function DiscoverPage() {
 
   // Library state
   const [librarySearch, setLibrarySearch] = useState('')
-    const [libraryCategory, setLibraryCategory] = useState<string>('all')
+  const [libraryCategory, setLibraryCategory] = useState<string>('all')
   const [categories, setCategories] = useState<{ id: string; value: string; label: string; scope: 'global' | 'church' }[]>([])
+  const [libraryTags, setLibraryTags] = useState<{ id: string; name: string }[]>([])
+  const [selectedLibraryTags, setSelectedLibraryTags] = useState<string[]>([])
+  const [showLibraryTagFilter, setShowLibraryTagFilter] = useState(false)
   const [librarySongs, setLibrarySongs] = useState<LibrarySong[]>([])
   const [libraryLoading, setLibraryLoading] = useState(false)
   const [libraryPage, setLibraryPage] = useState(1)
@@ -290,6 +293,7 @@ export default function DiscoverPage() {
   useEffect(() => {
     if (!church) return
     api.get('/api/songs/categories/all').then(res => setCategories(res.data)).catch(() => {})
+    api.get('/api/templates/library/tags').then(res => setLibraryTags(res.data)).catch(() => {})
   }, [church])
 
   useEffect(() => {
@@ -320,12 +324,13 @@ export default function DiscoverPage() {
   }, [church])
 
   // Fetch library results
-  const fetchLibrary = useCallback(async (search: string, category: string, page: number) => {
+  const fetchLibrary = useCallback(async (search: string, category: string, page: number, tags: string[] = []) => {
     setLibraryLoading(true)
     try {
       const params: Record<string, string> = { page: String(page) }
       if (search) params.q = search
       if (category !== 'all') params.category = category
+      if (tags.length > 0) params.tags = tags.join(',')
       const { data } = await api.get('/api/templates/library', { params })
       setLibrarySongs(data.songs)
       setLibraryTotal(data.total)
@@ -358,14 +363,14 @@ export default function DiscoverPage() {
     if (librarySearchTimer.current) clearTimeout(librarySearchTimer.current)
     librarySearchTimer.current = setTimeout(() => {
       setLibraryPage(1)
-      fetchLibrary(librarySearch, libraryCategory, 1)
+      fetchLibrary(librarySearch, libraryCategory, 1, selectedLibraryTags)
     }, 300)
     return () => { if (librarySearchTimer.current) clearTimeout(librarySearchTimer.current) }
-  }, [librarySearch, libraryCategory])
+  }, [librarySearch, libraryCategory, selectedLibraryTags])
 
   const handleLibraryPageChange = (page: number) => {
     setLibraryPage(page)
-    fetchLibrary(librarySearch, libraryCategory, page)
+    fetchLibrary(librarySearch, libraryCategory, page, selectedLibraryTags)
   }
 
   const handleDiscoverToggle = async (song: DiscoverSong) => {
@@ -527,6 +532,40 @@ export default function DiscoverPage() {
             </button>
           ))}
         </div>
+
+        {libraryTags.length > 0 && (
+          <div className="songs-tagfilter">
+            <button
+              className={`btn btn-secondary songs-tagfilter-toggle${selectedLibraryTags.length ? ' is-active' : ''}`}
+              onClick={() => setShowLibraryTagFilter(v => !v)}
+            >
+              <Tag size={15} /> Tags{selectedLibraryTags.length > 0 ? ` (${selectedLibraryTags.length})` : ''}
+            </button>
+            {selectedLibraryTags.length > 0 && (
+              <button className="btn-text" onClick={() => setSelectedLibraryTags([])}>Clear tags</button>
+            )}
+            {showLibraryTagFilter && (
+              <div className="songs-tagfilter-panel">
+                <div className="tag-picker">
+                  {libraryTags.map(tag => {
+                    const sel = selectedLibraryTags.includes(tag.id)
+                    return (
+                      <button
+                        key={tag.id}
+                        type="button"
+                        className={`tag-chip ${sel ? 'tag-chip--selected' : ''}`}
+                        onClick={() => setSelectedLibraryTags(prev => sel ? prev.filter(t => t !== tag.id) : [...prev, tag.id])}
+                      >
+                        {tag.name}
+                        {sel && <X size={11} className="tag-chip-x" />}
+                      </button>
+                    )
+                  })}
+                </div>
+              </div>
+            )}
+          </div>
+        )}
 
         {libraryLoading ? (
           <p className="text-muted dash-loading">Loading…</p>

@@ -80,6 +80,13 @@ router.get('/library', requireAuth, async (req, res, next) => {
     const limit = 20;
     const offset = (parseInt(page) - 1) * limit;
 
+    // tags param accepts comma-separated tag UUIDs: ?tags=<uuid>,<uuid> (AND logic).
+    // Keep only well-formed UUIDs so a malformed param can't cause a uuid-cast error.
+    const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+    const tagIds = req.query.tags
+      ? req.query.tags.split(',').map(s => s.trim()).filter(s => UUID_RE.test(s))
+      : [];
+
     let query = `
       SELECT s.id, s.title, s.author, s.default_key, s.category,
              s.first_line, s.ccli_number, s.copyright_info, s.share_all_data,
@@ -118,6 +125,10 @@ router.get('/library', requireAuth, async (req, res, next) => {
     if (tag) {
       query += ` AND s.tag_search_vector @@ plainto_tsquery('english', $${idx++})`;
       params.push(tag);
+    }
+    for (const tagId of tagIds) {
+      query += ` AND EXISTS (SELECT 1 FROM song_tags WHERE song_id = s.id AND tag_id = $${idx++})`;
+      params.push(tagId);
     }
 
     query += ` GROUP BY s.id ORDER BY s.title ASC LIMIT $${idx++} OFFSET $${idx++}`;
@@ -159,6 +170,10 @@ router.get('/library', requireAuth, async (req, res, next) => {
       countQuery += ` AND s.tag_search_vector @@ plainto_tsquery('english', $${cidx++})`;
       countParams.push(tag);
     }
+    for (const tagId of tagIds) {
+      countQuery += ` AND EXISTS (SELECT 1 FROM song_tags WHERE song_id = s.id AND tag_id = $${cidx++})`;
+      countParams.push(tagId);
+    }
 
     const countResult = await pool.query(countQuery, countParams);
     const total = parseInt(countResult.rows[0].count);
@@ -169,6 +184,29 @@ router.get('/library', requireAuth, async (req, res, next) => {
       page: parseInt(page),
       pages: Math.ceil(total / limit),
     });
+  } catch (err) {
+    next(err);
+  }
+});
+
+// GET /templates/library/tags — tags that appear on at least one library song.
+// Powers the Discover → Song library tag filter; only returns tags that will
+// actually yield results, so no chip is ever a dead end.
+router.get('/library/tags', requireAuth, async (req, res, next) => {
+  try {
+    const result = await pool.query(
+      `SELECT DISTINCT t.id, t.name
+         FROM tags t
+         JOIN song_tags st ON st.tag_id = t.id
+         JOIN songs s ON s.id = st.song_id
+        WHERE s.church_id = $1
+          AND s.in_library = true
+          AND (s.is_draft = false OR s.is_draft IS NULL)
+          AND (s.retired = false OR s.retired IS NULL)
+        ORDER BY t.name ASC`,
+      [process.env.MASTER_CHURCH_ID]
+    );
+    res.json(result.rows);
   } catch (err) {
     next(err);
   }
