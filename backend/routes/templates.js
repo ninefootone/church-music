@@ -327,20 +327,37 @@ router.post('/:id/import', requireAuth, requireAdmin, async (req, res, next) => 
       ]
     );
 
-    // Copy tags
+    // Copy tags. Reuse an existing shared (global) or own-church tag by name —
+    // preferring the shared default — and only create a church-owned tag when no
+    // match exists. Mirrors the dedupe in POST /songs/tags/church so an import
+    // never mints a private duplicate of a default-list tag.
     const templateTags = await pool.query(
       `SELECT t.name FROM song_tags st JOIN tags t ON t.id = st.tag_id WHERE st.song_id = $1`,
       [req.params.id]
     );
     for (const tag of templateTags.rows) {
-      const newTag = await pool.query(
-        `INSERT INTO tags (church_id, name) VALUES ($1, $2)
-         ON CONFLICT (church_id, name) DO UPDATE SET name = EXCLUDED.name RETURNING id`,
+      const existingTag = await pool.query(
+        `SELECT id FROM tags
+          WHERE (church_id IS NULL OR church_id = $1)
+            AND lower(name) = lower($2)
+          ORDER BY (church_id IS NOT NULL)
+          LIMIT 1`,
         [churchId, tag.name]
       );
+      let tagId;
+      if (existingTag.rows.length) {
+        tagId = existingTag.rows[0].id;
+      } else {
+        const newTag = await pool.query(
+          `INSERT INTO tags (church_id, name) VALUES ($1, $2)
+           ON CONFLICT (church_id, name) DO UPDATE SET name = EXCLUDED.name RETURNING id`,
+          [churchId, tag.name]
+        );
+        tagId = newTag.rows[0].id;
+      }
       await pool.query(
         'INSERT INTO song_tags (song_id, tag_id) VALUES ($1, $2) ON CONFLICT DO NOTHING',
-        [song.rows[0].id, newTag.rows[0].id]
+        [song.rows[0].id, tagId]
       );
     }
 
