@@ -2,6 +2,7 @@ const express = require('express');
 const router = express.Router();
 const pool = require('../db/pool');
 const { requireAuth, requireAdmin, requireMembership } = require('../middleware/auth');
+const { sanitizeRichText } = require('../utils/sanitize');
 const multer = require('multer');
 const { S3Client, PutObjectCommand } = require('@aws-sdk/client-s3');
 const { v4: uuidv4 } = require('uuid');
@@ -363,6 +364,83 @@ router.put('/:churchId/plan-item-types', requireAuth, requireAdmin, async (req, 
     next(err);
   } finally {
     client.release();
+  }
+});
+
+// ============================================================
+// Liturgy snippets — per-church reusable service text (creeds,
+// prayers, welcomes, benedictions). Read: any member. Manage: admin.
+// ============================================================
+
+// List snippets
+router.get('/:churchId/liturgy-snippets', requireAuth, requireMembership, async (req, res, next) => {
+  try {
+    const result = await pool.query(
+      'SELECT * FROM church_liturgy_snippets WHERE church_id = $1 ORDER BY sort_order, title',
+      [req.churchId]
+    );
+    res.json(result.rows);
+  } catch (err) {
+    next(err);
+  }
+});
+
+// Create a snippet (admin only)
+router.post('/:churchId/liturgy-snippets', requireAuth, requireAdmin, async (req, res, next) => {
+  try {
+    const title = (req.body.title || '').trim();
+    if (!title) return res.status(400).json({ error: 'Title is required' });
+    const content = sanitizeRichText(req.body.content);
+    const note = (req.body.note || '').trim() || null;
+
+    const next_sort = await pool.query(
+      'SELECT COALESCE(MAX(sort_order), -1) + 1 AS n FROM church_liturgy_snippets WHERE church_id = $1',
+      [req.churchId]
+    );
+
+    const result = await pool.query(
+      `INSERT INTO church_liturgy_snippets (church_id, title, content, note, sort_order)
+       VALUES ($1, $2, $3, $4, $5) RETURNING *`,
+      [req.churchId, title, content, note, next_sort.rows[0].n]
+    );
+    res.status(201).json(result.rows[0]);
+  } catch (err) {
+    next(err);
+  }
+});
+
+// Update a snippet (admin only)
+router.put('/:churchId/liturgy-snippets/:id', requireAuth, requireAdmin, async (req, res, next) => {
+  try {
+    const title = (req.body.title || '').trim();
+    if (!title) return res.status(400).json({ error: 'Title is required' });
+    const content = sanitizeRichText(req.body.content);
+    const note = (req.body.note || '').trim() || null;
+
+    const result = await pool.query(
+      `UPDATE church_liturgy_snippets
+       SET title = $1, content = $2, note = $3
+       WHERE id = $4 AND church_id = $5 RETURNING *`,
+      [title, content, note, req.params.id, req.churchId]
+    );
+    if (result.rows.length === 0) return res.status(404).json({ error: 'Snippet not found' });
+    res.json(result.rows[0]);
+  } catch (err) {
+    next(err);
+  }
+});
+
+// Delete a snippet (admin only)
+router.delete('/:churchId/liturgy-snippets/:id', requireAuth, requireAdmin, async (req, res, next) => {
+  try {
+    const result = await pool.query(
+      'DELETE FROM church_liturgy_snippets WHERE id = $1 AND church_id = $2 RETURNING id',
+      [req.params.id, req.churchId]
+    );
+    if (result.rows.length === 0) return res.status(404).json({ error: 'Snippet not found' });
+    res.json({ success: true });
+  } catch (err) {
+    next(err);
   }
 });
 

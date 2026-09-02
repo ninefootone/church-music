@@ -14,6 +14,7 @@ const r2 = new S3Client({
 });
 const R2_BUCKET = process.env.R2_BUCKET_NAME;
 const pool = require('../db/pool');
+const { sanitizeRichText } = require('../utils/sanitize');
 const { requireAuth, requireMembership, requireAdmin, requirePermission } = require('../middleware/auth');
 const { v4: uuidv4 } = require('uuid');
 
@@ -98,7 +99,7 @@ router.get('/:id', requireAuth, requireMembership, async function(req, res, next
     }
 
     const items = await pool.query(
-      `SELECT si.id, si.type, si.phase, si.title, si.notes, si.key_override, si.position,
+      `SELECT si.id, si.type, si.phase, si.title, si.notes, si.content, si.key_override, si.position,
         si.custom_arrangement, si.duration_minutes,
         s.id AS song_id, s.title AS song_title, s.author AS song_author,
         s.default_key AS song_default_key, s.category AS song_category,
@@ -128,7 +129,7 @@ router.get('/public/:token', async function(req, res, next) {
     if (plan.rows.length === 0) return res.status(404).json({ error: 'Not found' });
 
     const items = await pool.query(
-      `SELECT si.type, si.phase, si.title, si.notes, si.key_override, si.position,
+      `SELECT si.type, si.phase, si.title, si.notes, si.content, si.key_override, si.position,
         si.custom_arrangement, si.duration_minutes,
         s.id AS song_id, s.title AS song_title, s.author AS song_author,
         s.default_key AS song_default_key, s.youtube_url AS song_youtube_url,
@@ -223,8 +224,8 @@ router.put('/:id/items', requireAuth, requireMembership, async function(req, res
     for (let i = 0; i < items.length; i++) {
       const item = items[i];
       await pool.query(
-        'INSERT INTO plan_items (plan_id, type, song_id, title, notes, key_override, position, custom_arrangement, duration_minutes, phase) VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10)',
-        [planId, item.type, item.song_id || null, item.title || null, item.notes || null, item.key_override || null, i, item.custom_arrangement || null, item.duration_minutes ? parseInt(item.duration_minutes) : null, item.phase || 'service']
+        'INSERT INTO plan_items (plan_id, type, song_id, title, notes, content, key_override, position, custom_arrangement, duration_minutes, phase) VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11)',
+        [planId, item.type, item.song_id || null, item.title || null, item.notes || null, sanitizeRichText(item.content), item.key_override || null, i, item.custom_arrangement || null, item.duration_minutes ? parseInt(item.duration_minutes) : null, item.phase || 'service']
       );
     }
 
@@ -564,9 +565,9 @@ router.post('/:id/duplicate', requireAuth, requirePermission('can_add_plans'), a
     );
     for (const item of items.rows) {
       await pool.query(
-        `INSERT INTO plan_items (plan_id, type, title, notes, song_id, key_override, position, custom_arrangement, duration_minutes, phase)
-         VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10)`,
-        [newId, item.type, item.title, item.notes, item.song_id, item.key_override, item.position, item.custom_arrangement, item.duration_minutes, item.phase || 'service']
+        `INSERT INTO plan_items (plan_id, type, title, notes, content, song_id, key_override, position, custom_arrangement, duration_minutes, phase)
+         VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11)`,
+        [newId, item.type, item.title, item.notes, item.content, item.song_id, item.key_override, item.position, item.custom_arrangement, item.duration_minutes, item.phase || 'service']
       );
     }
 
