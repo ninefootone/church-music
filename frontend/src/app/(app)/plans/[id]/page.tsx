@@ -90,12 +90,14 @@ function SongItem({ item, index, planId, canAnnotate, showTimings, showDurations
   }
 
   const isSong = item.type === 'song'
+  const hasContent = !isSong && !!item.content
+  const canExpand = isSong || hasContent
 
   return (
     <div className="song-item-card">
       <div
-        className="plan-item-row" style={{ cursor: isSong ? 'pointer' : 'default' }}
-        onClick={isSong ? handleExpand : undefined}
+        className="plan-item-row" style={{ cursor: canExpand ? 'pointer' : 'default' }}
+        onClick={canExpand ? handleExpand : undefined}
       >
         {(showTimings || showDurations) && (
           <div className="item-timing-col">
@@ -111,9 +113,6 @@ function SongItem({ item, index, planId, canAnnotate, showTimings, showDurations
           <p style={{ fontSize: 'var(--text-md)', fontWeight: isSong ? 600 : 400, color: isSong ? 'var(--color-text-primary)' : 'var(--color-text-secondary)', marginBottom: 0 }}>
             {isSong && item.song_title ? item.song_title : (item.title || item.type.charAt(0).toUpperCase() + item.type.slice(1))}
           </p>
-          {!isSong && item.content && (
-            <RichTextDisplay html={item.content} className="liturgy-text" allowedTags={LITURGY_ALLOWED_TAGS} />
-          )}
           {editingNotes ? (
             <div style={{ marginTop: 4 }} onClick={e => e.stopPropagation()}>
               <textarea
@@ -158,6 +157,13 @@ function SongItem({ item, index, planId, canAnnotate, showTimings, showDurations
             {item.song_category && (
               <CategoryBadge category={item.song_category} />
             )}
+            <span className="item-chevron">
+              {expanded ? <ChevronUp size={18} /> : <ChevronDown size={18} />}
+            </span>
+          </div>
+        )}
+        {hasContent && (
+          <div className="plan-item-pills">
             <span className="item-chevron">
               {expanded ? <ChevronUp size={18} /> : <ChevronDown size={18} />}
             </span>
@@ -263,6 +269,12 @@ function SongItem({ item, index, planId, canAnnotate, showTimings, showDurations
               )}
             </div>
           )}
+        </div>
+      )}
+
+      {hasContent && expanded && (
+        <div className="item-expanded">
+          <RichTextDisplay html={item.content} className="liturgy-text" allowedTags={LITURGY_ALLOWED_TAGS} />
         </div>
       )}
     </div>

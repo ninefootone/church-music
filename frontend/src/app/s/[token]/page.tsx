@@ -38,13 +38,15 @@ function SongItem({ item, index, token, showTimings, showDurations, calculatedSt
   }
 
   const isSong = item.type === 'song'
+  const hasContent = !isSong && !!item.content
+  const canExpand = isSong || hasContent
 
   return (
     <div className="song-item-card">
       <div
         className="item-row"
-        style={{ cursor: isSong ? 'pointer' : 'default' }}
-        onClick={isSong ? handleExpand : undefined}
+        style={{ cursor: canExpand ? 'pointer' : 'default' }}
+        onClick={canExpand ? handleExpand : undefined}
       >
         {(showTimings || showDurations) && (
           <div className="item-timing-col">
@@ -61,9 +63,6 @@ function SongItem({ item, index, token, showTimings, showDurations, calculatedSt
           <p className="item-title" style={{ fontWeight: isSong ? 600 : 400, color: isSong ? 'var(--color-text-primary)' : 'var(--color-text-secondary)' }}>
             {isSong && item.song_title ? item.song_title : (item.title || item.type)}
           </p>
-          {!isSong && item.content && (
-            <RichTextDisplay html={item.content} className="liturgy-text" allowedTags={LITURGY_ALLOWED_TAGS} />
-          )}
           {item.notes && (
             <p className="item-notes">{item.notes.split('\n').map((line: string, i: number) => {
               const parts = line.split(/(\*\*[^*]+\*\*|_[^_]+_)/g).map((part: string, j: number) => {
@@ -96,8 +95,19 @@ function SongItem({ item, index, token, showTimings, showDurations, calculatedSt
               {expanded ? <ChevronUp size={18} /> : <ChevronDown size={18} />}
             </span>
           )}
+          {hasContent && (
+            <span className="item-chevron">
+              {expanded ? <ChevronUp size={18} /> : <ChevronDown size={18} />}
+            </span>
+          )}
         </div>
       </div>
+
+      {hasContent && expanded && (
+        <div className="item-expanded">
+          <RichTextDisplay html={item.content} className="liturgy-text" allowedTags={LITURGY_ALLOWED_TAGS} />
+        </div>
+      )}
 
       {isSong && expanded && (
         <div className="item-expanded">
