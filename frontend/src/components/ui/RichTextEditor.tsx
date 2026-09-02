@@ -1,9 +1,9 @@
 'use client'
 
-import { useEditor, EditorContent } from '@tiptap/react'
+import { useEditor, EditorContent, Editor } from '@tiptap/react'
 import StarterKit from '@tiptap/starter-kit'
 import { Bold, Italic } from 'lucide-react'
-import { useEffect } from 'react'
+import { useEffect, useRef } from 'react'
 
 interface RichTextEditorProps {
   value: string
@@ -26,6 +26,15 @@ interface RichTextEditorProps {
 
 const identity = (v: string) => v || '<p></p>'
 
+// Build the paste-as-plain-text HTML — discards Word/Google-doc markup.
+function plainTextToHtml(text: string): string {
+  return text
+    .split('\n')
+    .map(line => line.trim())
+    .map(line => `<p>${line || '<br>'}</p>`)
+    .join('')
+}
+
 export function RichTextEditor({
   value,
   onChange,
@@ -33,6 +42,9 @@ export function RichTextEditor({
   transformIn = identity,
   hint = 'Select text then B or I to format',
 }: RichTextEditorProps) {
+  // Ref lets handlePaste (which runs long after creation) reach the live editor.
+  const editorRef = useRef<Editor | null>(null)
+
   const editor = useEditor({
     extensions: [
       StarterKit.configure({
@@ -55,9 +67,21 @@ export function RichTextEditor({
       attributes: {
         class: `${classPrefix}-content`,
       },
+      // Intercept paste inside ProseMirror so it doesn't also run its own
+      // default handler — returning true prevents the double insert.
+      handlePaste: (_view, event) => {
+        const text = event.clipboardData?.getData('text/plain')
+        if (!text) return false
+        event.preventDefault()
+        editorRef.current?.commands.insertContent(plainTextToHtml(text))
+        return true
+      },
     },
     immediatelyRender: false,
   })
+
+  // Keep the ref pointing at the current editor for handlePaste.
+  editorRef.current = editor
 
   // Sync when the value changes from outside the editor.
   useEffect(() => {
@@ -108,21 +132,8 @@ export function RichTextEditor({
     </button>
   )
 
-  // Paste as plain text only — discards Word/Google-doc HTML soup at the door.
-  const handlePaste = (e: React.ClipboardEvent) => {
-    const text = e.clipboardData.getData('text/plain')
-    if (!text) return
-    e.preventDefault()
-    const html = text
-      .split('\n')
-      .map(line => line.trim())
-      .map(line => `<p>${line || '<br>'}</p>`)
-      .join('')
-    editor.commands.insertContent(html)
-  }
-
   return (
-    <div onPaste={handlePaste} className={`${classPrefix}-wrap`}>
+    <div className={`${classPrefix}-wrap`}>
       <div className={`${classPrefix}-toolbar`}>
         <ToolbarButton
           onClick={() => editor.chain().focus().toggleBold().run()}
