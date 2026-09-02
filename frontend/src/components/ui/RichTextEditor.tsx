@@ -27,12 +27,24 @@ interface RichTextEditorProps {
 const identity = (v: string) => v || '<p></p>'
 
 // Build the paste-as-plain-text HTML — discards Word/Google-doc markup.
+// Adjacent lines become tight <br> breaks within one paragraph; only a blank
+// line in the source starts a new paragraph. Leading/trailing blanks are
+// dropped so a paste doesn't introduce spurious empty lines.
 function plainTextToHtml(text: string): string {
-  return text
-    .split('\n')
-    .map(line => line.trim())
-    .map(line => `<p>${line || '<br>'}</p>`)
-    .join('')
+  const blocks = text
+    .replace(/\r\n?/g, '\n')
+    .split(/\n{2,}/) // one or more blank lines separate paragraphs
+    .map(block =>
+      block
+        .split('\n')
+        .map(line => line.trim())
+        .filter(line => line.length > 0)
+        .join('<br>')
+    )
+    .filter(block => block.length > 0)
+
+  if (blocks.length === 0) return ''
+  return blocks.map(block => `<p>${block}</p>`).join('')
 }
 
 export function RichTextEditor({
