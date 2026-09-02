@@ -5,6 +5,7 @@ import { useEffect, useState } from 'react'
 import { format, parseISO } from 'date-fns'
 import { ChevronDown, ChevronUp, FileText, ExternalLink, PlayCircle } from 'lucide-react'
 import axios from 'axios'
+import { RichTextDisplay, LITURGY_ALLOWED_TAGS } from '@/components/ui/RichTextDisplay'
 
 const API = process.env.NEXT_PUBLIC_API_URL
 
@@ -60,6 +61,9 @@ function SongItem({ item, index, token, showTimings, showDurations, calculatedSt
           <p className="item-title" style={{ fontWeight: isSong ? 600 : 400, color: isSong ? 'var(--color-text-primary)' : 'var(--color-text-secondary)' }}>
             {isSong && item.song_title ? item.song_title : (item.title || item.type)}
           </p>
+          {!isSong && item.content && (
+            <RichTextDisplay html={item.content} className="liturgy-text" allowedTags={LITURGY_ALLOWED_TAGS} />
+          )}
           {item.notes && (
             <p className="item-notes">{item.notes.split('\n').map((line: string, i: number) => {
               const parts = line.split(/(\*\*[^*]+\*\*|_[^_]+_)/g).map((part: string, j: number) => {

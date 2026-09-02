@@ -421,6 +421,10 @@ router.post('/:id/email', requireAuth, requireMembership, async function(req, re
     const itemsHtml = items.map((item, i) => {
       if (item.type !== 'song') {
         const label = item.title || (item.type.charAt(0).toUpperCase() + item.type.slice(1))
+        const escHtml = (s) => String(s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
+        // item.content is already sanitised to <p>/<br>/<strong>/<em> on save.
+        const contentHtml = item.content ? `<div style="font-size:13px;color:#374151;font-style:normal;line-height:1.6;margin-top:6px;">${item.content}</div>` : ''
+        const noteHtml = item.notes ? `<div style="font-size:12px;color:#6b7280;font-style:italic;margin-top:4px;">${escHtml(item.notes).replace(/\n/g, '<br>')}</div>` : ''
         let timingCell = ''
         if (hasTimings || hasDurations) {
           const hh = String(Math.floor(runningMinutes / 60)).padStart(2, '0')
@@ -430,7 +434,7 @@ router.post('/:id/email', requireAuth, requireMembership, async function(req, re
           timingCell = `<td style="padding:10px 16px;white-space:nowrap;width:80px;">${timeStr}${durStr}</td>`
         }
         if (item.duration_minutes) runningMinutes += item.duration_minutes
-        return `<tr style="border-bottom:1px solid #e5e7eb;">${hasTimings || hasDurations ? timingCell : `<td style="width:80px;"></td>`}<td colspan="2" style="padding:10px 16px;background:#f8f9fa;font-size:13px;color:#666;font-style:italic;">${label}</td></tr>`
+        return `<tr style="border-bottom:1px solid #e5e7eb;">${hasTimings || hasDurations ? timingCell : `<td style="width:80px;"></td>`}<td colspan="2" style="padding:10px 16px;background:#f8f9fa;font-size:13px;color:#666;"><span style="font-style:italic;">${label}</span>${contentHtml}${noteHtml}</td></tr>`
       }
       const title = item.song_title || 'Untitled'
       const key = item.key_override || item.song_default_key || ''
