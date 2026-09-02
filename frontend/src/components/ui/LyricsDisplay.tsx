@@ -1,6 +1,6 @@
 'use client'
 
-import DOMPurify from 'dompurify'
+import { RichTextDisplay } from './RichTextDisplay'
 
 interface LyricsDisplayProps {
   lyrics: string
@@ -36,16 +36,19 @@ function normaliseHTML(html: string): string {
     .replace(/\n/g, '<br>')
 }
 
+// Thin wrapper around the shared RichTextDisplay. Keeps the lyrics-specific
+// legacy-marker/WordPress preprocessing and the broad default sanitiser
+// profile (legacy imported lyrics may contain div/h tags), while sharing the
+// single sanitise-and-render path.
 export function LyricsDisplay({ lyrics, className }: LyricsDisplayProps) {
   if (!lyrics) return null
 
   const html = isHTML(lyrics) ? normaliseHTML(lyrics) : markersToHTML(lyrics)
-  const safeHtml = DOMPurify.sanitize(html)
 
   return (
-    <div
+    <RichTextDisplay
+      html={html}
       className={`lyrics-text ${className || ''}`}
-      dangerouslySetInnerHTML={{ __html: safeHtml }}
     />
   )
 }
