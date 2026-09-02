@@ -28,6 +28,7 @@ import { KeyBadge, CategoryBadge } from '@/components/ui/badges'
 import { useChurch } from '@/context/ChurchContext'
 import api from '@/lib/api'
 import { ArrangementBuilder } from '@/components/ui/ArrangementBuilder'
+import { RichTextEditor } from '@/components/ui/RichTextEditor'
 
 const DEFAULT_ITEM_TYPES = [
   { label: 'Welcome' },
@@ -61,6 +62,7 @@ interface PlanItem {
   song_suggested_arrangement?: string
   song_default_duration?: number | null
   title: string
+  content: string
   notes: string
   key_override: string
   custom_arrangement: string
@@ -200,6 +202,15 @@ function SortableItem({
         {/* Notes + arrangement */}
         {item.expanded && (
           <div className="item-notes-panel">
+            {item.type !== 'song' && (
+              <div className="liturgy-content-field">
+                <p className="sub-section-label">Content</p>
+                <RichTextEditor
+                  value={item.content}
+                  onChange={val => onUpdate({ content: val })}
+                />
+              </div>
+            )}
             <textarea
               className="input notes-input"
               value={item.notes}
@@ -314,6 +325,7 @@ export default function PlanEditPage() {
         song_category: item.song_category,
         song_default_duration: item.song_default_duration ?? null,
         title: item.title || '',
+        content: item.content || '',
         notes: item.notes || '',
         key_override: normaliseKey(item.key_override) || normaliseKey(item.song_default_key),
         custom_arrangement: item.custom_arrangement || '',
@@ -348,7 +360,7 @@ export default function PlanEditPage() {
       song_default_key: song.default_key, song_category: song.category,
       song_suggested_arrangement: (song as any).suggested_arrangement || '',
       song_default_duration: (song as any).default_duration ?? null,
-      title: '', notes: '', key_override: normaliseKey(song.default_key),
+      title: '', content: '', notes: '', key_override: normaliseKey(song.default_key),
       custom_arrangement: '', expanded: false,
       duration_minutes: (song as any).default_duration ?? null,
     }])
@@ -358,7 +370,7 @@ export default function PlanEditPage() {
   const addItem = (type: string, label: string) => {
     setItems(prev => [...prev, {
       id: newId(), type, song_id: null,
-      title: label, notes: '', key_override: '', custom_arrangement: '', expanded: false,
+      title: label, content: '', notes: '', key_override: '', custom_arrangement: '', expanded: false,
       duration_minutes: null,
     }])
   }
@@ -378,7 +390,7 @@ export default function PlanEditPage() {
         api.put(`/api/plans/${id}/items`, {
           items: items.map(item => ({
             type: item.type, song_id: item.song_id || null,
-            title: item.title || null, notes: item.notes || null,
+            title: item.title || null, content: item.content || null, notes: item.notes || null,
             key_override: item.key_override || null,
             custom_arrangement: item.custom_arrangement || null,
             duration_minutes: item.duration_minutes || null,

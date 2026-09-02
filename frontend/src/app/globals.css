@@ -3492,6 +3492,18 @@ select.input {
 .lyrics-editor-hint    { font-size: var(--text-xs); color: var(--color-text-muted); align-self: center; margin-left: 8px; }
 .lyrics-editor-input   { padding: 12px 16px; min-height: 280px; font-size: var(--text-base); line-height: 1.8; }
 
+/* ── Shared rich-text editor (liturgy / service-item content) ── */
+.richtext-editor-wrap    { border: 1px solid var(--color-border); border-radius: var(--radius-md); overflow: hidden; background: var(--color-surface); }
+.richtext-editor-toolbar { display: flex; gap: 4px; padding: 8px 12px; border-bottom: 1px solid var(--color-border); background: var(--color-neutral-50); }
+.richtext-editor-hint    { font-size: var(--text-xs); color: var(--color-text-muted); align-self: center; margin-left: 8px; }
+.richtext-editor-input   { padding: 12px 16px; min-height: 120px; font-size: var(--text-base); line-height: 1.7; }
+.richtext-editor-content { outline: none; min-height: 120px; }
+.richtext-editor-content p { margin: 0 0 0.6em; line-height: 1.7; }
+.richtext-editor-content p:last-child { margin-bottom: 0; }
+.richtext-editor-content strong { font-weight: 700; }
+.richtext-editor-content em     { font-style: italic; }
+.liturgy-content-field { margin-bottom: 10px; }
+
 /* ── ChordPro Viewer ── */
 .chordpro-viewer       { position: fixed; inset: 0; z-index: 300; display: flex; flex-direction: column; background: var(--color-bg); }
 .chordpro-toolbar      { background: var(--color-surface); border-bottom: 1px solid var(--color-border); padding: 10px var(--space-lg); display: flex; align-items: center; gap: 12px; flex-shrink: 0; }
