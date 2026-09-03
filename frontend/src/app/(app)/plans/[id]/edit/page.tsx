@@ -30,15 +30,15 @@ import api from '@/lib/api'
 import { ArrangementBuilder } from '@/components/ui/ArrangementBuilder'
 import { RichTextEditor } from '@/components/ui/RichTextEditor'
 
-const DEFAULT_ITEM_TYPES = [
-  { label: 'Welcome' },
-  { label: 'Prayer' },
-  { label: 'Confession' },
-  { label: 'Assurance' },
-  { label: 'Reading' },
-  { label: 'Sermon' },
-  { label: 'Communion' },
-  { label: 'Announcement' },
+const DEFAULT_SERVICE_ITEMS = [
+  { title: 'Welcome' },
+  { title: 'Prayer' },
+  { title: 'Confession' },
+  { title: 'Assurance' },
+  { title: 'Reading' },
+  { title: 'Sermon' },
+  { title: 'Communion' },
+  { title: 'Announcement' },
 ]
 
 const KEYS = ['C', 'C#', 'Db', 'D', 'Eb', 'E', 'F', 'F#', 'Gb', 'G', 'Ab', 'A', 'Bb', 'B', 'Cm', 'C#m', 'Dm', 'Ebm', 'Em', 'Fm', 'F#m', 'Gm', 'Abm', 'Am', 'Bbm', 'Bm']
@@ -265,7 +265,7 @@ export default function PlanEditPage() {
   const { church, loading: churchLoading } = useChurch()
   const { getToken } = useAuth()
   const [plan, setPlan] = useState<any>(null)
-  const [customItemTypes, setCustomItemTypes] = useState<{ label: string }[] | null>(null)
+  const [serviceItems, setServiceItems] = useState<{ title: string; content?: string | null; note?: string | null }[] | null>(null)
   const [items, setItems] = useState<PlanItem[]>([])
   const [songs, setSongs] = useState<Song[]>([])
   const [songSearch, setSongSearch] = useState('')
@@ -306,10 +306,10 @@ export default function PlanEditPage() {
     Promise.all([
       api.get(`/api/plans/${id}`),
       api.get('/api/songs', { params: { include_retired: 'false' } }),
-      api.get(`/api/churches/${church.id}/plan-item-types`),
-    ]).then(([planRes, songsRes, itemTypesRes]) => {
-      if (itemTypesRes.data.length > 0) {
-        setCustomItemTypes(itemTypesRes.data.map((t: { name: string }) => ({ label: t.name })))
+      api.get(`/api/churches/${church.id}/liturgy-snippets`),
+    ]).then(([planRes, songsRes, snippetsRes]) => {
+      if (snippetsRes.data.length > 0) {
+        setServiceItems(snippetsRes.data.map((s: { title: string; content: string | null; note: string | null }) => ({ title: s.title, content: s.content, note: s.note })))
       }
       const s = planRes.data
       setPlan(s)
@@ -371,6 +371,15 @@ export default function PlanEditPage() {
     setItems(prev => [...prev, {
       id: newId(), type, song_id: null,
       title: label, content: '', notes: '', key_override: '', custom_arrangement: '', expanded: false,
+      duration_minutes: null,
+    }])
+  }
+
+  const addFromLibrary = (s: { title: string; content?: string | null; note?: string | null }) => {
+    setItems(prev => [...prev, {
+      id: newId(), type: 'custom', song_id: null,
+      title: s.title, content: s.content || '', notes: s.note || '',
+      key_override: '', custom_arrangement: '', expanded: false,
       duration_minutes: null,
     }])
   }
@@ -521,9 +530,9 @@ export default function PlanEditPage() {
             <div className="card">
               <div className="section-label">Other items</div>
               <div className="item-type-grid">
-                {(customItemTypes ?? DEFAULT_ITEM_TYPES).map(({ label }) => (
-                  <button key={label} type="button" onClick={() => addItem('custom', label)} className="filter-chip">
-                    + {label}
+                {(serviceItems ?? DEFAULT_SERVICE_ITEMS).map((s, i) => (
+                  <button key={i} type="button" onClick={() => addFromLibrary(s)} className="filter-chip">
+                    + {s.title}
                   </button>
                 ))}
                 <button type="button" onClick={() => addItem('custom', '')} className="filter-chip">
@@ -574,9 +583,9 @@ export default function PlanEditPage() {
             <div className="card">
               <div className="section-label">Other items</div>
               <div className="item-type-grid">
-                {(customItemTypes ?? DEFAULT_ITEM_TYPES).map(({ label }) => (
-                  <button key={label} type="button" onClick={() => addItem('custom', label)} className="filter-chip">
-                    + {label}
+                {(serviceItems ?? DEFAULT_SERVICE_ITEMS).map((s, i) => (
+                  <button key={i} type="button" onClick={() => addFromLibrary(s)} className="filter-chip">
+                    + {s.title}
                   </button>
                 ))}
                 <button type="button" onClick={() => addItem('custom', '')} className="filter-chip">
