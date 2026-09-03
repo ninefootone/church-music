@@ -3511,6 +3511,16 @@ select.input {
 .liturgy-text strong { font-weight: 700; color: var(--color-text-primary); }
 .liturgy-text em     { font-style: italic; }
 
+/* ── Service-text (snippet) library in Settings ── */
+.snippet-list { list-style: none; margin: 0 0 12px; padding: 0; }
+.snippet-row { display: flex; align-items: center; gap: 12px; padding: 10px 0; border-bottom: 1px solid var(--color-border); }
+.snippet-row:first-child { border-top: 1px solid var(--color-border); }
+.snippet-row-title { flex: 1; font-weight: 600; color: var(--color-text-primary); }
+.snippet-row-actions { display: flex; align-items: center; gap: 6px; }
+.snippet-editor { margin-top: 14px; padding-top: 14px; border-top: 1px solid var(--color-border); }
+.snippet-editor-actions { display: flex; gap: 8px; margin-top: 14px; }
+.snippet-add-btn { margin-top: 4px; }
+
 /* ── ChordPro Viewer ── */
 .chordpro-viewer       { position: fixed; inset: 0; z-index: 300; display: flex; flex-direction: column; background: var(--color-bg); }
 .chordpro-toolbar      { background: var(--color-surface); border-bottom: 1px solid var(--color-border); padding: 10px var(--space-lg); display: flex; align-items: center; gap: 12px; flex-shrink: 0; }

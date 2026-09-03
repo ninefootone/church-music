@@ -5,6 +5,7 @@ import { useAuth, useUser } from '@clerk/nextjs'
 import { useChurch } from '@/context/ChurchContext'
 import api, { setAuthToken } from '@/lib/api'
 import { ConfirmModal } from '@/components/ui/ConfirmModal'
+import { LiturgySnippetsManager } from '@/components/ui/LiturgySnippetsManager'
 import { Copy, Check, RefreshCw, Plus, X } from 'lucide-react'
 
 interface RoleItem {
@@ -450,6 +451,7 @@ export default function SettingsPage() {
     { id: 'notifications', label: 'Notifications' },
     { id: 'roles', label: 'Roles' },
     { id: 'itemtypes', label: 'Item types' },
+    { id: 'servicetext', label: 'Service text' },
     { id: 'categories', label: 'Categories' },
     { id: 'tags', label: 'Tags' },
   ]
@@ -735,6 +737,10 @@ export default function SettingsPage() {
           </button>
         </div>
       </div>
+      )}
+
+      {activeTab === 'servicetext' && (
+        <LiturgySnippetsManager />
       )}
 
       {/* Categories */}
