@@ -451,7 +451,7 @@ export default function SettingsPage() {
     { id: 'notifications', label: 'Notifications' },
     { id: 'roles', label: 'Roles' },
     { id: 'itemtypes', label: 'Item types' },
-    { id: 'servicetext', label: 'Service text' },
+    { id: 'servicetext', label: 'Service items' },
     { id: 'categories', label: 'Categories' },
     { id: 'tags', label: 'Tags' },
   ]

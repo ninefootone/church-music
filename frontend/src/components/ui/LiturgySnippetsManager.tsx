@@ -16,10 +16,11 @@ interface Snippet {
   sort_order: number
 }
 
-// Settings → "Service text": manage the per-church reusable snippet library
-// (church_liturgy_snippets). Admin-only surface (the whole Settings page is
-// already gated on isAdmin). Backend CRUD lives on
-// /api/churches/:churchId/liturgy-snippets.
+// Settings → "Service items": manage the per-church reusable library of
+// non-song service elements — a quick title on its own (Offering, Notices) or
+// a title with full reusable text and a note (the Lord's Prayer, a creed).
+// Admin-only surface (the whole Settings page is gated on isAdmin). Backend
+// CRUD lives on /api/churches/:churchId/liturgy-snippets.
 export function LiturgySnippetsManager() {
   const { getToken } = useAuth()
   const { church } = useChurch()
@@ -40,7 +41,7 @@ export function LiturgySnippetsManager() {
     if (!church || loaded) return
     api.get(`/api/churches/${church.id}/liturgy-snippets`)
       .then(r => { setSnippets(r.data); setLoaded(true) })
-      .catch(() => setError('Failed to load service text.'))
+      .catch(() => setError('Failed to load service items.'))
   }, [church, loaded])
 
   async function authApi() {
@@ -94,78 +95,93 @@ export function LiturgySnippetsManager() {
     }
   }
 
+  // The editor form — reused inline (editing a row) and at the foot (adding new).
+  const editorForm = (
+    <div className="snippet-editor">
+      <label className="settings-label">Title</label>
+      <input
+        className="input"
+        value={title}
+        onChange={e => setTitle(e.target.value)}
+        placeholder="e.g. The Lord&rsquo;s Prayer"
+        autoFocus
+      />
+
+      <label className="settings-label" style={{ marginTop: 12 }}>
+        Content <span className="label-note">(optional)</span>
+      </label>
+      <RichTextEditor value={content} onChange={setContent} />
+
+      <label className="settings-label" style={{ marginTop: 12 }}>
+        Note <span className="label-note">(optional)</span>
+      </label>
+      <input
+        className="input"
+        value={note}
+        onChange={e => setNote(e.target.value)}
+        placeholder="e.g. Congregation stands"
+      />
+
+      {error && <div className="settings-error" style={{ marginTop: 10 }}>{error}</div>}
+
+      <div className="snippet-editor-actions">
+        <button type="button" onClick={handleSave} className="btn btn-primary" disabled={saving}>
+          {saving ? 'Saving…' : editingId === 'new' ? 'Add' : 'Save changes'}
+        </button>
+        <button type="button" onClick={closeEditor} className="btn btn-secondary" disabled={saving}>
+          Cancel
+        </button>
+      </div>
+    </div>
+  )
+
   return (
     <div className="settings-card settings-card--spaced">
-      <h2 className="settings-section-heading settings-section-heading--tight">Service text</h2>
+      <h2 className="settings-section-heading settings-section-heading--tight">Service items</h2>
       <p className="settings-section-desc">
-        Reusable blocks of text — prayers, creeds, a welcome or call to worship, communion words, a benediction, a vision statement. Save them once here, then drop them into any plan with &ldquo;Insert from library&rdquo; when building it.
+        Your church&rsquo;s reusable non-song service elements. An item can be just a title (Offering, Notices, Welcome) or a title with full text and a note — a prayer, a creed, a call to worship, communion words, a benediction. Add them once here, then pick them when building a plan.
       </p>
 
-      {error && <div className="settings-error">{error}</div>}
+      {error && editingId === null && <div className="settings-error">{error}</div>}
 
       {loaded && snippets.length === 0 && editingId === null && (
-        <p className="form-empty-note">No saved service text yet.</p>
+        <p className="form-empty-note">No saved service items yet.</p>
       )}
 
       {snippets.length > 0 && (
         <ul className="snippet-list">
           {snippets.map(s => (
-            <li key={s.id} className="snippet-row">
-              <span className="snippet-row-title">{s.title}</span>
-              <div className="snippet-row-actions">
-                <button type="button" onClick={() => openEdit(s)} className="btn btn-ghost btn-icon-label">
-                  <Pencil size={14} />Edit
-                </button>
-                <button type="button" onClick={() => setDeleteTarget(s)} className="btn-icon-remove" title="Delete">
-                  <X size={16} />
-                </button>
-              </div>
-            </li>
+            editingId === s.id ? (
+              <li key={s.id} className="snippet-editing-li">{editorForm}</li>
+            ) : (
+              <li key={s.id} className="snippet-row">
+                <span className="snippet-row-title">{s.title}</span>
+                {s.content && <span className="snippet-row-badge">text</span>}
+                <div className="snippet-row-actions">
+                  <button type="button" onClick={() => openEdit(s)} className="btn btn-ghost btn-icon-label" disabled={editingId !== null}>
+                    <Pencil size={14} />Edit
+                  </button>
+                  <button type="button" onClick={() => setDeleteTarget(s)} className="btn-icon-remove" title="Delete" disabled={editingId !== null}>
+                    <X size={16} />
+                  </button>
+                </div>
+              </li>
+            )
           ))}
         </ul>
       )}
 
-      {editingId !== null ? (
-        <div className="snippet-editor">
-          <label className="settings-label">Title</label>
-          <input
-            className="input"
-            value={title}
-            onChange={e => setTitle(e.target.value)}
-            placeholder="e.g. The Lord&rsquo;s Prayer"
-          />
+      {editingId === 'new' && editorForm}
 
-          <label className="settings-label" style={{ marginTop: 12 }}>Content</label>
-          <RichTextEditor value={content} onChange={setContent} />
-
-          <label className="settings-label" style={{ marginTop: 12 }}>
-            Note <span className="label-note">(optional)</span>
-          </label>
-          <input
-            className="input"
-            value={note}
-            onChange={e => setNote(e.target.value)}
-            placeholder="e.g. Congregation stands"
-          />
-
-          <div className="snippet-editor-actions">
-            <button type="button" onClick={handleSave} className="btn btn-primary" disabled={saving}>
-              {saving ? 'Saving…' : editingId === 'new' ? 'Add' : 'Save changes'}
-            </button>
-            <button type="button" onClick={closeEditor} className="btn btn-secondary" disabled={saving}>
-              Cancel
-            </button>
-          </div>
-        </div>
-      ) : (
+      {editingId === null && (
         <button type="button" onClick={openNew} className="btn btn-ghost btn-icon-label snippet-add-btn">
-          <Plus size={15} />Add service text
+          <Plus size={15} />Add service item
         </button>
       )}
 
       {deleteTarget && (
         <ConfirmModal
-          title="Delete service text?"
+          title="Delete service item?"
           message={`“${deleteTarget.title}” will be removed from your library. Plans that already use it keep their own copy.`}
           confirmLabel="Delete"
           danger
