@@ -376,7 +376,7 @@ router.put('/:churchId/plan-item-types', requireAuth, requireAdmin, async (req, 
 router.get('/:churchId/liturgy-snippets', requireAuth, requireMembership, async (req, res, next) => {
   try {
     const result = await pool.query(
-      'SELECT * FROM church_liturgy_snippets WHERE church_id = $1 ORDER BY sort_order, title',
+      'SELECT * FROM church_liturgy_snippets WHERE church_id = $1 ORDER BY LOWER(title)',
       [req.churchId]
     );
     res.json(result.rows);
