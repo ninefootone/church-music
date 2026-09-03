@@ -3522,6 +3522,7 @@ select.input {
 .snippet-add-btn { margin-top: 4px; }
 .snippet-editing-li { list-style: none; }
 .snippet-row-badge { font-size: 11px; padding: 1px 8px; border-radius: 999px; background: var(--color-brand-50); color: var(--color-brand-600); font-weight: 600; }
+.filter-chip--more { font-weight: 600; color: var(--color-brand-600); }
 
 /* ── ChordPro Viewer ── */
 .chordpro-viewer       { position: fixed; inset: 0; z-index: 300; display: flex; flex-direction: column; background: var(--color-bg); }

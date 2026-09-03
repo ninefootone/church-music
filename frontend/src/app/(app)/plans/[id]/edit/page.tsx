@@ -41,6 +41,8 @@ const DEFAULT_SERVICE_ITEMS = [
   { title: 'Announcement' },
 ]
 
+const SERVICE_ITEMS_LIMIT = 8
+
 const KEYS = ['C', 'C#', 'Db', 'D', 'Eb', 'E', 'F', 'F#', 'Gb', 'G', 'Ab', 'A', 'Bb', 'B', 'Cm', 'C#m', 'Dm', 'Ebm', 'Em', 'Fm', 'F#m', 'Gm', 'Abm', 'Am', 'Bbm', 'Bm']
 
 function normaliseKey(key: string | null | undefined): string {
@@ -266,6 +268,7 @@ export default function PlanEditPage() {
   const { getToken } = useAuth()
   const [plan, setPlan] = useState<any>(null)
   const [serviceItems, setServiceItems] = useState<{ title: string; content?: string | null; note?: string | null }[] | null>(null)
+  const [showAllServiceItems, setShowAllServiceItems] = useState(false)
   const [items, setItems] = useState<PlanItem[]>([])
   const [songs, setSongs] = useState<Song[]>([])
   const [songSearch, setSongSearch] = useState('')
@@ -530,11 +533,16 @@ export default function PlanEditPage() {
             <div className="card">
               <div className="section-label">Other items</div>
               <div className="item-type-grid">
-                {(serviceItems ?? DEFAULT_SERVICE_ITEMS).map((s, i) => (
+                {(serviceItems ?? DEFAULT_SERVICE_ITEMS).slice(0, showAllServiceItems ? undefined : SERVICE_ITEMS_LIMIT).map((s, i) => (
                   <button key={i} type="button" onClick={() => addFromLibrary(s)} className="filter-chip">
                     + {s.title}
                   </button>
                 ))}
+                {(serviceItems ?? DEFAULT_SERVICE_ITEMS).length > SERVICE_ITEMS_LIMIT && (
+                  <button type="button" onClick={() => setShowAllServiceItems(v => !v)} className="filter-chip filter-chip--more">
+                    {showAllServiceItems ? 'Show less' : `Show more (${(serviceItems ?? DEFAULT_SERVICE_ITEMS).length - SERVICE_ITEMS_LIMIT})`}
+                  </button>
+                )}
                 <button type="button" onClick={() => addItem('custom', '')} className="filter-chip">
                   + Other
                 </button>
@@ -583,11 +591,16 @@ export default function PlanEditPage() {
             <div className="card">
               <div className="section-label">Other items</div>
               <div className="item-type-grid">
-                {(serviceItems ?? DEFAULT_SERVICE_ITEMS).map((s, i) => (
+                {(serviceItems ?? DEFAULT_SERVICE_ITEMS).slice(0, showAllServiceItems ? undefined : SERVICE_ITEMS_LIMIT).map((s, i) => (
                   <button key={i} type="button" onClick={() => addFromLibrary(s)} className="filter-chip">
                     + {s.title}
                   </button>
                 ))}
+                {(serviceItems ?? DEFAULT_SERVICE_ITEMS).length > SERVICE_ITEMS_LIMIT && (
+                  <button type="button" onClick={() => setShowAllServiceItems(v => !v)} className="filter-chip filter-chip--more">
+                    {showAllServiceItems ? 'Show less' : `Show more (${(serviceItems ?? DEFAULT_SERVICE_ITEMS).length - SERVICE_ITEMS_LIMIT})`}
+                  </button>
+                )}
                 <button type="button" onClick={() => addItem('custom', '')} className="filter-chip">
                   + Other
                 </button>
