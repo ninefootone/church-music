@@ -596,15 +596,15 @@ export default function PlanEditPage() {
                     + {s.title}
                   </button>
                 ))}
-                {(serviceItems ?? DEFAULT_SERVICE_ITEMS).length > SERVICE_ITEMS_LIMIT && (
-                  <button type="button" onClick={() => setShowAllServiceItems(v => !v)} className="filter-chip filter-chip--more">
-                    {showAllServiceItems ? 'Show less' : `Show more (${(serviceItems ?? DEFAULT_SERVICE_ITEMS).length - SERVICE_ITEMS_LIMIT})`}
-                  </button>
-                )}
                 <button type="button" onClick={() => addItem('custom', '')} className="filter-chip">
                   + Other
                 </button>
               </div>
+              {(serviceItems ?? DEFAULT_SERVICE_ITEMS).length > SERVICE_ITEMS_LIMIT && (
+                <button type="button" onClick={() => setShowAllServiceItems(v => !v)} className="btn-inline-link service-items-more">
+                  {showAllServiceItems ? 'Show less' : `Show more (${(serviceItems ?? DEFAULT_SERVICE_ITEMS).length - SERVICE_ITEMS_LIMIT})`}
+                </button>
+              )}
             </div>
           </div>
         )}
