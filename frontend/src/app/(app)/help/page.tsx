@@ -350,6 +350,12 @@ export default function HelpPage() {
                 From the plan detail page, click <strong>Edit</strong> and then add songs and other items (welcome, prayer, sermon etc.). Search songs by title then click + to add it to the plan.
               </p>
               <p className="help-content-body">
+                Alongside songs you can add <strong>service items</strong> — non-song elements such as a welcome, prayer, reading or offering. Under <strong>Other items</strong> you&apos;ll find quick buttons drawn from your church&apos;s <strong>Service items</strong> library (set up in Settings), plus <strong>+ Other</strong> for a one-off. Each can carry a <strong>title</strong>, a block of <strong>content</strong> — full text such as a prayer or creed, with bold and italic — and a short <strong>note</strong>. Expand the item to add or edit these.
+              </p>
+              <p className="help-content-body">
+                On the plan, the public share link and the emailed plan, a service item that has content shows as a single line you click to reveal the full text (the email prints it in full) — so the running order stays tidy but the words are there when you need them.
+              </p>
+              <p className="help-content-body">
                 Songs appear in the running order in the sequence you add them. You can drag and drop to reorder them using the dots on the left.
               </p>
               <p className="help-content-body">
@@ -459,6 +465,20 @@ export default function HelpPage() {
               </p>
               <p className="help-content-body">
                 You can send to all church members, or enter a custom list of email addresses. This is useful for distributing the plan to musicians before a service.
+              </p>
+            </div>
+          ),
+        },
+        {
+          id: 'duplicating-a-plan',
+          title: 'Duplicating a plan',
+          content: () => (
+            <div>
+              <p className="help-content-body">
+                To reuse a plan as a starting point, duplicate it — the copy includes its running order, service items and assigned musicians. Use <strong>Duplicate</strong> on the plan, then set the new date and time.
+              </p>
+              <p className="help-content-body">
+                The duplicate dialog also has a <strong>Title</strong> field, pre-filled with the original plan&apos;s title, so you can rename the copy as you create it.
               </p>
             </div>
           ),
@@ -618,6 +638,23 @@ export default function HelpPage() {
               </p>
               <p className="help-content-body">
                 Anyone who signs up via the link is automatically connected to your church as a standard member.
+              </p>
+            </div>
+          ),
+        },
+        {
+          id: 'service-items',
+          title: 'Service items library',
+          content: () => (
+            <div>
+              <p className="help-content-body">
+                <strong>Service items</strong> are your church&apos;s reusable non-song service elements — the things that appear in a plan alongside songs. An item can be just a <strong>title</strong> (Welcome, Offering, Notices) or a title with full <strong>content</strong> and a <strong>note</strong> — a prayer, a creed, a call to worship, communion words, a benediction.
+              </p>
+              <p className="help-content-body">
+                Manage them in <strong>Settings → Service items</strong> (admins only). Add an item with a title and, optionally, its full text (with bold and italic) and a note. Items that carry text show a small <strong>text</strong> badge in the list.
+              </p>
+              <p className="help-content-body">
+                When building a plan, your saved service items appear as quick buttons under <strong>Other items</strong>. Adding one drops in a <strong>copy</strong> — so editing it on a plan doesn&apos;t change your library, and editing the library later doesn&apos;t change plans that already use it.
               </p>
             </div>
           ),
