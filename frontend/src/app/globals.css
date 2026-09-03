@@ -3502,7 +3502,7 @@ select.input {
 .richtext-editor-content p:last-child { margin-bottom: 0; }
 .richtext-editor-content strong { font-weight: 700; }
 .richtext-editor-content em     { font-style: italic; }
-.liturgy-content-field { margin-bottom: 10px; }
+.liturgy-content-field { margin-top: 12px; margin-bottom: 10px; }
 
 /* ── Liturgy / service-item content (rendered) ── */
 .liturgy-text { margin-top: 4px; font-size: var(--text-base); line-height: 1.7; color: var(--color-text-secondary); }
