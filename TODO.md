@@ -49,6 +49,8 @@ Decision log:
 
 - [ ] Viewport metadata warning — Next 15 wants `viewport` in its own `export const viewport` rather than inside the `metadata` export (`layout.tsx`, sign-in, others). Cosmetic dev warning; move when convenient.
 
+- [ ] Unsaved-changes "are you sure you want to leave?" warning — none exists today. Tier 1: `beforeunload` for tab-close/refresh (small; browser controls the wording). Tier 2: intercept in-app nav + back button, awkward on App Router (no `routeChangeStart`), needs a custom modal. Real cost is per-form dirty-tracking (~5 forms: new/edit song, new plan, plan settings, settings) — check whether the plan builder auto-saves first. Do Tier 1 first.
+
 
 ### Discover
 - [ ] Dashboard Discover block — swipeable carousel showing in_discover songs with image, title, category and description; settings toggle (`hide_discover_dashboard` on `churches` table) to hide it
