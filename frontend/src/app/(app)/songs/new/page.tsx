@@ -64,7 +64,7 @@ export default function NewSongPage() {
     first_line: '', ccli_number: '', lyrics: '', tags: [] as string[],
     notes: '', bible_references: '', suggested_arrangement: '',
     share_all_data: false, in_discover: false, discover_description: '',
-    time_signature: '', tempo: '',
+    time_signature: '', tempo: '', in_library: false,
   })
   const [links, setLinks] = useState<SongLink[]>([])
 
@@ -297,6 +297,17 @@ export default function NewSongPage() {
                 />
                 <label htmlFor="share_all_data" className="checkbox-label">
                   Share all data — this song is public domain or we have permission from the copyright holder
+                </label>
+              </div>
+              <div className="checkbox-row" style={{ marginTop: '0.5rem' }}>
+                <input
+                  type="checkbox"
+                  id="in_library"
+                  checked={form.in_library}
+                  onChange={e => setForm(f => ({ ...f, in_library: e.target.checked }))}
+                />
+                <label htmlFor="in_library" className="checkbox-label">
+                  Add to public library — show this song in the searchable Discover library
                 </label>
               </div>
               <div className="checkbox-row" style={{ marginTop: '0.5rem' }}>
