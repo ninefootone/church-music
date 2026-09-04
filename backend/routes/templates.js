@@ -314,13 +314,16 @@ router.post('/:id/import', requireAuth, requireAdmin, async (req, res, next) => 
     // Copy template to church — include extended fields if share_all_data is enabled
     const song = await pool.query(
       `INSERT INTO songs (church_id, title, author, default_key, category, first_line, ccli_number,
-        notes, bible_references, suggested_arrangement, lyrics, copyright_info, copyright_link, is_template)
-       VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,false) RETURNING *`,
+        suggested_arrangement, time_signature, tempo,
+        notes, bible_references, lyrics, copyright_info, copyright_link, is_template)
+       VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15,false) RETURNING *`,
       [
         churchId, t.title, t.author, t.default_key, t.category, t.first_line, t.ccli_number,
+        t.suggested_arrangement ?? null,
+        t.time_signature ?? null,
+        t.tempo ?? null,
         t.share_all_data ? t.notes : null,
         t.share_all_data ? t.bible_references : null,
-        t.share_all_data ? t.suggested_arrangement : null,
         t.share_all_data ? t.lyrics : null,
         t.copyright_info ?? null,
         t.copyright_link ?? null,
