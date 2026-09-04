@@ -168,6 +168,13 @@ export default function NewSongPage() {
               onFirstLineChange={val => setForm(f => ({ ...f, first_line: f.first_line || val }))}
               onDefaultKeyChange={val => setForm(f => ({ ...f, default_key: f.default_key || val }))}
               onCategoryChange={val => setForm(f => ({ ...f, category: f.category || val as Category }))}
+              onExtras={extras => setForm(f => ({
+                ...f,
+                time_signature: f.time_signature || extras.time_signature,
+                tempo: f.tempo || extras.tempo,
+                suggested_arrangement: f.suggested_arrangement || extras.suggested_arrangement,
+                tags: f.tags.length ? f.tags : extras.tags,
+              }))}
             />
             {templateSearch && (
               <div className="template-match">

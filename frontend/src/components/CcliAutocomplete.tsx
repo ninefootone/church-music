@@ -12,6 +12,10 @@ type CcliEntry = {
   default_key: string
   category: string
   in_library: boolean
+  time_signature?: string | null
+  tempo?: number | null
+  suggested_arrangement?: string | null
+  tags?: { id: string; name: string }[]
 }
 
 type Props = {
@@ -23,6 +27,7 @@ type Props = {
   onFirstLineChange?: (firstLine: string) => void
   onDefaultKeyChange?: (key: string) => void
   onCategoryChange?: (category: string) => void
+  onExtras?: (extras: { time_signature: string; tempo: string; suggested_arrangement: string; tags: string[] }) => void
   onBlur?: () => void
 }
 
@@ -35,6 +40,7 @@ export default function CcliAutocomplete({
   onFirstLineChange,
   onDefaultKeyChange,
   onCategoryChange,
+  onExtras,
   onBlur,
 }: Props) {
   const [suggestions, setSuggestions] = useState<CcliEntry[]>([])
@@ -83,6 +89,12 @@ export default function CcliAutocomplete({
     if (onFirstLineChange && entry.first_line) onFirstLineChange(entry.first_line)
     if (onDefaultKeyChange && entry.default_key) onDefaultKeyChange(entry.default_key)
     if (onCategoryChange && entry.category) onCategoryChange(entry.category)
+    if (onExtras) onExtras({
+      time_signature: entry.time_signature || '',
+      tempo: entry.tempo != null ? String(entry.tempo) : '',
+      suggested_arrangement: entry.suggested_arrangement || '',
+      tags: (entry.tags || []).map(t => t.id),
+    })
     setSuggestions([])
     setOpen(false)
   }
