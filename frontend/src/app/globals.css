@@ -2206,7 +2206,10 @@ body.set-viewer-active { overflow: hidden; }
   line-height: 1.8;
 }
 .lyrics-editor-content strong { font-weight: 700; }
-.lyrics-editor-content p:has(> strong:only-child) { margin-top: 0.8em; }
+/* Space above a section header — a paragraph that STARTS with bold. :first-child
+   (not :only-child) so pasted stanzas, where the bold header shares a <p> with
+   <br>-joined lines, are covered too — not just typed one-line headers. */
+.lyrics-editor-content p:has(> strong:first-child) { margin-top: 0.8em; }
 .lyrics-editor-content em     { font-style: italic; }
 
 .lyrics-text p {
@@ -2217,7 +2220,8 @@ body.set-viewer-active { overflow: hidden; }
   color: var(--color-text-secondary);
 }
 .lyrics-text strong { font-weight: 700; color: var(--color-text-primary); }
-.lyrics-text p:has(> strong:only-child) { margin-top: 0.8em; }
+/* :first-child (not :only-child) — see the .lyrics-editor-content note above. */
+.lyrics-text p:has(> strong:first-child) { margin-top: 0.8em; }
 .lyrics-text em     { font-style: italic; }
 
 /* ============================================================
