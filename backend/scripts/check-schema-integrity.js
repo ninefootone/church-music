@@ -22,7 +22,7 @@ const pool = new Pool({
 const results = [];
 function record(name, ok, detail) {
   results.push({ name, ok, detail });
-  const tag = ok === true ? 'PASS' : ok === 'warn' ? 'WARN' : 'MISSING';
+  const tag = ok === true ? 'PASS' : ok === 'warn' ? 'WARN' : ok === 'fail' ? 'FAIL' : 'MISSING';
   console.log(`  [${tag}] ${name}${detail ? ' — ' + detail : ''}`);
 }
  
@@ -49,6 +49,43 @@ async function run() {
       ('songs_search_vector_update','song_tags_search_vector_update')`);
     record("function songs_search_vector_update",   fns.some(r => r.proname === 'songs_search_vector_update'));
     record("function song_tags_search_vector_update", fns.some(r => r.proname === 'song_tags_search_vector_update'));
+
+    // --- Trigger FIRE-TEST (the check that would have caught the 2026-09-07 500) ---
+    // Presence ≠ execution. A function can exist AND be attached yet throw the moment
+    // it fires — e.g. affected_song_id declared INTEGER while song_id is UUID, which
+    // 500'd every tag save until fixed. So actually fire the song_tags trigger by
+    // inserting then deleting one link, inside a transaction we ALWAYS roll back:
+    // read-only in effect, but it exercises the exact path a song save takes.
+    console.log('\nTrigger fire-test (runs the function, not just checks it exists):');
+    const pair = await q(`
+      SELECT s.id AS song_id, t.id AS tag_id
+      FROM songs s CROSS JOIN tags t
+      WHERE NOT EXISTS (SELECT 1 FROM song_tags st WHERE st.song_id = s.id AND st.tag_id = t.id)
+      LIMIT 1`);
+    if (!pair.length) {
+      record("song_tags trigger fires without error", 'warn',
+        'skipped — need ≥1 song and ≥1 tag with an unused (song,tag) combination to test');
+    } else {
+      const { song_id, tag_id } = pair[0];
+      const client = await pool.connect();
+      let fireErr = null;
+      try {
+        await client.query('BEGIN');
+        // AFTER INSERT then AFTER DELETE on song_tags — the save path. A type-mismatched
+        // function throws here (e.g. SQLSTATE 22P02, invalid input syntax for type ...).
+        await client.query('INSERT INTO song_tags (song_id, tag_id) VALUES ($1, $2)', [song_id, tag_id]);
+        await client.query('DELETE FROM song_tags WHERE song_id = $1 AND tag_id = $2', [song_id, tag_id]);
+      } catch (e) {
+        fireErr = e;
+      } finally {
+        await client.query('ROLLBACK').catch(() => {}); // always undo — nothing persists
+        client.release();
+      }
+      record("song_tags trigger fires without error (INSERT+DELETE, rolled back)",
+        fireErr ? 'fail' : true,
+        fireErr ? `${fireErr.code || ''} ${fireErr.message}`.trim()
+                : 'save path exercised, no persistence');
+    }
  
     // --- Search-vector data health ----------------------------------------
     console.log('\nSearch-vector data:');
@@ -115,8 +152,9 @@ async function run() {
       console.log('\nMISSING — needs attention:');
       for (const m of missing) console.log(`  - ${m.name}`);
       console.log('\nMost are re-created by re-running the owning migration (all should be idempotent).');
-      console.log('A missing songs/song_tags trigger specifically: re-run backend/scripts/repair-tag-search.js');
-      console.log('(covers the tag trigger) and/or re-apply the songs-trigger half of add_full_text_search.js.');
+      console.log('A song_tags trigger that is present but FAILS the fire-test means the function body');
+      console.log('itself throws (e.g. a type mismatch): fix the function source, then re-run');
+      console.log('repair-tag-search.js so its CREATE OR REPLACE swaps the corrected function in live.');
     } else {
       console.log('\nNothing missing. The silent-failure surface is clean.');
     }
