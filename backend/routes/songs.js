@@ -359,7 +359,12 @@ router.get('/', requireAuth, requireMembership, async (req, res, next) => {
       query += `
         GROUP BY s.id
         ORDER BY
-          (CASE WHEN s.title ILIKE $${idx} THEN 2 WHEN s.title ILIKE $${idx + 1} THEN 1 ELSE 0 END) DESC,
+          (CASE
+             WHEN s.title ILIKE $${idx} THEN 3
+             WHEN s.tag_search_vector @@ plainto_tsquery('english', $${idx + 2}) THEN 2
+             WHEN s.title ILIKE $${idx + 1} THEN 1
+             ELSE 0
+           END) DESC,
           ts_rank(s.search_vector, plainto_tsquery('english', $${idx + 2})) DESC,
           s.title ASC`;
       idx += 3;
