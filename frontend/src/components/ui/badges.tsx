@@ -37,10 +37,17 @@ export function DraftBadge() {
 
 // Why a song surfaced in a search result: tag / lyric / other-field match.
 // Title matches are self-evident, so they get no badge.
-const matchLabels: Record<string, string> = { tag: 'Tag', lyric: 'Lyric', other: 'Text' }
+// Full literal class names (never built with template strings) so Tailwind's
+// content scanner keeps these @layer rules instead of tree-shaking them out —
+// same reason CategoryBadge above uses a lookup map of complete class strings.
+const matchBadges: Record<string, { label: string; className: string }> = {
+  tag:   { label: 'Tag',   className: 'badge-match badge-match--tag' },
+  lyric: { label: 'Lyric', className: 'badge-match badge-match--lyric' },
+  other: { label: 'Text',  className: 'badge-match badge-match--other' },
+}
 
 export function MatchBadge({ reason }: { reason: string }) {
-  const label = matchLabels[reason]
-  if (!label) return null
-  return <span className={`badge-match badge-match--${reason}`}>{label}</span>
+  const b = matchBadges[reason]
+  if (!b) return null
+  return <span className={b.className}>{b.label}</span>
 }
