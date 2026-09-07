@@ -33,7 +33,7 @@ async function run() {
     await client.query(`
       CREATE OR REPLACE FUNCTION song_tags_search_vector_update() RETURNS trigger AS $$
       DECLARE
-        affected_song_id INTEGER;
+        affected_song_id UUID;
       BEGIN
         IF TG_OP = 'DELETE' THEN
           affected_song_id := OLD.song_id;

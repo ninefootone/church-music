@@ -92,7 +92,7 @@ async function run() {
     await client.query(`
       CREATE OR REPLACE FUNCTION song_tags_search_vector_update() RETURNS trigger AS $$
       DECLARE
-        affected_song_id INTEGER;
+        affected_song_id UUID;
       BEGIN
         -- Works for INSERT, UPDATE, and DELETE
         IF TG_OP = 'DELETE' THEN
