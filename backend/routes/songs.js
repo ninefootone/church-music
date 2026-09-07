@@ -297,6 +297,7 @@ router.get('/', requireAuth, requireMembership, async (req, res, next) => {
         COUNT(DISTINCT ss.id) FILTER (WHERE srv.plan_date > NOW()) AS times_planned,
         MAX(srv.plan_date) FILTER (WHERE srv.plan_date <= NOW()) AS last_sung,
         MIN(srv.plan_date) FILTER (WHERE srv.plan_date > NOW()) AS next_planned
+        /*MATCHED_ON*/
       FROM songs s
       LEFT JOIN song_tags st ON st.song_id = s.id
       LEFT JOIN tags t ON t.id = st.tag_id
@@ -306,6 +307,9 @@ router.get('/', requireAuth, requireMembership, async (req, res, next) => {
     `;
     const params = [churchId];
     let idx = 2;
+    // On a text search, this SELECT fragment reports WHY each song matched
+    // (tag / title / lyric / other) so the UI can badge the reason. Empty otherwise.
+    let matchedOnSql = '';
 
     if (category) {
       query += ` AND s.category = $${idx++}`;
@@ -323,6 +327,12 @@ router.get('/', requireAuth, requireMembership, async (req, res, next) => {
         idx++;
       } else {
         query += ` AND (s.search_vector @@ plainto_tsquery('english', $${idx}) OR s.tag_search_vector @@ plainto_tsquery('english', $${idx}) OR s.title ILIKE $${idx + 1})`;
+        matchedOnSql = `, ARRAY_REMOVE(ARRAY[
+          CASE WHEN s.tag_search_vector @@ plainto_tsquery('english', $${idx}) THEN 'tag' END,
+          CASE WHEN to_tsvector('english', coalesce(s.title,'')) @@ plainto_tsquery('english', $${idx}) OR s.title ILIKE $${idx + 1} THEN 'title' END,
+          CASE WHEN to_tsvector('english', coalesce(s.lyrics,'')) @@ plainto_tsquery('english', $${idx}) THEN 'lyric' END,
+          CASE WHEN to_tsvector('english', coalesce(s.author,'') || ' ' || coalesce(s.first_line,'') || ' ' || coalesce(s.notes,'') || ' ' || coalesce(s.bible_references,'')) @@ plainto_tsquery('english', $${idx}) THEN 'other' END
+        ], NULL) AS matched_on`;
         params.push(trimmed, `%${trimmed}%`);
         idx += 2;
       }
@@ -372,6 +382,7 @@ router.get('/', requireAuth, requireMembership, async (req, res, next) => {
       query += ` GROUP BY s.id ORDER BY ${orderClause}`;
     }
 
+    query = query.replace('/*MATCHED_ON*/', matchedOnSql);
     const result = await pool.query(query, params);
     res.json(result.rows);
   } catch (err) {

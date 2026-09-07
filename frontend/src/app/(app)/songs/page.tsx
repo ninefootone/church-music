@@ -4,7 +4,7 @@ import { useState, useEffect } from 'react'
 import Link from 'next/link'
 import { format, parseISO } from 'date-fns'
 import { Search, Plus, ChevronRight, ArrowUpDown, X, Tag } from 'lucide-react'
-import { CategoryBadge, KeyBadge, RetiredBadge, DraftBadge } from '@/components/ui/badges'
+import { CategoryBadge, KeyBadge, RetiredBadge, DraftBadge, MatchBadge } from '@/components/ui/badges'
 import { Song } from '@/types'
 import { useChurch } from '@/context/ChurchContext'
 import api from '@/lib/api'
@@ -196,6 +196,7 @@ export default function SongsPage() {
                   <span className="dash-row-meta--italic">{song.first_line}</span>
                 )}
                 <div className="song-row-badges-mobile">
+                  {song.matched_on?.filter(r => r !== 'title').map(r => <MatchBadge key={r} reason={r} />)}
                   {song.default_key && <KeyBadge keyOf={song.default_key} />}
                   {song.category && <CategoryBadge category={song.category} />}
                   {song.retired && <RetiredBadge />}
@@ -216,6 +217,7 @@ export default function SongsPage() {
               </div>
             </div>
             <div className="song-row-badges-desktop">
+              {song.matched_on?.filter(r => r !== 'title').map(r => <MatchBadge key={r} reason={r} />)}
               {song.default_key && <KeyBadge keyOf={song.default_key} />}
               {song.category && <CategoryBadge category={song.category} />}
               {song.retired && <RetiredBadge />}

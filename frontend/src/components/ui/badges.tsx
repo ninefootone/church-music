@@ -34,3 +34,13 @@ export function RetiredBadge() {
 export function DraftBadge() {
   return <span className="badge-draft">Draft</span>
 }
+
+// Why a song surfaced in a search result: tag / lyric / other-field match.
+// Title matches are self-evident, so they get no badge.
+const matchLabels: Record<string, string> = { tag: 'Tag', lyric: 'Lyric', other: 'Text' }
+
+export function MatchBadge({ reason }: { reason: string }) {
+  const label = matchLabels[reason]
+  if (!label) return null
+  return <span className={`badge-match badge-match--${reason}`}>{label}</span>
+}

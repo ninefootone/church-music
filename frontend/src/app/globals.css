@@ -250,6 +250,19 @@ body.set-viewer-active { overflow: hidden; }
   .cat-all-age   { background: var(--cat-all-age-bg);   color: var(--cat-all-age-text); }
   .cat-other     { background: var(--cat-other-bg);     color: var(--cat-other-text); }
 
+  /* ── Search match-reason badges ── */
+  .badge-match {
+    display: inline-flex;
+    align-items: center;
+    padding: 2px 8px;
+    border-radius: 999px;
+    font-size: var(--text-xs);
+    font-weight: 600;
+  }
+  .badge-match--tag   { background: var(--color-brand-100);   color: var(--color-brand-700); }
+  .badge-match--lyric { background: var(--color-accent-light); color: var(--color-accent-dark); }
+  .badge-match--other { background: var(--color-neutral-100); color: var(--color-neutral-400); }
+
   .badge-draft {
   display: inline-flex;
   align-items: center;
