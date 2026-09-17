@@ -186,7 +186,7 @@ export default function PublicSetModePage() {
         <p className="text-muted">
           Set mode shows chords, lyrics and sheet music, so it&rsquo;s only available to your church&rsquo;s worship team.
         </p>
-        <a href="/sign-in" className="btn-set-mode">Sign in to view</a>
+        <a href={`/sign-in?redirect_url=${encodeURIComponent(`/s/${token}`)}`} className="btn-set-mode">Sign in to view</a>
         <a href={`/s/${token}`} className="back-link"><ArrowLeft size={14} /> Back to plan</a>
       </div>
     </div>

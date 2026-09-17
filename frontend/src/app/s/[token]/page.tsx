@@ -123,7 +123,7 @@ function SongItem({ item, index, token, churchId, showTimings, showDurations, ca
               <p className="text-sm text-muted text-italic" style={{ margin: 0 }}>
                 Chords, lyrics and sheet music are available to your church&rsquo;s worship team.
               </p>
-              <a href="/sign-in" className="file-download-btn">Sign in to view</a>
+              <a href={`/sign-in?redirect_url=${encodeURIComponent(`/s/${token}`)}`} className="file-download-btn">Sign in to view</a>
             </div>
           ) : loadingFiles ? (
             <p className="item-detail-text">Loading files...</p>
