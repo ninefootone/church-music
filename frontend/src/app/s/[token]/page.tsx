@@ -23,10 +23,12 @@ function SongItem({ item, index, token, churchId, showTimings, showDurations, ca
   const [expanded, setExpanded] = useState(false)
   const [files, setFiles] = useState<SongFile[] | null>(null)
   const [loadingFiles, setLoadingFiles] = useState(false)
+  const [filesError, setFilesError] = useState(false)
 
   const handleExpand = async () => {
     if (!expanded && item.song_id && isSignedIn && files === null) {
       setLoadingFiles(true)
+      setFilesError(false)
       try {
         const authToken = await getToken()
         const res = await axios.get(`${API}/api/uploads/songs/${item.song_id}/files`, {
@@ -34,7 +36,7 @@ function SongItem({ item, index, token, churchId, showTimings, showDurations, ca
         })
         setFiles(res.data)
       } catch (err) {
-        setFiles([])
+        setFilesError(true)
       } finally {
         setLoadingFiles(false)
       }
@@ -117,14 +119,18 @@ function SongItem({ item, index, token, churchId, showTimings, showDurations, ca
       {isSong && expanded && (
         <div className="item-expanded">
           {!isSignedIn ? (
-            <div className="file-group">
-              <p className="text-sm text-muted text-italic">
-                Chords, lyrics and sheet music are available to your church&rsquo;s worship team. Sign in to view them.
+            <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-start', gap: 8 }}>
+              <p className="text-sm text-muted text-italic" style={{ margin: 0 }}>
+                Chords, lyrics and sheet music are available to your church&rsquo;s worship team.
               </p>
               <a href="/sign-in" className="file-download-btn">Sign in to view</a>
             </div>
           ) : loadingFiles ? (
             <p className="item-detail-text">Loading files...</p>
+          ) : filesError ? (
+            <p className="text-sm text-muted text-italic">
+              Couldn&rsquo;t load sheet music &mdash; please refresh and try again.
+            </p>
           ) : files && files.length > 0 ? (
             <div>
               <p className="sub-section-label">Sheet music</p>
