@@ -5,6 +5,7 @@ import { useEffect, useState } from 'react'
 import { format, parseISO } from 'date-fns'
 import { ChevronDown, ChevronUp, FileText, ExternalLink, PlayCircle } from 'lucide-react'
 import axios from 'axios'
+import { useAuth } from '@clerk/nextjs'
 import { RichTextDisplay, LITURGY_ALLOWED_TAGS } from '@/components/ui/RichTextDisplay'
 
 const API = process.env.NEXT_PUBLIC_API_URL
@@ -18,15 +19,19 @@ interface SongFile {
 }
 
 function SongItem({ item, index, token, showTimings, showDurations, calculatedStart }: { item: any; index: number; token: string | string[] | undefined; showTimings?: boolean; showDurations?: boolean; calculatedStart?: string | null }) {
+  const { isSignedIn, getToken } = useAuth()
   const [expanded, setExpanded] = useState(false)
   const [files, setFiles] = useState<SongFile[] | null>(null)
   const [loadingFiles, setLoadingFiles] = useState(false)
 
   const handleExpand = async () => {
-    if (!expanded && item.song_id && files === null) {
+    if (!expanded && item.song_id && isSignedIn && files === null) {
       setLoadingFiles(true)
       try {
-        const res = await axios.get(`${API}/api/uploads/public/songs/${item.song_id}/files?token=${token}`)
+        const authToken = await getToken()
+        const res = await axios.get(`${API}/api/uploads/songs/${item.song_id}/files`, {
+          headers: { Authorization: `Bearer ${authToken}` },
+        })
         setFiles(res.data)
       } catch (err) {
         setFiles([])
@@ -111,7 +116,14 @@ function SongItem({ item, index, token, showTimings, showDurations, calculatedSt
 
       {isSong && expanded && (
         <div className="item-expanded">
-          {loadingFiles ? (
+          {!isSignedIn ? (
+            <div className="file-group">
+              <p className="text-sm text-muted text-italic">
+                Chords, lyrics and sheet music are available to your church&rsquo;s worship team. Sign in to view them.
+              </p>
+              <a href="/sign-in" className="file-download-btn">Sign in to view</a>
+            </div>
+          ) : loadingFiles ? (
             <p className="item-detail-text">Loading files...</p>
           ) : files && files.length > 0 ? (
             <div>
@@ -175,6 +187,7 @@ function SongItem({ item, index, token, showTimings, showDurations, calculatedSt
 
 export default function PublicPlanPage() {
   const { token } = useParams()
+  const { isSignedIn } = useAuth()
   const [plan, setPlan] = useState<any>(null)
   const [musicians, setMusicians] = useState<any[]>([])
   const [loading, setLoading] = useState(true)
@@ -254,12 +267,14 @@ export default function PublicPlanPage() {
               </label>
             </div>
           )}
-          <div className="public-set-cta">
-            <a href={`/s/${token}/set`} className="btn-set-mode">
-              <PlayCircle size={15} />
-              Set mode
-            </a>
-          </div>
+          {isSignedIn && (
+            <div className="public-set-cta">
+              <a href={`/s/${token}/set`} className="btn-set-mode">
+                <PlayCircle size={15} />
+                Set mode
+              </a>
+            </div>
+          )}
         </div>
 
         {musicians.length > 0 && (
@@ -279,7 +294,7 @@ export default function PublicPlanPage() {
           <p className="text-muted">No items in this plan yet.</p>
         ) : (
           <>
-            <p className="plan-hint">Tap a song to view sheet music</p>
+            <p className="plan-hint">Tap a song for details</p>
             {plan.pre_service_notes && plan.plan_start_time && (
               <p className="item-notes" style={{ marginBottom: 8, whiteSpace: 'pre-line' }}>{plan.pre_service_notes}</p>
             )}

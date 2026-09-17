@@ -2,6 +2,7 @@
 
 import { useEffect, useState, useCallback, useRef } from 'react'
 import { useParams, useRouter } from 'next/navigation'
+import { useAuth } from '@clerk/nextjs'
 import { ChevronLeft, ChevronRight, X, Maximize, Minimize } from 'lucide-react'
 import { Document, Page, pdfjs } from 'react-pdf'
 import 'react-pdf/dist/Page/AnnotationLayer.css'
@@ -35,6 +36,7 @@ interface ChordProContent {
 
 export function PublicSetViewerPage() {
   const { token } = useParams()
+  const { isSignedIn, isLoaded } = useAuth()
   const router = useRouter()
   const [files, setFiles] = useState<SetFile[]>([])
   const [pages, setPages] = useState<ViewerPage[]>([])
@@ -147,11 +149,15 @@ export function PublicSetViewerPage() {
   }, [])
 
   useEffect(() => {
-    const raw = sessionStorage.getItem('setViewerFiles')
-    if (!raw) { 
-      console.log('No sessionStorage, token is:', token)
+    if (!isLoaded) return
+    if (!isSignedIn) {
       router.push(`/s/${token}/set`)
-      return 
+      return
+    }
+    const raw = sessionStorage.getItem('setViewerFiles')
+    if (!raw) {
+      router.push(`/s/${token}/set`)
+      return
     }
     console.log('sessionStorage found, files:', JSON.parse(raw).length)
     const parsed: SetFile[] = JSON.parse(raw)
@@ -208,7 +214,7 @@ export function PublicSetViewerPage() {
     }
 
     fetchChordPro()
-  }, [token, router])
+  }, [token, router, isLoaded, isSignedIn])
 
   // Phase 1: when chordPro content arrives, trigger measurement of first unmeasured file
   useEffect(() => {

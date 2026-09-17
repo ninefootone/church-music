@@ -5,6 +5,7 @@ import { useParams } from 'next/navigation'
 import { format, parseISO } from 'date-fns'
 import { ArrowLeft, FileText, Loader2, Code, Play } from 'lucide-react'
 import { useRouter } from 'next/navigation'
+import { useAuth } from '@clerk/nextjs'
 import axios from 'axios'
 
 const API = process.env.NEXT_PUBLIC_API_URL
@@ -48,6 +49,7 @@ function sortFiles(files: SongFile[], songKey?: string | null): SongFile[] {
 
 export default function PublicSetModePage() {
   const { token } = useParams()
+  const { isSignedIn, isLoaded, getToken } = useAuth()
 
   const [plan, setPlan] = useState<any>(null)
   const [filesMap, setFilesMap] = useState<Record<string, SongFile[]>>({})
@@ -58,9 +60,11 @@ export default function PublicSetModePage() {
   const [error, setError] = useState<string | null>(null)
 
   useEffect(() => {
-    if (!token) return
+    if (!token || !isLoaded) return
+    if (!isSignedIn) { setLoading(false); return }
     axios.get(`${API}/api/plans/public/${token}`)
       .then(async r => {
+        const authToken = await getToken()
         const svc = r.data
         setPlan(svc)
 
@@ -70,7 +74,9 @@ export default function PublicSetModePage() {
 
         const results = await Promise.allSettled(
           songItems.map((item: SongItem) =>
-            axios.get(`${API}/api/uploads/public/songs/${item.song_id}/files?token=${token}`)
+            axios.get(`${API}/api/uploads/songs/${item.song_id}/files`, {
+              headers: { Authorization: `Bearer ${authToken}` },
+            })
               .then(res => ({ songId: item.song_id!, files: res.data as SongFile[], item }))
           )
         )
@@ -112,7 +118,7 @@ export default function PublicSetModePage() {
       })
       .catch(() => setError('Could not load plan.'))
       .finally(() => setLoading(false))
-  }, [token])
+  }, [token, isLoaded, isSignedIn])
 
   const toggleFile = (songId: string, fileId: string) => {
     setSelected(prev => {
@@ -171,6 +177,18 @@ export default function PublicSetModePage() {
   if (loading) return (
     <div className="fullscreen-center">
       <Loader2 size={16} className="spin" /> Loading…
+    </div>
+  )
+
+  if (!isSignedIn) return (
+    <div className="fullscreen-center">
+      <div className="set-signin-gate">
+        <p className="text-muted">
+          Set mode shows chords, lyrics and sheet music, so it&rsquo;s only available to your church&rsquo;s worship team.
+        </p>
+        <a href="/sign-in" className="btn-set-mode">Sign in to view</a>
+        <a href={`/s/${token}`} className="back-link"><ArrowLeft size={14} /> Back to plan</a>
+      </div>
     </div>
   )
 

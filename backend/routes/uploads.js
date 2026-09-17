@@ -233,46 +233,11 @@ router.get('/songs/:songId/files', requireAuth, requireMembership, async functio
   }
 });
 
-// GET /public/songs/:songId/files — public: requires the plan's share token, and the song
-// must actually be an item on that specific shared plan. Prevents guessing arbitrary song IDs.
-router.get('/public/songs/:songId/files', async function(req, res, next) {
-  try {
-    const { token } = req.query;
-    if (!token) {
-      return res.status(400).json({ error: 'token is required' });
-    }
-
-    const authorized = await pool.query(
-      `SELECT 1 FROM plans p
-       JOIN plan_items pi ON pi.plan_id = p.id
-       WHERE p.public_token = $1 AND pi.song_id = $2
-       LIMIT 1`,
-      [token, req.params.songId]
-    );
-    if (authorized.rows.length === 0) {
-      return res.status(404).json({ error: 'Not found' });
-    }
-
-    const files = await pool.query(
-      'SELECT * FROM song_files WHERE song_id = $1 ORDER BY key_of, file_type',
-      [req.params.songId]
-    );
-
-    const filesWithUrls = await Promise.all(files.rows.map(async function(file) {
-      const activeKey = file.edited_r2_key || file.r2_key;
-      const url = await getSignedUrl(
-        r2,
-        new GetObjectCommand({ Bucket: BUCKET, Key: activeKey }),
-        { expiresIn: 3600 }
-      );
-      return Object.assign({}, file, { url: url, has_edits: !!file.edited_r2_key });
-    }));
-
-    res.json(filesWithUrls);
-  } catch (err) {
-    next(err);
-  }
-});
+// (removed) GET /public/songs/:songId/files — the unauthenticated, token-only file route
+// was the public-link licensing leak. Files/chords/lyrics are now served only by the
+// authenticated GET /songs/:songId/files (requireAuth + requireMembership), so a signed-in
+// member of the owning church gets them and nobody else does. See
+// claude/task-public-link-access-split.md. A request to the old path now 404s (no such route).
 
 router.patch('/songs/:songId/files/:fileId', requireAuth, requirePermission('can_manage_songs'), async function(req, res, next) {
   try {
