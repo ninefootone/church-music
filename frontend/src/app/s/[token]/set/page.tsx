@@ -75,7 +75,7 @@ export default function PublicSetModePage() {
         const results = await Promise.allSettled(
           songItems.map((item: SongItem) =>
             axios.get(`${API}/api/uploads/songs/${item.song_id}/files`, {
-              headers: { Authorization: `Bearer ${authToken}` },
+              headers: { Authorization: `Bearer ${authToken}`, 'x-church-id': svc.church_id },
             })
               .then(res => ({ songId: item.song_id!, files: res.data as SongFile[], item }))
           )

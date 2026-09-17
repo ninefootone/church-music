@@ -18,7 +18,7 @@ interface SongFile {
   url: string
 }
 
-function SongItem({ item, index, token, showTimings, showDurations, calculatedStart }: { item: any; index: number; token: string | string[] | undefined; showTimings?: boolean; showDurations?: boolean; calculatedStart?: string | null }) {
+function SongItem({ item, index, token, churchId, showTimings, showDurations, calculatedStart }: { item: any; index: number; token: string | string[] | undefined; churchId?: string; showTimings?: boolean; showDurations?: boolean; calculatedStart?: string | null }) {
   const { isSignedIn, getToken } = useAuth()
   const [expanded, setExpanded] = useState(false)
   const [files, setFiles] = useState<SongFile[] | null>(null)
@@ -30,7 +30,7 @@ function SongItem({ item, index, token, showTimings, showDurations, calculatedSt
       try {
         const authToken = await getToken()
         const res = await axios.get(`${API}/api/uploads/songs/${item.song_id}/files`, {
-          headers: { Authorization: `Bearer ${authToken}` },
+          headers: { Authorization: `Bearer ${authToken}`, 'x-church-id': churchId || '' },
         })
         setFiles(res.data)
       } catch (err) {
@@ -322,6 +322,7 @@ export default function PublicPlanPage() {
                     item={item}
                     index={i}
                     token={token}
+                    churchId={plan.church_id}
                     showTimings={showTimings && !!startTime && anyDurations}
                     showDurations={showDurations}
                     calculatedStart={calcStart}
