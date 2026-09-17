@@ -254,7 +254,7 @@ export default function HelpPage() {
                 <strong>CCLI number:</strong> enter the song&apos;s CCLI number for licence reporting.
               </p>
               <p className="help-content-body">
-                <strong>Lyrics:</strong> paste lyrics directly. These appear on the song page and public share view.
+                <strong>Lyrics:</strong> paste lyrics directly. These appear on the song page and, while planning, via the <strong>Show lyrics</strong> button on a plan&apos;s running order. They are not shown on the public share link.
               </p>
               <p className="help-content-body">
                 <strong>Arrangement:</strong> set a default arrangement (e.g. Intro, Verse, Chorus, Bridge) using the arrangement builder. This can be customised per plan.
@@ -416,7 +416,7 @@ export default function HelpPage() {
                 For ChordPro files, you can transpose the key directly in the viewer using the key selector in the toolbar. This only affects your current session — it doesn&apos;t change the file itself.
               </p>
               <p className="help-content-body">
-                The set mode viewer is also available on the public share link, so musicians without a Song Stack account can still access it.
+                The set viewer shows licensed content (sheet music, chord charts and lyrics), so it requires signing in. On a plan&apos;s public share link, Set mode is available to members of your church who are signed in — visitors without an account see the plan outline but not the music.
               </p>
             </div>
           ),
@@ -427,13 +427,13 @@ export default function HelpPage() {
           content: () => (
             <div>
               <p className="help-content-body">
-                Every plan has a public share link that gives read-only access to the plan details and set mode — no account needed. This is useful for sharing with musicians who aren&apos;t on Song Stack.
+                Every plan has a public share link that gives read-only access — useful for sharing with musicians who aren&apos;t on Song Stack. Anyone with the link can see the plan outline: the running order, song titles, authors, keys and capo, CCLI numbers, arrangements, and your team&apos;s notes. No account is needed for that.
               </p>
               <p className="help-content-body">
-                Find the share link on the plan detail page. Anyone with the link can view the running order, song keys, arrangements, and files.
+                Sheet music, chord charts, full lyrics and Set mode are only shown to members of your church who are signed in. A visitor opening the same link sees the outline and a prompt to sign in. This keeps licensed material behind a team login — your CCL licence lets you reproduce it for your own team, not publish it openly on the web.
               </p>
               <p className="help-content-body">
-                The link is unique to each plan and doesn&apos;t expire.
+                Find the share link on the plan detail page. The link is unique to each plan and doesn&apos;t expire.
               </p>
             </div>
           ),
