@@ -9,6 +9,7 @@ import { KeyBadge, CategoryBadge } from '@/components/ui/badges'
 import { useAuth } from '@clerk/nextjs'
 import { useChurch } from '@/context/ChurchContext'
 import api from '@/lib/api'
+import { parseArrangement } from '@/lib/arrangement'
 import { ConfirmModal } from '@/components/ui/ConfirmModal'
 import { PlanMusicianModal } from '@/components/ui/PlanMusicianModal'
 import { PlanEmailModal } from '@/components/ui/PlanEmailModal'
@@ -222,21 +223,19 @@ function SongItem({ item, index, planId, canAnnotate, showTimings, showDurations
             <>
               {(customArrangement || item.song_suggested_arrangement) && (() => {
                 const raw = customArrangement || item.song_suggested_arrangement
-                try {
-                  const parts: string[] = JSON.parse(raw)
-                  if (Array.isArray(parts)) return (
-                    <div className="song-section">
-                      <p className="sub-section-label">
-                        Arrangement{customArrangement ? <span className="label-note-inline"> (custom)</span> : ''}
-                      </p>
-                      <div className="pill-row">
-                        {parts.map((label: string, i: number) => (
-                          <span key={i} className="arrangement-pill arrangement-pill-sm">{label}</span>
-                        ))}
-                      </div>
+                const parts = parseArrangement(raw)
+                if (parts) return (
+                  <div className="song-section">
+                    <p className="sub-section-label">
+                      Arrangement{customArrangement ? <span className="label-note-inline"> (custom)</span> : ''}
+                    </p>
+                    <div className="pill-row">
+                      {parts.map((label, i) => (
+                        <span key={i} className="arrangement-pill arrangement-pill-sm">{label}</span>
+                      ))}
                     </div>
-                  )
-                } catch {}
+                  </div>
+                )
                 return <p className="item-detail-xs">{raw}</p>
               })()}
               {canAnnotate && (

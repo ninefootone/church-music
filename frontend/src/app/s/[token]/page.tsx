@@ -7,6 +7,7 @@ import { ChevronDown, ChevronUp, FileText, ExternalLink, PlayCircle } from 'luci
 import axios from 'axios'
 import { useAuth } from '@clerk/nextjs'
 import { RichTextDisplay, LITURGY_ALLOWED_TAGS } from '@/components/ui/RichTextDisplay'
+import { parseArrangement } from '@/lib/arrangement'
 
 const API = process.env.NEXT_PUBLIC_API_URL
 
@@ -161,19 +162,17 @@ function SongItem({ item, index, token, churchId, showTimings, showDurations, ca
 
           {(item.custom_arrangement || item.song_suggested_arrangement) && (() => {
             const raw = item.custom_arrangement || item.song_suggested_arrangement
-            try {
-              const parts: string[] = JSON.parse(raw)
-              if (Array.isArray(parts)) return (
-                <div className="song-section">
-                  <p className="sub-section-label">Arrangement</p>
-                  <div className="pill-row">
-                    {parts.map((label: string, i: number) => (
-                      <span key={i} className="arrangement-pill arrangement-pill-sm">{label}</span>
-                    ))}
-                  </div>
+            const parts = parseArrangement(raw)
+            if (parts) return (
+              <div className="song-section">
+                <p className="sub-section-label">Arrangement</p>
+                <div className="pill-row">
+                  {parts.map((label, i) => (
+                    <span key={i} className="arrangement-pill arrangement-pill-sm">{label}</span>
+                  ))}
                 </div>
-              )
-            } catch {}
+              </div>
+            )
             return (
               <p className="item-footnote">
                 {raw}

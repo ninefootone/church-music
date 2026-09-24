@@ -13,6 +13,7 @@ import { FileUploadModal } from '@/components/ui/FileUploadModal'
 import { AddLinkModal } from '@/components/ui/AddLinkModal'
 import { Song } from '@/types'
 import api from '@/lib/api'
+import { parseArrangement } from '@/lib/arrangement'
 import { useChurch } from '@/context/ChurchContext'
 import { AddToPlanModal } from '@/components/ui/AddToPlanModal'
 import { ConfirmModal } from '@/components/ui/ConfirmModal'
@@ -178,18 +179,16 @@ export default function SongDetailPage() {
 
   function renderArrangement(value: string) {
     if (!value) return null
-    try {
-      const parsed = JSON.parse(value)
-      if (Array.isArray(parsed)) {
-        return (
-          <div className="arrangement-pills">
-            {parsed.map((label: string, i: number) => (
-              <span key={i} className="arrangement-pill">{label}</span>
-            ))}
-          </div>
-        )
-      }
-    } catch {}
+    const parts = parseArrangement(value)
+    if (parts) {
+      return (
+        <div className="arrangement-pills">
+          {parts.map((label, i) => (
+            <span key={i} className="arrangement-pill">{label}</span>
+          ))}
+        </div>
+      )
+    }
     // Legacy plain text fallback
     return <p className="detail-text">{value}</p>
   }

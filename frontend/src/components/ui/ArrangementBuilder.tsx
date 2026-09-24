@@ -2,22 +2,16 @@
 
 import { useState, useRef } from 'react'
 import { GripVertical, X, Plus } from 'lucide-react'
+import { parseArrangement } from '@/lib/arrangement'
 
 const PRESET_ELEMENTS = ['Intro', 'Verse', 'Pre-Chorus', 'Chorus', 'Bridge', 'Tag', 'Link', 'Turnaround', 'Instrumental', 'Ending']
 
 type Item = { id: string; label: string }
 
-function parseArrangement(value: string): { items: Item[]; isLegacy: boolean } {
+function toItems(value: string): { items: Item[]; isLegacy: boolean } {
   if (!value) return { items: [], isLegacy: false }
-  try {
-    const parsed = JSON.parse(value)
-    if (Array.isArray(parsed)) {
-      return {
-        items: parsed.map((label: string, i: number) => ({ id: `${i}-${label}`, label })),
-        isLegacy: false,
-      }
-    }
-  } catch {}
+  const parts = parseArrangement(value)
+  if (parts) return { items: parts.map((label, i) => ({ id: `${i}-${label}`, label })), isLegacy: false }
   return { items: [], isLegacy: true }
 }
 
@@ -43,7 +37,7 @@ interface Props {
 }
 
 export function ArrangementBuilder({ value, onChange }: Props) {
-  const { items: initialItems, isLegacy } = parseArrangement(value)
+  const { items: initialItems, isLegacy } = toItems(value)
   const [items, setItems] = useState<Item[]>(initialItems)
   const [showLegacyPrompt, setShowLegacyPrompt] = useState(isLegacy)
   const [editingId, setEditingId] = useState<string | null>(null)

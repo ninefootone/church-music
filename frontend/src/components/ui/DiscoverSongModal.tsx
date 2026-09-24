@@ -4,6 +4,7 @@ import { useEffect, useState } from 'react'
 import { X, Music } from 'lucide-react'
 import { CategoryBadge, KeyBadge } from '@/components/ui/badges'
 import api from '@/lib/api'
+import { parseArrangement } from '@/lib/arrangement'
 import DOMPurify from 'dompurify'
 
 type SongDetail = {
@@ -91,16 +92,7 @@ export function DiscoverSongModal({
     return () => document.removeEventListener('keydown', handler)
   }, [onClose])
 
-  const arrangement: string[] = (() => {
-    const raw = song?.suggested_arrangement
-    if (!raw) return []
-    try {
-      const parsed = JSON.parse(raw)
-      if (Array.isArray(parsed)) return parsed.map(String).filter(Boolean)
-    } catch {}
-    // Legacy plain-text fallback (e.g. "Verse 1, Chorus, Verse 2")
-    return raw.split(',').map(s => s.trim()).filter(Boolean)
-  })()
+  const arrangementParts = parseArrangement(song?.suggested_arrangement)
 
   return (
     <div className="modal-overlay">
@@ -166,14 +158,18 @@ export function DiscoverSongModal({
             )}
 
             {/* Suggested arrangement */}
-            {arrangement.length > 0 && (
+            {song.suggested_arrangement && (
               <div className="song-section">
                 <p className="discover-modal__label">Suggested arrangement</p>
-                <div className="arrangement-pills">
-                  {arrangement.map((part, i) => (
-                    <span key={i} className="arrangement-pill">{part}</span>
-                  ))}
-                </div>
+                {arrangementParts ? (
+                  <div className="arrangement-pills">
+                    {arrangementParts.map((part, i) => (
+                      <span key={i} className="arrangement-pill">{part}</span>
+                    ))}
+                  </div>
+                ) : (
+                  <p className="detail-text">{song.suggested_arrangement}</p>
+                )}
               </div>
             )}
 
