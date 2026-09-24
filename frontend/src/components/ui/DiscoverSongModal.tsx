@@ -91,9 +91,16 @@ export function DiscoverSongModal({
     return () => document.removeEventListener('keydown', handler)
   }, [onClose])
 
-  const arrangement = song?.suggested_arrangement
-    ? song.suggested_arrangement.split(',').map(s => s.trim()).filter(Boolean)
-    : []
+  const arrangement: string[] = (() => {
+    const raw = song?.suggested_arrangement
+    if (!raw) return []
+    try {
+      const parsed = JSON.parse(raw)
+      if (Array.isArray(parsed)) return parsed.map(String).filter(Boolean)
+    } catch {}
+    // Legacy plain-text fallback (e.g. "Verse 1, Chorus, Verse 2")
+    return raw.split(',').map(s => s.trim()).filter(Boolean)
+  })()
 
   return (
     <div className="modal-overlay">
