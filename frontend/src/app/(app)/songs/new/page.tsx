@@ -38,6 +38,7 @@ export default function NewSongPage() {
   }, [error])
   const [atLimit, setAtLimit] = useState(false)
   const [templateSearch, setTemplateSearch] = useState<null | { id: string; title: string; author: string; ccli: string }>(null)
+  const [importing, setImporting] = useState(false)
   const [copyrightDismissed, setCopyrightDismissed] = useState(false)
 
   useEffect(() => {
@@ -91,12 +92,17 @@ export default function NewSongPage() {
 
   const importTemplate = async () => {
     if (!templateSearch) return
+    setImporting(true)
+    setError('')
     try {
       const token = await getToken()
       setAuthToken(token)
       const { data } = await api.post(`/api/templates/${templateSearch.id}/import`)
       router.push(`/songs/${data.id}`)
-    } catch (err: any) { setError(err.response?.data?.error || 'Failed to import song') }
+    } catch (err: any) {
+      setError(err.response?.data?.error || 'Failed to import song')
+      setImporting(false)
+    }
   }
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -182,8 +188,10 @@ export default function NewSongPage() {
                 <div className="template-match-title">{templateSearch.title} — {templateSearch.author}</div>
                 <div className="template-match-note">The copyright holder has given permission for this song to be shared. All fields will be copied to your library.</div>
                 <div className="btn-group">
-                  <button type="button" onClick={importTemplate} className="btn btn-primary btn-sm">Import this song</button>
-                  <button type="button" onClick={() => setTemplateSearch(null)} className="btn btn-secondary btn-sm">Create from scratch</button>
+                  <button type="button" onClick={importTemplate} className="btn btn-primary btn-sm" disabled={importing}>
+                    {importing ? 'Importing…' : 'Import this song'}
+                  </button>
+                  <button type="button" onClick={() => setTemplateSearch(null)} className="btn btn-secondary btn-sm" disabled={importing}>Create from scratch</button>
                 </div>
               </div>
             )}
