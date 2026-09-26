@@ -6,6 +6,14 @@ const { r2, BUCKET } = require('./uploads');
 const { CopyObjectCommand } = require('@aws-sdk/client-s3');
 const { v4: uuidv4 } = require('uuid');
 
+// Escapes literal % and _ (and the escape char itself) so a value passed into
+// an ILIKE pattern is matched as plain text, not as SQL wildcards. Used by the
+// author-contains filter below, where the value is a hardcoded artist name —
+// belt-and-braces since none of today's artist names contain these characters.
+function escapeLikeValue(value) {
+  return value.replace(/[\\%_]/g, (ch) => '\\' + ch);
+}
+
 // GET /discover — curated songs from master library with in_discover = true
 router.get('/discover', requireAuth, async (req, res, next) => {
   try {
@@ -76,7 +84,7 @@ router.put('/discover/order', requireAuth, requireAdmin, async (req, res, next) 
 // GET /templates/library — searchable public library (in_library = true, is_draft = false)
 router.get('/library', requireAuth, async (req, res, next) => {
   try {
-    const { q, category, tag, page = '1' } = req.query;
+    const { q, category, tag, author, page = '1' } = req.query;
     const limit = 20;
     const offset = (parseInt(page) - 1) * limit;
 
@@ -122,6 +130,16 @@ router.get('/library', requireAuth, async (req, res, next) => {
       params.push(category);
     }
 
+    if (author && author.trim()) {
+      // Contains match, not equals — `songs.author` is free text and can list
+      // co-writers (e.g. "Ben Slee, Colin Webster"), so an exact match would miss
+      // most of an artist's own catalogue. Powers the Discover "Browse by artist"
+      // boxes: each one jumps to every song whose author field mentions that
+      // artist's name, however it's combined with other credited writers.
+      query += ` AND s.author ILIKE $${idx++} ESCAPE '\\'`;
+      params.push(`%${escapeLikeValue(author.trim())}%`);
+    }
+
     if (tag) {
       query += ` AND s.tag_search_vector @@ plainto_tsquery('english', $${idx++})`;
       params.push(tag);
@@ -165,6 +183,10 @@ router.get('/library', requireAuth, async (req, res, next) => {
     if (category) {
       countQuery += ` AND s.category = $${cidx++}`;
       countParams.push(category);
+    }
+    if (author && author.trim()) {
+      countQuery += ` AND s.author ILIKE $${cidx++} ESCAPE '\\'`;
+      countParams.push(`%${escapeLikeValue(author.trim())}%`);
     }
     if (tag) {
       countQuery += ` AND s.tag_search_vector @@ plainto_tsquery('english', $${cidx++})`;

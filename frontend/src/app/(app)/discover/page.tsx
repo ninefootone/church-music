@@ -254,6 +254,18 @@ function LibraryRow({
   )
 }
 
+// Partner artists whose catalogues are fully in the master library.
+// Hardcoded — there are only a handful of these agreements; add a new one here
+// (and a real square logo in /public once you have it) when a new deal is signed.
+// `author` is matched as a CONTAINS, not an exact match — a song's author field
+// can list co-writers (e.g. "Ben Slee, Colin Webster"), so use the shortest
+// piece of text that appears on every one of that artist's songs (e.g. "Ben
+// Slee", not "Ben Slee Music" — check it actually appears verbatim first).
+const PARTNER_ARTISTS = [
+  { name: 'Awesome Cutlery', author: 'Awesome Cutlery', logo: '/logo-icon.svg' },
+  { name: 'Ben Slee Music', author: 'Ben Slee', logo: '/logo-icon.svg' },
+]
+
 export default function DiscoverPage() {
   const { getToken } = useAuth()
   const { church, loading: churchLoading, canManageSongs } = useChurch()
@@ -271,6 +283,8 @@ export default function DiscoverPage() {
   // Library state
   const [librarySearch, setLibrarySearch] = useState('')
   const [libraryCategory, setLibraryCategory] = useState<string>('all')
+  const [libraryAuthorFilter, setLibraryAuthorFilter] = useState<string | null>(null)
+  const librarySectionRef = useRef<HTMLDivElement>(null)
   const [categories, setCategories] = useState<{ id: string; value: string; label: string; scope: 'global' | 'church' }[]>([])
   const [libraryTags, setLibraryTags] = useState<{ id: string; name: string }[]>([])
   const [selectedLibraryTags, setSelectedLibraryTags] = useState<string[]>([])
@@ -324,13 +338,14 @@ export default function DiscoverPage() {
   }, [church])
 
   // Fetch library results
-  const fetchLibrary = useCallback(async (search: string, category: string, page: number, tags: string[] = []) => {
+  const fetchLibrary = useCallback(async (search: string, category: string, page: number, tags: string[] = [], author: string | null = null) => {
     setLibraryLoading(true)
     try {
       const params: Record<string, string> = { page: String(page) }
       if (search) params.q = search
       if (category !== 'all') params.category = category
       if (tags.length > 0) params.tags = tags.join(',')
+      if (author) params.author = author
       const { data } = await api.get('/api/templates/library', { params })
       setLibrarySongs(data.songs)
       setLibraryTotal(data.total)
@@ -363,14 +378,20 @@ export default function DiscoverPage() {
     if (librarySearchTimer.current) clearTimeout(librarySearchTimer.current)
     librarySearchTimer.current = setTimeout(() => {
       setLibraryPage(1)
-      fetchLibrary(librarySearch, libraryCategory, 1, selectedLibraryTags)
+      fetchLibrary(librarySearch, libraryCategory, 1, selectedLibraryTags, libraryAuthorFilter)
     }, 300)
     return () => { if (librarySearchTimer.current) clearTimeout(librarySearchTimer.current) }
-  }, [librarySearch, libraryCategory, selectedLibraryTags])
+  }, [librarySearch, libraryCategory, selectedLibraryTags, libraryAuthorFilter])
 
   const handleLibraryPageChange = (page: number) => {
     setLibraryPage(page)
-    fetchLibrary(librarySearch, libraryCategory, page, selectedLibraryTags)
+    fetchLibrary(librarySearch, libraryCategory, page, selectedLibraryTags, libraryAuthorFilter)
+  }
+
+  const handleArtistFilter = (author: string) => {
+    setLibraryAuthorFilter(prev => (prev === author ? null : author))
+    setLibraryPage(1)
+    librarySectionRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' })
   }
 
   const handleDiscoverToggle = async (song: DiscoverSong) => {
@@ -489,9 +510,32 @@ export default function DiscoverPage() {
       )}
 
       {/* Library section */}
-      <div className="library-section">
+      <div className="library-section" ref={librarySectionRef}>
         <h2 className="library-section__title">Song library</h2>
         <p className="library-section__subtitle">Public domain hymns and songs we have permission to share. Search by title or author and add any to your church library.</p>
+
+        <div className="artist-filter-section">
+          <span className="artist-filter-label">Browse by artist</span>
+          <div className="artist-filter-row">
+            {PARTNER_ARTISTS.map(artist => (
+              <button
+                key={artist.author}
+                type="button"
+                className={`artist-filter-chip ${libraryAuthorFilter === artist.author ? 'is-active' : ''}`}
+                onClick={() => handleArtistFilter(artist.author)}
+              >
+                <img src={artist.logo} alt="" className="artist-filter-chip__logo" />
+                {artist.name}
+              </button>
+            ))}
+          </div>
+          {libraryAuthorFilter && (
+            <div className="artist-filter-active">
+              Showing songs by <strong>{libraryAuthorFilter}</strong>
+              <button className="btn-text" onClick={() => setLibraryAuthorFilter(null)}>Show all artists</button>
+            </div>
+          )}
+        </div>
 
         <div className="songs-search-bar">
           <div className="songs-search-wrap">
