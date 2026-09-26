@@ -3301,13 +3301,38 @@ select.input {
   object-fit: contain;
   flex-shrink: 0;
 }
-.artist-filter-active {
+.artist-filter-info {
+  margin-top: 0.75rem;
+  padding: 12px 14px;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  background: var(--color-brand-50);
+}
+.artist-filter-info__header {
   display: flex;
   align-items: center;
+  flex-wrap: wrap;
   gap: 0.5rem;
-  margin-top: 0.6rem;
   font-size: var(--text-sm);
   color: var(--color-text-secondary);
+}
+.artist-filter-info__description {
+  margin: 0.5rem 0 0;
+  font-size: var(--text-sm);
+  color: var(--color-text-secondary);
+}
+.artist-filter-info__link {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.3rem;
+  margin-top: 0.5rem;
+  font-size: var(--text-sm);
+  font-weight: 600;
+  color: var(--color-brand-600);
+  text-decoration: none;
+}
+.artist-filter-info__link:hover {
+  text-decoration: underline;
 }
 .library-results {
   display: flex;

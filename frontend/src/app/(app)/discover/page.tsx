@@ -5,7 +5,7 @@ import { useAuth } from '@clerk/nextjs'
 import { useChurch } from '@/context/ChurchContext'
 import { CategoryBadge, KeyBadge } from '@/components/ui/badges'
 import api, { setAuthToken } from '@/lib/api'
-import { Sparkles, Youtube, Music, GripVertical, Search, X, ChevronRight, Tag } from 'lucide-react'
+import { Sparkles, Youtube, Music, GripVertical, Search, X, ChevronRight, Tag, ExternalLink } from 'lucide-react'
 import { DiscoverSongModal } from '@/components/ui/DiscoverSongModal'
 import {
   DndContext,
@@ -261,9 +261,23 @@ function LibraryRow({
 // can list co-writers (e.g. "Ben Slee, Colin Webster"), so use the shortest
 // piece of text that appears on every one of that artist's songs (e.g. "Ben
 // Slee", not "Ben Slee Music" — check it actually appears verbatim first).
+// `description` and `website` are both optional — leave either blank ('') and
+// that part of the info panel simply doesn't render.
 const PARTNER_ARTISTS = [
-  { name: 'Awesome Cutlery', author: 'Awesome Cutlery', logo: '/Awesome-Cutlery-logo-sq.svg' },
-  { name: 'Ben Slee Music', author: 'Ben Slee', logo: '/Ben-Slee-logo-sq.svg' },
+  {
+    name: 'Awesome Cutlery',
+    author: 'Awesome Cutlery',
+    logo: '/Awesome-Cutlery-logo-sq.svg',
+    description: 'Our mission is to help families worship Jesus together.',
+    website: 'https://www.awesomecutlery.com/',
+  },
+  {
+    name: 'Ben Slee Music',
+    author: 'Ben Slee',
+    logo: '/Ben-Slee-logo-sq.svg',
+    description: 'Ben serves as the Music Pastor at Christ Church Mayfair in London. I hope and pray there\'s something to lift your eyes to Jesus here.',
+    website: 'https://bensleemusic.com/',
+  },
 ]
 
 export default function DiscoverPage() {
@@ -393,6 +407,8 @@ export default function DiscoverPage() {
     setLibraryPage(1)
     librarySectionRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' })
   }
+
+  const activeArtist = PARTNER_ARTISTS.find(a => a.author === libraryAuthorFilter) || null
 
   const handleDiscoverToggle = async (song: DiscoverSong) => {
     setTogglingDiscover(s => ({ ...s, [song.id]: true }))
@@ -529,10 +545,25 @@ export default function DiscoverPage() {
               </button>
             ))}
           </div>
-          {libraryAuthorFilter && (
-            <div className="artist-filter-active">
-              Showing songs by <strong>{libraryAuthorFilter}</strong>
-              <button className="btn-text" onClick={() => setLibraryAuthorFilter(null)}>Show all artists</button>
+          {activeArtist && (
+            <div className="artist-filter-info">
+              <div className="artist-filter-info__header">
+                Showing songs by <strong>{activeArtist.name}</strong>
+                <button className="btn-text" onClick={() => setLibraryAuthorFilter(null)}>Show all artists</button>
+              </div>
+              {activeArtist.description && (
+                <p className="artist-filter-info__description">{activeArtist.description}</p>
+              )}
+              {activeArtist.website && (
+                
+                  href={activeArtist.website}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="artist-filter-info__link"
+                >
+                  Visit {activeArtist.name} <ExternalLink size={13} />
+                </a>
+              )}
             </div>
           )}
         </div>
