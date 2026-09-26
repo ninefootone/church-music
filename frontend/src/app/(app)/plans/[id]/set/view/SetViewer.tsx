@@ -9,7 +9,7 @@ import 'react-pdf/dist/Page/TextLayer.css'
 import DOMPurify from 'dompurify'
 
 if (typeof window !== 'undefined') {
-  pdfjs.GlobalWorkerOptions.workerSrc = `//unpkg.com/pdfjs-dist@${pdfjs.version}/build/pdf.worker.min.mjs`
+  pdfjs.GlobalWorkerOptions.workerSrc = `//unpkg.com/pdfjs-dist@${pdfjs.version}/legacy/build/pdf.worker.min.mjs`
 }
 
 interface SetFile {
