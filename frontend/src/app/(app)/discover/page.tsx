@@ -262,8 +262,8 @@ function LibraryRow({
 // piece of text that appears on every one of that artist's songs (e.g. "Ben
 // Slee", not "Ben Slee Music" — check it actually appears verbatim first).
 const PARTNER_ARTISTS = [
-  { name: 'Awesome Cutlery', author: 'Awesome Cutlery', logo: '/logo-icon.svg' },
-  { name: 'Ben Slee Music', author: 'Ben Slee', logo: '/logo-icon.svg' },
+  { name: 'Awesome Cutlery', author: 'Awesome Cutlery', logo: '/Awesome-Cutlery-logo-sq.svg' },
+  { name: 'Ben Slee Music', author: 'Ben Slee', logo: '/Ben-Slee-logo-sq.svg' },
 ]
 
 export default function DiscoverPage() {
