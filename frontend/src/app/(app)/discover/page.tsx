@@ -275,7 +275,7 @@ const PARTNER_ARTISTS = [
     name: 'Ben Slee Music',
     author: 'Ben Slee',
     logo: '/Ben-Slee-logo-sq.svg',
-    description: 'Ben serves as the Music Pastor at Christ Church Mayfair in London. I hope and pray there\'s something to lift your eyes to Jesus here.',
+    description: 'I serve as the Music Pastor at Christ Church Mayfair in London. I hope and pray there\'s something to lift your eyes to Jesus here.',
     website: 'https://bensleemusic.com/',
   },
 ]
@@ -555,7 +555,7 @@ export default function DiscoverPage() {
                 <p className="artist-filter-info__description">{activeArtist.description}</p>
               )}
               {activeArtist.website && (
-                
+                <a
                   href={activeArtist.website}
                   target="_blank"
                   rel="noopener noreferrer"
