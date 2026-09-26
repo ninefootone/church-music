@@ -502,6 +502,10 @@ router.post('/', requireAuth, requirePermission('can_manage_songs'), async (req,
         INSERT INTO ccli_lookup (ccli_number, title, author, first_line, default_key, category, source_church_id)
         VALUES ($1, $2, $3, $4, $5, $6, $7)
         ON CONFLICT (ccli_number) DO UPDATE SET
+          title = EXCLUDED.title,
+          author = EXCLUDED.author,
+          first_line = EXCLUDED.first_line,
+          default_key = EXCLUDED.default_key,
           confirmed_count = ccli_lookup.confirmed_count + 1,
           category = COALESCE(EXCLUDED.category, ccli_lookup.category),
           updated_at = NOW()
@@ -597,6 +601,10 @@ router.put('/:id', requireAuth, requirePermission('can_manage_songs'), async (re
         INSERT INTO ccli_lookup (ccli_number, title, author, first_line, default_key, category, source_church_id)
         VALUES ($1, $2, $3, $4, $5, $6, $7)
         ON CONFLICT (ccli_number) DO UPDATE SET
+          title = EXCLUDED.title,
+          author = EXCLUDED.author,
+          first_line = EXCLUDED.first_line,
+          default_key = EXCLUDED.default_key,
           confirmed_count = ccli_lookup.confirmed_count + 1,
           category = COALESCE(EXCLUDED.category, ccli_lookup.category),
           updated_at = NOW()
