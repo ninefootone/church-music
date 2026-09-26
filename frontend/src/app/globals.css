@@ -3274,8 +3274,8 @@ select.input {
 .artist-filter-chip {
   display: flex;
   align-items: center;
-  gap: 0.5rem;
-  padding: 6px 14px 6px 6px;
+  gap: 0.65rem;
+  padding: 8px 16px 8px 8px;
   border-radius: var(--radius-pill);
   border: 1px solid var(--color-border);
   background: var(--color-surface);
@@ -3293,10 +3293,12 @@ select.input {
   color: var(--color-brand-600);
 }
 .artist-filter-chip__logo {
-  width: 24px;
-  height: 24px;
-  border-radius: 6px;
-  object-fit: cover;
+  width: 30px;
+  height: 30px;
+  padding: 3px;
+  box-sizing: border-box;
+  border-radius: 7px;
+  object-fit: contain;
   flex-shrink: 0;
 }
 .artist-filter-active {
