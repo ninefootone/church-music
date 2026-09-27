@@ -265,18 +265,25 @@ function LibraryRow({
 // that part of the info panel simply doesn't render.
 const PARTNER_ARTISTS = [
   {
-    name: 'Awesome Cutlery',
-    author: 'Awesome Cutlery',
-    logo: '/Awesome-Cutlery-logo-sq.svg',
-    description: 'Our mission is to help families worship Jesus together.',
-    website: 'https://www.awesomecutlery.com/',
-  },
-  {
     name: 'Ben Slee Music',
     author: 'Ben Slee',
     logo: '/Ben-Slee-logo-sq.svg',
     description: 'I serve as the Music Pastor at Christ Church Mayfair in London. I hope and pray there\'s something to lift your eyes to Jesus here.',
     website: 'https://bensleemusic.com/',
+  },
+  {
+    name: 'Joyful Noise',
+    author: 'Joyful Noise',
+    logo: '/joyful-noise-sq.png',
+    description: 'Songs from the word, to the heart and for the church.',
+    website: 'https://joyfulnoisemusic.co.uk/',
+  },
+  {
+    name: 'Awesome Cutlery',
+    author: 'Awesome Cutlery',
+    logo: '/Awesome-Cutlery-logo-sq.svg',
+    description: 'Our mission is to help families worship Jesus together.',
+    website: 'https://www.awesomecutlery.com/',
   },
 ]
 
