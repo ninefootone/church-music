@@ -157,13 +157,59 @@ export default function HelpPage() {
           content: () => (
             <div>
               <p className="help-content-body">
-                You can sign in with an email and password, or with a Google account.
+                You can sign in with an email and password, or with your Google or Apple account. The same account works on the website and in the Song Stack iPad app.
               </p>
               <p className="help-content-body">
                 Your account is tied to a church. If you&apos;ve been invited to join a church on Song Stack, follow the invite link in the message you received — this connects your account to that church automatically.
               </p>
               <p className="help-content-body">
                 If you need to join a church and don&apos;t have an invite link, ask one of your church admins. They can find the invite link on the Team page.
+              </p>
+              <p className="help-content-body">
+                <strong>Using Apple&apos;s Hide My Email?</strong> Apple then gives Song Stack a private relay address instead of your real one, which creates a separate account that isn&apos;t connected to your church yet. Enter your church&apos;s invite code to join it (on the website, or on the <strong>Join your church</strong> screen in the iPad app), or sign in with the email address you were invited with.
+              </p>
+            </div>
+          ),
+        },
+        {
+          id: 'your-account',
+          title: 'Your account',
+          content: () => (
+            <div>
+              <p className="help-content-body">
+                Open the avatar menu in the top navigation and choose <strong>Account</strong>. There you can change your name and photo, update your email address and password, and connect or disconnect Google or Apple sign-in.
+              </p>
+              <p className="help-content-body">
+                Your name is what other people see on the Team page and on plans where you&apos;re listed as a musician. If you change it on the Account page, it updates across Song Stack automatically.
+              </p>
+              <p className="help-content-body">
+                Our <a href="/privacy" target="_blank" rel="noopener noreferrer" style={{ color: 'var(--color-brand-500)', fontWeight: 600 }}>privacy policy</a> explains what we store about you and how long we keep it.
+              </p>
+            </div>
+          ),
+        },
+        {
+          id: 'deleting-your-account',
+          title: 'Deleting your account',
+          content: () => (
+            <div>
+              <p className="help-content-body">
+                You can delete your own account at any time, on the website or in the iPad app. It is immediate and can&apos;t be undone.
+              </p>
+              <p className="help-content-body">
+                <strong>On the website:</strong> open the avatar menu, choose <strong>Account</strong>, scroll below your profile to <strong>Delete account</strong>, and click <strong>Delete my account</strong>. You&apos;ll be asked to type DELETE to confirm.
+              </p>
+              <p className="help-content-body">
+                <strong>In the iPad app:</strong> go to <strong>Settings</strong> and use the red <strong>Delete account</strong> card at the very bottom. If you haven&apos;t joined a church yet, there&apos;s a <strong>Delete my account</strong> link on the Join your church screen.
+              </p>
+              <p className="help-content-body">
+                <strong>What happens:</strong> your account and personal details are removed. Your name on past plans becomes &ldquo;Former member&rdquo;. Shared PDF markings you drew stay for the church but are no longer attributed to you. In the iPad app, your personal markings, downloads and custom sets are cleared from that iPad. Copies can remain in our nightly backups for up to 14 days.
+              </p>
+              <p className="help-content-body">
+                <strong>When it&apos;s blocked:</strong> you&apos;ll see a message explaining why, and nothing is changed. This happens if you&apos;re the only admin of a church that still has other members (make someone else an admin from the Team page first), or if your church has an active subscription (cancel it under <strong>Settings → Billing</strong> first).
+              </p>
+              <p className="help-content-body">
+                <strong>If you&apos;re the last member</strong> of your church, deleting your account also deletes the church, its songs, plans and files. The confirmation names the church so you can see this before you go ahead.
               </p>
             </div>
           ),
@@ -416,6 +462,9 @@ export default function HelpPage() {
                 For ChordPro files, you can transpose the key directly in the viewer using the key selector in the toolbar. This only affects your current session — it doesn&apos;t change the file itself.
               </p>
               <p className="help-content-body">
+                The set viewer needs a reasonably recent browser — on an iPad that means iPadOS 16.4 or later. On an older iPad you&apos;ll see a short message instead; you can still open each song&apos;s music from the plan page.
+              </p>
+              <p className="help-content-body">
                 The set viewer shows licensed content (sheet music, chord charts and lyrics), so it requires signing in. On a plan&apos;s public share link, Set mode is available to members of your church who are signed in — visitors without an account see the plan outline but not the music.
               </p>
             </div>
@@ -555,7 +604,7 @@ export default function HelpPage() {
                 There are two roles in Song Stack:
               </p>
               <p className="help-content-body">
-                <strong>Admin:</strong> full access to everything, including team management, settings, and all songs and plans.
+                <strong>Admin:</strong> full access to everything, including team management, settings, and all songs and plans. A church always needs at least one admin — if you&apos;re the only admin and other members remain, make someone else an admin from the Team page before you delete your account.
               </p>
               <p className="help-content-body">
                 <strong>Member:</strong> read-only access by default, with specific capabilities granted individually.
@@ -564,16 +613,16 @@ export default function HelpPage() {
                 Admins can grant members the following additional permissions from the Team page:
               </p>
               <p className="help-content-body">
-                <strong>Manage songs:</strong> can add and edit songs in the library.
+                <strong>Add &amp; edit songs:</strong> can add and edit songs in the library.
               </p>
               <p className="help-content-body">
-                <strong>Add plans:</strong> can create new plans and edit their own plans.
-              </p>
-              <p className="help-content-body">
-                <strong>Edit any plan:</strong> can edit plans created by other members.
+                <strong>Add &amp; edit plans:</strong> can create new plans and edit the plans they created.
               </p>
               <p className="help-content-body">
                 <strong>Manage playlists:</strong> can add, edit, and delete playlist links on the dashboard.
+              </p>
+              <p className="help-content-body">
+                <strong>Add notes to plan items:</strong> can add notes to items in a plan. In the Song Stack iPad app, it also lets them draw shared markings on a PDF — markings the whole church can see (everyone can hide or show them).
               </p>
               <p className="help-content-body">
                 To change a member&apos;s role or permissions, go to the <strong>Team</strong> page and click on their name.
