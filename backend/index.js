@@ -58,16 +58,6 @@ app.use((err, req, res, next) => {
 
 // Run migration then start server
 const runMigration = async () => {
-  // TEMP diagnostic (2026-09-30, DB password rotation): log which DATABASE_URL the container really sees — host + a
-  // short hash of the password, never the password. Remove once the crash loop is understood.
-  try {
-    const u = new URL(process.env.DATABASE_URL);
-    const pw = decodeURIComponent(u.password);
-    console.log('[startup] DATABASE_URL seen:', JSON.stringify({ user: u.username, host: u.hostname, port: u.port, db: u.pathname, pwLen: pw.length, pwHash: require('crypto').createHash('sha256').update(pw).digest('hex').slice(0, 8) }),
-      'PGPASSWORD_set=' + Boolean(process.env.PGPASSWORD), 'NODE_ENV=' + process.env.NODE_ENV);
-  } catch (e) {
-    console.log('[startup] DATABASE_URL unusable:', e.message, 'set=' + Boolean(process.env.DATABASE_URL));
-  }
   const pool = new Pool({ connectionString: process.env.DATABASE_URL });
   const client = await pool.connect();
   try {
