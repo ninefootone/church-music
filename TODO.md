@@ -70,7 +70,12 @@ Next:
 
 ### Features – Admin
 - [ ] Automated email reminders – email musicans 1 week before a plan
-- [x] Full offboarding process – account deletion — DONE 2026-09-30 for the iPad app: `DELETE /api/account` + `GET /api/account/deletion-check` (see project doc `account-deletion.md`). Still open: a WEB delete button (Clerk's own web "Delete account" must stay OFF until then) + fix `/api/superadmin/churches/:id` delete ordering (plan_items FK).
+- [x] Full offboarding process – account deletion — DONE 2026-09-30 on BOTH the iPad app and the website (Account page → Delete account): `DELETE /api/account` + `GET /api/account/deletion-check` (see project doc `account-deletion.md`). Clerk's own web "Delete account" stays OFF. Privacy policy rewritten to match (`privacy-policy-and-app-links.md`).
+- [ ] Fix `/api/superadmin/churches/:id` delete ordering — bare `DELETE FROM churches` can hit the `plan_items_song_id_fkey` error; delete the church's plans first (as `accountDeletion.js` does).
+- [ ] `requireAuth` should return 5xx (not 401) when the DB is down, and `/health` should ping the DB — a DB outage currently looks like a sign-in problem.
+- [ ] Backend → Railway private DB address (`…railway.internal:5432`) instead of the public proxy host; do at a quiet time, confirm `Migration complete` in the deploy log.
+- [ ] iPad app: if the signed-in account is deleted elsewhere (e.g. on the web) the app shows "You're offline" — detect session-invalid vs offline and sign out.
+- [ ] App Store listing + App Privacy answers (iPadOS 16.4+, no tracking); Privacy Policy URL = https://app.songstack.church/privacy.
 
 ## Done
 - [x] Lyrics on plan detail — expanding a song in the plan running order shows a "Show lyrics" toggle when the song has lyrics (`songs.lyrics`), rendered via the shared `LyricsDisplay`. Added `s.lyrics AS song_lyrics` to the authenticated plan-detail query only (public-share query left untouched — lyrics stay off shared links).
