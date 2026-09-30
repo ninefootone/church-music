@@ -18,6 +18,7 @@ const mailingRoutes = require('./routes/mailing');
 const superAdminRoutes = require('./routes/superadmin');
 const unavailabilityRoutes = require('./routes/unavailability');
 const playlistRoutes = require('./routes/playlists');
+const annotationRoutes = require('./routes/annotations');
 
 const app = express();
 
@@ -27,6 +28,9 @@ app.use(cors({
   credentials: true,
 }));
 app.use('/api/stripe', stripeRoutes);
+// Shared PDF markings: a page of ink can exceed express.json's 100kb default, so this route gets its own larger
+// parser, mounted BEFORE the global one (body-parser skips already-parsed bodies).
+app.use('/api/annotations', express.json({ limit: '2mb' }), annotationRoutes);
 app.use(express.json());
 
 app.get('/health', (req, res) => res.json({ status: 'ok' }));
