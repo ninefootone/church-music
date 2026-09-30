@@ -110,4 +110,21 @@ async function unsubscribeFromList({ email, listId = 2 }) {
   })
 }
 
-module.exports = { sendBrevoEmail, subscribeToList, getBrevoContactStatus, unsubscribeFromList }
+async function deleteBrevoContact({ email }) {
+  return new Promise((resolve, reject) => {
+    const options = {
+      hostname: 'api.brevo.com',
+      path: `/v3/contacts/${encodeURIComponent(email)}`,
+      method: 'DELETE',
+      headers: { 'api-key': process.env.BREVO_API_KEY },
+    }
+    const req = https.request(options, (res) => {
+      res.on('data', () => {})
+      res.on('end', () => resolve({ status: res.statusCode })) // 204 deleted, 404 not a contact — both fine
+    })
+    req.on('error', reject)
+    req.end()
+  })
+}
+
+module.exports = { sendBrevoEmail, subscribeToList, getBrevoContactStatus, unsubscribeFromList, deleteBrevoContact }

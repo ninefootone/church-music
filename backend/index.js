@@ -19,6 +19,7 @@ const superAdminRoutes = require('./routes/superadmin');
 const unavailabilityRoutes = require('./routes/unavailability');
 const playlistRoutes = require('./routes/playlists');
 const annotationRoutes = require('./routes/annotations');
+const accountRoutes = require('./routes/account');
 
 const app = express();
 
@@ -48,6 +49,7 @@ app.use('/api/unavailability', unavailabilityRoutes);
 app.use('/api/playlists', playlistRoutes);
 app.use('/api/mailing', mailingRoutes);
 app.use('/api/superadmin', superAdminRoutes);
+app.use('/api/account', accountRoutes);
 
 app.use((err, req, res, next) => {
   console.error(err.stack);
