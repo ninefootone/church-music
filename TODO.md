@@ -70,7 +70,7 @@ Next:
 
 ### Features – Admin
 - [ ] Automated email reminders – email musicans 1 week before a plan
-- [ ] Full offboarding process – account deletion — settings page option for users to delete their own account (Clerk backend API + DB cleanup)
+- [x] Full offboarding process – account deletion — DONE 2026-09-30 for the iPad app: `DELETE /api/account` + `GET /api/account/deletion-check` (see project doc `account-deletion.md`). Still open: a WEB delete button (Clerk's own web "Delete account" must stay OFF until then) + fix `/api/superadmin/churches/:id` delete ordering (plan_items FK).
 
 ## Done
 - [x] Lyrics on plan detail — expanding a song in the plan running order shows a "Show lyrics" toggle when the song has lyrics (`songs.lyrics`), rendered via the shared `LyricsDisplay`. Added `s.lyrics AS song_lyrics` to the authenticated plan-detail query only (public-share query left untouched — lyrics stay off shared links).
