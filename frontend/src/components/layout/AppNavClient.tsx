@@ -4,7 +4,7 @@ import { useState } from 'react'
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
 import { useClerk } from '@clerk/nextjs'
-import { Menu, X, LogOut, HelpCircle, Home, BarChart2 } from 'lucide-react'
+import { Menu, X, LogOut, HelpCircle, Home, BarChart2, UserCircle } from 'lucide-react'
 import { useChurch } from '@/context/ChurchContext'
 
 const navLinks = [
@@ -91,6 +91,9 @@ export function AppNavClient() {
                           </Link>
                         ))}
                         <div className="nav-dropdown-footer">
+                          <Link href="/account" className={`app-nav-mobile-link nav-signout-btn ${isActive('/account') ? 'is-active' : ''}`} onClick={() => setDesktopOpen(false)}>
+                            <UserCircle size={16} /> Account
+                          </Link>
                           <button onClick={() => signOut({ redirectUrl: '/' })} className="app-nav-mobile-link nav-signout-btn">
                             <LogOut size={16} /> Sign out
                           </button>
@@ -137,6 +140,9 @@ export function AppNavClient() {
               </Link>
             ))}
             <div className="nav-dropdown-footer">
+              <Link href="/account" className={`app-nav-mobile-link nav-signout-btn ${isActive('/account') ? 'is-active' : ''}`} onClick={() => setMobileOpen(false)}>
+                <UserCircle size={16} /> Account
+              </Link>
               <button onClick={() => signOut({ redirectUrl: '/' })} className="app-nav-mobile-link nav-signout-btn">
                 <LogOut size={16} /> Sign out
               </button>
