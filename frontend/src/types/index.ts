@@ -52,7 +52,7 @@ export interface Song {
   id: string
   church_id: string | null
   title: string
-  author: string
+  author: string | null
   default_key: string
   category: Category
   first_line: string | null
@@ -141,7 +141,7 @@ export interface StatsData {
   top_songs: {
     song_id: string
     title: string
-    author: string
+    author: string | null
     category: Category
     count: number
     last_sung: string

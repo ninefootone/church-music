@@ -58,7 +58,7 @@ interface PlanItem {
   type: string
   song_id: string | null
   song_title?: string
-  song_author?: string
+  song_author?: string | null
   song_default_key?: string
   song_category?: string
   song_suggested_arrangement?: string
@@ -75,7 +75,7 @@ interface PlanItem {
 interface Song {
   id: string
   title: string
-  author: string
+  author: string | null
   default_key: string
   category: string
 }
