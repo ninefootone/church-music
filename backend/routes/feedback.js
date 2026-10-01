@@ -1,4 +1,5 @@
 const express = require('express');
+const Sentry = require('@sentry/node');
 const router = express.Router();
 const https = require('https');
 const { sendBrevoEmail } = require('../utils/email');
@@ -56,6 +57,7 @@ router.post('/', async (req, res) => {
     res.json({ success: true });
   } catch (err) {
     console.error('Feedback error:', err);
+    Sentry.captureException(err);
     res.status(500).json({ error: 'Failed to send feedback' });
   }
 });

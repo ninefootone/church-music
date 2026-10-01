@@ -1,4 +1,5 @@
 const express = require('express');
+const Sentry = require('@sentry/node');
 const router = express.Router();
 const { sendBrevoEmail } = require('../utils/email');
 const { S3Client, GetObjectCommand } = require('@aws-sdk/client-s3');
@@ -539,6 +540,7 @@ router.post('/:id/email', requireAuth, requireMembership, async function(req, re
     res.json({ success: true, sent: recipients.length - failures.length, failed: failures.length })
   } catch (err) {
     console.error('Plan email error:', err)
+    Sentry.captureException(err)
     res.status(500).json({ error: 'Failed to send email' })
   }
 })

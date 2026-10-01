@@ -1,4 +1,5 @@
 const express = require('express')
+const Sentry = require('@sentry/node');
 const router = express.Router()
 const { subscribeToList, getBrevoContactStatus, unsubscribeFromList } = require('../utils/email')
 
@@ -11,6 +12,7 @@ router.post('/subscribe', async (req, res) => {
     res.json({ success: true, status: result.status })
   } catch (err) {
     console.error('Subscribe error:', err)
+    Sentry.captureException(err)
     res.status(500).json({ error: 'Failed to subscribe' })
   }
 })
@@ -26,6 +28,7 @@ router.get('/status', async (req, res) => {
     res.json({ subscribed: listIds.includes(2) })
   } catch (err) {
     console.error('Status error:', err)
+    Sentry.captureException(err)
     res.status(500).json({ error: 'Failed to check status' })
   }
 })
@@ -39,6 +42,7 @@ router.post('/unsubscribe', async (req, res) => {
     res.json({ success: true })
   } catch (err) {
     console.error('Unsubscribe error:', err)
+    Sentry.captureException(err)
     res.status(500).json({ error: 'Failed to unsubscribe' })
   }
 })

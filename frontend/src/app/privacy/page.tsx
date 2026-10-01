@@ -19,7 +19,7 @@ export default function PrivacyPage() {
 
       <main className="legal-content">
         <h1>Privacy &amp; Cookie Policy</h1>
-        <p className="legal-updated">Last updated: September 2026</p>
+        <p className="legal-updated">Last updated: October 2026</p>
 
         <p>This policy covers the Song Stack website (<strong>songstack.church</strong>), the web app (<strong>app.songstack.church</strong>) and the Song Stack iPad app (together, &ldquo;the Service&rdquo;), operated by <strong>ninefootone creative ltd</strong>, a company registered in England and Wales.</p>
 
@@ -82,6 +82,7 @@ export default function PrivacyPage() {
           <li><strong>Brevo</strong> (<a href="https://www.brevo.com/legal/privacypolicy/" target="_blank" rel="noopener">brevo.com/legal/privacypolicy</a>) — sending emails and managing our email contact list</li>
           <li><strong>Google Analytics</strong> and <strong>reCAPTCHA</strong> (<a href="https://policies.google.com/privacy" target="_blank" rel="noopener">policies.google.com/privacy</a>) — anonymised usage analytics (website, with consent) and spam protection on the feedback form</li>
           <li><strong>Expo</strong> (<a href="https://expo.dev/privacy" target="_blank" rel="noopener">expo.dev/privacy</a>) — delivers updates to the iPad app</li>
+          <li><strong>Sentry</strong> (<a href="https://sentry.io/privacy/" target="_blank" rel="noopener">sentry.io/privacy</a>) — error monitoring. When something breaks, Sentry receives the technical error details, the page address, and the browser and device type so we can fix it. We configure it not to collect cookies, request headers, request contents or your account details.</li>
           <li><strong>Apple</strong> — distributes the iPad app through the App Store and TestFlight</li>
         </ul>
         <p>Some of these providers process data outside the UK; where they do, they rely on recognised safeguards such as the UK International Data Transfer Addendum or an adequacy decision.</p>

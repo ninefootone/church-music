@@ -1,4 +1,5 @@
 const express = require('express');
+const Sentry = require('@sentry/node');
 const router = express.Router();
 const stripe = require('stripe')(process.env.STRIPE_SECRET_KEY);
 const pool = require('../db/pool');
@@ -109,6 +110,7 @@ router.post('/webhook', express.raw({ type: 'application/json' }), async (req, r
     }
   } catch (err) {
     console.error('Webhook handler error:', err);
+    Sentry.captureException(err);
     return res.status(500).json({ error: 'Webhook handler failed' });
   }
 

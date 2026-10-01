@@ -1,4 +1,5 @@
 require('dotenv').config();
+const Sentry = require('./instrument'); // must stay first after dotenv
 const express = require('express');
 const cors = require('cors');
 const helmet = require('helmet');
@@ -50,6 +51,9 @@ app.use('/api/playlists', playlistRoutes);
 app.use('/api/mailing', mailingRoutes);
 app.use('/api/superadmin', superAdminRoutes);
 app.use('/api/account', accountRoutes);
+
+// Report errors passed via next(err) to Sentry. Must come after all routes and BEFORE the handler below.
+Sentry.setupExpressErrorHandler(app);
 
 app.use((err, req, res, next) => {
   console.error(err.stack);
