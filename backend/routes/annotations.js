@@ -27,7 +27,12 @@ function cleanStroke(s) {
   const width = Math.min(Math.max(Number(s.width) || 3, 1), 40);
   const cap = s.cap === 'square' ? 'square' : 'round';
   const join = s.join === 'bevel' ? 'bevel' : 'round';
-  return { color, width, cap, join, pts };
+  const out = { color, width, cap, join, pts };
+  // pw = width (in the drawing device's points) of the page rectangle the stroke was drawn on. Lets every viewer scale
+  // `width` to its own page size. Optional: strokes drawn before this field existed don't have it.
+  const pw = Number(s.pw);
+  if (Number.isFinite(pw) && pw >= 50 && pw <= 5000) out.pw = Math.round(pw);
+  return out;
 }
 
 // Rows for the given file ids, restricted to files that belong to this church.
