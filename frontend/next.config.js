@@ -1,3 +1,5 @@
+const { withSentryConfig } = require('@sentry/nextjs/config')
+
 /** @type {import('next').NextConfig} */
 const nextConfig = {
   reactStrictMode: true,
@@ -16,4 +18,9 @@ const nextConfig = {
   },
 }
 
-module.exports = nextConfig
+// Sentry build wrapper. Source-map upload (readable stack traces) only happens when
+// SENTRY_AUTH_TOKEN, SENTRY_ORG and SENTRY_PROJECT are set in the build environment (Vercel).
+module.exports = withSentryConfig(nextConfig, {
+  silent: !process.env.CI,
+  widenClientFileUpload: true,
+})

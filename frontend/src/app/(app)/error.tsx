@@ -2,6 +2,7 @@
 
 import { useEffect } from 'react'
 import Link from 'next/link'
+import * as Sentry from '@sentry/nextjs'
 
 // Catches render errors in any (app) page. Because it sits inside (app)/layout.tsx,
 // the nav and footer stay on screen and only the page content is replaced.
@@ -14,6 +15,7 @@ export default function AppError({
 }) {
   useEffect(() => {
     console.error('[Song Stack] Page error:', error)
+    Sentry.captureException(error)
   }, [error])
 
   return (

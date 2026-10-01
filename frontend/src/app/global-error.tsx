@@ -1,6 +1,7 @@
 'use client'
 
 import { useEffect } from 'react'
+import * as Sentry from '@sentry/nextjs'
 
 // Last-resort boundary: only used if the root layout itself fails. Replaces the whole
 // document, so it must render its own <html>/<body> and can't rely on app CSS.
@@ -13,6 +14,7 @@ export default function GlobalError({
 }) {
   useEffect(() => {
     console.error('[Song Stack] Global error:', error)
+    Sentry.captureException(error)
   }, [error])
 
   return (
