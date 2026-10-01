@@ -341,10 +341,11 @@ export default function PlanEditPage() {
       .finally(() => setLoading(false))
   }, [id, churchLoading, church])
 
-  const filteredSongs = songs.filter(s =>
-    s.title.toLowerCase().includes(songSearch.toLowerCase()) ||
-    s.author.toLowerCase().includes(songSearch.toLowerCase())
-  )
+  const filteredSongs = songs.filter(s => {
+    const q = songSearch.toLowerCase()
+    return (s.title ?? '').toLowerCase().includes(q) ||
+      (s.author ?? '').toLowerCase().includes(q)
+  })
 
   const handleDragEnd = (event: DragEndEvent) => {
     const { active, over } = event
