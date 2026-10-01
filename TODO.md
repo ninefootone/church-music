@@ -34,6 +34,8 @@ Next:
 - [ ] Bluetooth foot-controller page turns.
 - [ ] Android build (same codebase) — later.
 - [ ] Store assets, TestFlight, submit & review.
+- [ ] **iPad app: plans don't refresh after web edits (found 2026-10-01).** (1) The Plans list (`HomeScreen.tsx`, effect keyed on `reloadKey` only) is fetched ONCE at mount — a title/date change or new plan made on the website only shows after quitting and relaunching the app. Fix: pull-to-refresh (`RefreshControl`) + re-run the load on `AppState` → active and when returning to the Plans tab. (2) A downloaded plan (✓ Offline) opens from the manifest snapshot with no network check (`openPlan`, by design) so web changes to its SONGS/ORDER never appear until remove + re-download, and — unlike custom sets — nothing says it's stale. Risk: leader swaps a song Saturday night, band plays Friday's download. Fix: when online, compare the server plan (`/plans/:id` item ids/order/key overrides) to the snapshot and show "Changed since download · Update" on the row and in plan detail. JS-only → ship by OTA AFTER App Store approval (reviewers' devices pull the production channel). Test on Dev first.
+
 ## Backlog
 
 - [ ] Database schema migrations — adopt a migration runner (e.g. node-pg-migrate) or at minimum a `schema_migrations` table, so "has this migration run?" is recorded in the database rather than remembered. The one-off scripts in `backend/db/` and `backend/scripts/` are currently applied by hand with no record of what's been run — this is the ambiguity that made syncing across machines uncertain. Keep the existing scripts as history; route new schema changes through the runner.
