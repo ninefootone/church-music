@@ -25,12 +25,12 @@ Done:
 - [x] Plan lists show date + time + title, sorted and deduped.
 
 Next:
-- [ ] **PDF annotation** — decide architecture first (Skia overlay on react-native-pdf vs
-      rasterise-page-to-image + one Skia canvas; leaning the latter). Reuse the Skia ink prototype.
-      This also fixes the viewer's white-margin / swipe / two-page-landscape wants.
+- [x] **PDF annotation** — DONE: rasterised page image + one Skia canvas (`PdfView.tsx`), personal ink
+      saved locally, plus a church-wide **shared** layer (admins / `can_annotate_plans`) synced via
+      `/api/annotations` and polled every 15s while a PDF is open. See project doc `shared-annotations.md`.
 - [ ] Offline caching — download PDF/ChordPro bytes + plan/song metadata locally (1h signed URLs
       are useless offline).
-- [ ] Annotation persistence — local, and/or round-trip (via `edited_r2_key` or a new endpoint).
+- [x] Annotation persistence — DONE (local personal markings + server-stored shared markings; no PDF round-trip).
 - [ ] Bluetooth foot-controller page turns.
 - [ ] Android build (same codebase) — later.
 - [ ] Store assets, TestFlight, submit & review.
@@ -66,6 +66,7 @@ Next:
 - [ ] Hymnbook + hymn number fields (traditional-church request) — DECISION: add as two plain optional `TEXT` columns on `songs`, shown on the song form/detail and hidden-when-empty. First confirm existing added fields (`bible_references` etc.) already hide when blank; if so, NO settings toggle — a toggle carries real conditional-rendering cost across every song surface and sets the precedent that every niche field earns a switch (→ settings sprawl). Deliberately NOT building generic custom fields yet: right long-term abstraction (same global+per-church pattern as categories/tags) but premature for one church — revisit if denominational-field requests keep coming (tune name, meter, composer/author split). Known model limit: a single hymnbook/number pair breaks for churches using multiple hymnbooks — accepted for now.
 
 ### Features – Print/View
+- [ ] Shared markings on the website (decided NOT now, 2026-10-01) — read-only overlay would only reach the set viewer (song-page files open as raw PDF tabs, so it needs the single-file viewer below first) and markings can only be drawn on the iPad. Revisit if web usage shows demand. Gotcha if built: iPad renders the PDF MediaBox, pdf.js the CropBox — verify strokes line up on real files.
 - [ ] Single file viewer — route at /songs/[id]/view/[fileId] that opens a single PDF or ChordPro file in the full set viewer (same component, single file); accessible from the song page for rehearsal use; supports swipe/keyboard navigation and auto-hide controls
 
 ### Features – Admin
