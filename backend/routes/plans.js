@@ -20,6 +20,28 @@ const { insertTemplateItems } = require('../utils/planTemplateItems');
 const { requireAuth, requireMembership, requireAdmin, requirePermission } = require('../middleware/auth');
 const { v4: uuidv4 } = require('uuid');
 
+// Loads a plan scoped to the caller's church. Returns null if it doesn't exist
+// there (callers send 404, so other churches' plan ids look the same as missing).
+async function loadChurchPlan(planId, churchId) {
+  const r = await pool.query(
+    'SELECT id, created_by, status FROM plans WHERE id=$1 AND church_id=$2',
+    [planId, churchId]
+  );
+  return r.rows[0] || null;
+}
+
+// Same rule the plan detail page uses to show edit controls:
+// admin, the plan's creator, or "Add & edit plans".
+function canEditPlan(req, plan) {
+  return req.membership.role === 'admin'
+    || plan.created_by === req.user.clerk_id
+    || !!req.membership.can_add_plans;
+}
+
+function canSeeDraftPlans(req) {
+  return req.membership.role === 'admin' || !!req.membership.can_add_plans;
+}
+
 router.get('/', requireAuth, requireMembership, async function(req, res, next) {
   try {
     const churchId = req.churchId;
@@ -76,8 +98,12 @@ router.get('/my-upcoming', requireAuth, requireMembership, async function(req, r
   }
 });
 
-router.get('/:id/musicians', async function(req, res, next) {
+router.get('/:id/musicians', requireAuth, requireMembership, async function(req, res, next) {
   try {
+    const plan = await loadChurchPlan(req.params.id, req.churchId);
+    if (!plan || (plan.status === 'draft' && !canSeeDraftPlans(req))) {
+      return res.status(404).json({ error: 'Plan not found' });
+    }
     const result = await pool.query(
       `SELECT sm.id, sm.name, sm.role, sm.user_id, sm.created_at
        FROM plan_musicians sm
@@ -150,7 +176,14 @@ router.get('/public/:token', async function(req, res, next) {
       [plan.rows[0].id]
     );
 
-    res.json(Object.assign({}, plan.rows[0], { items: items.rows }));
+    // Musicians are included here because the public share page has no login;
+    // GET /:id/musicians now requires church membership.
+    const musicians = await pool.query(
+      `SELECT user_id, name, role FROM plan_musicians WHERE plan_id = $1 ORDER BY created_at ASC`,
+      [plan.rows[0].id]
+    );
+
+    res.json(Object.assign({}, plan.rows[0], { items: items.rows, musicians: musicians.rows }));
   } catch (err) {
     next(err);
   }
@@ -372,8 +405,21 @@ router.post('/:id/musicians', requireAuth, requireMembership, async function(req
 
   try {
     const { name, role, user_id } = req.body;
-    console.log('[musicians POST] body:', req.body, 'planId:', req.params.id);
     if (!name || !role) return res.status(400).json({ error: 'name and role are required' });
+
+    const plan = await loadChurchPlan(req.params.id, req.churchId);
+    if (!plan) return res.status(404).json({ error: 'Not found' });
+    if (!canEditPlan(req, plan)) return res.status(403).json({ error: 'Not authorised' });
+
+    // A linked user must be a member of this church.
+    if (user_id) {
+      const member = await pool.query(
+        "SELECT 1 FROM memberships WHERE church_id=$1 AND user_id=$2 AND role != 'revoked'",
+        [req.churchId, user_id]
+      );
+      if (member.rows.length === 0) return res.status(400).json({ error: 'That person is not a member of this church' });
+    }
+
     const result = await pool.query(
       `INSERT INTO plan_musicians (plan_id, user_id, name, role)
        VALUES ($1, $2, $3, $4) RETURNING *`,
@@ -381,13 +427,15 @@ router.post('/:id/musicians', requireAuth, requireMembership, async function(req
     );
     res.status(201).json(result.rows[0]);
   } catch (err) {
-    console.error('[musicians POST] error:', err.message, err.stack);
     next(err);
   }
 });
 
 router.delete('/:id/musicians/:musicianId', requireAuth, requireMembership, async function(req, res, next) {
   try {
+    const plan = await loadChurchPlan(req.params.id, req.churchId);
+    if (!plan) return res.status(404).json({ error: 'Not found' });
+    if (!canEditPlan(req, plan)) return res.status(403).json({ error: 'Not authorised' });
     await pool.query(
       `DELETE FROM plan_musicians WHERE id = $1 AND plan_id = $2`,
       [req.params.musicianId, req.params.id]

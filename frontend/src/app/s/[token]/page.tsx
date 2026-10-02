@@ -212,11 +212,10 @@ export default function PublicPlanPage() {
     axios.get(`${API}/api/plans/public/${token}`)
       .then(r => {
         setPlan(r.data)
-        return axios.get(`${API}/api/plans/${r.data.id}/musicians`)
+        setMusicians(r.data.musicians || [])
       })
-      .then(r => setMusicians(r.data))
-      .catch((err) => {
-        if (!plan) setError('Plan not found')
+      .catch(() => {
+        setError('Plan not found')
       })
       .finally(() => setLoading(false))
   }, [token])
