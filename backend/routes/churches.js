@@ -77,7 +77,7 @@ router.post('/join', requireAuth, async (req, res, next) => {
 
     // Notify admin by email
     try {
-      const { sendBrevoEmail } = require('../utils/email')
+      const { sendBrevoEmail, escapeHtml } = require('../utils/email')
       const adminResult = await pool.query(
         `SELECT u.email, u.name
          FROM memberships m
@@ -100,7 +100,7 @@ router.post('/join', requireAuth, async (req, res, next) => {
             to: admin.email,
             toName: adminName,
             subject: `New member joined ${church.rows[0].name}`,
-            htmlContent: `<p>Hi ${adminName},</p><p><strong>${memberName}</strong> (${m.email}) has just joined <strong>${church.rows[0].name}</strong> on Song Stack.</p><p>You can view and manage your team from your <a href="https://app.songstack.church/dashboard">dashboard</a>.</p><p>— Song Stack</p>`
+            htmlContent: `<p>Hi ${escapeHtml(adminName)},</p><p><strong>${escapeHtml(memberName)}</strong> (${escapeHtml(m.email)}) has just joined <strong>${escapeHtml(church.rows[0].name)}</strong> on Song Stack.</p><p>You can view and manage your team from your <a href="https://app.songstack.church/dashboard">dashboard</a>.</p><p>— Song Stack</p>`
           })
         }
       }

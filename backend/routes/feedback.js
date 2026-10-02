@@ -2,7 +2,7 @@ const express = require('express');
 const Sentry = require('@sentry/node');
 const router = express.Router();
 const https = require('https');
-const { sendBrevoEmail, subscribeToList } = require('../utils/email');
+const { sendBrevoEmail, subscribeToList, escapeHtml } = require('../utils/email');
 
 async function verifyRecaptcha(token) {
   const data = `secret=${process.env.RECAPTCHA_SECRET_KEY}&response=${token}`;
@@ -46,10 +46,10 @@ router.post('/', async (req, res) => {
       subject: `[Song Stack Feedback] ${type || 'General'} from ${name}`,
       htmlContent: `
         <h2>New feedback received</h2>
-        <p><strong>From:</strong> ${name} (${email})</p>
-        <p><strong>Type:</strong> ${type || 'General'}</p>
+        <p><strong>From:</strong> ${escapeHtml(name)} (${escapeHtml(email)})</p>
+        <p><strong>Type:</strong> ${escapeHtml(type || 'General')}</p>
         <p><strong>Message:</strong></p>
-        <p>${message.replace(/\n/g, '<br>')}</p>
+        <p>${escapeHtml(message).replace(/\n/g, '<br>')}</p>
         <p><strong>reCAPTCHA score:</strong> ${recaptcha.score}</p>
       `,
     });

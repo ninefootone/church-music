@@ -1,7 +1,7 @@
 const express = require('express');
 const Sentry = require('@sentry/node');
 const router = express.Router();
-const { sendBrevoEmail } = require('../utils/email');
+const { sendBrevoEmail, escapeHtml } = require('../utils/email');
 const { S3Client, GetObjectCommand } = require('@aws-sdk/client-s3');
 const { getSignedUrl } = require('@aws-sdk/s3-request-presigner');
 
@@ -550,14 +550,13 @@ router.post('/:id/email', requireAuth, requireMembership, async function(req, re
     // Build song rows HTML
     const itemsHtml = items.map((item, i) => {
       if (item.type !== 'song') {
-        const escHtml = (s) => String(s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
         const rawLabel = item.type === 'song_slot'
           ? (item.title ? `${item.title} — song to be chosen` : 'Song to be chosen')
           : (item.title || (item.type.charAt(0).toUpperCase() + item.type.slice(1)))
-        const label = escHtml(rawLabel)
+        const label = escapeHtml(rawLabel)
         // item.content is already sanitised to <p>/<br>/<strong>/<em> on save.
         const contentHtml = item.content ? `<div style="font-size:13px;color:#374151;font-style:normal;line-height:1.6;margin-top:6px;">${item.content}</div>` : ''
-        const noteHtml = item.notes ? `<div style="font-size:12px;color:#6b7280;font-style:italic;margin-top:4px;">${escHtml(item.notes).replace(/\n/g, '<br>')}</div>` : ''
+        const noteHtml = item.notes ? `<div style="font-size:12px;color:#6b7280;font-style:italic;margin-top:4px;">${escapeHtml(item.notes).replace(/\n/g, '<br>')}</div>` : ''
         let timingCell = ''
         if (hasTimings || hasDurations) {
           const hh = String(Math.floor(runningMinutes / 60)).padStart(2, '0')
@@ -571,13 +570,13 @@ router.post('/:id/email', requireAuth, requireMembership, async function(req, re
       }
       const title = item.song_title || 'Untitled'
       const key = item.key_override || item.song_default_key || ''
-      const keyBadge = key ? `<span style="display:inline-block;padding:2px 8px;background:#dbeafe;color:#1e40af;border-radius:4px;font-size:11px;font-weight:600;margin-left:6px;">${key}</span>` : ''
+      const keyBadge = key ? `<span style="display:inline-block;padding:2px 8px;background:#dbeafe;color:#1e40af;border-radius:4px;font-size:11px;font-weight:600;margin-left:6px;">${escapeHtml(key)}</span>` : ''
       const arrangement = item.custom_arrangement || ''
-      const arrangementHtml = arrangement ? `<div style="font-size:12px;color:#6b7280;margin-top:3px;">${arrangement}</div>` : ''
+      const arrangementHtml = arrangement ? `<div style="font-size:12px;color:#6b7280;margin-top:3px;">${escapeHtml(arrangement)}</div>` : ''
       const files = filesBySongId[item.song_id] || []
       const fileLinks = files.map(f => {
         const label = [f.label, f.key_of].filter(Boolean).join(' — ')
-        return `<a href="${f.signedUrl}" style="display:inline-block;margin-right:6px;margin-top:4px;padding:3px 10px;background:#f3f4f6;border:1px solid #d1d5db;border-radius:4px;font-size:11px;color:#1d4ed8;text-decoration:none;">${label}</a>`
+        return `<a href="${escapeHtml(f.signedUrl)}" style="display:inline-block;margin-right:6px;margin-top:4px;padding:3px 10px;background:#f3f4f6;border:1px solid #d1d5db;border-radius:4px;font-size:11px;color:#1d4ed8;text-decoration:none;">${escapeHtml(label)}</a>`
       }).join('')
       const hh = String(Math.floor(runningMinutes / 60)).padStart(2, '0')
       const mm = String(runningMinutes % 60).padStart(2, '0')
@@ -590,11 +589,11 @@ router.post('/:id/email', requireAuth, requireMembership, async function(req, re
       return `<tr style="border-bottom:1px solid #e5e7eb;">
         ${timingCell}
         <td style="padding:10px 16px;">
-          <div style="font-size:15px;font-weight:600;color:#111827;">${title}${keyBadge}</div>
+          <div style="font-size:15px;font-weight:600;color:#111827;">${escapeHtml(title)}${keyBadge}</div>
           ${arrangementHtml}
           ${fileLinks ? `<div style="margin-top:4px;">${fileLinks}</div>` : ''}
         </td>
-        <td style="padding:10px 16px;font-size:13px;color:#6b7280;">${item.song_category ? item.song_category.replace(/_/g, '-').replace(/\b\w/g, c => c.toUpperCase()) : ''}</td>
+        <td style="padding:10px 16px;font-size:13px;color:#6b7280;">${item.song_category ? escapeHtml(item.song_category.replace(/_/g, '-').replace(/\b\w/g, c => c.toUpperCase())) : ''}</td>
       </tr>`
     }).join('')
 
@@ -606,15 +605,15 @@ router.post('/:id/email', requireAuth, requireMembership, async function(req, re
     }
     const musicianRows = Object.keys(musicianGroups).length > 0
       ? Object.entries(musicianGroups).map(([name, roles]) =>
-          `<tr><td style="padding:6px 16px;font-size:14px;color:#111827;">${name}</td><td style="padding:6px 16px;font-size:13px;color:#6b7280;">${roles.join(', ')}</td></tr>`
+          `<tr><td style="padding:6px 16px;font-size:14px;color:#111827;">${escapeHtml(name)}</td><td style="padding:6px 16px;font-size:13px;color:#6b7280;">${escapeHtml(roles.join(', '))}</td></tr>`
         ).join('')
       : `<tr><td colspan="2" style="padding:10px 16px;font-size:13px;color:#9ca3af;font-style:italic;">No musicians listed</td></tr>`
 
     const preServiceNotesHtml = plan.pre_service_notes && plan.plan_start_time
-      ? `<div style="padding:12px 16px;font-size:13px;color:#4b5563;white-space:pre-line;border-bottom:1px solid #e5e7eb;">${plan.pre_service_notes}</div>`
+      ? `<div style="padding:12px 16px;font-size:13px;color:#4b5563;white-space:pre-line;border-bottom:1px solid #e5e7eb;">${escapeHtml(plan.pre_service_notes)}</div>`
       : ''
-    const planTitle = plan.title ? ` — ${plan.title}` : ''
-    const planTime = plan.plan_time ? `<p style="margin:4px 0 0;color:rgba(255,255,255,0.75);font-size:14px;">${plan.plan_time}</p>` : ''
+    const planTitle = plan.title ? ` — ${escapeHtml(plan.title)}` : ''
+    const planTime = plan.plan_time ? `<p style="margin:4px 0 0;color:rgba(255,255,255,0.75);font-size:14px;">${escapeHtml(plan.plan_time)}</p>` : ''
     const publicUrl = `${process.env.FRONTEND_URL || 'https://songstack.church'}/s/${plan.public_token}`
 
     const htmlContent = `
@@ -625,7 +624,7 @@ router.post('/:id/email', requireAuth, requireMembership, async function(req, re
   <div style="max-width:600px;margin:32px auto;background:#ffffff;border-radius:8px;overflow:hidden;box-shadow:0 1px 3px rgba(0,0,0,0.1);">
     
     <div style="background:#4b7fa5;padding:24px 32px;">
-      <p style="margin:0;color:rgba(255,255,255,0.8);font-size:12px;text-transform:uppercase;letter-spacing:0.08em;">${plan.church_name}</p>
+      <p style="margin:0;color:rgba(255,255,255,0.8);font-size:12px;text-transform:uppercase;letter-spacing:0.08em;">${escapeHtml(plan.church_name)}</p>
       <h1 style="margin:4px 0 0;color:#ffffff;font-size:22px;font-weight:700;">Plan${planTitle}</h1>
       <p style="margin:8px 0 0;color:rgba(255,255,255,0.9);font-size:16px;">${planDate}</p>
       ${planTime}

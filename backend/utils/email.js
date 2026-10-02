@@ -127,4 +127,15 @@ async function deleteBrevoContact({ email }) {
   })
 }
 
-module.exports = { sendBrevoEmail, subscribeToList, getBrevoContactStatus, unsubscribeFromList, deleteBrevoContact }
+// Escape text for an HTML email body or attribute. Use on EVERY user- or
+// church-entered value (names, titles, notes…) interpolated into htmlContent.
+function escapeHtml(value) {
+  return String(value ?? '')
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#39;')
+}
+
+module.exports = { sendBrevoEmail, subscribeToList, getBrevoContactStatus, unsubscribeFromList, deleteBrevoContact, escapeHtml }
