@@ -18,7 +18,30 @@ const s3 = new S3Client({
 
 const upload = multer({ storage: multer.memoryStorage(), limits: { fileSize: 2 * 1024 * 1024 } });
 
-const generateInviteCode = () => Math.random().toString(36).substring(2, 8).toUpperCase();
+const crypto = require('crypto');
+// 6 characters from A–Z0–9 via a cryptographic RNG (Math.random is predictable).
+const INVITE_CHARS = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
+const generateInviteCode = () => Array.from({ length: 6 }, () => INVITE_CHARS[crypto.randomInt(INVITE_CHARS.length)]).join('');
+
+// Wrong invite codes per user: max JOIN_MAX_FAILS per JOIN_WINDOW_MS, then 429.
+// Stops anyone cycling through codes to find a church. In-memory, so it resets on
+// deploy — fine for this purpose.
+const JOIN_MAX_FAILS = 10;
+const JOIN_WINDOW_MS = 15 * 60 * 1000;
+const joinFails = new Map(); // user id -> { count, resetAt }
+function joinBlocked(userId) {
+  const e = joinFails.get(userId);
+  if (!e) return false;
+  if (Date.now() > e.resetAt) { joinFails.delete(userId); return false; }
+  return e.count >= JOIN_MAX_FAILS;
+}
+function recordJoinFail(userId) {
+  const now = Date.now();
+  const e = joinFails.get(userId);
+  if (!e || now > e.resetAt) joinFails.set(userId, { count: 1, resetAt: now + JOIN_WINDOW_MS });
+  else e.count += 1;
+  if (joinFails.size > 10000) { for (const [k, v] of joinFails) if (now > v.resetAt) joinFails.delete(k); }
+}
 const generateShortId = () => Math.random().toString(36).substring(2, 6);
 
 // Create a church
@@ -51,9 +74,16 @@ router.post('/', requireAuth, async (req, res, next) => {
 // Join a church by invite code
 router.post('/join', requireAuth, async (req, res, next) => {
   try {
-    const { invite_code } = req.body;
+    if (joinBlocked(req.user.id)) {
+      return res.status(429).json({ error: 'Too many incorrect codes. Please wait 15 minutes and try again.' });
+    }
+    const invite_code = typeof req.body.invite_code === 'string' ? req.body.invite_code.trim().toUpperCase() : '';
+    if (!invite_code) return res.status(400).json({ error: 'Please enter an invite code' });
     const church = await pool.query('SELECT * FROM churches WHERE invite_code = $1', [invite_code]);
-    if (church.rows.length === 0) return res.status(404).json({ error: 'Invalid invite code — please check and try again' });
+    if (church.rows.length === 0) {
+      recordJoinFail(req.user.id);
+      return res.status(404).json({ error: 'Invalid invite code — please check and try again' });
+    }
 
     const existing = await pool.query(
       'SELECT * FROM memberships WHERE church_id = $1 AND user_id = $2',
