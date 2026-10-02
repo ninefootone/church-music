@@ -574,12 +574,15 @@ export default function PlanDetailPage() {
               <LayoutTemplate size={14} /> Save as template
             </button>
           )}
-          <button
-            onClick={() => setShowDeletePlan(true)}
-            className="btn btn-secondary btn-danger-text"
-          >
-            <Trash2 size={14} /> Delete plan
-          </button>
+          {/* Same rule as DELETE /api/plans/:id — admins and the plan's creator only. */}
+          {(isAdmin || plan.created_by === userId) && (
+            <button
+              onClick={() => setShowDeletePlan(true)}
+              className="btn btn-secondary btn-danger-text"
+            >
+              <Trash2 size={14} /> Delete plan
+            </button>
+          )}
         </div>
       )}
       {showTemplateModal && (
