@@ -36,22 +36,41 @@ export function AddToPlanModal({ song, onClose }: AddToPlanModalProps) {
     try {
       // Fetch current items
       const { data } = await api.get(`/api/plans/${plan.id}`)
+      // Re-send EVERY field — the items endpoint replaces the whole running
+      // order, so anything left out here (content, arrangements, durations)
+      // would be wiped from the plan.
       const currentItems = (data.items || []).map((item: any) => ({
         type: item.type,
         song_id: item.song_id || null,
         title: item.title || null,
         notes: item.notes || null,
+        content: item.content || null,
         key_override: item.key_override || null,
+        custom_arrangement: item.custom_arrangement || null,
+        duration_minutes: item.duration_minutes || null,
+        phase: item.phase || 'service',
       }))
 
-      // Append the new song
-      const newItems = [...currentItems, {
+      const newSong = {
         type: 'song',
         song_id: song.id,
         title: null,
         notes: null,
+        content: null,
         key_override: song.default_key || null,
-      }]
+        custom_arrangement: null,
+        duration_minutes: (song as any).default_duration ?? null,
+        phase: 'service',
+      }
+
+      // Fill the first empty song slot (from a plan template) if there is one,
+      // otherwise append.
+      const slotIdx = currentItems.findIndex((i: any) => i.type === 'song_slot')
+      const newItems = slotIdx === -1
+        ? [...currentItems, newSong]
+        : currentItems.map((item: any, i: number) => i === slotIdx
+            ? { ...newSong, duration_minutes: newSong.duration_minutes ?? item.duration_minutes, phase: item.phase }
+            : item)
 
       await api.put(`/api/plans/${plan.id}/items`, { items: newItems })
       setAdded(plan.id)
