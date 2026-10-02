@@ -16,6 +16,7 @@ const r2 = new S3Client({
 const R2_BUCKET = process.env.R2_BUCKET_NAME;
 const pool = require('../db/pool');
 const { sanitizeRichText } = require('../utils/sanitize');
+const { insertTemplateItems } = require('../utils/planTemplateItems');
 const { requireAuth, requireMembership, requireAdmin, requirePermission } = require('../middleware/auth');
 const { v4: uuidv4 } = require('uuid');
 
@@ -165,18 +166,44 @@ router.post('/', requireAuth, requirePermission('can_add_plans'), async function
       }
     }
 
+    // Optional template: its running order is copied in, and its time/title/
+    // notes fill any field the request didn't send.
+    let template = null;
+    if (req.body.template_id) {
+      const t = await pool.query(
+        'SELECT * FROM plan_templates WHERE id=$1 AND church_id=$2',
+        [req.body.template_id, churchId]
+      );
+      if (t.rows.length === 0) return res.status(404).json({ error: 'Template not found' });
+      template = t.rows[0];
+    }
+    const pick = (field) => (req.body[field] !== undefined ? req.body[field] : template?.[field]);
+
     const plan_date = req.body.plan_date;
-    const plan_time = req.body.plan_time;
-    const plan_start_time = req.body.plan_start_time || null;
-    const plan_sort_order = req.body.plan_sort_order ?? 0;
-    const title = req.body.title;
+    const plan_time = pick('plan_time') || null;
+    const plan_start_time = pick('plan_start_time') || null;
+    const plan_sort_order = pick('plan_sort_order') ?? 0;
+    const title = pick('title') || null;
+    const pre_service_notes = pick('pre_service_notes') || null;
+    const planStatus = ['draft', 'published'].includes(req.body.status) ? req.body.status : 'published';
     const public_token = uuidv4();
 
-    const plan = await pool.query(
-      'INSERT INTO plans (church_id, plan_date, plan_time, plan_start_time, plan_sort_order, title, public_token, created_by) VALUES ($1,$2,$3,$4,$5,$6,$7,$8) RETURNING *',
-      [churchId, plan_date, plan_time, plan_start_time, plan_sort_order, title, public_token, req.user.clerk_id]
-    );
-    res.status(201).json(plan.rows[0]);
+    const client = await pool.connect();
+    try {
+      await client.query('BEGIN');
+      const plan = await client.query(
+        'INSERT INTO plans (church_id, plan_date, plan_time, plan_start_time, plan_sort_order, title, public_token, created_by, status, pre_service_notes) VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10) RETURNING *',
+        [churchId, plan_date, plan_time, plan_start_time, plan_sort_order, title, public_token, req.user.clerk_id, planStatus, pre_service_notes]
+      );
+      if (template) await insertTemplateItems(client, plan.rows[0].id, template.items);
+      await client.query('COMMIT');
+      res.status(201).json(plan.rows[0]);
+    } catch (err) {
+      await client.query('ROLLBACK').catch(() => {});
+      throw err;
+    } finally {
+      client.release();
+    }
   } catch (err) {
     next(err);
   }

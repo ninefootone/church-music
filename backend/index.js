@@ -21,6 +21,7 @@ const unavailabilityRoutes = require('./routes/unavailability');
 const playlistRoutes = require('./routes/playlists');
 const annotationRoutes = require('./routes/annotations');
 const accountRoutes = require('./routes/account');
+const planTemplateRoutes = require('./routes/planTemplates');
 
 const app = express();
 
@@ -51,6 +52,7 @@ app.use('/api/playlists', playlistRoutes);
 app.use('/api/mailing', mailingRoutes);
 app.use('/api/superadmin', superAdminRoutes);
 app.use('/api/account', accountRoutes);
+app.use('/api/plan-templates', planTemplateRoutes);
 
 // Report errors passed via next(err) to Sentry. Must come after all routes and BEFORE the handler below.
 Sentry.setupExpressErrorHandler(app);
