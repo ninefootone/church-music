@@ -120,8 +120,11 @@ router.post('/webhook', express.raw({ type: 'application/json' }), async (req, r
 // POST /api/stripe/create-checkout-session
 router.post('/create-checkout-session', requireAuth, express.json(), requireAdmin, async (req, res, next) => {
   try {
-    const { priceId, churchId } = req.body;
-    if (!priceId || !churchId) return res.status(400).json({ error: 'priceId and churchId required' });
+    // Use the church requireAdmin verified (x-church-id header), never the body:
+    // the header wins in requireAdmin, so a body churchId could name another church.
+    const churchId = req.churchId;
+    const { priceId } = req.body;
+    if (!priceId) return res.status(400).json({ error: 'priceId required' });
 
     const church = await pool.query('SELECT * FROM churches WHERE id = $1', [churchId]);
     if (church.rows.length === 0) return res.status(404).json({ error: 'Church not found' });
@@ -146,8 +149,8 @@ router.post('/create-checkout-session', requireAuth, express.json(), requireAdmi
 // POST /api/stripe/create-portal-session
 router.post('/create-portal-session', requireAuth, express.json(), requireAdmin, async (req, res, next) => {
   try {
-    const { churchId } = req.body;
-    if (!churchId) return res.status(400).json({ error: 'churchId required' });
+    // The church requireAdmin verified — not req.body.churchId (see checkout above).
+    const churchId = req.churchId;
 
     const church = await pool.query('SELECT * FROM churches WHERE id = $1', [churchId]);
     if (church.rows.length === 0) return res.status(404).json({ error: 'Church not found' });
