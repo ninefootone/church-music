@@ -2,6 +2,7 @@ const express = require('express');
 const router = express.Router();
 const pool = require('../db/pool');
 const { requireAuth, requireMembership, requireAdmin, requirePermission } = require('../middleware/auth');
+const { songLimitReached, SONG_LIMIT_MESSAGE } = require('../utils/limits');
 
 const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 
@@ -459,14 +460,8 @@ router.post('/', requireAuth, requirePermission('can_manage_songs'), async (req,
     const { churchId } = req;
 
     // Free tier gate — max 5 songs (free_access churches are exempt)
-    const church = await pool.query('SELECT subscription_status, free_access FROM churches WHERE id = $1', [churchId]);
-    const status = church.rows[0]?.subscription_status;
-    const freeAccess = church.rows[0]?.free_access;
-    if (!freeAccess && (!status || status === 'free')) {
-      const count = await pool.query('SELECT COUNT(*) FROM songs WHERE church_id = $1', [churchId]);
-      if (parseInt(count.rows[0].count) >= 5) {
-        return res.status(403).json({ error: 'You have reached the 5 song limit on the free plan. Upgrade in Settings to add more.' });
-      }
+    if (await songLimitReached(pool, churchId)) {
+      return res.status(403).json({ error: SONG_LIMIT_MESSAGE, code: 'song_limit' });
     }
 
     const { title, author, default_key, category, first_line, lyrics, ccli_number, youtube_url, notes, bible_references, suggested_arrangement, ccli_url, share_all_data, copyright_info, copyright_link, in_discover, discover_description, tags, time_signature, tempo, default_duration, in_library } = req.body;

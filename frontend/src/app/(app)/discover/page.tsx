@@ -51,7 +51,7 @@ type LibrarySong = {
   tags: string[]
 }
 
-type ImportState = 'idle' | 'loading' | 'done' | 'exists' | 'error'
+type ImportState = 'idle' | 'loading' | 'done' | 'exists' | 'limit' | 'error'
 
 function SpotifyIcon() {
   return (
@@ -177,6 +177,11 @@ function SortableCard({
                 Failed — try again
               </span>
             )}
+            {canManageSongs && importState === 'limit' && (
+              <span className="text-sm text-danger">
+                Free plan limit reached — <a href="/settings" className="link">upgrade in Settings</a>
+              </span>
+            )}
           </div>
           {isMasterLibrary && (
             <button
@@ -248,6 +253,9 @@ function LibraryRow({
         )}
         {canManageSongs && importState === 'error' && (
           <span className="text-sm text-danger">Failed</span>
+        )}
+        {canManageSongs && importState === 'limit' && (
+          <span className="text-sm text-danger">Free plan limit reached</span>
         )}
       </div>
     </div>
@@ -460,6 +468,8 @@ export default function DiscoverPage() {
         const existingId = err.response?.data?.existing?.id
         if (existingId) setImportedIds(s => ({ ...s, [song.id]: existingId }))
         setImportStates(s => ({ ...s, [song.id]: 'exists' }))
+      } else if (err.response?.data?.code === 'song_limit') {
+        setImportStates(s => ({ ...s, [song.id]: 'limit' }))
       } else {
         setImportStates(s => ({ ...s, [song.id]: 'error' }))
       }
@@ -480,6 +490,8 @@ export default function DiscoverPage() {
         const existingId = err.response?.data?.existing?.id
         if (existingId) setLibraryImportedIds(s => ({ ...s, [song.id]: existingId }))
         setLibraryImportStates(s => ({ ...s, [song.id]: 'exists' }))
+      } else if (err.response?.data?.code === 'song_limit') {
+        setLibraryImportStates(s => ({ ...s, [song.id]: 'limit' }))
       } else {
         setLibraryImportStates(s => ({ ...s, [song.id]: 'error' }))
       }

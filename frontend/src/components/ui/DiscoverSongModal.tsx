@@ -30,7 +30,7 @@ interface Props {
   songId: string
   onClose: () => void
   canManageSongs: boolean
-  importState: 'idle' | 'loading' | 'done' | 'exists' | 'error'
+  importState: 'idle' | 'loading' | 'done' | 'exists' | 'limit' | 'error'
   importedSongId: string | undefined
   onImport: () => void
 }
@@ -229,6 +229,11 @@ export function DiscoverSongModal({
               )}
               {canManageSongs && importState === 'error' && (
                 <span className="text-sm text-danger">Failed — try again</span>
+              )}
+              {canManageSongs && importState === 'limit' && (
+                <span className="text-sm text-danger">
+                  Free plan limit reached — <a href="/settings" className="link">upgrade in Settings</a>
+                </span>
               )}
             </div>
           </div>

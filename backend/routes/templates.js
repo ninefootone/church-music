@@ -1,7 +1,8 @@
 const express = require('express');
 const router = express.Router();
 const pool = require('../db/pool');
-const { requireAuth, requireMembership, requireAdmin } = require('../middleware/auth');
+const { requireAuth, requireMembership, requireAdmin, requirePermission } = require('../middleware/auth');
+const { songLimitReached, SONG_LIMIT_MESSAGE } = require('../utils/limits');
 const { r2, BUCKET } = require('./uploads');
 const { CopyObjectCommand } = require('@aws-sdk/client-s3');
 const { v4: uuidv4 } = require('uuid');
@@ -308,9 +309,16 @@ router.get('/search', requireAuth, async (req, res, next) => {
 });
 
 // POST /templates/:id/import — import a template into church library
-router.post('/:id/import', requireAuth, requireAdmin, async (req, res, next) => {
+// Gated like POST /api/songs (admin or "Add & edit songs") — the Discover page
+// already shows Import to song managers, who used to get a 403 here.
+router.post('/:id/import', requireAuth, requirePermission('can_manage_songs'), async (req, res, next) => {
   try {
     const { churchId } = req;
+
+    // Free-plan song limit — same rule as creating a song by hand.
+    if (await songLimitReached(pool, churchId)) {
+      return res.status(403).json({ error: SONG_LIMIT_MESSAGE, code: 'song_limit' });
+    }
 
     // Get template — either a shared template or a discover song from the master library
     const template = await pool.query(
