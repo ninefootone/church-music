@@ -36,6 +36,19 @@ Next:
 - [ ] Store assets, TestFlight, submit & review.
 - [ ] **iPad app: plans don't refresh after web edits (found 2026-10-01).** (1) The Plans list (`HomeScreen.tsx`, effect keyed on `reloadKey` only) is fetched ONCE at mount — a title/date change or new plan made on the website only shows after quitting and relaunching the app. Fix: pull-to-refresh (`RefreshControl`) + re-run the load on `AppState` → active and when returning to the Plans tab. (2) A downloaded plan (✓ Offline) opens from the manifest snapshot with no network check (`openPlan`, by design) so web changes to its SONGS/ORDER never appear until remove + re-download, and — unlike custom sets — nothing says it's stale. Risk: leader swaps a song Saturday night, band plays Friday's download. Fix: when online, compare the server plan (`/plans/:id` item ids/order/key overrides) to the snapshot and show "Changed since download · Update" on the row and in plan detail. JS-only → ship by OTA AFTER App Store approval (reviewers' devices pull the production channel). Test on Dev first.
 
+## Next up after plan templates — fixes + codebase review (agreed 2026-10-02)
+
+Small issues found while building plan templates (detail in project doc `plan-templates.md`):
+- [ ] `PUT /api/plans/:id/items` doesn't check that each `song_id` belongs to the church (a crafted request could reference another church's song, and its title would then show via the plan-detail join).
+- [ ] PATCH `/plans/:id/items/:itemId/arrangement` and `/notes` still read the deprecated `can_edit_any_plan` flag (the rest of plans.js uses `can_add_plans`) — align.
+- [ ] `DuplicatePlanModal.tsx` uses `.form-group` / `.form-label` / `.form-error`, which don't exist in globals.css (unstyled), plus inline `style={{}}` props — restyle with existing classes.
+- [ ] Plan detail (`plans/[id]/page.tsx`) has an unused `showDuplicateModal` state — remove (or wire Duplicate onto plan detail).
+- [ ] `backend/db/migrate.js` is stale vs the live schema (`item_type` + CHECK list vs live `type`, no CHECK) — misleading for anyone rebuilding the DB; regenerate or mark as historical. Ties in with the migration-runner item below.
+- [ ] Live `plans.status` default may not match `add-plan-status.js` ('published') — "Save as draft" on New plan produced drafts even when POST ignored status. Check with a read-only `information_schema.columns` query.
+- [ ] Settings → Plan templates is admin-only (whole Settings page), but non-admins with "Add & edit plans" can save/replace templates from a plan — decide if that's right.
+
+Then: a thorough review of the whole codebase (security/permission checks on every route, church scoping, transactions, error handling, dead code, CSS/inline-style leftovers) — plan the approach at the start of that session.
+
 ## Backlog
 
 - [ ] Database schema migrations — adopt a migration runner (e.g. node-pg-migrate) or at minimum a `schema_migrations` table, so "has this migration run?" is recorded in the database rather than remembered. The one-off scripts in `backend/db/` and `backend/scripts/` are currently applied by hand with no record of what's been run — this is the ambiguity that made syncing across machines uncertain. Keep the existing scripts as history; route new schema changes through the runner.

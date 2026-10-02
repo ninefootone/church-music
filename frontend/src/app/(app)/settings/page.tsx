@@ -6,6 +6,7 @@ import { useChurch } from '@/context/ChurchContext'
 import api, { setAuthToken } from '@/lib/api'
 import { ConfirmModal } from '@/components/ui/ConfirmModal'
 import { LiturgySnippetsManager } from '@/components/ui/LiturgySnippetsManager'
+import { PlanTemplatesManager } from '@/components/ui/PlanTemplatesManager'
 import { Copy, Check, RefreshCw, Plus, X } from 'lucide-react'
 
 interface RoleItem {
@@ -380,6 +381,7 @@ export default function SettingsPage() {
     { id: 'notifications', label: 'Notifications' },
     { id: 'roles', label: 'Roles' },
     { id: 'servicetext', label: 'Service items' },
+    { id: 'plantemplates', label: 'Plan templates' },
     { id: 'categories', label: 'Categories' },
     { id: 'tags', label: 'Tags' },
   ]
@@ -608,6 +610,10 @@ export default function SettingsPage() {
 
       {activeTab === 'servicetext' && (
         <LiturgySnippetsManager />
+      )}
+
+      {activeTab === 'plantemplates' && (
+        <PlanTemplatesManager />
       )}
 
       {/* Categories */}
