@@ -2049,6 +2049,10 @@ body.set-viewer-active { overflow: hidden; }
   color: var(--color-primary, #4f46e5);
   text-decoration: underline;
 }
+/* Buttons that are links (e.g. "Back to your library" after sending feedback)
+   keep button styling — the rule above is more specific than .btn-* on its own. */
+.legal-content a.btn-primary,
+.legal-content a.btn-primary:hover { color: white; text-decoration: none; }
 
 .footer-link {
   color: inherit;
