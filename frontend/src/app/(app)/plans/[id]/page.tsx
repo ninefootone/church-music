@@ -316,7 +316,6 @@ export default function PlanDetailPage() {
   }
   const [showMusicianModal, setShowMusicianModal] = useState(false)
   const [showEmailModal, setShowEmailModal] = useState(false)
-  const [showDuplicateModal, setShowDuplicateModal] = useState(false)
   const [showTemplateModal, setShowTemplateModal] = useState(false)
 
   useEffect(() => {
