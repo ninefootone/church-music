@@ -456,8 +456,12 @@ router.get('/:id', requireAuth, requireMembership, async (req, res, next) => {
 
 // POST /songs — create song (admin or can_manage_songs)
 router.post('/', requireAuth, requirePermission('can_manage_songs'), async (req, res, next) => {
+  let client;
   try {
     const { churchId } = req;
+    if (!(typeof req.body.title === 'string' && req.body.title.trim())) {
+      return res.status(400).json({ error: 'Title is required' });
+    }
 
     // Free tier gate — max 5 songs (free_access churches are exempt)
     if (await songLimitReached(pool, churchId)) {
@@ -471,23 +475,28 @@ router.post('/', requireAuth, requirePermission('can_manage_songs'), async (req,
     const shareEnabled = isMasterLibrary && (share_all_data ?? false);
     const libraryEnabled = isMasterLibrary && (in_library ?? false);
 
-    const song = await pool.query(
+    // Song, tags and the CCLI lookup in one transaction — a failure can't leave a
+    // song saved without its tags.
+    client = await pool.connect();
+    await client.query('BEGIN');
+
+    const song = await client.query(
       `INSERT INTO songs (church_id, title, author, default_key, category, first_line, lyrics, ccli_number, youtube_url, notes, bible_references, suggested_arrangement, ccli_url, share_all_data, copyright_info, copyright_link, in_discover, discover_description, time_signature, tempo, default_duration, in_library)
        VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15,$16,$17,$18,$19,$20,$21,$22) RETURNING *`,
-      [churchId, title, author, default_key, category, first_line, lyrics, ccli_number, youtube_url, notes, bible_references, suggested_arrangement, ccli_url, shareEnabled, copyright_info ?? null, copyright_link ?? null, discoverEnabled, discover_description ?? null, time_signature ?? null, tempo ? parseInt(tempo) : null, default_duration ? parseInt(default_duration) : null, libraryEnabled]
+      [churchId, title.trim(), author, default_key, category, first_line, lyrics, ccli_number, youtube_url, notes, bible_references, suggested_arrangement, ccli_url, shareEnabled, copyright_info ?? null, copyright_link ?? null, discoverEnabled, discover_description ?? null, time_signature ?? null, tempo ? parseInt(tempo) : null, default_duration ? parseInt(default_duration) : null, libraryEnabled]
     );
 
     // Handle tags — insert only tags that exist and are global or this church's own.
     // Filtering here means one stale/foreign tag id can't FK-error the whole save,
     // and enforces that a church can only attach global or its own tags.
     if (Array.isArray(tags) && tags.length > 0) {
-      const { rows: validTags } = await pool.query(
+      const { rows: validTags } = await client.query(
         `SELECT id FROM tags
          WHERE id::text = ANY($1::text[]) AND (church_id IS NULL OR church_id = $2)`,
-        [tags, churchId]
+        [tags.map(String), churchId]
       );
       for (const { id: tagId } of validTags) {
-        await pool.query(
+        await client.query(
           'INSERT INTO song_tags (song_id, tag_id) VALUES ($1, $2) ON CONFLICT DO NOTHING',
           [song.rows[0].id, tagId]
         );
@@ -495,7 +504,7 @@ router.post('/', requireAuth, requirePermission('can_manage_songs'), async (req,
     }
 
     if (ccli_number) {
-      await pool.query(`
+      await client.query(`
         INSERT INTO ccli_lookup (ccli_number, title, author, first_line, default_key, category, source_church_id)
         VALUES ($1, $2, $3, $4, $5, $6, $7)
         ON CONFLICT (ccli_number) DO UPDATE SET
@@ -506,12 +515,16 @@ router.post('/', requireAuth, requirePermission('can_manage_songs'), async (req,
           confirmed_count = ccli_lookup.confirmed_count + 1,
           category = COALESCE(EXCLUDED.category, ccli_lookup.category),
           updated_at = NOW()
-      `, [ccli_number, title, author, first_line, default_key, category ?? null, churchId]);
+      `, [ccli_number, title.trim(), author, first_line, default_key, category ?? null, churchId]);
     }
 
+    await client.query('COMMIT');
     res.status(201).json(song.rows[0]);
   } catch (err) {
+    if (client) await client.query('ROLLBACK').catch(() => {});
     next(err);
+  } finally {
+    if (client) client.release();
   }
 });
 
