@@ -38,18 +38,13 @@ Next:
 
 ## Next up after plan templates — fixes + codebase review (agreed 2026-10-02)
 
-Small issues found while building plan templates (detail in project doc `plan-templates.md`):
-- [ ] `PUT /api/plans/:id/items` doesn't check that each `song_id` belongs to the church (a crafted request could reference another church's song, and its title would then show via the plan-detail join).
-- [ ] PATCH `/plans/:id/items/:itemId/arrangement` and `/notes` still read the deprecated `can_edit_any_plan` flag (the rest of plans.js uses `can_add_plans`) — align.
-- [ ] `DuplicatePlanModal.tsx` uses `.form-group` / `.form-label` / `.form-error`, which don't exist in globals.css (unstyled), plus inline `style={{}}` props — restyle with existing classes.
-- [ ] Plan detail (`plans/[id]/page.tsx`) has an unused `showDuplicateModal` state — remove (or wire Duplicate onto plan detail).
-- [ ] `backend/db/migrate.js` is stale vs the live schema (`item_type` + CHECK list vs live `type`, no CHECK) — misleading for anyone rebuilding the DB; regenerate or mark as historical. Ties in with the migration-runner item below.
-- [ ] Live `plans.status` default may not match `add-plan-status.js` ('published') — "Save as draft" on New plan produced drafts even when POST ignored status. Check with a read-only `information_schema.columns` query.
-- [ ] Settings → Plan templates is admin-only (whole Settings page), but non-admins with "Add & edit plans" can save/replace templates from a plan — decide if that's right.
+**Phase 1 (known fixes) ALL DONE 2026-10-02** — song_id check, musicians routes locked down, PATCH routes off `can_edit_any_plan`, DuplicatePlanModal restyle, unused state removed, live `plans.status` default verified ('published'), stale schema retired (`db/history/migrate.js`), Plans → Templates page for plan editors. Detail: project doc `codebase-review.md`.
 
-- [x] (DONE 2026-10-02 in HomeScreen.tsx — ship by OTA, respecting the App Store review freeze) iPad app (`song-stack-app`): plan items of type `song_slot` (empty song placeholders from plan templates) need a label — show "Song to be chosen" (or "<title> — song to be chosen"), not the raw type. Web logic is in `frontend/src/lib/planItems.ts`. Ship by OTA.
-
-Then: a thorough review of the whole codebase (security/permission checks on every route, church scoping, transactions, error handling, dead code, CSS/inline-style leftovers) — plan the approach at the start of that session.
+**Phase 2 — codebase review IN PROGRESS.** All backend route files read; findings + status in project doc `codebase-review.md`. Fixed so far: 3 Critical (song links cross-church, Stripe portal/checkout church from body, unauthenticated mailing routes), 4 High (plan email permission, song save wiping fields, superadmin church delete order, Discover import limit/permission), email escaping, feedback button style.
+- [ ] Test superadmin church delete with a throwaway church (commit ba2dad3, untested).
+- [ ] Remaining Medium items (transactions on duplicate/create/import, item validation, logo MIME/SVG, legacy member-delete route, http(s)-only URLs, Stripe priceId allow-list, invite-code rate limit, upload error message).
+- [ ] Decisions for Jon (one at a time): plan-email file links to non-members, plan delete rule, public share `SELECT *` + drafts, ccli_lookup overwrite, unavailability check for plan editors, Brevo double opt-in, member email list, drop `can_edit_any_plan`.
+- [ ] Review middleware/auth.js, index.js, utils/*; then the lighter frontend pass.
 
 ## Backlog
 
@@ -90,9 +85,9 @@ Then: a thorough review of the whole codebase (security/permission checks on eve
 ### Features – Admin
 - [ ] Automated email reminders – email musicans 1 week before a plan
 - [x] Full offboarding process – account deletion — DONE 2026-09-30 on BOTH the iPad app and the website (Account page → Delete account): `DELETE /api/account` + `GET /api/account/deletion-check` (see project doc `account-deletion.md`). Clerk's own web "Delete account" stays OFF. Privacy policy rewritten to match (`privacy-policy-and-app-links.md`).
-- [ ] Fix `/api/superadmin/churches/:id` delete ordering — bare `DELETE FROM churches` can hit the `plan_items_song_id_fkey` error; delete the church's plans first (as `accountDeletion.js` does).
+- [x] Fix `/api/superadmin/churches/:id` delete ordering — DONE 2026-10-02 (ba2dad3): DB first in one transaction (plans, then church), R2 files after. Not yet tested on live.
 - [ ] `requireAuth` should return 5xx (not 401) when the DB is down, and `/health` should ping the DB — a DB outage currently looks like a sign-in problem.
-- [ ] Backend → Railway private DB address (`…railway.internal:5432`) instead of the public proxy host; do at a quiet time, confirm `Migration complete` in the deploy log.
+- [ ] Backend → Railway private DB address (`…railway.internal:5432`) instead of the public proxy host; do at a quiet time, confirm `Server running on port` in the deploy log (the boot-time migration that printed `Migration complete` was removed 2026-10-02) and that the app loads.
 - [ ] iPad app: if the signed-in account is deleted elsewhere (e.g. on the web) the app shows "You're offline" — detect session-invalid vs offline and sign out.
 - [ ] App Store listing + App Privacy answers (iPadOS 16.4+, no tracking); Privacy Policy URL = https://app.songstack.church/privacy.
 
