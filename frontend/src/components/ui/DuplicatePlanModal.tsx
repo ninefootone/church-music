@@ -51,47 +51,50 @@ export function DuplicatePlanModal({ plan, onClose, onDuplicated }: Props) {
   return (
     <div className="modal-overlay" onClick={onClose}>
       <div className="modal-box" onClick={e => e.stopPropagation()}>
-        <div className="modal-header">
+        <div className="modal-header modal-header--tight">
           <h2 className="modal-title">Duplicate plan</h2>
           <button className="modal-close" onClick={onClose}><X size={18} /></button>
         </div>
-        <p className="text-muted" style={{ marginBottom: 'var(--space-md)', fontSize: 'var(--text-sm)' }}>
-          The new plan will be saved as a draft with the same running order and musicians. Update the date and time for the new service.
-        </p>
 
-        <div className="form-group">
-          <label className="form-label">Title <span className="text-muted">(optional)</span></label>
-          <input
-            type="text"
-            className="input"
-            value={title}
-            onChange={e => setTitle(e.target.value)}
-            placeholder="e.g. Easter Sunday"
-          />
+        <div className="form-stack">
+          <p className="template-modal-text text-muted">
+            The new plan will be saved as a draft with the same running order and musicians. Update the date and time for the new service.
+          </p>
+
+          <div>
+            <label className="label">Title <span className="label-note">(optional)</span></label>
+            <input
+              type="text"
+              className="input"
+              value={title}
+              onChange={e => setTitle(e.target.value)}
+              placeholder="e.g. Easter Sunday"
+            />
+          </div>
+
+          <div>
+            <label className="label">Date</label>
+            <input
+              type="date"
+              className="input"
+              value={date}
+              onChange={e => setDate(e.target.value)}
+            />
+          </div>
+
+          <div>
+            <label className="label">Time</label>
+            <input
+              type="time"
+              className="input"
+              value={time}
+              onChange={e => setTime(e.target.value)}
+              required
+            />
+          </div>
+
+          {error && <div className="error-box">{error}</div>}
         </div>
-
-        <div className="form-group">
-          <label className="form-label">Date</label>
-          <input
-            type="date"
-            className="input"
-            value={date}
-            onChange={e => setDate(e.target.value)}
-          />
-        </div>
-
-        <div className="form-group">
-          <label className="form-label">Time</label>
-          <input
-            type="time"
-            className="input"
-            value={time}
-            onChange={e => setTime(e.target.value)}
-            required
-          />
-        </div>
-
-        {error && <p className="form-error">{error}</p>}
 
         <div className="modal-footer">
           <button className="btn btn-secondary" onClick={onClose}>Cancel</button>
