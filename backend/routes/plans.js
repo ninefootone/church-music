@@ -216,23 +216,42 @@ router.put('/:id', requireAuth, requireMembership, async function(req, res, next
 });
 
 router.put('/:id/items', requireAuth, requireMembership, async function(req, res, next) {
+  const planId = req.params.id;
+  const items = req.body.items;
+  if (!Array.isArray(items)) return res.status(400).json({ error: 'items must be an array' });
+
+  let client;
   try {
-    const items = req.body.items;
-    const planId = req.params.id;
+    // Same rule as PUT /:id — plan must belong to this church, and the caller
+    // must be an admin, the plan's creator, or have can_add_plans.
+    const existing = await pool.query(
+      'SELECT created_by FROM plans WHERE id=$1 AND church_id=$2',
+      [planId, req.churchId]
+    );
+    if (existing.rows.length === 0) return res.status(404).json({ error: 'Not found' });
+    const isAdmin = req.membership.role === 'admin';
+    const isOwner = existing.rows[0].created_by === req.user.clerk_id;
+    const canEditAny = req.membership.can_add_plans;
+    if (!isAdmin && !isOwner && !canEditAny) return res.status(403).json({ error: 'Not authorised' });
 
-    await pool.query('DELETE FROM plan_items WHERE plan_id = $1', [planId]);
-
+    // Delete + re-insert in one transaction so a failure can't leave the plan half-empty.
+    client = await pool.connect();
+    await client.query('BEGIN');
+    await client.query('DELETE FROM plan_items WHERE plan_id = $1', [planId]);
     for (let i = 0; i < items.length; i++) {
       const item = items[i];
-      await pool.query(
+      await client.query(
         'INSERT INTO plan_items (plan_id, type, song_id, title, notes, content, key_override, position, custom_arrangement, duration_minutes, phase) VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11)',
         [planId, item.type, item.song_id || null, item.title || null, item.notes || null, sanitizeRichText(item.content), item.key_override || null, i, item.custom_arrangement || null, item.duration_minutes ? parseInt(item.duration_minutes) : null, item.phase || 'service']
       );
     }
-
+    await client.query('COMMIT');
     res.json({ success: true });
   } catch (err) {
+    if (client) await client.query('ROLLBACK').catch(() => {});
     next(err);
+  } finally {
+    if (client) client.release();
   }
 });
 
