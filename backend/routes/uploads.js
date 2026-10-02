@@ -20,6 +20,28 @@ const r2 = new S3Client({
 });
 
 const BUCKET = process.env.R2_BUCKET_NAME;
+
+// Check the file's actual CONTENT matches its extension. The browser sets the
+// file type from the name, so a PNG renamed to .pdf used to upload fine and only
+// fail when someone tried to open it.
+function contentMatchesExtension(buffer, ext) {
+  if (!buffer || buffer.length === 0) return false;
+  const head = buffer.subarray(0, 16);
+  switch (ext) {
+    case 'pdf': {
+      // "%PDF-" usually at byte 0; the spec allows it within the first 1 KB.
+      return buffer.subarray(0, 1024).includes(Buffer.from('%PDF-'));
+    }
+    case 'cho': case 'chordpro': case 'txt': {
+      // Plain text: no NUL bytes in the first 8 KB (images/PDFs/Word files have them).
+      return !buffer.subarray(0, 8192).includes(0);
+    }
+    case 'png':  return head.subarray(0, 8).equals(Buffer.from([0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a]));
+    case 'jpg': case 'jpeg': return head[0] === 0xff && head[1] === 0xd8 && head[2] === 0xff;
+    case 'webp': return head.subarray(0, 4).toString('latin1') === 'RIFF' && head.subarray(8, 12).toString('latin1') === 'WEBP';
+    default: return false;
+  }
+}
 module.exports.r2 = r2;
 module.exports.BUCKET = BUCKET;
 
@@ -68,6 +90,9 @@ router.post('/songs/:songId/discover-image', requireAuth, requireAdmin, uploadIm
     }
 
     const ext = req.file.originalname.split('.').pop()?.toLowerCase();
+    if (!contentMatchesExtension(req.file.buffer, ext)) {
+      return res.status(400).json({ error: "This image doesn't match its file type — it may have been renamed." });
+    }
     const r2Key = 'discover/songs/' + songId + '/artwork.' + ext;
 
     // Delete old image if one exists
@@ -159,6 +184,9 @@ router.post('/songs/:songId', requireAuth, requirePermission('can_manage_songs')
     }
 
     const ext = req.file.originalname.split('.').pop();
+    if (!contentMatchesExtension(req.file.buffer, (ext || '').toLowerCase())) {
+      return res.status(400).json({ error: `This file isn't a real ${ext.toUpperCase()} — it may have been renamed. Please upload the original PDF or ChordPro file.` });
+    }
     const r2Key = 'churches/' + churchId + '/songs/' + songId + '/' + uuidv4() + '.' + ext;
 
     await r2.send(new PutObjectCommand({
