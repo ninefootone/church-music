@@ -117,6 +117,16 @@ router.post('/webhook', express.raw({ type: 'application/json' }), async (req, r
   res.json({ received: true });
 });
 
+// The prices a church may subscribe to. Set STRIPE_PRICE_MONTHLY and
+// STRIPE_PRICE_ANNUAL on Railway to the same values as the frontend's
+// NEXT_PUBLIC_STRIPE_PRICE_* (Vercel). Without them the check is skipped (with a
+// warning) so checkout keeps working; with them, any other price id is refused —
+// otherwise the browser could ask for any price in our Stripe account.
+const ALLOWED_PRICE_IDS = [process.env.STRIPE_PRICE_MONTHLY, process.env.STRIPE_PRICE_ANNUAL].filter(Boolean);
+if (ALLOWED_PRICE_IDS.length === 0) {
+  console.warn('[stripe] STRIPE_PRICE_MONTHLY / STRIPE_PRICE_ANNUAL not set — checkout accepts any price id');
+}
+
 // POST /api/stripe/create-checkout-session
 router.post('/create-checkout-session', requireAuth, express.json(), requireAdmin, async (req, res, next) => {
   try {
@@ -125,6 +135,9 @@ router.post('/create-checkout-session', requireAuth, express.json(), requireAdmi
     const churchId = req.churchId;
     const { priceId } = req.body;
     if (!priceId) return res.status(400).json({ error: 'priceId required' });
+    if (ALLOWED_PRICE_IDS.length > 0 && !ALLOWED_PRICE_IDS.includes(priceId)) {
+      return res.status(400).json({ error: 'Unknown plan' });
+    }
 
     const church = await pool.query('SELECT * FROM churches WHERE id = $1', [churchId]);
     if (church.rows.length === 0) return res.status(404).json({ error: 'Church not found' });
