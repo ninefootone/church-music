@@ -52,16 +52,21 @@ router.get('/', requireAuth, requireMembership, async function(req, res, next) {
 // GET /api/plans/my-upcoming — plans where the logged-in user is listed as a musician
 router.get('/my-upcoming', requireAuth, requireMembership, async function(req, res, next) {
   try {
+    // Same draft rule as GET / — only admins and can_add_plans members see drafts.
+    // (Without this, a musician on a draft — e.g. a duplicated plan — saw it in
+    // Upcoming and then got "Plan not found" when opening it.)
+    const canSeeDrafts = req.membership.role === 'admin' || req.membership.can_add_plans;
     const result = await pool.query(
-      `SELECT p.id, p.plan_date, p.plan_time, p.title,
+      `SELECT p.id, p.plan_date, p.plan_time, p.plan_start_time, p.plan_sort_order, p.title, p.status,
               STRING_AGG(pm.role, ', ' ORDER BY pm.role) AS musician_roles
        FROM plans p
        JOIN plan_musicians pm ON pm.plan_id = p.id
        WHERE p.church_id = $1
          AND pm.user_id = $2
          AND p.plan_date >= CURRENT_DATE
-       GROUP BY p.id, p.plan_date, p.plan_time, p.title
-       ORDER BY p.plan_date ASC, p.plan_time ASC
+         ${canSeeDrafts ? '' : "AND p.status = 'published'"}
+       GROUP BY p.id
+       ORDER BY p.plan_date ASC, p.plan_sort_order ASC, p.plan_start_time ASC NULLS LAST
        LIMIT 10`,
       [req.churchId, req.user.id]
     );
