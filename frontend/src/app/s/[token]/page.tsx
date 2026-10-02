@@ -214,8 +214,8 @@ export default function PublicPlanPage() {
         setPlan(r.data)
         setMusicians(r.data.musicians || [])
       })
-      .catch(() => {
-        setError('Plan not found')
+      .catch((err) => {
+        setError(err?.response?.data?.code === 'not_published' ? "This plan isn't published yet." : 'Plan not found.')
       })
       .finally(() => setLoading(false))
   }, [token])
@@ -228,7 +228,7 @@ export default function PublicPlanPage() {
 
   if (error || !plan) return (
     <div className="fullscreen-center">
-      <p className="text-muted">Plan not found.</p>
+      <p className="text-muted">{error || 'Plan not found.'}</p>
     </div>
   )
 

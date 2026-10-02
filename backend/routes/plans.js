@@ -155,11 +155,19 @@ router.get('/:id', requireAuth, requireMembership, async function(req, res, next
 
 router.get('/public/:token', async function(req, res, next) {
   try {
+    // Only the fields the share pages display (+ id for the queries below, and
+    // church_id, which the signed-in Set view sends as x-church-id). Not created_by,
+    // public_token, timestamps, etc.
     const plan = await pool.query(
-      'SELECT * FROM plans WHERE public_token = $1',
+      `SELECT id, church_id, status, title, plan_date, plan_time, plan_start_time, plan_sort_order, pre_service_notes
+         FROM plans WHERE public_token = $1`,
       [req.params.token]
     );
     if (plan.rows.length === 0) return res.status(404).json({ error: 'Not found' });
+    // Drafts aren't shared until published (decided with Jon 2026-10-02).
+    if (plan.rows[0].status !== 'published') {
+      return res.status(404).json({ error: "This plan isn't published yet", code: 'not_published' });
+    }
 
     const items = await pool.query(
       `SELECT si.type, si.phase, si.title, si.notes, si.content, si.key_override, si.position,
@@ -183,7 +191,8 @@ router.get('/public/:token', async function(req, res, next) {
       [plan.rows[0].id]
     );
 
-    res.json(Object.assign({}, plan.rows[0], { items: items.rows, musicians: musicians.rows }));
+    const { id, status, ...publicPlan } = plan.rows[0];
+    res.json(Object.assign(publicPlan, { items: items.rows, musicians: musicians.rows }));
   } catch (err) {
     next(err);
   }
