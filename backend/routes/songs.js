@@ -679,11 +679,44 @@ router.put('/:id', requireAuth, requirePermission('can_manage_songs'), async (re
 });
 
 // DELETE /songs/:id (admin or can_manage_songs)
+// A song used in any plan can't be deleted (plan_items.song_id has no ON DELETE
+// rule, so Postgres refuses) — say so plainly and point to Retire, instead of a
+// 500 that left the confirm dialog stuck open. Files are removed from R2 after
+// the row is gone (they used to be left behind).
 router.delete('/:id', requireAuth, requirePermission('can_manage_songs'), async (req, res, next) => {
   try {
+    if (!UUID_RE.test(req.params.id)) return res.status(404).json({ error: 'Song not found' });
+    const song = await pool.query('SELECT id FROM songs WHERE id = $1 AND church_id = $2', [req.params.id, req.churchId]);
+    if (song.rows.length === 0) return res.status(404).json({ error: 'Song not found' });
+
+    const used = await pool.query('SELECT COUNT(DISTINCT plan_id)::int AS n FROM plan_items WHERE song_id = $1', [req.params.id]);
+    const n = used.rows[0].n;
+    if (n > 0) {
+      return res.status(409).json({
+        code: 'song_in_use',
+        error: `This song is in ${n} plan${n === 1 ? '' : 's'}, so it can't be deleted. Use Retire song to hide it from your library instead.`,
+      });
+    }
+
+    const files = await pool.query('SELECT r2_key, edited_r2_key FROM song_files WHERE song_id = $1', [req.params.id]);
+    const keys = files.rows.flatMap(r => [r.r2_key, r.edited_r2_key]).filter(Boolean);
+
     await pool.query('DELETE FROM songs WHERE id = $1 AND church_id = $2', [req.params.id, req.churchId]);
+
+    // Best effort — the song is already gone.
+    const { r2, BUCKET } = require('./uploads');
+    const { DeleteObjectCommand } = require('@aws-sdk/client-s3');
+    Promise.allSettled(keys.map(Key => r2.send(new DeleteObjectCommand({ Bucket: BUCKET, Key }))))
+      .then(rs => {
+        const failed = rs.filter(r => r.status === 'rejected').length;
+        if (failed) console.warn(`[songs] ${failed}/${keys.length} R2 deletes failed for song ${req.params.id}`);
+      });
+
     res.json({ success: true });
   } catch (err) {
+    if (err.code === '23503') {
+      return res.status(409).json({ code: 'song_in_use', error: "This song is still used elsewhere, so it can't be deleted. Use Retire song instead." });
+    }
     next(err);
   }
 });

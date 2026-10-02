@@ -632,8 +632,13 @@ export default function SongDetailPage() {
           confirmLabel="Delete song"
           danger
           onConfirm={async () => {
-            await api.delete(`/api/songs/${song.id}`)
-            router.push('/songs')
+            try {
+              await api.delete(`/api/songs/${song.id}`)
+              router.push('/songs')
+            } catch (err: any) {
+              setShowDeleteSong(false)
+              alert(err?.response?.data?.error || 'Delete failed. Please try again.')
+            }
           }}
           onCancel={() => setShowDeleteSong(false)}
         />
