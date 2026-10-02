@@ -312,6 +312,7 @@ router.get('/search', requireAuth, async (req, res, next) => {
 // Gated like POST /api/songs (admin or "Add & edit songs") — the Discover page
 // already shows Import to song managers, who used to get a 403 here.
 router.post('/:id/import', requireAuth, requirePermission('can_manage_songs'), async (req, res, next) => {
+  let client;
   try {
     const { churchId } = req;
 
@@ -341,8 +342,14 @@ router.post('/:id/import', requireAuth, requirePermission('can_manage_songs'), a
     );
     if (existing.rows.length > 0) return res.status(409).json({ error: 'Song already in your library', existing: existing.rows[0] });
 
+    // Song, tags, file rows and links in one transaction. R2 objects are copied
+    // inside it; if anything fails the rows roll back (a copied object may be left
+    // orphaned in R2, which is harmless).
+    client = await pool.connect();
+    await client.query('BEGIN');
+
     // Copy template to church — include extended fields if share_all_data is enabled
-    const song = await pool.query(
+    const song = await client.query(
       `INSERT INTO songs (church_id, title, author, default_key, category, first_line, ccli_number,
         suggested_arrangement, time_signature, tempo,
         notes, bible_references, lyrics, copyright_info, copyright_link, is_template)
@@ -364,12 +371,12 @@ router.post('/:id/import', requireAuth, requirePermission('can_manage_songs'), a
     // preferring the shared default — and only create a church-owned tag when no
     // match exists. Mirrors the dedupe in POST /songs/tags/church so an import
     // never mints a private duplicate of a default-list tag.
-    const templateTags = await pool.query(
+    const templateTags = await client.query(
       `SELECT t.name FROM song_tags st JOIN tags t ON t.id = st.tag_id WHERE st.song_id = $1`,
       [req.params.id]
     );
     for (const tag of templateTags.rows) {
-      const existingTag = await pool.query(
+      const existingTag = await client.query(
         `SELECT id FROM tags
           WHERE (church_id IS NULL OR church_id = $1)
             AND lower(name) = lower($2)
@@ -381,14 +388,14 @@ router.post('/:id/import', requireAuth, requirePermission('can_manage_songs'), a
       if (existingTag.rows.length) {
         tagId = existingTag.rows[0].id;
       } else {
-        const newTag = await pool.query(
+        const newTag = await client.query(
           `INSERT INTO tags (church_id, name) VALUES ($1, $2)
            ON CONFLICT (church_id, name) DO UPDATE SET name = EXCLUDED.name RETURNING id`,
           [churchId, tag.name]
         );
         tagId = newTag.rows[0].id;
       }
-      await pool.query(
+      await client.query(
         'INSERT INTO song_tags (song_id, tag_id) VALUES ($1, $2) ON CONFLICT DO NOTHING',
         [song.rows[0].id, tagId]
       );
@@ -396,7 +403,7 @@ router.post('/:id/import', requireAuth, requirePermission('can_manage_songs'), a
 
     // Copy song files in R2 if share_all_data is enabled
     if (t.share_all_data) {
-      const files = await pool.query(
+      const files = await client.query(
         `SELECT * FROM song_files WHERE song_id = $1`,
         [req.params.id]
       );
@@ -408,7 +415,7 @@ router.post('/:id/import', requireAuth, requirePermission('can_manage_songs'), a
           CopySource: `${BUCKET}/${file.r2_key}`,
           Key: newKey,
         }));
-        await pool.query(
+        await client.query(
           `INSERT INTO song_files (song_id, file_type, label, key_of, r2_key) VALUES ($1,$2,$3,$4,$5)`,
           [song.rows[0].id, file.file_type, file.label, file.key_of, newKey]
         );
@@ -417,21 +424,25 @@ router.post('/:id/import', requireAuth, requirePermission('can_manage_songs'), a
 
     // Copy song_videos if share_all_data is enabled
     if (t.share_all_data) {
-      const videos = await pool.query(
+      const videos = await client.query(
         `SELECT url, label, link_type, sort_order FROM song_videos WHERE song_id = $1`,
         [req.params.id]
       );
       for (const v of videos.rows) {
-        await pool.query(
+        await client.query(
           `INSERT INTO song_videos (song_id, url, label, link_type, sort_order) VALUES ($1,$2,$3,$4,$5)`,
           [song.rows[0].id, v.url, v.label, v.link_type, v.sort_order]
         );
       }
     }
 
+    await client.query('COMMIT');
     res.status(201).json({ ...song.rows[0], share_all_data: t.share_all_data });
   } catch (err) {
+    if (client) await client.query('ROLLBACK').catch(() => {});
     next(err);
+  } finally {
+    if (client) client.release();
   }
 });
 
