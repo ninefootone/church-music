@@ -38,7 +38,7 @@ function summarise(t: PlanTemplate): string {
   return parts.filter(Boolean).join(' · ')
 }
 
-// Settings → "Plan templates": list, edit the basic fields, delete. The running
+// Plans → Templates (/plans/templates) and Settings → "Plan templates": list, edit the basic fields, delete. The running
 // order itself is changed by building it in a plan and using "Save as template"
 // → replace (no second builder). Backend: /api/plan-templates.
 export function PlanTemplatesManager() {

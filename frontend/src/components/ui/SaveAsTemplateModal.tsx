@@ -76,7 +76,7 @@ export function SaveAsTemplateModal({ plan, onClose }: Props) {
 
         {done ? (
           <>
-            <p className="template-modal-text">{done} Choose it from <strong>New plan</strong> to start a plan from it, or manage templates in Settings.</p>
+            <p className="template-modal-text">{done} Choose it from <strong>New plan</strong> to start a plan from it, or manage templates from <strong>Plans → Templates</strong>.</p>
             <div className="modal-footer">
               <button className="btn btn-primary" onClick={onClose}>Done</button>
             </div>

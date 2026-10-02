@@ -556,7 +556,7 @@ export default function HelpPage() {
                 <strong>Song slots</strong> are placeholders in the running order. While editing a plan you can add one with <strong>+ Song slot</strong> under Other items and give it an optional label such as &quot;Response song&quot;. An empty slot shows as <em>Song to be chosen</em> on the plan, the share link and the email, and you&apos;ll be asked to confirm if you publish while any are still empty.
               </p>
               <p className="help-content-body">
-                Changing a template doesn&apos;t affect plans already made from it. Admins can rename, edit or delete templates in <strong>Settings → Plan templates</strong>. Saving templates needs the <strong>Add &amp; edit plans</strong> permission.
+                Changing a template doesn&apos;t affect plans already made from it. To rename, edit or delete templates, go to <strong>Plans → Templates</strong> (admins can also use <strong>Settings → Plan templates</strong>). Saving and managing templates needs the <strong>Add &amp; edit plans</strong> permission.
               </p>
             </div>
           ),
@@ -743,7 +743,7 @@ export default function HelpPage() {
           content: () => (
             <div>
               <p className="help-content-body">
-                <strong>Settings → Plan templates</strong> lists your church&apos;s templates with how many service items and song slots each has. Click <strong>Edit</strong> to change a template&apos;s name, plan title, start time or pre-service notes, or the <strong>x</strong> to delete it.
+                <strong>Settings → Plan templates</strong> (also at <strong>Plans → Templates</strong>, for anyone who can add &amp; edit plans) lists your church&apos;s templates with how many service items and song slots each has. Click <strong>Edit</strong> to change a template&apos;s name, plan title, start time or pre-service notes, or the <strong>x</strong> to delete it.
               </p>
               <p className="help-content-body">
                 Templates are created from a plan, not here: open a plan and use <strong>Save as template</strong>. To change a template&apos;s running order, build it in a plan and save it over the existing template. See <strong>Plans → Plan templates and song slots</strong>.

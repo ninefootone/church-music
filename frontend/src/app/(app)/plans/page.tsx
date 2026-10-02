@@ -127,9 +127,12 @@ export default function PlansPage() {
       <div className="page-header">
         <h1 className="page-title">Plans</h1>
         {canAddPlans && (
-          <Link href="/plans/new" className="btn btn-primary">
-            <Plus size={16} /> Add new plan
-          </Link>
+          <div className="page-header-actions">
+            <Link href="/plans/templates" className="btn btn-secondary">Templates</Link>
+            <Link href="/plans/new" className="btn btn-primary">
+              <Plus size={16} /> Add new plan
+            </Link>
+          </div>
         )}
       </div>
 
