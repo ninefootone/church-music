@@ -177,15 +177,20 @@ router.post('/:churchId/logo', requireAuth, requireAdmin, upload.single('logo'),
     if (!req.file) return res.status(400).json({ error: 'No file provided' });
 
     const ext = req.file.originalname.split('.').pop().toLowerCase();
-    const allowed = ['jpg', 'jpeg', 'png', 'svg', 'webp'];
-    if (!allowed.includes(ext)) return res.status(400).json({ error: 'Invalid file type' });
+    // Content-Type comes from OUR list, not the browser's claim: logos are served
+    // from the public R2 URL, so a file labelled text/html would otherwise be
+    // served as a web page on our storage domain. SVG can carry script when opened
+    // directly, so it is sent as a download (an <img> tag still displays it).
+    const TYPES = { jpg: 'image/jpeg', jpeg: 'image/jpeg', png: 'image/png', webp: 'image/webp', svg: 'image/svg+xml' };
+    if (!TYPES[ext]) return res.status(400).json({ error: 'Logo must be a JPG, PNG, WebP or SVG image' });
 
     const key = `logos/${uuidv4()}.${ext}`;
     await s3.send(new PutObjectCommand({
       Bucket: process.env.R2_BUCKET_NAME,
       Key: key,
       Body: req.file.buffer,
-      ContentType: req.file.mimetype,
+      ContentType: TYPES[ext],
+      ...(ext === 'svg' ? { ContentDisposition: 'attachment' } : {}),
     }));
 
     const logo_url = `${process.env.R2_PUBLIC_URL}/${key}`;
