@@ -130,20 +130,8 @@ router.get('/mine', requireAuth, async (req, res, next) => {
   }
 });
 
-// Remove a member (admin only)
-router.delete('/:churchId/members/:memberId', requireAuth, requireAdmin, async (req, res, next) => {
-  try {
-    const { churchId } = req
-    const { memberId } = req.params
-    await pool.query(
-      'UPDATE memberships SET role = $1 WHERE church_id = $2 AND user_id = $3',
-      ['revoked', churchId, memberId]
-    )
-    res.json({ message: 'Member removed' })
-  } catch (err) {
-    next(err)
-  }
-})
+// (removed 2026-10-02) DELETE /:churchId/members/:memberId — unused legacy route that
+// skipped the last-admin check. Members are removed via DELETE /api/members/:membershipId.
 
 // Get church details
 router.get('/:churchId', requireAuth, requireMembership, async (req, res, next) => {
