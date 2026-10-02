@@ -343,18 +343,15 @@ router.patch('/:id/items/:itemId/arrangement', requireAuth, requireMembership, a
   try {
     const { custom_arrangement } = req.body;
     const { id: planId, itemId } = req.params;
-    const isAdmin = req.membership.role === 'admin';
-    const canEditAny = req.membership.can_edit_any_plan;
-    const canAnnotate = req.membership.can_annotate_plans;
-
-    const plan = await pool.query(
-      'SELECT created_by FROM plans WHERE id=$1 AND church_id=$2',
-      [planId, req.churchId]
-    );
-    if (plan.rows.length === 0) return res.status(404).json({ error: 'Not found' });
-
-    const isOwner = plan.rows[0].created_by === req.user.clerk_id;
-    if (!isAdmin && !isOwner && !canEditAny && !canAnnotate) {
+    // Full plan editors (same rule as PUT /:id/items) or "Add notes to plan items".
+    const plan = await loadChurchPlan(planId, req.churchId);
+    if (!plan) return res.status(404).json({ error: 'Not found' });
+    const canEdit = canEditPlan(req, plan);
+    // Annotators who can't see drafts mustn't reach draft plans either.
+    if (plan.status === 'draft' && !canEdit && !canSeeDraftPlans(req)) {
+      return res.status(404).json({ error: 'Not found' });
+    }
+    if (!canEdit && !req.membership.can_annotate_plans) {
       return res.status(403).json({ error: 'Not authorised' });
     }
 
@@ -374,19 +371,15 @@ router.patch('/:id/items/:itemId/notes', requireAuth, requireMembership, async f
   try {
     const { notes } = req.body;
     const { id: planId, itemId } = req.params;
-    const isAdmin = req.membership.role === 'admin';
-    const canEditAny = req.membership.can_edit_any_plan;
-    const canAnnotate = req.membership.can_annotate_plans;
-
-    // Check plan belongs to this church
-    const plan = await pool.query(
-      'SELECT created_by FROM plans WHERE id=$1 AND church_id=$2',
-      [planId, req.churchId]
-    );
-    if (plan.rows.length === 0) return res.status(404).json({ error: 'Not found' });
-
-    const isOwner = plan.rows[0].created_by === req.user.clerk_id;
-    if (!isAdmin && !isOwner && !canEditAny && !canAnnotate) {
+    // Full plan editors (same rule as PUT /:id/items) or "Add notes to plan items".
+    const plan = await loadChurchPlan(planId, req.churchId);
+    if (!plan) return res.status(404).json({ error: 'Not found' });
+    const canEdit = canEditPlan(req, plan);
+    // Annotators who can't see drafts mustn't reach draft plans either.
+    if (plan.status === 'draft' && !canEdit && !canSeeDraftPlans(req)) {
+      return res.status(404).json({ error: 'Not found' });
+    }
+    if (!canEdit && !req.membership.can_annotate_plans) {
       return res.status(403).json({ error: 'Not authorised' });
     }
 
