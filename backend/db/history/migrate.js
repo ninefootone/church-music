@@ -1,3 +1,12 @@
+// HISTORICAL — DO NOT RUN. Kept only as a record of the original schema.
+// This is out of date versus the live database (e.g. plan_items.item_type + a
+// CHECK list, where live has `type` with no CHECK; plans.created_by as a users FK,
+// where live stores the Clerk id). Running it on an empty DB builds the wrong schema.
+// The live schema is the sum of the hand-run scripts in db/ and scripts/; a
+// pg_dump --schema-only baseline is step 1 of the migration-runner TODO item.
+// Retired 2026-10-02 (it used to be `npm run db:migrate`).
+process.exit(1);
+
 require('dotenv').config();
 const { Pool } = require('pg');
 
