@@ -57,6 +57,17 @@ app.use('/api/plan-templates', planTemplateRoutes);
 Sentry.setupExpressErrorHandler(app);
 
 app.use((err, req, res, next) => {
+  // Client mistakes get a 4xx with a useful message instead of "Something went
+  // wrong" (and, having a 4xx status, aren't reported to Sentry).
+  if (err && err.name === 'MulterError') {
+    const msg = err.code === 'LIMIT_FILE_SIZE' ? 'That file is too large to upload.' : `Upload failed: ${err.message}`;
+    return res.status(400).json({ error: msg });
+  }
+  if (err && err.type === 'entity.too.large') return res.status(413).json({ error: 'That request is too large.' });
+  if (err && err.type === 'entity.parse.failed') return res.status(400).json({ error: 'Invalid request body.' });
+  if (err && err.expose && Number.isInteger(err.status) && err.status >= 400 && err.status < 500) {
+    return res.status(err.status).json({ error: err.message });
+  }
   console.error(err.stack);
   res.status(500).json({ error: 'Something went wrong' });
 });

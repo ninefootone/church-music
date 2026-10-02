@@ -33,7 +33,7 @@ const upload = multer({
     if (allowed.includes(file.mimetype) && allowedExt.includes(ext || '')) {
       cb(null, true);
     } else {
-      cb(new Error('Only PDF and ChordPro files are allowed'));
+      cb(Object.assign(new Error('Only PDF and ChordPro files are allowed'), { status: 400, expose: true }));
     }
   },
 });
@@ -48,7 +48,7 @@ const uploadImage = multer({
     if (allowedMime.includes(file.mimetype) && allowedExt.includes(ext || '')) {
       cb(null, true);
     } else {
-      cb(new Error('Only JPEG, PNG and WebP images are allowed'));
+      cb(Object.assign(new Error('Only JPEG, PNG and WebP images are allowed'), { status: 400, expose: true }));
     }
   },
 });
