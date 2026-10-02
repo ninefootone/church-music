@@ -677,52 +677,51 @@ router.post('/:id/email', requireAuth, requireMembership, async function(req, re
 })
 
 router.post('/:id/duplicate', requireAuth, requirePermission('can_add_plans'), async function(req, res, next) {
+  const { plan_date, plan_time, plan_start_time, plan_sort_order, title } = req.body;
+  if (!plan_date) return res.status(400).json({ error: 'Date is required' });
+
+  let client;
   try {
     const source = await pool.query(
       'SELECT * FROM plans WHERE id=$1 AND church_id=$2',
       [req.params.id, req.churchId]
     );
     if (source.rows.length === 0) return res.status(404).json({ error: 'Plan not found' });
-
     const orig = source.rows[0];
-    const { plan_date, plan_time, plan_start_time, plan_sort_order, title } = req.body;
     const public_token = uuidv4();
 
-    const newPlan = await pool.query(
+    // Plan + items + musicians in one transaction, so a failure can't leave a
+    // half-copied draft behind.
+    client = await pool.connect();
+    await client.query('BEGIN');
+
+    const newPlan = await client.query(
       `INSERT INTO plans (church_id, plan_date, plan_time, plan_start_time, plan_sort_order, title, public_token, created_by, status, pre_service_notes)
        VALUES ($1,$2,$3,$4,$5,$6,$7,$8,'draft',$9) RETURNING *`,
       [req.churchId, plan_date, plan_time, plan_start_time ?? orig.plan_start_time, plan_sort_order ?? orig.plan_sort_order, title ?? orig.title, public_token, req.user.clerk_id, orig.pre_service_notes ?? null]
     );
     const newId = newPlan.rows[0].id;
 
-    // Copy plan items
-    const items = await pool.query(
-      'SELECT * FROM plan_items WHERE plan_id=$1 ORDER BY position',
-      [orig.id]
+    await client.query(
+      `INSERT INTO plan_items (plan_id, type, title, notes, content, song_id, key_override, position, custom_arrangement, duration_minutes, phase)
+       SELECT $1, type, title, notes, content, song_id, key_override, position, custom_arrangement, duration_minutes, COALESCE(phase, 'service')
+         FROM plan_items WHERE plan_id = $2 ORDER BY position`,
+      [newId, orig.id]
     );
-    for (const item of items.rows) {
-      await pool.query(
-        `INSERT INTO plan_items (plan_id, type, title, notes, content, song_id, key_override, position, custom_arrangement, duration_minutes, phase)
-         VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11)`,
-        [newId, item.type, item.title, item.notes, item.content, item.song_id, item.key_override, item.position, item.custom_arrangement, item.duration_minutes, item.phase || 'service']
-      );
-    }
 
-    // Copy musicians
-    const musicians = await pool.query(
-      'SELECT * FROM plan_musicians WHERE plan_id=$1',
-      [orig.id]
+    await client.query(
+      `INSERT INTO plan_musicians (plan_id, name, role, user_id)
+       SELECT $1, name, role, user_id FROM plan_musicians WHERE plan_id = $2`,
+      [newId, orig.id]
     );
-    for (const m of musicians.rows) {
-      await pool.query(
-        `INSERT INTO plan_musicians (plan_id, name, role, user_id) VALUES ($1,$2,$3,$4)`,
-        [newId, m.name, m.role, m.user_id]
-      );
-    }
 
+    await client.query('COMMIT');
     res.status(201).json(newPlan.rows[0]);
   } catch (err) {
+    if (client) await client.query('ROLLBACK').catch(() => {});
     next(err);
+  } finally {
+    if (client) client.release();
   }
 });
 
