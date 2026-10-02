@@ -284,6 +284,14 @@ router.put('/:id/items', requireAuth, requireMembership, async function(req, res
   const planId = req.params.id;
   const items = req.body.items;
   if (!Array.isArray(items)) return res.status(400).json({ error: 'items must be an array' });
+  // Each item must be an object with a type; otherwise the insert below would
+  // throw (a null item or missing type used to come back as a 500).
+  if (items.length > 300) return res.status(400).json({ error: 'Too many items (max 300)' });
+  for (const it of items) {
+    if (!it || typeof it !== 'object' || typeof it.type !== 'string' || !it.type.trim() || it.type.length > 50) {
+      return res.status(400).json({ error: 'Each item needs a type' });
+    }
+  }
 
   let client;
   try {
@@ -325,7 +333,7 @@ router.put('/:id/items', requireAuth, requireMembership, async function(req, res
       const item = items[i];
       await client.query(
         'INSERT INTO plan_items (plan_id, type, song_id, title, notes, content, key_override, position, custom_arrangement, duration_minutes, phase) VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11)',
-        [planId, item.type, item.song_id || null, item.title || null, item.notes || null, sanitizeRichText(item.content), item.key_override || null, i, item.custom_arrangement || null, item.duration_minutes ? parseInt(item.duration_minutes) : null, item.phase || 'service']
+        [planId, item.type.trim(), item.song_id || null, item.title || null, item.notes || null, sanitizeRichText(item.content), item.key_override || null, i, item.custom_arrangement || null, parseInt(item.duration_minutes, 10) > 0 ? parseInt(item.duration_minutes, 10) : null, item.phase === 'pre-service' ? 'pre-service' : 'service']
       );
     }
     await client.query('COMMIT');
