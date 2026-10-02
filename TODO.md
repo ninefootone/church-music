@@ -47,7 +47,7 @@ Small issues found while building plan templates (detail in project doc `plan-te
 - [ ] Live `plans.status` default may not match `add-plan-status.js` ('published') — "Save as draft" on New plan produced drafts even when POST ignored status. Check with a read-only `information_schema.columns` query.
 - [ ] Settings → Plan templates is admin-only (whole Settings page), but non-admins with "Add & edit plans" can save/replace templates from a plan — decide if that's right.
 
-- [ ] iPad app (`song-stack-app`): plan items of type `song_slot` (empty song placeholders from plan templates) need a label — show "Song to be chosen" (or "<title> — song to be chosen"), not the raw type. Web logic is in `frontend/src/lib/planItems.ts`. Ship by OTA.
+- [x] (DONE 2026-10-02 in HomeScreen.tsx — ship by OTA, respecting the App Store review freeze) iPad app (`song-stack-app`): plan items of type `song_slot` (empty song placeholders from plan templates) need a label — show "Song to be chosen" (or "<title> — song to be chosen"), not the raw type. Web logic is in `frontend/src/lib/planItems.ts`. Ship by OTA.
 
 Then: a thorough review of the whole codebase (security/permission checks on every route, church scoping, transactions, error handling, dead code, CSS/inline-style leftovers) — plan the approach at the start of that session.
 

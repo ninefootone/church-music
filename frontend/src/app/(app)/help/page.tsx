@@ -379,7 +379,10 @@ export default function HelpPage() {
                 From the Plans page, click <strong>New plan</strong>. Give the plan a date — this is the only required field. You can also add a title (e.g. &quot;Sunday Morning&quot;) and a time. The time is helpful for ordering plans when you have more than one on a single day.
               </p>
               <p className="help-content-body">
-                Once created, you&apos;ll land on the plan detail page where you can add songs, assign musicians, and manage the running order.
+                If your church has <strong>plan templates</strong>, a <strong>Start from</strong> row appears at the top of the form. Choose <strong>Blank plan</strong> or one of your templates — a template fills in the time and title and brings in its running order. See <strong>Plan templates and song slots</strong> below.
+              </p>
+              <p className="help-content-body">
+                Once created, you&apos;ll land on the plan detail page where you can add songs, assign musicians, and manage the running order. (When you start from a template with song slots, you go straight into editing the plan so you can add the songs.)
               </p>
               <p className="help-content-body">
                 Plans are listed on the Plans page split into upcoming and past. The dashboard also shows your next few upcoming plans at a glance.
@@ -403,6 +406,9 @@ export default function HelpPage() {
               </p>
               <p className="help-content-body">
                 Songs appear in the running order in the sequence you add them. You can drag and drop to reorder them using the dots on the left.
+              </p>
+              <p className="help-content-body">
+                If the plan has empty <strong>song slots</strong> (usually from a template), each song you add fills the next empty slot instead of going to the end. Once the slots are full, songs are added to the end as normal. Adding a song from a song page with <strong>Add to plan</strong> fills the next slot too.
               </p>
               <p className="help-content-body">
                 To remove a song from a plan, open the plan and use the x button next to the song. This only removes it from the plan — the song stays in your library.
@@ -528,6 +534,29 @@ export default function HelpPage() {
               </p>
               <p className="help-content-body">
                 The duplicate dialog also has a <strong>Title</strong> field, pre-filled with the original plan&apos;s title, so you can rename the copy as you create it.
+              </p>
+            </div>
+          ),
+        },
+        {
+          id: 'plan-templates',
+          title: 'Plan templates and song slots',
+          content: () => (
+            <div>
+              <p className="help-content-body">
+                If your services follow the same pattern each week — say a 9.15am, an 11am and a 7pm — save each one as a <strong>plan template</strong>. A template holds the time, title, pre-service notes and running order, so a new plan only needs a date and the week&apos;s songs.
+              </p>
+              <p className="help-content-body">
+                <strong>Saving a template:</strong> build a plan the way you want it, open it and click <strong>Save as template</strong> at the bottom of the page. Give it a name (e.g. &quot;Sunday 9.15am&quot;), or choose <strong>Replace an existing template</strong> to update one you already have. Songs in the plan are saved as empty <strong>song slots</strong>; the date and musicians aren&apos;t saved.
+              </p>
+              <p className="help-content-body">
+                <strong>Using a template:</strong> on <strong>New plan</strong>, pick the template under <strong>Start from</strong>, set the date and create the plan. If the template has song slots you&apos;ll go straight into editing it — add your songs and they fill the slots in order.
+              </p>
+              <p className="help-content-body">
+                <strong>Song slots</strong> are placeholders in the running order. While editing a plan you can add one with <strong>+ Song slot</strong> under Other items and give it an optional label such as &quot;Response song&quot;. An empty slot shows as <em>Song to be chosen</em> on the plan, the share link and the email, and you&apos;ll be asked to confirm if you publish while any are still empty.
+              </p>
+              <p className="help-content-body">
+                Changing a template doesn&apos;t affect plans already made from it. Admins can rename, edit or delete templates in <strong>Settings → Plan templates</strong>. Saving templates needs the <strong>Add &amp; edit plans</strong> permission.
               </p>
             </div>
           ),
@@ -704,6 +733,20 @@ export default function HelpPage() {
               </p>
               <p className="help-content-body">
                 When building a plan, your saved service items appear as quick buttons under <strong>Other items</strong>. Adding one drops in a <strong>copy</strong> — so editing it on a plan doesn&apos;t change your library, and editing the library later doesn&apos;t change plans that already use it.
+              </p>
+            </div>
+          ),
+        },
+        {
+          id: 'settings-plan-templates',
+          title: 'Plan templates',
+          content: () => (
+            <div>
+              <p className="help-content-body">
+                <strong>Settings → Plan templates</strong> lists your church&apos;s templates with how many service items and song slots each has. Click <strong>Edit</strong> to change a template&apos;s name, plan title, start time or pre-service notes, or the <strong>x</strong> to delete it.
+              </p>
+              <p className="help-content-body">
+                Templates are created from a plan, not here: open a plan and use <strong>Save as template</strong>. To change a template&apos;s running order, build it in a plan and save it over the existing template. See <strong>Plans → Plan templates and song slots</strong>.
               </p>
             </div>
           ),
