@@ -83,6 +83,7 @@ export function FileUploadModal({ songId, defaultKey, onClose, onUploaded }: Fil
     setUploading(true)
 
     let anyUploaded = false
+    let anyFailed = false
 
     for (const entry of entries) {
       updateEntry(entry.id, { status: 'uploading', error: undefined })
@@ -103,6 +104,7 @@ export function FileUploadModal({ songId, defaultKey, onClose, onUploaded }: Fil
         updateEntry(entry.id, { status: 'done' })
         anyUploaded = true
       } catch (err: any) {
+        anyFailed = true
         updateEntry(entry.id, { status: 'error', error: err.response?.data?.error || 'Upload failed' })
       }
     }
@@ -112,8 +114,9 @@ export function FileUploadModal({ songId, defaultKey, onClose, onUploaded }: Fil
     if (anyUploaded) onUploaded()
 
     // If all succeeded, close. If some failed, leave modal open so user can see errors.
-    const stillPending = entries.some(e => e.status === 'error')
-    if (!stillPending) onClose()
+    // (Tracked locally: `entries` is this render's snapshot, so reading statuses from
+    // it here always saw 'pending' and closed the modal, hiding the error.)
+    if (!anyFailed) onClose()
   }
 
   const pendingCount = entries.filter(e => e.status === 'pending' || e.status === 'error').length
