@@ -467,8 +467,11 @@ router.post('/:id/email', requireAuth, requireMembership, async function(req, re
     // Build song rows HTML
     const itemsHtml = items.map((item, i) => {
       if (item.type !== 'song') {
-        const label = item.title || (item.type.charAt(0).toUpperCase() + item.type.slice(1))
         const escHtml = (s) => String(s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
+        const rawLabel = item.type === 'song_slot'
+          ? (item.title ? `${item.title} — song to be chosen` : 'Song to be chosen')
+          : (item.title || (item.type.charAt(0).toUpperCase() + item.type.slice(1)))
+        const label = escHtml(rawLabel)
         // item.content is already sanitised to <p>/<br>/<strong>/<em> on save.
         const contentHtml = item.content ? `<div style="font-size:13px;color:#374151;font-style:normal;line-height:1.6;margin-top:6px;">${item.content}</div>` : ''
         const noteHtml = item.notes ? `<div style="font-size:12px;color:#6b7280;font-style:italic;margin-top:4px;">${escHtml(item.notes).replace(/\n/g, '<br>')}</div>` : ''

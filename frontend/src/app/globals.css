@@ -3699,3 +3699,10 @@ select.input {
 .template-row-main       { flex: 1; display: flex; flex-direction: column; gap: 2px; min-width: 0; }
 .template-row-meta       { font-size: var(--text-sm); color: var(--color-text-muted); }
 .template-field-gap      { margin-top: 12px; }
+
+/* Song slots (empty song placeholders from plan templates) */
+.song-slot-edit          { display: flex; align-items: center; gap: 8px; }
+.song-slot-icon          { color: var(--color-text-muted); flex-shrink: 0; }
+.song-slot-input         { border-style: dashed; background: var(--color-neutral-50); color: var(--color-text-secondary); font-style: italic; }
+.filter-chip--slot       { border-style: dashed; }
+.song-slot-label         { font-style: italic; }

@@ -29,6 +29,7 @@ import { useChurch } from '@/context/ChurchContext'
 import api from '@/lib/api'
 import { ArrangementBuilder } from '@/components/ui/ArrangementBuilder'
 import { RichTextEditor } from '@/components/ui/RichTextEditor'
+import { ConfirmModal } from '@/components/ui/ConfirmModal'
 
 const DEFAULT_SERVICE_ITEMS = [
   { title: 'Welcome' },
@@ -145,7 +146,18 @@ function SortableItem({
 
           {/* Title */}
           <div className="dash-row-content">
-            {item.type === 'song' ? (
+            {item.type === 'song_slot' ? (
+              <div className="song-slot-edit">
+                <Music size={14} className="song-slot-icon" />
+                <input
+                  className="input input--sm song-slot-input"
+                  value={item.title}
+                  onChange={e => onUpdate({ title: e.target.value })}
+                  placeholder="Song slot — the next song you add fills it"
+                  aria-label="Song slot label (optional)"
+                />
+              </div>
+            ) : item.type === 'song' ? (
               <>
                 <p className="dash-row-title">
                   {item.song_title}
@@ -181,15 +193,17 @@ function SortableItem({
           )}
 
           {/* Notes toggle */}
-          <button
-            type="button"
-            onClick={onToggleExpanded}
-            title="Add notes"
-            className="btn-icon-toggle"
-            style={{ color: item.notes ? 'var(--color-brand-500)' : 'var(--color-text-muted)' }}
-          >
-            {item.expanded ? <ChevronUp size={16} /> : <ChevronDown size={16} />}
-          </button>
+          {item.type !== 'song_slot' && (
+            <button
+              type="button"
+              onClick={onToggleExpanded}
+              title="Add notes"
+              className="btn-icon-toggle"
+              style={{ color: item.notes ? 'var(--color-brand-500)' : 'var(--color-text-muted)' }}
+            >
+              {item.expanded ? <ChevronUp size={16} /> : <ChevronDown size={16} />}
+            </button>
+          )}
 
           {/* Remove */}
           <button
@@ -202,7 +216,7 @@ function SortableItem({
         </div>
 
         {/* Notes + arrangement */}
-        {item.expanded && (
+        {item.expanded && item.type !== 'song_slot' && (
           <div className="item-notes-panel">
             {item.type !== 'song' && (
               <div className="liturgy-content-field">
@@ -357,17 +371,26 @@ export default function PlanEditPage() {
     })
   }
 
+  // Adds a song. If the running order has an empty song slot (from a
+  // template), the song fills the first one in place; otherwise it's appended.
   const addSong = (song: Song) => {
-    setItems(prev => [...prev, {
-      id: newId(), type: 'song', song_id: song.id,
-      song_title: song.title, song_author: song.author,
-      song_default_key: song.default_key, song_category: song.category,
-      song_suggested_arrangement: (song as any).suggested_arrangement || '',
-      song_default_duration: (song as any).default_duration ?? null,
-      title: '', content: '', notes: '', key_override: normaliseKey(song.default_key),
-      custom_arrangement: '', expanded: false,
-      duration_minutes: (song as any).default_duration ?? null,
-    }])
+    setItems(prev => {
+      const songItem: PlanItem = {
+        id: newId(), type: 'song', song_id: song.id,
+        song_title: song.title, song_author: song.author,
+        song_default_key: song.default_key, song_category: song.category,
+        song_suggested_arrangement: (song as any).suggested_arrangement || '',
+        song_default_duration: (song as any).default_duration ?? null,
+        title: '', content: '', notes: '', key_override: normaliseKey(song.default_key),
+        custom_arrangement: '', expanded: false,
+        duration_minutes: (song as any).default_duration ?? null,
+      }
+      const slotIdx = prev.findIndex(i => i.type === 'song_slot')
+      if (slotIdx === -1) return [...prev, songItem]
+      const slot = prev[slotIdx]
+      const filled = { ...songItem, duration_minutes: songItem.duration_minutes ?? slot.duration_minutes }
+      return prev.map((item, i) => (i === slotIdx ? filled : item))
+    })
     setSongSearch('')
   }
 
@@ -393,6 +416,14 @@ export default function PlanEditPage() {
     setItems(prev => prev.map((item, i) => i === idx ? { ...item, ...updates } : item))
   const toggleExpanded = (idx: number) =>
     setItems(prev => prev.map((item, i) => i === idx ? { ...item, expanded: !item.expanded } : item))
+
+  const emptySlots = items.filter(i => i.type === 'song_slot').length
+  const [confirmPublish, setConfirmPublish] = useState(false)
+
+  const requestSave = (status: 'draft' | 'published') => {
+    if (status === 'published' && emptySlots > 0) { setConfirmPublish(true); return }
+    handleSave(status)
+  }
 
   const handleSave = async (status: 'draft' | 'published') => {
     setSaving(true); setError('')
@@ -479,10 +510,10 @@ export default function PlanEditPage() {
         </div>
         <div className="btn-group">
           <Link href={`/plans/${id}`} className="btn btn-secondary">Cancel</Link>
-          <button className="btn btn-secondary" onClick={() => handleSave('draft')} disabled={saving}>
+          <button className="btn btn-secondary" onClick={() => requestSave('draft')} disabled={saving}>
             {saving ? 'Saving…' : planStatus === 'published' ? 'Revert to draft' : 'Save draft'}
           </button>
-          <button className="btn btn-primary" onClick={() => handleSave('published')} disabled={saving}>
+          <button className="btn btn-primary" onClick={() => requestSave('published')} disabled={saving}>
             {saving ? 'Saving…' : 'Publish'}
           </button>
         </div>
@@ -547,6 +578,9 @@ export default function PlanEditPage() {
                 <button type="button" onClick={() => addItem('custom', '')} className="filter-chip">
                   + Other
                 </button>
+                <button type="button" onClick={() => addItem('song_slot', '')} className="filter-chip filter-chip--slot">
+                  + Song slot
+                </button>
               </div>
             </div>
           </div>
@@ -600,6 +634,9 @@ export default function PlanEditPage() {
                 <button type="button" onClick={() => addItem('custom', '')} className="filter-chip">
                   + Other
                 </button>
+                <button type="button" onClick={() => addItem('song_slot', '')} className="filter-chip filter-chip--slot">
+                  + Song slot
+                </button>
               </div>
               {(serviceItems ?? DEFAULT_SERVICE_ITEMS).length > SERVICE_ITEMS_LIMIT && (
                 <button type="button" onClick={() => setShowAllServiceItems(v => !v)} className="btn-inline-link service-items-more">
@@ -614,7 +651,10 @@ export default function PlanEditPage() {
         <div className="running-order-col">
           <div className="section-header-row">
             <span className="running-order-label">Running order</span>
-            <span className="running-order-count">{items.length} item{items.length !== 1 ? 's' : ''}</span>
+            <span className="running-order-count">
+              {items.length} item{items.length !== 1 ? 's' : ''}
+              {emptySlots > 0 && ` · ${emptySlots} empty song slot${emptySlots !== 1 ? 's' : ''}`}
+            </span>
           </div>
           {planStartTime && (
             <>
@@ -665,14 +705,24 @@ export default function PlanEditPage() {
       {/* Fixed bottom save bar */}
       <div className="save-bar">
         <Link href={`/plans/${id}`} className="btn btn-secondary">Cancel</Link>
-        <button className="btn btn-secondary" onClick={() => handleSave('draft')} disabled={saving}>
+        <button className="btn btn-secondary" onClick={() => requestSave('draft')} disabled={saving}>
           {saving ? 'Saving…' : planStatus === 'published' ? 'Revert to draft' : 'Save draft'}
         </button>
-        <button className="btn btn-primary" onClick={() => handleSave('published')} disabled={saving}>
+        <button className="btn btn-primary" onClick={() => requestSave('published')} disabled={saving}>
           {saving ? 'Saving…' : 'Publish'}
         </button>
       </div>
       <div className="save-bar-spacer" />
+
+      {confirmPublish && (
+        <ConfirmModal
+          title="Publish with empty song slots?"
+          message={`${emptySlots} song slot${emptySlots !== 1 ? 's are' : ' is'} still empty. ${emptySlots !== 1 ? "They'll" : "It'll"} show as “Song to be chosen” in the published plan. Publish anyway, or save as a draft and fill ${emptySlots !== 1 ? 'them' : 'it'} first?`}
+          confirmLabel="Publish anyway"
+          onConfirm={async () => { setConfirmPublish(false); await handleSave('published') }}
+          onCancel={() => setConfirmPublish(false)}
+        />
+      )}
     </div>
   )
 }

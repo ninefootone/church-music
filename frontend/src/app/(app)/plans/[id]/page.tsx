@@ -18,6 +18,7 @@ import type { PlanMusician } from '@/types'
 import { ArrangementBuilder } from '@/components/ui/ArrangementBuilder'
 import { LyricsDisplay } from '@/components/ui/LyricsDisplay'
 import { RichTextDisplay, LITURGY_ALLOWED_TAGS } from '@/components/ui/RichTextDisplay'
+import { isSongSlot, nonSongLabel } from '@/lib/planItems'
 
 interface SongFile {
   id: string
@@ -112,8 +113,8 @@ function SongItem({ item, index, planId, canAnnotate, showTimings, showDurations
           </div>
         )}
         <div className="dash-row-content">
-          <p style={{ fontSize: 'var(--text-md)', fontWeight: isSong ? 600 : 400, color: isSong ? 'var(--color-text-primary)' : 'var(--color-text-secondary)', marginBottom: 0 }}>
-            {isSong && item.song_title ? item.song_title : (item.title || item.type.charAt(0).toUpperCase() + item.type.slice(1))}
+          <p className={isSongSlot(item) ? 'song-slot-label' : undefined} style={{ fontSize: 'var(--text-md)', fontWeight: isSong ? 600 : 400, color: isSong ? 'var(--color-text-primary)' : 'var(--color-text-secondary)', marginBottom: 0 }}>
+            {isSong && item.song_title ? item.song_title : nonSongLabel(item)}
           </p>
           {editingNotes ? (
             <div style={{ marginTop: 4 }} onClick={e => e.stopPropagation()}>

@@ -8,6 +8,7 @@ import axios from 'axios'
 import { useAuth } from '@clerk/nextjs'
 import { RichTextDisplay, LITURGY_ALLOWED_TAGS } from '@/components/ui/RichTextDisplay'
 import { parseArrangement } from '@/lib/arrangement'
+import { isSongSlot, nonSongLabel } from '@/lib/planItems'
 
 const API = process.env.NEXT_PUBLIC_API_URL
 
@@ -68,8 +69,8 @@ function SongItem({ item, index, token, churchId, showTimings, showDurations, ca
         )}
 
         <div className="dash-row-content">
-          <p className="item-title" style={{ fontWeight: isSong ? 600 : 400, color: isSong ? 'var(--color-text-primary)' : 'var(--color-text-secondary)' }}>
-            {isSong && item.song_title ? item.song_title : (item.title || item.type)}
+          <p className={`item-title${isSongSlot(item) ? ' song-slot-label' : ''}`} style={{ fontWeight: isSong ? 600 : 400, color: isSong ? 'var(--color-text-primary)' : 'var(--color-text-secondary)' }}>
+            {isSong && item.song_title ? item.song_title : nonSongLabel(item)}
           </p>
           {item.notes && (
             <p className="item-notes">{item.notes.split('\n').map((line: string, i: number) => {
