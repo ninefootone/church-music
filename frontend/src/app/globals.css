@@ -3706,3 +3706,5 @@ select.input {
 .song-slot-input         { border-style: dashed; background: var(--color-neutral-50); color: var(--color-text-secondary); font-style: italic; }
 .filter-chip--slot       { border-style: dashed; }
 .song-slot-label         { font-style: italic; }
+.template-picker         { display: flex; flex-wrap: wrap; gap: 8px; }
+.template-picker-summary { font-size: var(--text-sm); color: var(--color-text-muted); margin: 8px 0 0; }
