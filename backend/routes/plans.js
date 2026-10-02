@@ -266,6 +266,24 @@ router.put('/:id/items', requireAuth, requireMembership, async function(req, res
     const canEditAny = req.membership.can_add_plans;
     if (!isAdmin && !isOwner && !canEditAny) return res.status(403).json({ error: 'Not authorised' });
 
+    // Every song_id must be one of THIS church's songs. Without this, a crafted
+    // request could link another church's song, and its title/lyrics would then
+    // show through the plan-detail join.
+    const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+    const songIds = [...new Set(items.map(it => it && it.song_id).filter(Boolean))];
+    if (songIds.some(id => typeof id !== 'string' || !UUID_RE.test(id))) {
+      return res.status(400).json({ error: 'Invalid song id' });
+    }
+    if (songIds.length > 0) {
+      const owned = await pool.query(
+        'SELECT id FROM songs WHERE church_id = $1 AND id = ANY($2::uuid[])',
+        [req.churchId, songIds]
+      );
+      if (owned.rows.length !== songIds.length) {
+        return res.status(400).json({ error: 'One or more songs were not found in this church' });
+      }
+    }
+
     // Delete + re-insert in one transaction so a failure can't leave the plan half-empty.
     client = await pool.connect();
     await client.query('BEGIN');
