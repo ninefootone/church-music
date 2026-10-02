@@ -58,55 +58,76 @@ router.get('/churches', requireAuth, requireSuperAdmin, async (req, res, next) =
 });
 
 // DELETE /api/superadmin/churches/:id
+// Database first, in one transaction; R2 files only AFTER the commit. (It used to
+// delete the files first, then fail on the plan_items → songs foreign key, leaving
+// the church in place with its files gone.) Plans are deleted before the church
+// for the same FK reason as utils/accountDeletion.js.
+const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+
 router.delete('/churches/:id', requireAuth, requireSuperAdmin, async (req, res, next) => {
   const { id } = req.params;
+  if (!UUID_RE.test(id)) return res.status(404).json({ error: 'Church not found' });
+  if (id === process.env.MASTER_CHURCH_ID) {
+    return res.status(400).json({ error: 'The master library church cannot be deleted here' });
+  }
 
+  const client = await pool.connect();
+  let churchName, r2Keys;
   try {
-    // 1. Confirm church exists
-    const churchResult = await pool.query('SELECT id, name FROM churches WHERE id = $1', [id]);
+    await client.query('BEGIN');
+
+    const churchResult = await client.query('SELECT id, name, logo_url FROM churches WHERE id = $1 FOR UPDATE', [id]);
     if (churchResult.rows.length === 0) {
+      await client.query('ROLLBACK');
       return res.status(404).json({ error: 'Church not found' });
     }
+    churchName = churchResult.rows[0].name;
 
-    // 2. Collect all R2 keys for files belonging to this church's songs
-    const filesResult = await pool.query(
-      `SELECT sf.r2_key
-       FROM song_files sf
-       JOIN songs s ON s.id = sf.song_id
-       WHERE s.church_id = $1`,
+    // Collect every R2 key now (originals + edited ChordPro copies + logo); delete after commit.
+    const filesResult = await client.query(
+      `SELECT sf.r2_key, sf.edited_r2_key
+         FROM song_files sf JOIN songs s ON s.id = sf.song_id
+        WHERE s.church_id = $1`,
       [id]
     );
+    r2Keys = filesResult.rows.flatMap(r => [r.r2_key, r.edited_r2_key]).filter(Boolean);
+    const logoUrl = churchResult.rows[0].logo_url;
+    const publicBase = process.env.R2_PUBLIC_URL ? process.env.R2_PUBLIC_URL + '/' : null;
+    if (logoUrl && publicBase && logoUrl.startsWith(publicBase)) r2Keys.push(logoUrl.slice(publicBase.length));
 
-    // 3. Delete R2 files (fire-and-forget per file; log failures but don't abort)
-    const r2Keys = filesResult.rows.map(r => r.r2_key);
-
-    const r2Results = await Promise.allSettled(
-      r2Keys.map(key =>
-        r2.send(new DeleteObjectCommand({ Bucket: BUCKET, Key: key }))
-      )
-    );
-
-    const r2Failures = r2Results
-      .map((r, i) => r.status === 'rejected' ? r2Keys[i] : null)
-      .filter(Boolean);
-
-    if (r2Failures.length > 0) {
-      console.warn(`[superadmin] R2 delete failures for church ${id}:`, r2Failures);
-    }
-
-    // 5. Delete church from DB — cascades to songs, song_files, song_tags,
-    //    song_videos, plans, plan_items, plan_musicians, memberships, church_roles
-    await pool.query('DELETE FROM churches WHERE id = $1', [id]);
-
-    res.json({
-      success: true,
-      churchName: churchResult.rows[0].name,
-      filesDeleted: r2Keys.length - r2Failures.length,
-      r2Failures,
-    });
+    await client.query('DELETE FROM plans WHERE church_id = $1', [id]);
+    // Cascades to songs, song_files, song_tags, song_videos, memberships, church_roles, …
+    await client.query('DELETE FROM churches WHERE id = $1', [id]);
+    await client.query('COMMIT');
   } catch (err) {
-    next(err);
+    await client.query('ROLLBACK').catch(() => {});
+    if (err.code === '23503') {
+      // Something outside this church still points at it (e.g. another church's plan
+      // uses one of its songs). Nothing was deleted, files included.
+      return res.status(409).json({ error: `Can't delete: still referenced (${err.constraint}). Nothing was deleted.` });
+    }
+    return next(err);
+  } finally {
+    client.release();
   }
+
+  // Outside-world cleanup — the database is already clean.
+  const r2Results = await Promise.allSettled(
+    r2Keys.map(key => r2.send(new DeleteObjectCommand({ Bucket: BUCKET, Key: key })))
+  );
+  const r2Failures = r2Results
+    .map((r, i) => (r.status === 'rejected' ? r2Keys[i] : null))
+    .filter(Boolean);
+  if (r2Failures.length > 0) {
+    console.warn(`[superadmin] R2 delete failures for church ${id}:`, r2Failures);
+  }
+
+  res.json({
+    success: true,
+    churchName,
+    filesDeleted: r2Keys.length - r2Failures.length,
+    r2Failures,
+  });
 });
 
 // PATCH /api/superadmin/churches/:id/free-access
