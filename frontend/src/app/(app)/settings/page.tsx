@@ -99,11 +99,11 @@ export default function SettingsPage() {
   }, [church, rolesLoaded])
 
   useEffect(() => {
-    const email = user?.primaryEmailAddress?.emailAddress
-    if (!email) return
-    fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/mailing/status?email=${encodeURIComponent(email)}`)
-      .then(r => r.json())
-      .then(d => setSubscribed(d.subscribed))
+    if (!user) return
+    // Signed-in route: the backend checks the account's own email.
+    getAuthenticatedApi()
+      .then(client => client.get('/api/mailing/status'))
+      .then(r => setSubscribed(r.data.subscribed))
       .catch(() => {})
   }, [user])
 
@@ -199,22 +199,15 @@ export default function SettingsPage() {
   }
 
   async function handleMailingToggle() {
-    const email = user?.primaryEmailAddress?.emailAddress
-    const name = [user?.firstName, user?.lastName].filter(Boolean).join(' ')
-    if (!email) return
+    if (!user) return
     setMailingLoading(true)
     try {
+      const client = await getAuthenticatedApi()
       if (subscribed) {
-        await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/mailing/unsubscribe`, {
-          method: 'POST', headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ email }),
-        })
+        await client.post('/api/mailing/unsubscribe')
         setSubscribed(false)
       } else {
-        await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/mailing/subscribe`, {
-          method: 'POST', headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ email, name }),
-        })
+        await client.post('/api/mailing/subscribe')
         setSubscribed(true)
       }
     } catch {

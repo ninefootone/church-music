@@ -38,14 +38,9 @@ export default function OnboardingPage() {
 
   async function subscribeUser() {
     try {
-      const email = user?.primaryEmailAddress?.emailAddress
-      const name = [user?.firstName, user?.lastName].filter(Boolean).join(' ')
-      if (!email) return
-      await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/mailing/subscribe`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ email, name }),
-      })
+      // Signed-in route: the backend subscribes the account's own email.
+      const client = await getAuthenticatedApi()
+      await client.post('/api/mailing/subscribe')
     } catch {
       // Non-critical — don't block onboarding
     }

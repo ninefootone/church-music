@@ -43,17 +43,10 @@ export default function FeedbackForm({ onSuccess }: { onSuccess?: () => void } =
       const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/feedback`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ name, email, type, message, recaptchaToken: token }),
+        body: JSON.stringify({ name, email, type, message, recaptchaToken: token, subscribe }),
       })
 
       if (!res.ok) throw new Error('Failed')
-      if (subscribe) {
-        await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/mailing/subscribe`, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ email, name }),
-        }).catch(() => {}) // Non-critical
-      }
       setStatus('sent')
       if (onSuccess) onSuccess()
     } catch {

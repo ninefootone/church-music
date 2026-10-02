@@ -2,7 +2,7 @@ const express = require('express');
 const Sentry = require('@sentry/node');
 const router = express.Router();
 const https = require('https');
-const { sendBrevoEmail } = require('../utils/email');
+const { sendBrevoEmail, subscribeToList } = require('../utils/email');
 
 async function verifyRecaptcha(token) {
   const data = `secret=${process.env.RECAPTCHA_SECRET_KEY}&response=${token}`;
@@ -28,7 +28,7 @@ async function verifyRecaptcha(token) {
 }
 
 router.post('/', async (req, res) => {
-  const { name, email, type, message, recaptchaToken } = req.body;
+  const { name, email, type, message, recaptchaToken, subscribe } = req.body;
 
   if (!name || !email || !message || !recaptchaToken) {
     return res.status(400).json({ error: 'Missing required fields' });
@@ -53,6 +53,12 @@ router.post('/', async (req, res) => {
         <p><strong>reCAPTCHA score:</strong> ${recaptcha.score}</p>
       `,
     });
+
+    // Optional mailing-list opt-in from the form's checkbox — only after reCAPTCHA
+    // has passed (this replaced an unauthenticated /api/mailing/subscribe call).
+    if (subscribe === true) {
+      await subscribeToList({ email, name }).catch((e) => console.warn('Feedback subscribe failed:', e.message));
+    }
 
     res.json({ success: true });
   } catch (err) {
