@@ -3,6 +3,8 @@ const router = express.Router();
 const pool = require('../db/pool');
 const { requireAuth, requireMembership, requireAdmin, requirePermission } = require('../middleware/auth');
 
+const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+
 // GET /songs/tags/all — global tags (master-managed) + this church's own tags.
 // `scope` is 'global' (church_id IS NULL) or 'church' (this church's own).
 router.get('/tags/all', requireAuth, requireMembership, async (req, res, next) => {
@@ -627,11 +629,20 @@ router.delete('/:id', requireAuth, requirePermission('can_manage_songs'), async 
   }
 });
 
+// The video/link routes key on song_id alone, so check the song is this church's
+// first — otherwise a song manager in one church could edit another church's links.
+async function songInChurch(songId, churchId) {
+  if (!UUID_RE.test(songId || '')) return false;
+  const r = await pool.query('SELECT 1 FROM songs WHERE id = $1 AND church_id = $2', [songId, churchId]);
+  return r.rows.length > 0;
+}
+
 // POST /songs/:id/videos
 router.post('/:id/videos', requireAuth, requirePermission('can_manage_songs'), async (req, res, next) => {
   try {
     const { url, label, sort_order, link_type } = req.body;
     if (!url) return res.status(400).json({ error: 'url is required' });
+    if (!(await songInChurch(req.params.id, req.churchId))) return res.status(404).json({ error: 'Song not found' });
 
     const result = await pool.query(
       `INSERT INTO song_videos (song_id, url, label, sort_order, link_type)
@@ -650,6 +661,7 @@ router.put('/:id/videos/:videoId', requireAuth, requirePermission('can_manage_so
   try {
     const { url, label, link_type } = req.body;
     if (!url) return res.status(400).json({ error: 'url is required' });
+    if (!(await songInChurch(req.params.id, req.churchId))) return res.status(404).json({ error: 'Link not found' });
 
     const result = await pool.query(
       `UPDATE song_videos SET url=$1, label=$2, link_type=$3
@@ -667,6 +679,7 @@ router.put('/:id/videos/:videoId', requireAuth, requirePermission('can_manage_so
 // DELETE /songs/:id/videos/:videoId
 router.delete('/:id/videos/:videoId', requireAuth, requirePermission('can_manage_songs'), async (req, res, next) => {
   try {
+    if (!(await songInChurch(req.params.id, req.churchId))) return res.status(404).json({ error: 'Link not found' });
     const result = await pool.query(
       `DELETE FROM song_videos WHERE id=$1 AND song_id=$2 RETURNING id`,
       [req.params.videoId, req.params.id]
