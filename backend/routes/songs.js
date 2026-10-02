@@ -555,51 +555,98 @@ router.patch('/:id/retire', requireAuth, requirePermission('can_manage_songs'), 
 });
 
 // PUT /songs/:id — update song (admin or can_manage_songs)
+//
+// Only the fields PRESENT in the request body are changed. It used to overwrite
+// every column, so any field the edit form doesn't send (default_duration,
+// ccli_url, youtube_url) was wiped on every save, and tags were deleted even when
+// none were sent. To clear a field, send it as '' / null.
+// Song row, tags and the CCLI lookup are written in one transaction.
+const SONG_TEXT_FIELDS = ['title', 'author', 'default_key', 'category', 'first_line', 'lyrics', 'ccli_number',
+  'youtube_url', 'notes', 'bible_references', 'suggested_arrangement', 'ccli_url', 'copyright_info',
+  'copyright_link', 'discover_description', 'time_signature'];
+const SONG_INT_FIELDS = ['tempo', 'default_duration'];
+
 router.put('/:id', requireAuth, requirePermission('can_manage_songs'), async (req, res, next) => {
+  const { churchId } = req;
+  const body = req.body || {};
+  if (!UUID_RE.test(req.params.id)) return res.status(404).json({ error: 'Song not found' });
+  if ('title' in body && !(typeof body.title === 'string' && body.title.trim())) {
+    return res.status(400).json({ error: 'Title is required' });
+  }
+
+  const sets = [];
+  const params = [];
+  const set = (col, val) => { params.push(val); sets.push(`${col}=$${params.length}`); };
+
+  for (const f of SONG_TEXT_FIELDS) {
+    if (f in body) set(f, body[f] === '' || body[f] === undefined ? null : body[f]);
+  }
+  // title can't be NULL — keep the trimmed value rather than the '' → null rule above
+  if ('title' in body) params[sets.findIndex(x => x.startsWith('title='))] = body.title.trim();
+  for (const f of SONG_INT_FIELDS) {
+    if (f in body) {
+      const n = parseInt(body[f], 10);
+      set(f, Number.isFinite(n) ? n : null);
+    }
+  }
+
+  // Master-library flags: only the master church can turn them on; for every other
+  // church they are always false (as before).
+  const isMasterLibrary = churchId === process.env.MASTER_CHURCH_ID;
+  if (isMasterLibrary) {
+    if ('share_all_data' in body) {
+      const share = !!body.share_all_data;
+      set('share_all_data', share);
+      set('is_template', share);
+      set('template_status', share ? 'approved' : 'pending');
+    }
+    if ('in_discover' in body) set('in_discover', !!body.in_discover);
+    if ('in_library' in body) set('in_library', !!body.in_library);
+    if ('is_draft' in body) set('is_draft', !!body.is_draft);
+  } else {
+    set('share_all_data', false);
+    set('is_template', false);
+    set('template_status', 'pending');
+    set('in_discover', false);
+    set('in_library', false);
+    set('is_draft', false);
+  }
+
+  const client = await pool.connect();
   try {
-    const { churchId } = req;
-    const { title, author, default_key, category, first_line, lyrics, ccli_number, youtube_url, notes, bible_references, suggested_arrangement, ccli_url, share_all_data, copyright_info, copyright_link, in_discover, discover_description, tags, time_signature, tempo, default_duration, is_draft, in_library } = req.body;
-
-    const isMasterLibrary = churchId === process.env.MASTER_CHURCH_ID;
-    const shareEnabled = isMasterLibrary && (share_all_data ?? false);
-    const discoverEnabled = isMasterLibrary && (in_discover ?? false);
-    const libraryEnabled = isMasterLibrary && (in_library ?? false);
-    const draftEnabled = isMasterLibrary && (is_draft ?? false);
-
-    const song = await pool.query(
-      `UPDATE songs SET title=$1, author=$2, default_key=$3, category=$4,
-       first_line=$5, lyrics=$6, ccli_number=$7, youtube_url=$8,
-       notes=$9, bible_references=$10, suggested_arrangement=$11, ccli_url=$12,
-       share_all_data=$13, copyright_info=$14, copyright_link=$15,
-       is_template=$16, template_status=$17,
-       in_discover=$18, discover_description=$19,
-       time_signature=$20, tempo=$21, default_duration=$22,
-       in_library=$23, is_draft=$24
-       WHERE id=$25 AND church_id=$26 RETURNING *`,
-      [title, author, default_key, category, first_line, lyrics, ccli_number, youtube_url, notes, bible_references, suggested_arrangement, ccli_url, shareEnabled, copyright_info ?? null, copyright_link ?? null, shareEnabled, shareEnabled ? 'approved' : 'pending', discoverEnabled, discover_description ?? null, time_signature ?? null, tempo ? parseInt(tempo) : null, default_duration ? parseInt(default_duration) : null, libraryEnabled, draftEnabled, req.params.id, churchId]
+    await client.query('BEGIN');
+    params.push(req.params.id, churchId);
+    const song = await client.query(
+      `UPDATE songs SET ${sets.join(', ')} WHERE id=$${params.length - 1} AND church_id=$${params.length} RETURNING *`,
+      params
     );
-    if (song.rows.length === 0) return res.status(404).json({ error: 'Song not found' });
+    if (song.rows.length === 0) {
+      await client.query('ROLLBACK');
+      return res.status(404).json({ error: 'Song not found' });
+    }
+    const saved = song.rows[0];
 
-    // Replace tags — insert only tags that exist and are global or this church's own.
-    // Filtering here means one stale/foreign tag id can't FK-error the whole save,
-    // and enforces that a church can only attach global or its own tags.
-    await pool.query('DELETE FROM song_tags WHERE song_id = $1', [req.params.id]);
-    if (Array.isArray(tags) && tags.length > 0) {
-      const { rows: validTags } = await pool.query(
-        `SELECT id FROM tags
-         WHERE id::text = ANY($1::text[]) AND (church_id IS NULL OR church_id = $2)`,
-        [tags, churchId]
-      );
-      for (const { id: tagId } of validTags) {
-        await pool.query(
-          'INSERT INTO song_tags (song_id, tag_id) VALUES ($1, $2) ON CONFLICT DO NOTHING',
-          [req.params.id, tagId]
+    // Replace tags only when the caller sent a tags array. Insert only tags that
+    // exist and are global or this church's own (a stale/foreign id is skipped).
+    if (Array.isArray(body.tags)) {
+      await client.query('DELETE FROM song_tags WHERE song_id = $1', [saved.id]);
+      if (body.tags.length > 0) {
+        const { rows: validTags } = await client.query(
+          `SELECT id FROM tags
+           WHERE id::text = ANY($1::text[]) AND (church_id IS NULL OR church_id = $2)`,
+          [body.tags.map(String), churchId]
         );
+        for (const { id: tagId } of validTags) {
+          await client.query(
+            'INSERT INTO song_tags (song_id, tag_id) VALUES ($1, $2) ON CONFLICT DO NOTHING',
+            [saved.id, tagId]
+          );
+        }
       }
     }
 
-    if (ccli_number) {
-      await pool.query(`
+    if (saved.ccli_number) {
+      await client.query(`
         INSERT INTO ccli_lookup (ccli_number, title, author, first_line, default_key, category, source_church_id)
         VALUES ($1, $2, $3, $4, $5, $6, $7)
         ON CONFLICT (ccli_number) DO UPDATE SET
@@ -610,12 +657,16 @@ router.put('/:id', requireAuth, requirePermission('can_manage_songs'), async (re
           confirmed_count = ccli_lookup.confirmed_count + 1,
           category = COALESCE(EXCLUDED.category, ccli_lookup.category),
           updated_at = NOW()
-      `, [ccli_number, title, author, first_line, default_key, category ?? null, churchId]);
+      `, [saved.ccli_number, saved.title, saved.author, saved.first_line, saved.default_key, saved.category ?? null, churchId]);
     }
 
-    res.json(song.rows[0]);
+    await client.query('COMMIT');
+    res.json(saved);
   } catch (err) {
+    await client.query('ROLLBACK').catch(() => {});
     next(err);
+  } finally {
+    client.release();
   }
 });
 
