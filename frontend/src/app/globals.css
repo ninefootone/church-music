@@ -3691,3 +3691,8 @@ select.input {
 .role-chip-btn           { padding: 8px 16px; border-radius: var(--radius-sm); border: 1px solid; font-size: var(--text-sm); font-weight: 500; cursor: pointer; font-family: inherit; }
 .custom-role-input       { margin-top: 10px; width: 100%; padding: 10px 14px; border: 1px solid var(--color-border); border-radius: var(--radius-sm); font-size: var(--text-md); background: var(--color-surface); color: var(--color-text-primary); box-sizing: border-box; font-family: inherit; }
 .btn-full-center         { width: 100%; justify-content: center; }
+
+/* Plan templates */
+.template-modal-text     { font-size: var(--text-sm); margin: 0; }
+.template-modal-hint     { font-size: var(--text-sm); margin: 6px 0 0; }
+.template-mode-options   { display: flex; flex-direction: column; }

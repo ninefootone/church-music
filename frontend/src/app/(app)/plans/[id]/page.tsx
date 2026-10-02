@@ -4,7 +4,7 @@ import { useState, useEffect } from 'react'
 import Link from 'next/link'
 import { useParams, useRouter } from 'next/navigation'
 import { format, parseISO } from 'date-fns'
-import { ArrowLeft, Share2, Plus, Music, BookOpen, Mic2, Trash2, ChevronDown, ChevronUp, FileText, ExternalLink, X, PlayCircle, Mail } from 'lucide-react'
+import { ArrowLeft, Share2, Plus, Music, BookOpen, Mic2, Trash2, ChevronDown, ChevronUp, FileText, ExternalLink, X, PlayCircle, Mail, LayoutTemplate } from 'lucide-react'
 import { KeyBadge, CategoryBadge } from '@/components/ui/badges'
 import { useAuth } from '@clerk/nextjs'
 import { useChurch } from '@/context/ChurchContext'
@@ -13,6 +13,7 @@ import { parseArrangement } from '@/lib/arrangement'
 import { ConfirmModal } from '@/components/ui/ConfirmModal'
 import { PlanMusicianModal } from '@/components/ui/PlanMusicianModal'
 import { PlanEmailModal } from '@/components/ui/PlanEmailModal'
+import { SaveAsTemplateModal } from '@/components/ui/SaveAsTemplateModal'
 import type { PlanMusician } from '@/types'
 import { ArrangementBuilder } from '@/components/ui/ArrangementBuilder'
 import { LyricsDisplay } from '@/components/ui/LyricsDisplay'
@@ -315,6 +316,7 @@ export default function PlanDetailPage() {
   const [showMusicianModal, setShowMusicianModal] = useState(false)
   const [showEmailModal, setShowEmailModal] = useState(false)
   const [showDuplicateModal, setShowDuplicateModal] = useState(false)
+  const [showTemplateModal, setShowTemplateModal] = useState(false)
 
   useEffect(() => {
     if (!id || churchLoading) return
@@ -564,6 +566,14 @@ export default function PlanDetailPage() {
 
       {(isAdmin || canAddPlans || plan.created_by === userId) && (
         <div className="song-actions-footer">
+          {(isAdmin || canAddPlans) && (
+            <button
+              onClick={() => setShowTemplateModal(true)}
+              className="btn btn-secondary"
+            >
+              <LayoutTemplate size={14} /> Save as template
+            </button>
+          )}
           <button
             onClick={() => setShowDeletePlan(true)}
             className="btn btn-secondary btn-danger-text"
@@ -571,6 +581,12 @@ export default function PlanDetailPage() {
             <Trash2 size={14} /> Delete plan
           </button>
         </div>
+      )}
+      {showTemplateModal && (
+        <SaveAsTemplateModal
+          plan={plan}
+          onClose={() => setShowTemplateModal(false)}
+        />
       )}
       {showEmailModal && (
         <PlanEmailModal
