@@ -459,10 +459,27 @@ router.delete('/:id', requireAuth, requireMembership, async function(req, res, n
 router.post('/:id/email', requireAuth, requireMembership, async function(req, res, next) {
   const planId = req.params.id
   const churchId = req.churchId
-  const { recipients } = req.body // array of { email, name }
-
-  if (!recipients || recipients.length === 0) {
+  // array of { email, name }. Validate, de-duplicate and cap: this sends real
+  // email from our domain, so it must not be usable as an open relay.
+  const MAX_RECIPIENTS = 100
+  const EMAIL_RE = /^[^\s@<>"']+@[^\s@<>"']+\.[^\s@<>"']+$/
+  if (!Array.isArray(req.body.recipients) || req.body.recipients.length === 0) {
     return res.status(400).json({ error: 'No recipients provided' })
+  }
+  const seen = new Set()
+  const recipients = []
+  for (const r of req.body.recipients) {
+    const email = typeof r?.email === 'string' ? r.email.trim() : ''
+    if (!email || email.length > 254 || !EMAIL_RE.test(email)) {
+      return res.status(400).json({ error: `Invalid email address: ${String(r?.email ?? '').slice(0, 100)}` })
+    }
+    const key = email.toLowerCase()
+    if (seen.has(key)) continue
+    seen.add(key)
+    recipients.push({ email, name: typeof r.name === 'string' ? r.name.trim().slice(0, 100) : '' })
+  }
+  if (recipients.length > MAX_RECIPIENTS) {
+    return res.status(400).json({ error: `Too many recipients (max ${MAX_RECIPIENTS})` })
   }
 
   try {
@@ -473,6 +490,8 @@ router.post('/:id/email', requireAuth, requireMembership, async function(req, re
     )
     if (planResult.rows.length === 0) return res.status(404).json({ error: 'Plan not found' })
     const plan = planResult.rows[0]
+    // Same people the plan page shows the Email button to.
+    if (!canEditPlan(req, plan)) return res.status(403).json({ error: 'Not authorised' })
 
     // Fetch items
     const itemsResult = await pool.query(
