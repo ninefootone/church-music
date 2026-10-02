@@ -25,4 +25,23 @@ function sanitizeRichText(input) {
   return clean;
 }
 
-module.exports = { sanitizeRichText };
+// Web links people type in (playlists, song links, copyright link). Only http(s)
+// is allowed: React 18 still renders `javascript:` hrefs, which run script on
+// click. A bare domain ("open.spotify.com/…") gets https:// added.
+// Returns: null for empty, the cleaned string if OK, or undefined if NOT a web link.
+function cleanHttpUrl(input) {
+  if (input === null || input === undefined) return null;
+  let s = String(input).trim();
+  if (!s) return null;
+  if (s.length > 2000) return undefined;
+  if (!/^[a-z][a-z0-9+.-]*:/i.test(s)) s = 'https://' + s;
+  let u;
+  try { u = new URL(s); } catch { return undefined; }
+  if (u.protocol !== 'http:' && u.protocol !== 'https:') return undefined;
+  if (!u.hostname || !u.hostname.includes('.')) return undefined;
+  return s;
+}
+
+const BAD_URL_MESSAGE = 'Links must be web addresses starting http:// or https://';
+
+module.exports = { sanitizeRichText, cleanHttpUrl, BAD_URL_MESSAGE };

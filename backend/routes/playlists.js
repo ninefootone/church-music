@@ -2,6 +2,7 @@ const express = require('express');
 const router = express.Router();
 const pool = require('../db/pool');
 const { requireAuth, requireMembership, requirePermission } = require('../middleware/auth');
+const { cleanHttpUrl, BAD_URL_MESSAGE } = require('../utils/sanitize');
 
 // GET — all members can read
 router.get('/', requireAuth, requireMembership, async function(req, res, next) {
@@ -21,7 +22,9 @@ router.get('/', requireAuth, requireMembership, async function(req, res, next) {
 
 // POST — admin or can_manage_playlists
 router.post('/', requireAuth, requirePermission('can_manage_playlists'), async function(req, res, next) {
-  const { name, url, type = 'other' } = req.body;
+  const { name, type = 'other' } = req.body;
+  const url = cleanHttpUrl(req.body.url);
+  if (url === undefined) return res.status(400).json({ error: BAD_URL_MESSAGE });
   if (!name || !url) return res.status(400).json({ error: 'name and url are required' });
 
   try {
@@ -39,7 +42,9 @@ router.post('/', requireAuth, requirePermission('can_manage_playlists'), async f
 
 // PUT — admin or can_manage_playlists
 router.put('/:id', requireAuth, requirePermission('can_manage_playlists'), async function(req, res, next) {
-  const { name, url, type = 'other' } = req.body;
+  const { name, type = 'other' } = req.body;
+  const url = cleanHttpUrl(req.body.url);
+  if (url === undefined) return res.status(400).json({ error: BAD_URL_MESSAGE });
   if (!name || !url) return res.status(400).json({ error: 'name and url are required' });
 
   try {

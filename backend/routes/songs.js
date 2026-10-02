@@ -3,6 +3,8 @@ const router = express.Router();
 const pool = require('../db/pool');
 const { requireAuth, requireMembership, requireAdmin, requirePermission } = require('../middleware/auth');
 const { songLimitReached, SONG_LIMIT_MESSAGE } = require('../utils/limits');
+const { cleanHttpUrl, BAD_URL_MESSAGE } = require('../utils/sanitize');
+const SONG_URL_FIELDS = ['youtube_url', 'ccli_url', 'copyright_link'];
 
 const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 
@@ -462,6 +464,11 @@ router.post('/', requireAuth, requirePermission('can_manage_songs'), async (req,
     if (!(typeof req.body.title === 'string' && req.body.title.trim())) {
       return res.status(400).json({ error: 'Title is required' });
     }
+    for (const f of SONG_URL_FIELDS) {
+      const v = cleanHttpUrl(req.body[f]);
+      if (v === undefined) return res.status(400).json({ error: BAD_URL_MESSAGE });
+      req.body[f] = v;
+    }
 
     // Free tier gate — max 5 songs (free_access churches are exempt)
     if (await songLimitReached(pool, churchId)) {
@@ -580,6 +587,12 @@ router.put('/:id', requireAuth, requirePermission('can_manage_songs'), async (re
   if (!UUID_RE.test(req.params.id)) return res.status(404).json({ error: 'Song not found' });
   if ('title' in body && !(typeof body.title === 'string' && body.title.trim())) {
     return res.status(400).json({ error: 'Title is required' });
+  }
+  for (const f of SONG_URL_FIELDS) {
+    if (!(f in body)) continue;
+    const v = cleanHttpUrl(body[f]);
+    if (v === undefined) return res.status(400).json({ error: BAD_URL_MESSAGE });
+    body[f] = v;
   }
 
   const sets = [];
@@ -732,7 +745,9 @@ async function songInChurch(songId, churchId) {
 // POST /songs/:id/videos
 router.post('/:id/videos', requireAuth, requirePermission('can_manage_songs'), async (req, res, next) => {
   try {
-    const { url, label, sort_order, link_type } = req.body;
+    const { label, sort_order, link_type } = req.body;
+    const url = cleanHttpUrl(req.body.url);
+    if (url === undefined) return res.status(400).json({ error: BAD_URL_MESSAGE });
     if (!url) return res.status(400).json({ error: 'url is required' });
     if (!(await songInChurch(req.params.id, req.churchId))) return res.status(404).json({ error: 'Song not found' });
 
@@ -751,7 +766,9 @@ router.post('/:id/videos', requireAuth, requirePermission('can_manage_songs'), a
 // PUT /songs/:id/videos/:videoId
 router.put('/:id/videos/:videoId', requireAuth, requirePermission('can_manage_songs'), async (req, res, next) => {
   try {
-    const { url, label, link_type } = req.body;
+    const { label, link_type } = req.body;
+    const url = cleanHttpUrl(req.body.url);
+    if (url === undefined) return res.status(400).json({ error: BAD_URL_MESSAGE });
     if (!url) return res.status(400).json({ error: 'url is required' });
     if (!(await songInChurch(req.params.id, req.churchId))) return res.status(404).json({ error: 'Link not found' });
 
