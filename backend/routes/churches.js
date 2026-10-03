@@ -256,7 +256,10 @@ router.put('/:churchId/roles', requireAuth, requireAdmin, async (req, res, next)
   if (!Array.isArray(roles)) return res.status(400).json({ error: 'roles must be an array' });
 
   const churchId = req.churchId;
-  const client = await pool.connect();
+  // Connect inside a try: a database outage must reach next(err) (→ 500), not escape as an
+  // unhandled rejection that leaves the request hanging.
+  let client;
+  try { client = await pool.connect(); } catch (err) { return next(err); }
 
   try {
     await client.query('BEGIN');
@@ -342,7 +345,10 @@ router.put('/:churchId/plan-item-types', requireAuth, requireAdmin, async (req, 
   if (!Array.isArray(types)) return res.status(400).json({ error: 'types must be an array' });
 
   const churchId = req.churchId;
-  const client = await pool.connect();
+  // Connect inside a try: a database outage must reach next(err) (→ 500), not escape as an
+  // unhandled rejection that leaves the request hanging.
+  let client;
+  try { client = await pool.connect(); } catch (err) { return next(err); }
   try {
     await client.query('BEGIN');
 

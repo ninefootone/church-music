@@ -71,7 +71,10 @@ router.delete('/churches/:id', requireAuth, requireSuperAdmin, async (req, res, 
     return res.status(400).json({ error: 'The master library church cannot be deleted here' });
   }
 
-  const client = await pool.connect();
+  // Connect inside a try: a database outage must reach next(err) (→ 500), not escape as an
+  // unhandled rejection that leaves the request hanging.
+  let client;
+  try { client = await pool.connect(); } catch (err) { return next(err); }
   let churchName, r2Keys;
   try {
     await client.query('BEGIN');

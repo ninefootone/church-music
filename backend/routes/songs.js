@@ -291,7 +291,10 @@ router.delete('/categories/church/:id', requireAuth, requirePermission('can_mana
   if (!UUID_RE.test(req.params.id)) {
     return res.status(404).json({ error: 'Category not found' });
   }
-  const client = await pool.connect();
+  // Connect inside a try: a database outage must reach next(err) (→ 500), not escape as an
+  // unhandled rejection that leaves the request hanging.
+  let client;
+  try { client = await pool.connect(); } catch (err) { return next(err); }
   try {
     await client.query('BEGIN');
     const cat = await client.query(
@@ -656,7 +659,10 @@ router.put('/:id', requireAuth, requirePermission('can_manage_songs'), async (re
     set('is_draft', false);
   }
 
-  const client = await pool.connect();
+  // Connect inside a try: a database outage must reach next(err) (→ 500), not escape as an
+  // unhandled rejection that leaves the request hanging.
+  let client;
+  try { client = await pool.connect(); } catch (err) { return next(err); }
   try {
     await client.query('BEGIN');
     params.push(req.params.id, churchId);

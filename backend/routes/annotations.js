@@ -76,7 +76,10 @@ router.post('/files/:fileId/strokes', requireAuth, requireMembership, async (req
   const remove = Array.isArray(req.body?.remove) ? req.body.remove.filter((id) => typeof id === 'string' && UUID_RE.test(id)) : [];
   if (add.length + remove.length > MAX_STROKES) return res.status(400).json({ error: `Too many changes (max ${MAX_STROKES})` });
 
-  const client = await pool.connect();
+  // Connect inside a try: a database outage must reach next(err) (→ 500), not escape as an
+  // unhandled rejection that leaves the request hanging.
+  let client;
+  try { client = await pool.connect(); } catch (err) { return next(err); }
   let released = false;
   const release = () => { if (!released) { released = true; client.release(); } };
   try {
