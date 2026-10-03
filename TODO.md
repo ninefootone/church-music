@@ -41,7 +41,7 @@ Next:
 **Phase 1 (known fixes) ALL DONE 2026-10-02** — song_id check, musicians routes locked down, PATCH routes off `can_edit_any_plan`, DuplicatePlanModal restyle, unused state removed, live `plans.status` default verified ('published'), stale schema retired (`db/history/migrate.js`), Plans → Templates page for plan editors. Detail: project doc `codebase-review.md`.
 
 **Phase 2 — codebase review: backend routes DONE 2026-10-03. Phase 3 (auth/index/utils/pool + all Low items) DONE 2026-10-03.** Every route file read; 3 Critical, 4 High and ~16 Medium fixed, all 8 product decisions made with Jon. Full list, decisions and the commit for each: project doc `codebase-review.md`. New Railway env vars set: `STRIPE_PRICE_MONTHLY`, `STRIPE_PRICE_ANNUAL`, `BREVO_DOI_TEMPLATE_ID` (see `backend/.env.example`).
-- [ ] Test superadmin church delete with a throwaway church (commit ba2dad3, untested).
+- [x] Test superadmin church delete with a throwaway church (commit ba2dad3) — Jon tested 2026-10-03, worked.
 - [x] Review `middleware/auth.js`, `index.js` (CORS/helmet/body limits), `utils/*`, `db/pool.js` — DONE 2026-10-03; findings in `codebase-review.md` (Phase 3).
   - [x] Fix: `await pool.connect()` outside `try` in 6 handlers (DB outage → hung request / crash) — DONE 2026-10-03 (the other 5 + accountDeletion were already inside a try).
   - [x] Fix: Brevo calls in `utils/email.js` have no timeout — DONE 2026-10-03 (15s), plus reCAPTCHA check in `feedback.js` (timeout; a non-JSON Google reply no longer crashes the process).
@@ -53,7 +53,7 @@ Next:
   - [x] Missing/invalid date on plan create, bad start time on plans/templates, malformed `template_id`/`plan_id` in bodies → 400/404 not 500 — DONE 2026-10-03.
   - [x] `retired` must be true/false (400); church create + admin membership in one transaction; dead `GET/PUT /:churchId/plan-item-types` routes removed (Service items replaced them) — DONE 2026-10-03.
   - [x] Song file delete also removes the edited ChordPro copy from R2 (DB row first, R2 best-effort); Discover-image upload 404s for an unknown song before uploading — DONE 2026-10-03.
-  - [x] Dead `POST /api/templates/contribute` removed (no callers; its church-less pending songs had no review path) — DONE 2026-10-03. Run read-only `backend/scripts/check-contributed-songs.js` once to see if any leftover rows need cleaning.
+  - [x] Dead `POST /api/templates/contribute` removed (no callers; its church-less pending songs had no review path) — DONE 2026-10-03. Read-only `backend/scripts/check-contributed-songs.js` run by Jon 2026-10-03: no leftover rows.
 - [ ] Drop unused columns `plan_items.duration_mins`, `memberships.can_edit_any_plan` and unused table `church_plan_item_types` — with the migration runner below.
 
 ## Backlog
