@@ -40,11 +40,12 @@ Next:
 
 **Phase 1 (known fixes) ALL DONE 2026-10-02** — song_id check, musicians routes locked down, PATCH routes off `can_edit_any_plan`, DuplicatePlanModal restyle, unused state removed, live `plans.status` default verified ('published'), stale schema retired (`db/history/migrate.js`), Plans → Templates page for plan editors. Detail: project doc `codebase-review.md`.
 
-**Phase 2 — codebase review IN PROGRESS.** All backend route files read; findings + status in project doc `codebase-review.md`. Fixed so far: 3 Critical (song links cross-church, Stripe portal/checkout church from body, unauthenticated mailing routes), 4 High (plan email permission, song save wiping fields, superadmin church delete order, Discover import limit/permission), email escaping, feedback button style.
+**Phase 2 — codebase review: backend routes DONE 2026-10-03.** Every route file read; 3 Critical, 4 High and ~16 Medium fixed, all 8 product decisions made with Jon. Full list, decisions and the commit for each: project doc `codebase-review.md`. New Railway env vars set: `STRIPE_PRICE_MONTHLY`, `STRIPE_PRICE_ANNUAL`, `BREVO_DOI_TEMPLATE_ID` (see `backend/.env.example`).
 - [ ] Test superadmin church delete with a throwaway church (commit ba2dad3, untested).
-- [ ] Remaining Medium items (transactions on duplicate/create/import, item validation, logo MIME/SVG, legacy member-delete route, http(s)-only URLs, Stripe priceId allow-list, invite-code rate limit, upload error message).
-- [ ] Decisions for Jon (one at a time): plan-email file links to non-members, plan delete rule, public share `SELECT *` + drafts, ccli_lookup overwrite, unavailability check for plan editors, Brevo double opt-in, member email list, drop `can_edit_any_plan`.
-- [ ] Review middleware/auth.js, index.js, utils/*; then the lighter frontend pass.
+- [ ] Review `middleware/auth.js`, `index.js` (CORS/helmet/body limits), `utils/*`.
+- [ ] Lighter frontend pass: undefined CSS classes, inline styles, `tsc --noUnusedLocals` one-off, pages that GET then PUT whole objects.
+- [ ] Low items in `codebase-review.md` (malformed UUID/missing date → 500s, R2 orphans on file delete, `/contribute` dead route, etc.).
+- [ ] Drop unused columns `plan_items.duration_mins`, `memberships.can_edit_any_plan` — with the migration runner below.
 
 ## Backlog
 
