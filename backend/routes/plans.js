@@ -2,7 +2,7 @@ const express = require('express');
 const Sentry = require('@sentry/node');
 const router = express.Router();
 const { isIsoDate, isClockTime, DATE_MESSAGE, START_TIME_MESSAGE } = require('../utils/dates');
-const { requireIdParams } = require('../utils/ids');
+const { requireIdParams, isUuid } = require('../utils/ids');
 // Malformed IDs in the URL → 404 before any handler runs (see utils/ids.js).
 requireIdParams(router, { id: 'Plan not found', itemId: 'Plan item not found', musicianId: 'Musician not found' });
 const { sendBrevoEmail, escapeHtml } = require('../utils/email');
@@ -219,8 +219,15 @@ router.post('/', requireAuth, requirePermission('can_add_plans'), async function
 
     // Optional template: its running order is copied in, and its time/title/
     // notes fill any field the request didn't send.
+    // Date is required (NOT NULL column — a missing one used to come back as a 500).
+    if (!isIsoDate(req.body.plan_date)) return res.status(400).json({ error: DATE_MESSAGE });
+    if (req.body.plan_start_time && !isClockTime(req.body.plan_start_time)) {
+      return res.status(400).json({ error: START_TIME_MESSAGE });
+    }
+
     let template = null;
     if (req.body.template_id) {
+      if (!isUuid(req.body.template_id)) return res.status(404).json({ error: 'Template not found' });
       const t = await pool.query(
         'SELECT * FROM plan_templates WHERE id=$1 AND church_id=$2',
         [req.body.template_id, churchId]

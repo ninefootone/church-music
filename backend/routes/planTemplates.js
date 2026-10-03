@@ -12,7 +12,8 @@
 
 const express = require('express');
 const router = express.Router();
-const { requireIdParams } = require('../utils/ids');
+const { requireIdParams, isUuid } = require('../utils/ids');
+const { isClockTime, START_TIME_MESSAGE } = require('../utils/dates');
 // Malformed IDs in the URL → 404 before any handler runs (see utils/ids.js).
 requireIdParams(router, { id: 'Template not found' });
 const pool = require('../db/pool');
@@ -62,6 +63,7 @@ router.post('/', requireAuth, canWrite, async function(req, res, next) {
     const name = cleanText(req.body.name, 100);
     if (!name) return res.status(400).json({ error: 'Template name is required' });
     if (!req.body.plan_id) return res.status(400).json({ error: 'plan_id is required' });
+    if (!isUuid(req.body.plan_id)) return res.status(404).json({ error: 'Plan not found' });
 
     const snap = await snapshotPlan(req.body.plan_id, req.churchId);
     if (!snap) return res.status(404).json({ error: 'Plan not found' });
@@ -81,6 +83,9 @@ router.put('/:id', requireAuth, canWrite, async function(req, res, next) {
   try {
     const name = cleanText(req.body.name, 100);
     if (!name) return res.status(400).json({ error: 'Template name is required' });
+    if (req.body.plan_start_time && !isClockTime(req.body.plan_start_time)) {
+      return res.status(400).json({ error: START_TIME_MESSAGE });
+    }
     const sortOrder = parseInt(req.body.plan_sort_order, 10);
 
     const result = await pool.query(
@@ -108,6 +113,7 @@ router.put('/:id', requireAuth, canWrite, async function(req, res, next) {
 router.put('/:id/from-plan', requireAuth, canWrite, async function(req, res, next) {
   try {
     if (!req.body.plan_id) return res.status(400).json({ error: 'plan_id is required' });
+    if (!isUuid(req.body.plan_id)) return res.status(404).json({ error: 'Plan not found' });
     const snap = await snapshotPlan(req.body.plan_id, req.churchId);
     if (!snap) return res.status(404).json({ error: 'Plan not found' });
 
