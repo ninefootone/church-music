@@ -449,30 +449,8 @@ router.post('/:id/import', requireAuth, requirePermission('can_manage_songs'), a
   }
 });
 
-// POST /templates/contribute — submit a song as a template
-router.post('/contribute', requireAuth, requireAdmin, async (req, res, next) => {
-  try {
-    const { songId } = req.body;
-    const { churchId } = req;
-
-    const song = await pool.query(
-      'SELECT * FROM songs WHERE id = $1 AND church_id = $2',
-      [songId, churchId]
-    );
-    if (song.rows.length === 0) return res.status(404).json({ error: 'Song not found' });
-    const s = song.rows[0];
-
-    // Create pending template (no files, no lyrics)
-    const template = await pool.query(
-      `INSERT INTO songs (title, author, default_key, category, first_line, ccli_number, is_template, template_status, contributed_by)
-       VALUES ($1,$2,$3,$4,$5,$6,true,'pending',$7) RETURNING *`,
-      [s.title, s.author, s.default_key, s.category, s.first_line, s.ccli_number, churchId]
-    );
-
-    res.status(201).json({ message: 'Submitted for review', template: template.rows[0] });
-  } catch (err) {
-    next(err);
-  }
-});
+// POST /contribute (church admins offering a song to the shared library) was removed 2026-10-03:
+// nothing called it, and the church-less 'pending' songs it created had no review screen.
+// Build it properly (with a master-library review queue) if contributions are wanted.
 
 module.exports = router;

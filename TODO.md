@@ -53,6 +53,7 @@ Next:
   - [x] Missing/invalid date on plan create, bad start time on plans/templates, malformed `template_id`/`plan_id` in bodies → 400/404 not 500 — DONE 2026-10-03.
   - [x] `retired` must be true/false (400); church create + admin membership in one transaction; dead `GET/PUT /:churchId/plan-item-types` routes removed (Service items replaced them) — DONE 2026-10-03.
   - [x] Song file delete also removes the edited ChordPro copy from R2 (DB row first, R2 best-effort); Discover-image upload 404s for an unknown song before uploading — DONE 2026-10-03.
+  - [x] Dead `POST /api/templates/contribute` removed (no callers; its church-less pending songs had no review path) — DONE 2026-10-03. Run read-only `backend/scripts/check-contributed-songs.js` once to see if any leftover rows need cleaning.
 - [ ] Drop unused columns `plan_items.duration_mins`, `memberships.can_edit_any_plan` — with the migration runner below.
 
 ## Backlog
