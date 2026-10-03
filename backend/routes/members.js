@@ -14,7 +14,11 @@ router.get('/', requireAuth, requireMembership, async function(req, res, next) {
        ORDER BY m.role DESC, u.name`,
       [req.churchId]
     );
-    res.json(result.rows);
+    // Emails: admins and "Add & edit plans" members (musician picker, plan email)
+    // see everyone's. Other members only see ADMINS' emails — the Help page lists
+    // admins to contact. Decided with Jon 2026-10-02.
+    const seesEmails = req.membership.role === 'admin' || !!req.membership.can_add_plans;
+    res.json(seesEmails ? result.rows : result.rows.map(m => (m.role === 'admin' ? m : { ...m, email: null })));
   } catch (err) {
     next(err);
   }
