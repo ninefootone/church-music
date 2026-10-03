@@ -42,6 +42,10 @@ export function PublicSetViewerPage() {
   const [pages, setPages] = useState<ViewerPage[]>([])
   const [currentPage, setCurrentPage] = useState(0)
   const [pageCounts, setPageCounts] = useState<Record<number, number>>({})
+  // Real width/height ratio of each PDF page ("fileIndex-pageIndex"), so pages that
+  // aren't A4-shaped (e.g. tall hymnbook pages) still fit the screen. Until a page
+  // has loaded we assume A4 (0.707).
+  const [pageAspects, setPageAspects] = useState<Record<string, number>>({})
   const [containerSize, setContainerSize] = useState<{ width: number; height: number } | null>(null)
   const [chordProContents, setChordProContents] = useState<ChordProContent[]>([])
   const [measuringIndex, setMeasuringIndex] = useState<number | null>(null)
@@ -347,7 +351,13 @@ export function PublicSetViewerPage() {
             >
               <Page
                 pageNumber={current.pageIndex + 1}
-                width={containerSize ? Math.min(containerSize.width - 16, (containerSize.height - 16) * 0.707) : undefined}
+                width={containerSize ? Math.min(containerSize.width - 16, (containerSize.height - 16) * (pageAspects[`${current.fileIndex}-${current.pageIndex}`] ?? 0.707)) : undefined}
+                onLoadSuccess={(page) => {
+                  const vp = page.getViewport({ scale: 1 })
+                  const key = `${current.fileIndex}-${current.pageIndex}`
+                  const aspect = vp.width / vp.height
+                  if (aspect > 0 && pageAspects[key] !== aspect) setPageAspects(prev => ({ ...prev, [key]: aspect }))
+                }}
                 renderTextLayer={false}
                 renderAnnotationLayer={false}
               />
