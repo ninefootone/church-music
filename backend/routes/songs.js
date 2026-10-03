@@ -586,7 +586,9 @@ router.patch('/:id/discover', requireAuth, requireAdmin, async (req, res, next) 
 router.patch('/:id/retire', requireAuth, requirePermission('can_manage_songs'), async (req, res, next) => {
   try {
     const { churchId } = req;
-    const { retired } = req.body;
+    const retired = req.body?.retired;
+    // Must be a real true/false: anything else (missing, "yes") used to reach Postgres.
+    if (typeof retired !== 'boolean') return res.status(400).json({ error: 'retired must be true or false' });
     const result = await pool.query(
       `UPDATE songs SET retired = $1, updated_at = NOW() WHERE id = $2 AND church_id = $3 RETURNING *`,
       [retired, req.params.id, churchId]
