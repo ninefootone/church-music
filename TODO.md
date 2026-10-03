@@ -42,7 +42,10 @@ Next:
 
 **Phase 2 — codebase review: backend routes DONE 2026-10-03.** Every route file read; 3 Critical, 4 High and ~16 Medium fixed, all 8 product decisions made with Jon. Full list, decisions and the commit for each: project doc `codebase-review.md`. New Railway env vars set: `STRIPE_PRICE_MONTHLY`, `STRIPE_PRICE_ANNUAL`, `BREVO_DOI_TEMPLATE_ID` (see `backend/.env.example`).
 - [ ] Test superadmin church delete with a throwaway church (commit ba2dad3, untested).
-- [ ] Review `middleware/auth.js`, `index.js` (CORS/helmet/body limits), `utils/*`.
+- [x] Review `middleware/auth.js`, `index.js` (CORS/helmet/body limits), `utils/*`, `db/pool.js` — DONE 2026-10-03; findings in `codebase-review.md` (Phase 3).
+  - [ ] Fix: `await pool.connect()` outside `try` in 11 handlers (DB outage → hung request / crash).
+  - [ ] Fix: Brevo calls in `utils/email.js` have no timeout.
+  - [ ] Unknown `/api` paths → JSON 404; error handler checks `res.headersSent`.
 - [ ] Lighter frontend pass: undefined CSS classes, inline styles, `tsc --noUnusedLocals` one-off, pages that GET then PUT whole objects.
 - [ ] Low items in `codebase-review.md` (malformed UUID/missing date → 500s, R2 orphans on file delete, `/contribute` dead route, etc.).
 - [ ] Drop unused columns `plan_items.duration_mins`, `memberships.can_edit_any_plan` — with the migration runner below.
