@@ -1,7 +1,7 @@
 const express = require('express');
 const router = express.Router();
 const pool = require('../db/pool');
-const { requireAuth, requireMembership, requireAdmin } = require('../middleware/auth');
+const { requireAuth, requireMembership, requireAdmin, requirePermission } = require('../middleware/auth');
 
 // GET /api/unavailability — current user's unavailability entries
 router.get('/', requireAuth, requireMembership, async function(req, res, next) {
@@ -81,8 +81,9 @@ router.delete('/:id', requireAuth, requireMembership, async function(req, res, n
   }
 });
 
-// GET /api/unavailability/check?userId=X&date=Y — check a member is available on a plan date (admin only)
-router.get('/check', requireAuth, requireAdmin, async function(req, res, next) {
+// GET /api/unavailability/check?userId=X&date=Y — check a member is available on a plan date.
+// Admins + "Add & edit plans" (the people who add musicians to plans) — decided with Jon 2026-10-02.
+router.get('/check', requireAuth, requirePermission('can_add_plans'), async function(req, res, next) {
   try {
     const { userId, date } = req.query;
     if (!userId || !date) {

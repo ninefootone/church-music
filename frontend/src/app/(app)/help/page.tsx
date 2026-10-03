@@ -572,10 +572,10 @@ export default function HelpPage() {
           content: () => (
             <div>
               <p className="help-content-body">
-                If you know you&apos;re unavailable for a period — a holiday, a work trip, or anything else — you can log it in Song Stack so your admins know not to schedule you.
+                If you know you&apos;re unavailable for a period — a holiday, a work trip, or anything else — you can log it in Song Stack so the people who plan services know not to schedule you.
               </p>
               <p className="help-content-body">
-                Go to <strong>Manage my availability</strong> on the dashboard. Enter a start date, end date, and an optional note, then click <strong>Add</strong>. Your unavailability will be visible to church admins when they&apos;re building plans.
+                Go to <strong>Manage my availability</strong> on the dashboard. Enter a start date, end date, and an optional note, then click <strong>Add</strong>. Your dates and note will be visible to church admins and members who can add &amp; edit plans when they add musicians to a plan.
               </p>
               <p className="help-content-body">
                 To remove an entry, click the delete button next to it. You can add as many periods as you need.
