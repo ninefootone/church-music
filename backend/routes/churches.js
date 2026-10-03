@@ -58,17 +58,27 @@ router.post('/', requireAuth, async (req, res, next) => {
     const slug = `${baseSlug}-${generateShortId()}`
     const invite_code = generateInviteCode();
 
-    const church = await pool.query(
-      'INSERT INTO churches (name, slug, invite_code, created_by, ccli_number) VALUES ($1, $2, $3, $4, $5) RETURNING *',
-      [name, slug, invite_code, req.user.id, ccli_number || null]
-    );
-
-    await pool.query(
-      'INSERT INTO memberships (church_id, user_id, role) VALUES ($1, $2, $3)',
-      [church.rows[0].id, req.user.id, 'admin']
-    );
-
-    res.status(201).json(church.rows[0]);
+    // Church + its first admin membership in one transaction: if the membership insert
+    // failed, the church used to be left behind with no admin and nobody able to reach it.
+    const client = await pool.connect();
+    try {
+      await client.query('BEGIN');
+      const church = await client.query(
+        'INSERT INTO churches (name, slug, invite_code, created_by, ccli_number) VALUES ($1, $2, $3, $4, $5) RETURNING *',
+        [name, slug, invite_code, req.user.id, ccli_number || null]
+      );
+      await client.query(
+        'INSERT INTO memberships (church_id, user_id, role) VALUES ($1, $2, $3)',
+        [church.rows[0].id, req.user.id, 'admin']
+      );
+      await client.query('COMMIT');
+      res.status(201).json(church.rows[0]);
+    } catch (err) {
+      await client.query('ROLLBACK').catch(() => {});
+      throw err;
+    } finally {
+      client.release();
+    }
   } catch (err) {
     next(err);
   }
@@ -329,75 +339,9 @@ router.get('/:churchId/roles/usage', requireAuth, requireAdmin, async (req, res,
   }
 });
 
-// Get plan item types for a church
-router.get('/:churchId/plan-item-types', requireAuth, requireMembership, async (req, res, next) => {
-  try {
-    const result = await pool.query(
-      'SELECT * FROM church_plan_item_types WHERE church_id = $1 ORDER BY sort_order, name',
-      [req.churchId]
-    );
-    res.json(result.rows);
-  } catch (err) {
-    next(err);
-  }
-});
-
-// Save plan item types for a church (admin only) — receives full array, diffs against DB
-router.put('/:churchId/plan-item-types', requireAuth, requireAdmin, async (req, res, next) => {
-  const { types } = req.body;
-  if (!Array.isArray(types)) return res.status(400).json({ error: 'types must be an array' });
-
-  const churchId = req.churchId;
-  // Connect inside a try: a database outage must reach next(err) (→ 500), not escape as an
-  // unhandled rejection that leaves the request hanging.
-  let client;
-  try { client = await pool.connect(); } catch (err) { return next(err); }
-  try {
-    await client.query('BEGIN');
-
-    const existing = await client.query(
-      'SELECT * FROM church_plan_item_types WHERE church_id = $1',
-      [churchId]
-    );
-
-    const incomingIds = types.filter(t => t.id).map(t => t.id);
-
-    // Delete removed types
-    for (const row of existing.rows) {
-      if (!incomingIds.includes(row.id)) {
-        await client.query('DELETE FROM church_plan_item_types WHERE id = $1', [row.id]);
-      }
-    }
-
-    // Upsert remaining/new types
-    for (let i = 0; i < types.length; i++) {
-      const { id, name } = types[i];
-      if (id) {
-        await client.query(
-          'UPDATE church_plan_item_types SET name = $1, sort_order = $2 WHERE id = $3 AND church_id = $4',
-          [name.trim(), i, id, churchId]
-        );
-      } else {
-        await client.query(
-          'INSERT INTO church_plan_item_types (church_id, name, sort_order) VALUES ($1, $2, $3)',
-          [churchId, name.trim(), i]
-        );
-      }
-    }
-
-    await client.query('COMMIT');
-    const updated = await pool.query(
-      'SELECT * FROM church_plan_item_types WHERE church_id = $1 ORDER BY sort_order, name',
-      [churchId]
-    );
-    res.json(updated.rows);
-  } catch (err) {
-    await client.query('ROLLBACK');
-    next(err);
-  } finally {
-    client.release();
-  }
-});
+// Plan item types (GET/PUT /:churchId/plan-item-types) were removed 2026-10-03: replaced by
+// the Service items library (merge-item-types-into-snippets.js, 2026-09-03) and no longer
+// called by the website or iPad app. The church_plan_item_types table is left in place.
 
 // ============================================================
 // Liturgy snippets — per-church reusable service text (creeds,

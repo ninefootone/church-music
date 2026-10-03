@@ -51,6 +51,7 @@ Next:
   - [x] Malformed IDs → 404 (URL) / 400 (`x-church-id`) via shared `utils/ids.js` (`requireIdParams` on every router) — DONE 2026-10-03.
   - [x] (High, found 2026-10-03) Plan details page (`/plans/[id]/settings`) wiped the plan's pre-service notes on save — `PUT /api/plans/:id` now only updates fields sent; date/start time validated (400 not 500) via `utils/dates.js`.
   - [x] Missing/invalid date on plan create, bad start time on plans/templates, malformed `template_id`/`plan_id` in bodies → 400/404 not 500 — DONE 2026-10-03.
+  - [x] `retired` must be true/false (400); church create + admin membership in one transaction; dead `GET/PUT /:churchId/plan-item-types` routes removed (Service items replaced them) — DONE 2026-10-03.
 - [ ] Drop unused columns `plan_items.duration_mins`, `memberships.can_edit_any_plan` — with the migration runner below.
 
 ## Backlog
