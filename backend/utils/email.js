@@ -65,6 +65,47 @@ async function subscribeToList({ email, name, listId = 2 }) {
   })
 }
 
+// Double opt-in: Brevo emails a "please confirm" link and only adds the contact to
+// the list once they click it. Used for the PUBLIC feedback form, where the email
+// isn't verified (decided with Jon 2026-10-02). Needs a Brevo double-opt-in
+// template: set BREVO_DOI_TEMPLATE_ID (and optionally BREVO_DOI_REDIRECT_URL).
+async function subscribeToListDoubleOptIn({ email, name, listId = 2 }) {
+  const templateId = parseInt(process.env.BREVO_DOI_TEMPLATE_ID, 10)
+  if (!templateId) {
+    console.warn('[brevo] BREVO_DOI_TEMPLATE_ID not set — feedback-form subscribe skipped')
+    return { status: 0, skipped: true }
+  }
+  const [firstName, ...rest] = (name || '').trim().split(' ')
+  const lastName = rest.join(' ') || undefined
+  const body = JSON.stringify({
+    email,
+    attributes: { FIRSTNAME: firstName, LASTNAME: lastName },
+    includeListIds: [listId],
+    templateId,
+    redirectionUrl: process.env.BREVO_DOI_REDIRECT_URL || 'https://songstack.church',
+  })
+  return new Promise((resolve, reject) => {
+    const options = {
+      hostname: 'api.brevo.com',
+      path: '/v3/contacts/doubleOptinConfirmation',
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'api-key': process.env.BREVO_API_KEY,
+        'Content-Length': Buffer.byteLength(body),
+      },
+    }
+    const req = https.request(options, (res) => {
+      let resBody = ''
+      res.on('data', chunk => resBody += chunk)
+      res.on('end', () => resolve({ status: res.statusCode, body: resBody }))
+    })
+    req.on('error', reject)
+    req.write(body)
+    req.end()
+  })
+}
+
 async function getBrevoContactStatus({ email }) {
   return new Promise((resolve, reject) => {
     const options = {
@@ -138,4 +179,4 @@ function escapeHtml(value) {
     .replace(/'/g, '&#39;')
 }
 
-module.exports = { sendBrevoEmail, subscribeToList, getBrevoContactStatus, unsubscribeFromList, deleteBrevoContact, escapeHtml }
+module.exports = { sendBrevoEmail, subscribeToList, subscribeToListDoubleOptIn, getBrevoContactStatus, unsubscribeFromList, deleteBrevoContact, escapeHtml }

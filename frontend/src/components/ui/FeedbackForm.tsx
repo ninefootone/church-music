@@ -58,6 +58,7 @@ export default function FeedbackForm({ onSuccess }: { onSuccess?: () => void } =
     return (
       <div className="feedback-success">
         <p>Thanks! We&apos;ll get back to you at {email} as soon as we can.</p>
+        {subscribe && <p>To join our mailing list, click the link in the confirmation email we&apos;ve just sent you.</p>}
         <a href="/dashboard" className="btn btn-primary btn-back-link">Back to your library</a>
       </div>
     )

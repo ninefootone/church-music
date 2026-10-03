@@ -2,7 +2,7 @@ const express = require('express');
 const Sentry = require('@sentry/node');
 const router = express.Router();
 const https = require('https');
-const { sendBrevoEmail, subscribeToList, escapeHtml } = require('../utils/email');
+const { sendBrevoEmail, subscribeToListDoubleOptIn, escapeHtml } = require('../utils/email');
 
 async function verifyRecaptcha(token) {
   const data = `secret=${process.env.RECAPTCHA_SECRET_KEY}&response=${token}`;
@@ -54,10 +54,11 @@ router.post('/', async (req, res) => {
       `,
     });
 
-    // Optional mailing-list opt-in from the form's checkbox — only after reCAPTCHA
-    // has passed (this replaced an unauthenticated /api/mailing/subscribe call).
+    // Optional mailing-list opt-in from the form's checkbox — only after reCAPTCHA,
+    // and by DOUBLE opt-in (Brevo emails a confirm link) because this email address
+    // isn't verified: someone could type another person's address.
     if (subscribe === true) {
-      await subscribeToList({ email, name }).catch((e) => console.warn('Feedback subscribe failed:', e.message));
+      await subscribeToListDoubleOptIn({ email, name }).catch((e) => console.warn('Feedback subscribe failed:', e.message));
     }
 
     res.json({ success: true });
