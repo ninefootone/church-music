@@ -98,9 +98,12 @@ router.post('/songs/:songId/discover-image', requireAuth, requireAdmin, uploadIm
     }
     const r2Key = 'discover/songs/' + songId + '/artwork.' + ext;
 
-    // Delete old image if one exists
+    // Song must exist in the master library BEFORE anything is uploaded (an unknown id used
+    // to upload the image to R2 anyway and answer 201, leaving an orphan object).
     const existing = await pool.query('SELECT discover_image_key FROM songs WHERE id = $1 AND church_id = $2', [songId, churchId]);
-    if (existing.rows[0]?.discover_image_key) {
+    if (existing.rows.length === 0) return res.status(404).json({ error: 'Song not found' });
+    // Delete old image if one exists
+    if (existing.rows[0].discover_image_key) {
       try {
         await r2.send(new DeleteObjectCommand({ Bucket: BUCKET, Key: existing.rows[0].discover_image_key }));
       } catch (_) {}
@@ -301,8 +304,17 @@ router.delete('/songs/:songId/files/:fileId', requireAuth, requirePermission('ca
       return res.status(404).json({ error: 'File not found' });
     }
 
-    await r2.send(new DeleteObjectCommand({ Bucket: BUCKET, Key: file.rows[0].r2_key }));
+    // Database row first, then storage. The edited ChordPro copy (edited_r2_key) used to be
+    // left behind in R2. Storage cleanup is best-effort: a failed R2 delete leaves an orphan
+    // object (harmless), never a file row pointing at nothing.
     await pool.query('DELETE FROM song_files WHERE id = $1', [req.params.fileId]);
+    for (const key of [file.rows[0].r2_key, file.rows[0].edited_r2_key].filter(Boolean)) {
+      try {
+        await r2.send(new DeleteObjectCommand({ Bucket: BUCKET, Key: key }));
+      } catch (e) {
+        console.warn('[uploads] R2 delete failed for', key, e.message);
+      }
+    }
 
     res.json({ success: true });
   } catch (err) {
