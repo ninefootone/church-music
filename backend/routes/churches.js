@@ -1,5 +1,8 @@
 const express = require('express');
 const router = express.Router();
+const { requireIdParams } = require('../utils/ids');
+// Malformed IDs in the URL → 404 before any handler runs (see utils/ids.js).
+requireIdParams(router, { churchId: 'Church not found', id: 'Not found' });
 const pool = require('../db/pool');
 const { requireAuth, requireAdmin, requireMembership } = require('../middleware/auth');
 const { sanitizeRichText } = require('../utils/sanitize');

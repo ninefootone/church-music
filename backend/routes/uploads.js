@@ -1,5 +1,8 @@
 const express = require('express');
 const router = express.Router();
+const { requireIdParams } = require('../utils/ids');
+// Malformed IDs in the URL → 404 before any handler runs (see utils/ids.js).
+requireIdParams(router, { songId: 'Song not found', fileId: 'File not found' });
 const multer = require('multer');
 const { S3Client, PutObjectCommand, GetObjectCommand, DeleteObjectCommand } = require('@aws-sdk/client-s3');
 const { getSignedUrl } = require('@aws-sdk/s3-request-presigner');

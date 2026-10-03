@@ -1,5 +1,8 @@
 const express = require('express');
 const router = express.Router();
+const { isIntId, requireIdParams } = require('../utils/ids');
+// Malformed IDs in the URL → 404 before any handler runs (see utils/ids.js).
+requireIdParams(router, { id: 'Playlist not found' }, isIntId);
 const pool = require('../db/pool');
 const { requireAuth, requireMembership, requirePermission } = require('../middleware/auth');
 const { cleanHttpUrl, BAD_URL_MESSAGE } = require('../utils/sanitize');

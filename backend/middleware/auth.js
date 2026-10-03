@@ -1,5 +1,6 @@
 const { verifyToken, createClerkClient } = require('@clerk/backend');
 const Sentry = require('../instrument');
+const { isUuid } = require('../utils/ids');
 
 const clerkClient = createClerkClient({ secretKey: process.env.CLERK_SECRET_KEY });
 
@@ -69,8 +70,9 @@ function serviceUnavailable(res, err) {
 const requireMembership = async (req, res, next) => {
   try {
     const pool = require('../db/pool');
-    const churchId = req.headers['x-church-id'] || req.params.churchId || req.body.churchId;
+    const churchId = req.headers['x-church-id'] || req.params.churchId || req.body?.churchId;
     if (!churchId) return res.status(400).json({ error: 'x-church-id header required' });
+    if (!isUuid(churchId)) return res.status(400).json({ error: 'Invalid church id' });
 
     const membership = await pool.query(
       "SELECT * FROM memberships WHERE church_id = $1 AND user_id = $2 AND role != 'revoked'",
@@ -89,8 +91,9 @@ const requireMembership = async (req, res, next) => {
 const requireAdmin = async (req, res, next) => {
   try {
     const pool = require('../db/pool');
-    const churchId = req.headers['x-church-id'] || req.params.churchId || req.body.churchId;
+    const churchId = req.headers['x-church-id'] || req.params.churchId || req.body?.churchId;
     if (!churchId) return res.status(400).json({ error: 'x-church-id header required' });
+    if (!isUuid(churchId)) return res.status(400).json({ error: 'Invalid church id' });
 
     const membership = await pool.query(
       "SELECT * FROM memberships WHERE church_id = $1 AND user_id = $2 AND role = 'admin'",
@@ -112,8 +115,9 @@ const requireChurchAdmin = requireAdmin;
 const requirePermission = (flag) => async (req, res, next) => {
   try {
     const pool = require('../db/pool');
-    const churchId = req.headers['x-church-id'] || req.params.churchId || req.body.churchId;
+    const churchId = req.headers['x-church-id'] || req.params.churchId || req.body?.churchId;
     if (!churchId) return res.status(400).json({ error: 'x-church-id header required' });
+    if (!isUuid(churchId)) return res.status(400).json({ error: 'Invalid church id' });
 
     const membership = await pool.query(
       "SELECT * FROM memberships WHERE church_id = $1 AND user_id = $2 AND role != 'revoked'",

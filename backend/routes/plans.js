@@ -1,6 +1,9 @@
 const express = require('express');
 const Sentry = require('@sentry/node');
 const router = express.Router();
+const { requireIdParams } = require('../utils/ids');
+// Malformed IDs in the URL → 404 before any handler runs (see utils/ids.js).
+requireIdParams(router, { id: 'Plan not found', itemId: 'Plan item not found', musicianId: 'Musician not found' });
 const { sendBrevoEmail, escapeHtml } = require('../utils/email');
 const { S3Client, GetObjectCommand } = require('@aws-sdk/client-s3');
 const { getSignedUrl } = require('@aws-sdk/s3-request-presigner');

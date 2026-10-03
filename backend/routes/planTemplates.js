@@ -12,6 +12,9 @@
 
 const express = require('express');
 const router = express.Router();
+const { requireIdParams } = require('../utils/ids');
+// Malformed IDs in the URL → 404 before any handler runs (see utils/ids.js).
+requireIdParams(router, { id: 'Template not found' });
 const pool = require('../db/pool');
 const { requireAuth, requireMembership, requirePermission } = require('../middleware/auth');
 const { normaliseTemplateItems, cleanText } = require('../utils/planTemplateItems');

@@ -2,6 +2,9 @@
 // Read: any church member. Write: church admins + members with can_annotate_plans.
 const express = require('express');
 const router = express.Router();
+const { requireIdParams } = require('../utils/ids');
+// Malformed IDs in the URL → 404 before any handler runs (see utils/ids.js).
+requireIdParams(router, { fileId: 'File not found' });
 const pool = require('../db/pool');
 const { requireAuth, requireMembership } = require('../middleware/auth');
 

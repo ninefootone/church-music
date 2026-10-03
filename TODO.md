@@ -48,6 +48,7 @@ Next:
   - [ ] Unknown `/api` paths → JSON 404; error handler checks `res.headersSent`.
 - [ ] Lighter frontend pass: undefined CSS classes, inline styles, `tsc --noUnusedLocals` one-off, pages that GET then PUT whole objects.
 - [ ] Low items in `codebase-review.md` (malformed UUID/missing date → 500s, R2 orphans on file delete, `/contribute` dead route, etc.).
+  - [x] Malformed IDs → 404 (URL) / 400 (`x-church-id`) via shared `utils/ids.js` (`requireIdParams` on every router) — DONE 2026-10-03.
 - [ ] Drop unused columns `plan_items.duration_mins`, `memberships.can_edit_any_plan` — with the migration runner below.
 
 ## Backlog

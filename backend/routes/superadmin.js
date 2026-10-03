@@ -1,5 +1,8 @@
 const express = require('express');
 const router = express.Router();
+const { requireIdParams } = require('../utils/ids');
+// Malformed IDs in the URL → 404 before any handler runs (see utils/ids.js).
+requireIdParams(router, { id: 'Church not found' });
 const pool = require('../db/pool');
 const { requireAuth } = require('../middleware/auth');
 const { S3Client, DeleteObjectCommand } = require('@aws-sdk/client-s3');
