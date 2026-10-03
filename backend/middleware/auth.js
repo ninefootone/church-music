@@ -1,37 +1,70 @@
 const { verifyToken, createClerkClient } = require('@clerk/backend');
+const Sentry = require('../instrument');
 
 const clerkClient = createClerkClient({ secretKey: process.env.CLERK_SECRET_KEY });
 
+// Clerk token-verification failures that are OUR side's problem (Clerk unreachable, bad
+// server config) rather than a bad token. Matched on `reason` because the error class
+// exported from '@clerk/backend/errors' isn't the same object verifyToken throws.
+const SERVER_SIDE_TOKEN_REASONS = new Set([
+  'jwk-remote-failed-to-load',
+  'secret-key-invalid',
+  'jwk-failed-to-resolve',
+  'jwk-local-missing',
+]);
+
+// 401 ONLY when the sign-in itself is bad (missing/expired/invalid token, or the Clerk user
+// no longer exists). Anything else — database down, Clerk API down — is a 503: the web
+// client treats 401 as "token expired, refresh and retry", so a 401 for an outage made it
+// look like a sign-in problem.
 const requireAuth = async (req, res, next) => {
+  const token = req.headers.authorization?.split(' ')[1];
+  if (!token) return res.status(401).json({ error: 'Unauthorised' });
+
+  let payload;
   try {
-    const token = req.headers.authorization?.split(' ')[1];
-    if (!token) return res.status(401).json({ error: 'Unauthorised' });
+    payload = await verifyToken(token, { secretKey: process.env.CLERK_SECRET_KEY });
+  } catch (err) {
+    if (err && typeof err.reason === 'string' && !SERVER_SIDE_TOKEN_REASONS.has(err.reason)) {
+      return res.status(401).json({ error: 'Unauthorised' });
+    }
+    return serviceUnavailable(res, err);
+  }
+  req.clerkUserId = payload.sub;
 
-    const payload = await verifyToken(token, {
-      secretKey: process.env.CLERK_SECRET_KEY,
-    });
+  let clerkUser;
+  try {
+    clerkUser = await clerkClient.users.getUser(payload.sub);
+  } catch (err) {
+    // Valid token but the account has since been deleted in Clerk.
+    if (err && err.status === 404) return res.status(401).json({ error: 'Unauthorised' });
+    return serviceUnavailable(res, err);
+  }
 
-    req.clerkUserId = payload.sub;
-
-    const pool = require('../db/pool');
-    let user = await pool.query('SELECT * FROM users WHERE clerk_id = $1', [payload.sub]);
-
-    const clerkUser = await clerkClient.users.getUser(payload.sub);
-    const email = clerkUser.emailAddresses[0]?.emailAddress || '';
+  try {
+    // Primary email, not simply the first one: accounts with Google + Apple (relay) addresses
+    // have several, and [0] isn't necessarily the one the user chose.
+    const primary = clerkUser.emailAddresses.find((e) => e.id === clerkUser.primaryEmailAddressId);
+    const email = (primary || clerkUser.emailAddresses[0])?.emailAddress || '';
     const name = `${clerkUser.firstName || ''} ${clerkUser.lastName || ''}`.trim();
     const imageUrl = clerkUser.imageUrl || null;
-    user = await pool.query(
+    const pool = require('../db/pool');
+    const user = await pool.query(
       'INSERT INTO users (clerk_id, email, name, image_url) VALUES ($1, $2, $3, $4) ON CONFLICT (clerk_id) DO UPDATE SET email = $2, name = $3, image_url = $4 RETURNING *',
       [payload.sub, email, name, imageUrl]
     );
-
     req.user = user.rows[0];
-    next();
   } catch (err) {
-    console.error('Auth error:', err.message);
-    res.status(401).json({ error: 'Unauthorised' });
+    return serviceUnavailable(res, err);
   }
+  next();
 };
+
+function serviceUnavailable(res, err) {
+  console.error('Auth unavailable:', err && err.message);
+  Sentry.captureException(err);
+  return res.status(503).json({ error: 'Song Stack is having trouble right now. Please try again in a moment.' });
+}
 
 const requireMembership = async (req, res, next) => {
   try {
