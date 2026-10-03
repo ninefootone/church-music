@@ -44,7 +44,7 @@ Next:
 - [ ] Test superadmin church delete with a throwaway church (commit ba2dad3, untested).
 - [x] Review `middleware/auth.js`, `index.js` (CORS/helmet/body limits), `utils/*`, `db/pool.js` — DONE 2026-10-03; findings in `codebase-review.md` (Phase 3).
   - [x] Fix: `await pool.connect()` outside `try` in 6 handlers (DB outage → hung request / crash) — DONE 2026-10-03 (the other 5 + accountDeletion were already inside a try).
-  - [ ] Fix: Brevo calls in `utils/email.js` have no timeout.
+  - [x] Fix: Brevo calls in `utils/email.js` have no timeout — DONE 2026-10-03 (15s), plus reCAPTCHA check in `feedback.js` (timeout; a non-JSON Google reply no longer crashes the process).
   - [ ] Unknown `/api` paths → JSON 404; error handler checks `res.headersSent`.
 - [ ] Lighter frontend pass: undefined CSS classes, inline styles, `tsc --noUnusedLocals` one-off, pages that GET then PUT whole objects.
 - [ ] Low items in `codebase-review.md` (malformed UUID/missing date → 500s, R2 orphans on file delete, `/contribute` dead route, etc.).

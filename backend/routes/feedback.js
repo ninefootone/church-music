@@ -5,7 +5,7 @@ const https = require('https');
 const { sendBrevoEmail, subscribeToListDoubleOptIn, escapeHtml } = require('../utils/email');
 
 async function verifyRecaptcha(token) {
-  const data = `secret=${process.env.RECAPTCHA_SECRET_KEY}&response=${token}`;
+  const data = `secret=${encodeURIComponent(process.env.RECAPTCHA_SECRET_KEY || '')}&response=${encodeURIComponent(token || '')}`;
   return new Promise((resolve, reject) => {
     const options = {
       hostname: 'www.google.com',
@@ -19,9 +19,14 @@ async function verifyRecaptcha(token) {
     const req = https.request(options, (res) => {
       let body = '';
       res.on('data', chunk => body += chunk);
-      res.on('end', () => resolve(JSON.parse(body)));
+      // A non-JSON reply (Google error page) must reject, not throw inside this event
+      // handler — an uncaught throw there would take down the whole API process.
+      res.on('end', () => {
+        try { resolve(JSON.parse(body)); } catch (err) { reject(err); }
+      });
     });
     req.on('error', reject);
+    req.setTimeout(15000, () => req.destroy(new Error('reCAPTCHA request timed out')));
     req.write(data);
     req.end();
   });

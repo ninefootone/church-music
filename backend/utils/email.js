@@ -1,5 +1,13 @@
 const https = require('https')
 
+// Every Brevo call gives up after 15s of silence, so a stalled Brevo can't hang the
+// request that triggered it (plan email, feedback form, account deletion…). destroy(err)
+// fires the request's 'error' event, which each caller's promise already rejects on.
+const BREVO_TIMEOUT_MS = 15000
+function applyTimeout(req) {
+  req.setTimeout(BREVO_TIMEOUT_MS, () => req.destroy(new Error('Brevo request timed out')))
+}
+
 async function sendBrevoEmail({ to, toName, subject, htmlContent }) {
   const data = JSON.stringify({
     sender: { name: 'Song Stack', email: 'noreply@songstack.church' },
@@ -27,6 +35,8 @@ async function sendBrevoEmail({ to, toName, subject, htmlContent }) {
     })
 
     req.on('error', reject)
+
+    applyTimeout(req)
     req.write(data)
     req.end()
   })
@@ -60,6 +70,7 @@ async function subscribeToList({ email, name, listId = 2 }) {
       res.on('end', () => resolve({ status: res.statusCode, body: resBody }))
     })
     req.on('error', reject)
+    applyTimeout(req)
     req.write(body)
     req.end()
   })
@@ -101,6 +112,7 @@ async function subscribeToListDoubleOptIn({ email, name, listId = 2 }) {
       res.on('end', () => resolve({ status: res.statusCode, body: resBody }))
     })
     req.on('error', reject)
+    applyTimeout(req)
     req.write(body)
     req.end()
   })
@@ -123,6 +135,7 @@ async function getBrevoContactStatus({ email }) {
       })
     })
     req.on('error', reject)
+    applyTimeout(req)
     req.end()
   })
 }
@@ -146,6 +159,7 @@ async function unsubscribeFromList({ email, listId = 2 }) {
       res.on('end', () => resolve({ status: res.statusCode, body }))
     })
     req.on('error', reject)
+    applyTimeout(req)
     req.write(data)
     req.end()
   })
@@ -164,6 +178,7 @@ async function deleteBrevoContact({ email }) {
       res.on('end', () => resolve({ status: res.statusCode })) // 204 deleted, 404 not a contact — both fine
     })
     req.on('error', reject)
+    applyTimeout(req)
     req.end()
   })
 }
