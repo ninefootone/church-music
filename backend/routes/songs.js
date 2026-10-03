@@ -6,6 +6,42 @@ const { songLimitReached, SONG_LIMIT_MESSAGE } = require('../utils/limits');
 const { cleanHttpUrl, BAD_URL_MESSAGE } = require('../utils/sanitize');
 const SONG_URL_FIELDS = ['youtube_url', 'ccli_url', 'copyright_link'];
 
+// Shared CCLI autocomplete (ccli_lookup). Only CURATOR churches set the shared
+// title/author/first line/key/category (decided with Jon 2026-10-02) — before, any
+// church's save overwrote them for everyone. Other churches add new numbers (not
+// shown in autocomplete, which only lists curator-sourced rows) and bump the
+// confirmation count. A curator save also takes over source_church_id, so a row
+// first created by another church becomes visible once a curator saves it.
+async function upsertCcliLookup(db, churchId, song) {
+  if (!song.ccli_number) return;
+  const cur = await db.query('SELECT is_curator FROM churches WHERE id = $1', [churchId]);
+  const isCurator = !!cur.rows[0]?.is_curator;
+  const params = [song.ccli_number, song.title, song.author, song.first_line, song.default_key, song.category ?? null, churchId];
+  if (isCurator) {
+    await db.query(`
+      INSERT INTO ccli_lookup (ccli_number, title, author, first_line, default_key, category, source_church_id)
+      VALUES ($1, $2, $3, $4, $5, $6, $7)
+      ON CONFLICT (ccli_number) DO UPDATE SET
+        title = EXCLUDED.title,
+        author = EXCLUDED.author,
+        first_line = EXCLUDED.first_line,
+        default_key = EXCLUDED.default_key,
+        category = COALESCE(EXCLUDED.category, ccli_lookup.category),
+        source_church_id = EXCLUDED.source_church_id,
+        confirmed_count = ccli_lookup.confirmed_count + 1,
+        updated_at = NOW()
+    `, params);
+  } else {
+    await db.query(`
+      INSERT INTO ccli_lookup (ccli_number, title, author, first_line, default_key, category, source_church_id)
+      VALUES ($1, $2, $3, $4, $5, $6, $7)
+      ON CONFLICT (ccli_number) DO UPDATE SET
+        confirmed_count = ccli_lookup.confirmed_count + 1,
+        updated_at = NOW()
+    `, params);
+  }
+}
+
 const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 
 // GET /songs/tags/all — global tags (master-managed) + this church's own tags.
@@ -510,20 +546,7 @@ router.post('/', requireAuth, requirePermission('can_manage_songs'), async (req,
       }
     }
 
-    if (ccli_number) {
-      await client.query(`
-        INSERT INTO ccli_lookup (ccli_number, title, author, first_line, default_key, category, source_church_id)
-        VALUES ($1, $2, $3, $4, $5, $6, $7)
-        ON CONFLICT (ccli_number) DO UPDATE SET
-          title = EXCLUDED.title,
-          author = EXCLUDED.author,
-          first_line = EXCLUDED.first_line,
-          default_key = EXCLUDED.default_key,
-          confirmed_count = ccli_lookup.confirmed_count + 1,
-          category = COALESCE(EXCLUDED.category, ccli_lookup.category),
-          updated_at = NOW()
-      `, [ccli_number, title.trim(), author, first_line, default_key, category ?? null, churchId]);
-    }
+    await upsertCcliLookup(client, churchId, { ccli_number, title: title.trim(), author, first_line, default_key, category });
 
     await client.query('COMMIT');
     res.status(201).json(song.rows[0]);
@@ -666,20 +689,7 @@ router.put('/:id', requireAuth, requirePermission('can_manage_songs'), async (re
       }
     }
 
-    if (saved.ccli_number) {
-      await client.query(`
-        INSERT INTO ccli_lookup (ccli_number, title, author, first_line, default_key, category, source_church_id)
-        VALUES ($1, $2, $3, $4, $5, $6, $7)
-        ON CONFLICT (ccli_number) DO UPDATE SET
-          title = EXCLUDED.title,
-          author = EXCLUDED.author,
-          first_line = EXCLUDED.first_line,
-          default_key = EXCLUDED.default_key,
-          confirmed_count = ccli_lookup.confirmed_count + 1,
-          category = COALESCE(EXCLUDED.category, ccli_lookup.category),
-          updated_at = NOW()
-      `, [saved.ccli_number, saved.title, saved.author, saved.first_line, saved.default_key, saved.category ?? null, churchId]);
-    }
+    await upsertCcliLookup(client, churchId, saved);
 
     await client.query('COMMIT');
     res.json(saved);
