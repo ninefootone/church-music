@@ -1,6 +1,7 @@
 const express = require('express');
 const Sentry = require('@sentry/node');
 const router = express.Router();
+const { isIsoDate, isClockTime, DATE_MESSAGE, START_TIME_MESSAGE } = require('../utils/dates');
 const { requireIdParams } = require('../utils/ids');
 // Malformed IDs in the URL → 404 before any handler runs (see utils/ids.js).
 requireIdParams(router, { id: 'Plan not found', itemId: 'Plan item not found', musicianId: 'Musician not found' });
@@ -270,20 +271,31 @@ router.put('/:id', requireAuth, requireMembership, async function(req, res, next
     const isOwner = existing.rows[0].created_by === req.user.clerk_id;
     const canEditAny = req.membership.can_add_plans;
     if (!isAdmin && !isOwner && !canEditAny) return res.status(403).json({ error: 'Not authorised' });
-    const plan_date = req.body.plan_date;
-    const plan_time = req.body.plan_time;
-    const plan_start_time = req.body.plan_start_time || null;
-    const plan_sort_order = req.body.plan_sort_order ?? 0;
-    const title = req.body.title;
-    const pre_service_notes = req.body.pre_service_notes || null;
-    const status = ['draft', 'published'].includes(req.body.status) ? req.body.status : undefined;
+    // Only fields actually sent are updated. This used to overwrite every column, so the
+    // Plan details page (which doesn't send pre_service_notes) wiped the pre-service notes.
+    const body = req.body || {};
+    if ('plan_date' in body && !isIsoDate(body.plan_date)) return res.status(400).json({ error: DATE_MESSAGE });
+    if ('plan_start_time' in body && body.plan_start_time && !isClockTime(body.plan_start_time)) {
+      return res.status(400).json({ error: START_TIME_MESSAGE });
+    }
+    const sets = [];
+    const params = [];
+    const set = (col, val) => { params.push(val); sets.push(`${col}=$${params.length}`); };
+    if ('plan_date' in body) set('plan_date', body.plan_date);
+    if ('plan_time' in body) set('plan_time', body.plan_time || null);
+    if ('plan_start_time' in body) set('plan_start_time', body.plan_start_time || null);
+    if ('plan_sort_order' in body) {
+      const n = parseInt(body.plan_sort_order, 10);
+      set('plan_sort_order', Number.isFinite(n) ? n : 0);
+    }
+    if ('title' in body) set('title', body.title ?? null);
+    if ('pre_service_notes' in body) set('pre_service_notes', body.pre_service_notes || null);
+    if (['draft', 'published'].includes(body.status)) set('status', body.status);
+    if (sets.length === 0) return res.status(400).json({ error: 'Nothing to update' });
+    params.push(req.params.id, req.churchId);
     const plan = await pool.query(
-      status
-        ? `UPDATE plans SET plan_date=$1, plan_time=$2, plan_start_time=$3, plan_sort_order=$4, title=$5, pre_service_notes=$8, status=$9 WHERE id=$6 AND church_id=$7 RETURNING *`
-        : `UPDATE plans SET plan_date=$1, plan_time=$2, plan_start_time=$3, plan_sort_order=$4, title=$5, pre_service_notes=$8 WHERE id=$6 AND church_id=$7 RETURNING *`,
-      status
-        ? [plan_date, plan_time, plan_start_time, plan_sort_order, title, req.params.id, req.churchId, pre_service_notes, status]
-        : [plan_date, plan_time, plan_start_time, plan_sort_order, title, req.params.id, req.churchId, pre_service_notes]
+      `UPDATE plans SET ${sets.join(', ')} WHERE id=$${params.length - 1} AND church_id=$${params.length} RETURNING *`,
+      params
     );
     if (plan.rows.length === 0) return res.status(404).json({ error: 'Not found' });
     res.json(plan.rows[0]);

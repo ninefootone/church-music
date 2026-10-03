@@ -49,6 +49,7 @@ Next:
 - [ ] Lighter frontend pass: undefined CSS classes, inline styles, `tsc --noUnusedLocals` one-off, pages that GET then PUT whole objects.
 - [ ] Low items in `codebase-review.md` (malformed UUID/missing date → 500s, R2 orphans on file delete, `/contribute` dead route, etc.).
   - [x] Malformed IDs → 404 (URL) / 400 (`x-church-id`) via shared `utils/ids.js` (`requireIdParams` on every router) — DONE 2026-10-03.
+  - [x] (High, found 2026-10-03) Plan details page (`/plans/[id]/settings`) wiped the plan's pre-service notes on save — `PUT /api/plans/:id` now only updates fields sent; date/start time validated (400 not 500) via `utils/dates.js`.
 - [ ] Drop unused columns `plan_items.duration_mins`, `memberships.can_edit_any_plan` — with the migration runner below.
 
 ## Backlog
