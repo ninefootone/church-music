@@ -53,10 +53,16 @@ app.use('/api/superadmin', superAdminRoutes);
 app.use('/api/account', accountRoutes);
 app.use('/api/plan-templates', planTemplateRoutes);
 
+// Unknown /api/... paths: JSON 404 (Express's default is an HTML "Cannot GET" page).
+app.use('/api', (req, res) => res.status(404).json({ error: 'Not found' }));
+
 // Report errors passed via next(err) to Sentry. Must come after all routes and BEFORE the handler below.
 Sentry.setupExpressErrorHandler(app);
 
 app.use((err, req, res, next) => {
+  // If part of the response has already gone (e.g. mid file stream), we can't send a JSON
+  // error any more; hand over to Express, which closes the connection.
+  if (res.headersSent) return next(err);
   // Client mistakes get a 4xx with a useful message instead of "Something went
   // wrong" (and, having a 4xx status, aren't reported to Sentry).
   if (err && err.name === 'MulterError') {
