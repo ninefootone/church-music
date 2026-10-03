@@ -1,6 +1,7 @@
 'use client'
 
 import { useState, useEffect } from 'react'
+import { useAuth } from '@clerk/nextjs'
 
 export default function FeedbackForm({ onSuccess }: { onSuccess?: () => void } = {}) {
   const [name, setName] = useState('')
@@ -10,6 +11,7 @@ export default function FeedbackForm({ onSuccess }: { onSuccess?: () => void } =
   const [status, setStatus] = useState<'idle' | 'sending' | 'sent' | 'error'>('idle')
   const [touched, setTouched] = useState<Record<string, boolean>>({})
   const [subscribe, setSubscribe] = useState(false)
+  const { isSignedIn } = useAuth()
 
   useEffect(() => {
     const siteKey = process.env.NEXT_PUBLIC_RECAPTCHA_SITE_KEY
@@ -59,7 +61,9 @@ export default function FeedbackForm({ onSuccess }: { onSuccess?: () => void } =
       <div className="feedback-success">
         <p>Thanks! We&apos;ll get back to you at {email} as soon as we can.</p>
         {subscribe && <p>To join our mailing list, click the link in the confirmation email we&apos;ve just sent you.</p>}
-        <a href="/dashboard" className="btn btn-primary btn-back-link">Back to your library</a>
+        {isSignedIn
+          ? <a href="/dashboard" className="btn btn-primary btn-back-link">Back to your library</a>
+          : <a href="/" className="btn btn-primary btn-back-link">Back to Song Stack</a>}
       </div>
     )
   }
