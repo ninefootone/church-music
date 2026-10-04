@@ -271,7 +271,7 @@ export default function SongDetailPage() {
               spellCheck={false}
             />
             {editError && (
-              <p className="modal-footer--padded" style={{ color: '#c00', fontSize: 13, margin: 0 }}>{editError}</p>
+              <p className="modal-footer--padded text-danger" style={{ fontSize: 13, margin: 0 }}>{editError}</p>
             )}
           </div>
         </div>

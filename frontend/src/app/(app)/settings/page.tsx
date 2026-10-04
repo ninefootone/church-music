@@ -788,8 +788,7 @@ export default function SettingsPage() {
               <button type="button" className="btn btn-ghost" onClick={() => setWarningModal(null)}>Cancel</button>
               <button
                 type="button"
-                className="btn btn-primary"
-                style={{ background: 'var(--color-error, #d9534f)', borderColor: 'var(--color-error, #d9534f)' }}
+                className="btn btn-danger"
                 onClick={() => confirmDelete(warningModal.index)}
               >
                 {warningModal.type === 'delete' ? 'Delete anyway' : 'Rename anyway'}

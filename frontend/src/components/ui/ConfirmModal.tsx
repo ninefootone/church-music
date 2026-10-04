@@ -60,8 +60,7 @@ export function ConfirmModal({
           <button
             onClick={handleConfirm}
             disabled={busy}
-            className="btn btn-primary"
-            style={danger ? { background: '#9a3a3a', borderColor: '#9a3a3a' } : {}}
+            className={danger ? 'btn btn-danger' : 'btn btn-primary'}
           >
             {confirmLabel}
           </button>

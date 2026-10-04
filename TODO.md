@@ -50,7 +50,9 @@ Next:
 - [ ] Frontend pass (started 2026-10-04). Re-run `python3 frontend/scripts/css-audit.py` after CSS work.
   - [x] Undefined CSS classes + undefined colour tokens (error text wasn't red; legal-page links indigo) — DONE 2026-10-04.
   - [x] `.btn:disabled` style (faded + not-allowed cursor, no hover change) — Jon approved, DONE 2026-10-04.
-  - [ ] Inline `style={{}}`, `tsc --noUnusedLocals` one-off, pages that GET then PUT whole objects.
+  - [x] Inline styles reviewed 2026-10-04: 165 (123 static). Decision: NOT migrating wholesale (cosmetic risk, no user benefit). Fixed only hard-coded colours that bypassed tokens: new `.btn-danger` (ConfirmModal danger + Settings warning), song-file edit error uses `.text-danger`. Left on purpose: the two Set viewers (dark chrome) and `DeleteAccountSection` (matches Clerk's account page).
+  - [ ] Later, only if touched: `SetViewer.tsx` and `PublicSetViewer.tsx` duplicate ~15 inline-styled chrome elements — share one component/CSS when either next changes.
+  - [ ] `tsc --noUnusedLocals` one-off, pages that GET then PUT whole objects.
   - [ ] Optional: delete ~22 dead rules in `@layer components` (listed by the audit; Tailwind already drops them from the build).
 - [x] Low items in `codebase-review.md` — DONE 2026-10-03 (only the unused-column drops remain, below).
   - [x] Malformed IDs → 404 (URL) / 400 (`x-church-id`) via shared `utils/ids.js` (`requireIdParams` on every router) — DONE 2026-10-03.

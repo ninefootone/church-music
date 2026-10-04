@@ -161,6 +161,10 @@ body.set-viewer-active { overflow: hidden; }
   /* Disabled buttons (saving states, a confirm already clicked, invalid forms) look disabled
      and keep their normal colours on hover. Added 2026-10-04. */
   .btn:disabled                { opacity: 0.55; cursor: not-allowed; }
+  /* Destructive confirm buttons (ConfirmModal danger, Settings delete/rename warnings). */
+  .btn-danger                  { background: var(--color-danger); color: white; }
+  .btn-danger:hover            { background: #7f2f2f; }
+  .btn-danger:disabled:hover   { background: var(--color-danger); }
   .btn-primary:disabled:hover  { background: var(--color-brand-500); }
   .btn-secondary:disabled:hover { background: var(--color-neutral-100); color: var(--color-text-secondary); }
   .btn-ghost {
