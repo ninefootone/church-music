@@ -64,10 +64,12 @@ export default function SongDetailPage() {
     if (!song || !showDeleteLink) return
     try {
       await api.delete(`/api/songs/${song.id}/videos/${showDeleteLink}`)
-      setShowDeleteLink(null)
       fetchSong()
     } catch (err) {
       console.error('Failed to delete link:', err)
+    } finally {
+      // Close on failure too (ConfirmModal keeps its button disabled after the action returns).
+      setShowDeleteLink(null)
     }
   }
 

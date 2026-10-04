@@ -1,5 +1,6 @@
 'use client'
 
+import { useRef, useState } from 'react'
 import { X } from 'lucide-react'
 
 interface ConfirmModalProps {
@@ -7,7 +8,7 @@ interface ConfirmModalProps {
   message: string
   confirmLabel?: string
   danger?: boolean
-  onConfirm: () => void
+  onConfirm: () => void | Promise<void>
   onCancel: () => void
 }
 
@@ -19,6 +20,26 @@ export function ConfirmModal({
   onConfirm,
   onCancel,
 }: ConfirmModalProps) {
+  // One confirm per opening. A second click while the first is still running (or after it
+  // succeeded, while the page is navigating away) used to fire the action twice — e.g. two
+  // DELETEs for one plan, the second failing with 404. The button stays disabled once the
+  // action succeeds (every caller closes the modal or navigates); it re-enables only if the
+  // action throws, so the user can retry.
+  const busyRef = useRef(false)
+  const [busy, setBusy] = useState(false)
+  const handleConfirm = async () => {
+    if (busyRef.current) return
+    busyRef.current = true
+    setBusy(true)
+    try {
+      await onConfirm()
+    } catch (err) {
+      busyRef.current = false
+      setBusy(false)
+      throw err
+    }
+  }
+
   return (
     <div className="modal-overlay">
       <div onClick={onCancel} className="modal-backdrop" />
@@ -37,7 +58,8 @@ export function ConfirmModal({
         <div className="modal-footer">
           <button onClick={onCancel} className="btn btn-secondary">Cancel</button>
           <button
-            onClick={onConfirm}
+            onClick={handleConfirm}
+            disabled={busy}
             className="btn btn-primary"
             style={danger ? { background: '#9a3a3a', borderColor: '#9a3a3a' } : {}}
           >

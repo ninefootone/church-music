@@ -46,6 +46,7 @@ Next:
   - [x] Fix: `await pool.connect()` outside `try` in 6 handlers (DB outage → hung request / crash) — DONE 2026-10-03 (the other 5 + accountDeletion were already inside a try).
   - [x] Fix: Brevo calls in `utils/email.js` have no timeout — DONE 2026-10-03 (15s), plus reCAPTCHA check in `feedback.js` (timeout; a non-JSON Google reply no longer crashes the process).
   - [x] Unknown `/api` paths → JSON 404; error handler checks `res.headersSent` — DONE 2026-10-03.
+- [x] Sentry 2026-10-03 "AxiosError 404" on Delete plan: one delete fired two DELETEs (second → 404). `ConfirmModal` now runs its action once (button disabled while running and after success; re-enabled on error). Plan delete shows an error instead of failing silently — DONE 2026-10-04.
 - [ ] **NEXT (paused 2026-10-03, backend fully done):** Lighter frontend pass: undefined CSS classes, inline styles, `tsc --noUnusedLocals` one-off, pages that GET then PUT whole objects (plan details page found + fixed server-side already).
 - [x] Low items in `codebase-review.md` — DONE 2026-10-03 (only the unused-column drops remain, below).
   - [x] Malformed IDs → 404 (URL) / 400 (`x-church-id`) via shared `utils/ids.js` (`requireIdParams` on every router) — DONE 2026-10-03.

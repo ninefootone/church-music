@@ -619,8 +619,13 @@ export default function PlanDetailPage() {
           confirmLabel="Delete plan"
           danger
           onConfirm={async () => {
-            await api.delete(`/api/plans/${id}`)
-            router.push('/plans')
+            try {
+              await api.delete(`/api/plans/${id}`)
+              router.push('/plans')
+            } catch (err: any) {
+              setShowDeletePlan(false)
+              alert(err?.response?.data?.error || 'Delete failed. Please try again.')
+            }
           }}
           onCancel={() => setShowDeletePlan(false)}
         />
