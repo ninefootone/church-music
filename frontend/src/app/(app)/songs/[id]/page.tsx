@@ -39,6 +39,7 @@ export default function SongDetailPage() {
   const [editingLinkId, setEditingLinkId] = useState<string | null>(null)
   const [editingLinkForm, setEditingLinkForm] = useState<{ url: string; label: string; link_type: string }>({ url: '', label: '', link_type: 'youtube' })
   const [showDeleteLink, setShowDeleteLink] = useState<string | null>(null)
+  const [showRevertConfirm, setShowRevertConfirm] = useState(false)
   const [discoverImageUrl, setDiscoverImageUrl] = useState<string | null>(null)
   const [chordProEdit, setChordProEdit] = useState<{ fileId: string; content: string; originalContent: string; hasEdits: boolean } | null>(null)
   const [editSaving, setEditSaving] = useState(false)
@@ -171,6 +172,23 @@ export default function SongDetailPage() {
     }
   }
 
+  // Throws away the edited ChordPro copy and reloads the original into the editor.
+  // Confirmed with the app's ConfirmModal (was the browser's confirm() popup).
+  const revertChordPro = async () => {
+    if (!song || !chordProEdit) return
+    try {
+      await api.delete(`/api/uploads/songs/${song.id}/files/${chordProEdit.fileId}/chordpro-edits`)
+      const { data } = await api.get(`/api/uploads/songs/${song.id}/files/${chordProEdit.fileId}/url`)
+      const response = await fetch(data.url)
+      const text = await response.text()
+      setChordProEdit({ fileId: chordProEdit.fileId, content: text, originalContent: text, hasEdits: false })
+    } catch {
+      alert('Revert failed. Please try again.')
+    } finally {
+      setShowRevertConfirm(false)
+    }
+  }
+
   if (loading || churchLoading) return <p className="text-muted dash-loading">Loading…</p>
   if (notFound || !song) return (
     <div className="dash-loading">
@@ -218,20 +236,7 @@ export default function SongDetailPage() {
               <div style={{ display: 'flex', gap: 8, alignItems: 'center', flexWrap: 'wrap' }}>
                 {chordProEdit.hasEdits && (
                   <button
-                    onClick={async () => {
-                      if (!song) return
-                      if (!confirm('Revert to the original uploaded file? Your edits will be deleted.')) return
-                      try {
-                        await api.delete(`/api/uploads/songs/${song.id}/files/${chordProEdit.fileId}/chordpro-edits`)
-                        // Re-fetch original to update textarea
-                        const { data } = await api.get(`/api/uploads/songs/${song.id}/files/${chordProEdit.fileId}/url`)
-                        const response = await fetch(data.url)
-                        const text = await response.text()
-                        setChordProEdit({ fileId: chordProEdit.fileId, content: text, originalContent: text, hasEdits: false })
-                      } catch {
-                        alert('Revert failed. Please try again.')
-                      }
-                    }}
+                    onClick={() => setShowRevertConfirm(true)}
                     className="btn btn-secondary btn-sm btn-danger-text"
                   >
                     <RotateCcw size={13} /> Revert to original
@@ -275,6 +280,16 @@ export default function SongDetailPage() {
             )}
           </div>
         </div>
+      )}
+      {showRevertConfirm && chordProEdit && (
+        <ConfirmModal
+          title="Revert to original"
+          message="Revert to the original uploaded file? Your edits will be deleted."
+          confirmLabel="Revert"
+          danger
+          onConfirm={revertChordPro}
+          onCancel={() => setShowRevertConfirm(false)}
+        />
       )}
 
       {showAddLink && (

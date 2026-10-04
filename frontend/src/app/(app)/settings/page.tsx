@@ -37,6 +37,7 @@ export default function SettingsPage() {
   const [error, setError] = useState('')
   const [copied, setCopied] = useState(false)
   const [regenerating, setRegenerating] = useState(false)
+  const [showRegenConfirm, setShowRegenConfirm] = useState(false)
   const [subscribed, setSubscribed] = useState<boolean | null>(null)
   const [mailingLoading, setMailingLoading] = useState(false)
   const [logoUploading, setLogoUploading] = useState(false)
@@ -134,8 +135,9 @@ export default function SettingsPage() {
     }
   }
 
+  // Confirmed with the app's ConfirmModal (was the browser's confirm() popup).
   async function handleRegenerateInvite() {
-    if (!confirm('Are you sure? The old invite code will stop working immediately.')) return
+    setShowRegenConfirm(false)
     setRegenerating(true)
     try {
       const client = await getAuthenticatedApi()
@@ -510,7 +512,7 @@ export default function SettingsPage() {
               <button type="button" className="btn btn-ghost btn-icon-label" onClick={handleCopy}>
                 {copied ? <><Check size={15} />Copied</> : <><Copy size={15} />Copy</>}
               </button>
-              <button type="button" className="btn btn-ghost btn-icon-label" onClick={handleRegenerateInvite} disabled={regenerating}>
+              <button type="button" className="btn btn-ghost btn-icon-label" onClick={() => setShowRegenConfirm(true)} disabled={regenerating}>
                 <RefreshCw size={15} />{regenerating ? 'Regenerating…' : 'Regenerate'}
               </button>
             </div>
@@ -796,6 +798,15 @@ export default function SettingsPage() {
             </div>
           </div>
         </div>
+      )}
+      {showRegenConfirm && (
+        <ConfirmModal
+          title="Regenerate invite code"
+          message="Are you sure? The old invite code will stop working immediately."
+          confirmLabel="Regenerate"
+          onConfirm={handleRegenerateInvite}
+          onCancel={() => setShowRegenConfirm(false)}
+        />
       )}
     </div>
   )

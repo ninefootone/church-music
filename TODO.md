@@ -53,7 +53,7 @@ Next:
   - [x] Inline styles reviewed 2026-10-04: 165 (123 static). Decision: NOT migrating wholesale (cosmetic risk, no user benefit). Fixed only hard-coded colours that bypassed tokens: new `.btn-danger` (ConfirmModal danger + Settings warning), song-file edit error uses `.text-danger`. Left on purpose: the two Set viewers (dark chrome) and `DeleteAccountSection` (matches Clerk's account page).
   - [x] Delete buttons standardised 2026-10-04: two deliberate tiers — the button that OPENS a delete is `btn btn-secondary btn-danger-text` (red text, quiet), the CONFIRM inside the box is `btn btn-danger` (solid red). Team "Remove member" and dashboard playlist "Delete" brought into line.
   - [x] Dashboard playlist delete uses `ConfirmModal` instead of the browser's `confirm()` popup — DONE 2026-10-04.
-  - [ ] Optional: two more browser `confirm()` popups users see — song page "Revert to original" (ChordPro edits) and Settings "Regenerate invite code". (Superadmin `/admin` page ones can stay.)
+  - [x] Song "Revert to original" and Settings "Regenerate invite code" now use `ConfirmModal` — DONE 2026-10-04. No browser `confirm()` left outside superadmin `/admin`.
   - [ ] Later, only if touched: `SetViewer.tsx` and `PublicSetViewer.tsx` duplicate ~15 inline-styled chrome elements — share one component/CSS when either next changes.
   - [ ] `tsc --noUnusedLocals` one-off, pages that GET then PUT whole objects.
   - [ ] Optional: delete ~22 dead rules in `@layer components` (listed by the audit; Tailwind already drops them from the build).
