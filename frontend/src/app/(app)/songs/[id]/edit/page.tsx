@@ -8,21 +8,12 @@ import { useChurch } from '@/context/ChurchContext'
 import { ArrowLeft } from 'lucide-react'
 import { Category, Song } from '@/types'
 import CategorySelect from '@/components/ui/CategorySelect'
-import { Plus, Trash2 } from 'lucide-react'
+import { Trash2 } from 'lucide-react'
 import CcliAutocomplete from '@/components/CcliAutocomplete'
 import api, { setAuthToken } from '@/lib/api'
 import { LyricsEditor } from '@/components/ui/LyricsEditor'
 import { ArrangementBuilder } from '@/components/ui/ArrangementBuilder'
 import TagInput from '@/components/ui/TagInput'
-
-type SongLink = { id?: string; url: string; label: string; link_type: string }
-
-const LINK_TYPES = [
-  { value: 'youtube', label: 'YouTube' },
-  { value: 'spotify', label: 'Spotify' },
-  { value: 'apple_music', label: 'Apple Music' },
-  { value: 'other', label: 'Other' },
-]
 
 export default function EditSongPage() {
   const { id } = useParams()
@@ -41,7 +32,6 @@ export default function EditSongPage() {
     }
   }, [error])
   const [form, setForm] = useState({ title: '', author: '', default_key: '', category: '' as Category | '', first_line: '', ccli_number: '', lyrics: '', tags: [] as string[], notes: '', bible_references: '', suggested_arrangement: '', share_all_data: false, copyright_info: '', copyright_link: '', in_discover: false, discover_description: '', time_signature: '', tempo: '', is_draft: false, in_library: false })
-  const [links, setLinks] = useState<SongLink[]>([])
   const [discoverImageUrl, setDiscoverImageUrl] = useState<string | null>(null)
   const [discoverImageUploading, setDiscoverImageUploading] = useState(false)
 
@@ -61,7 +51,6 @@ export default function EditSongPage() {
           } catch {}
         })()
       }
-      setLinks((s.videos || []).map((v: any) => ({ id: v.id, url: v.url, label: v.label || '', link_type: v.link_type || 'youtube' })))
     }).catch(() => setError('Failed to load song')).finally(() => setFetching(false))
   }, [id])
 
@@ -73,21 +62,9 @@ export default function EditSongPage() {
       const token = await getToken()
       setAuthToken(token)
       await api.put(`/api/songs/${id}`, { ...form, tags: form.tags })
-
-      // Sync links: delete removed ones, update existing, add new
-      const existingLinks = links.filter(l => l.id)
-      const newLinks = links.filter(l => !l.id)
-
-      for (const link of existingLinks) {
-        if (link.url.trim()) {
-          await api.put(`/api/songs/${id}/videos/${link.id}`, { url: link.url, label: link.label, link_type: link.link_type })
-        }
-      }
-      for (const link of newLinks) {
-        if (link.url.trim()) {
-          await api.post(`/api/songs/${id}/videos`, { url: link.url, label: link.label, link_type: link.link_type, sort_order: 0 })
-        }
-      }
+      // Links are managed on the song page (Add link / edit / delete). This page used to
+      // re-save every link it loaded on each save — with no link editor here, that only
+      // rewrote them with stale values and could fail the save after the song was saved.
 
       router.push(`/songs/${id}`)
     } catch (err: any) {
@@ -125,19 +102,6 @@ export default function EditSongPage() {
     } catch {
       setError('Failed to remove image')
     }
-  }
-
-  const addLink = () => setLinks(l => [...l, { url: '', label: '', link_type: 'youtube' }])
-
-  const updateLink = (i: number, field: keyof SongLink, value: string) =>
-    setLinks(l => l.map((item, idx) => idx === i ? { ...item, [field]: value } : item))
-
-  const removeLink = async (i: number) => {
-    const link = links[i]
-    if (link.id) {
-      try { await api.delete(`/api/songs/${id}/videos/${link.id}`) } catch {}
-    }
-    setLinks(l => l.filter((_, idx) => idx !== i))
   }
 
   if (fetching) return <p className="text-muted dash-loading">Loading…</p>
