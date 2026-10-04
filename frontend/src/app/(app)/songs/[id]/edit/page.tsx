@@ -140,7 +140,7 @@ export default function EditSongPage() {
     setLinks(l => l.filter((_, idx) => idx !== i))
   }
 
-  if (fetching) return <div className="loading-state">Loading…</div>
+  if (fetching) return <p className="text-muted dash-loading">Loading…</p>
 
   return (
     <div className="page-constrained">

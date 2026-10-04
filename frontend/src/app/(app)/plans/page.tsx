@@ -71,7 +71,7 @@ export default function PlansPage() {
           {plan.status === 'draft' && (
             <span className="badge badge-draft">DRAFT</span>
           )}
-          <span className={`badge badge-${badge}`}>
+          <span className={badge === 'today' ? 'badge badge-today' : 'badge badge-upcoming'}>
             {badge === 'today' ? 'TODAY' : 'UPCOMING'}
           </span>
           <ChevronRight size={18} className="text-muted" />

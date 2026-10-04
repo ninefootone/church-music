@@ -571,7 +571,7 @@ export default function PlanEditPage() {
                   </button>
                 ))}
                 {(serviceItems ?? DEFAULT_SERVICE_ITEMS).length > SERVICE_ITEMS_LIMIT && (
-                  <button type="button" onClick={() => setShowAllServiceItems(v => !v)} className="filter-chip filter-chip--more">
+                  <button type="button" onClick={() => setShowAllServiceItems(v => !v)} className="filter-chip">
                     {showAllServiceItems ? 'Show less' : `Show more (${(serviceItems ?? DEFAULT_SERVICE_ITEMS).length - SERVICE_ITEMS_LIMIT})`}
                   </button>
                 )}

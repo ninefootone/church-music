@@ -104,14 +104,14 @@ export default function TagInput({ value, onChange }: TagInputProps) {
   return (
     <div className="tag-input">
       {globalTags.length > 0 && (
-        <div className="tag-group">
+        <div>
           <p className="tag-group-label">Suggested tags</p>
           <div className="tag-picker">{globalTags.map(chip)}</div>
         </div>
       )}
 
       {churchTags.length > 0 && (
-        <div className="tag-group">
+        <div>
           <p className="tag-group-label">Your church&apos;s tags</p>
           <div className="tag-picker">
             {churchTags.map(tag => (

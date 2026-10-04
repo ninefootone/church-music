@@ -143,7 +143,7 @@ export function PlanMusicianModal({ planId, planDate, churchId, onAdd, onClose }
               )}
             </div>
           ) : (
-            <div className="tag-input-wrap">
+            <div>
               <input
                 type="text"
                 placeholder="Search members or type a guest name…"

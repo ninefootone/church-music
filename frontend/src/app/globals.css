@@ -67,6 +67,25 @@ body.set-viewer-active { overflow: hidden; }
   --color-border:         var(--color-neutral-100);
   --color-border-hover:   var(--color-brand-200);
 
+  /* Tokens that were used in this file and in components but never defined (found
+     2026-10-04). Without a definition, a var() with no fallback is invalid, so e.g.
+     .error-text / .text-danger / .input-error rendered in the normal text colour, not red.
+     Red = the existing danger red (.btn-danger-text, ConfirmModal), green = accent-dark. */
+  --color-danger:         #9a3a3a;
+  --color-error:          var(--color-danger);
+  --color-error-bg:       #fdf0f0;   /* same as .error-box */
+  --color-error-border:   #f5c0c0;
+  --color-success:        var(--color-accent-dark);
+  --color-success-bg:     var(--color-accent-light);
+  --color-brand-300:      #8eb3cd;   /* between brand-200 and brand-400 */
+  --color-brand-primary:  var(--color-brand-600);
+  --color-primary:        var(--color-brand-600);   /* legal pages used to fall back to indigo #4f46e5 */
+  --color-neutral-300:    #b0b8c2;   /* between neutral-200 and neutral-400 */
+  --color-text:           var(--color-text-primary);
+  --color-bg-subtle:      var(--color-neutral-50);
+  --color-surface-hover:  var(--color-neutral-50);
+  --color-card:           var(--color-surface);
+
   --cat-praise-bg:      #eef3fb; --cat-praise-text:      #3a5fa0;
   --cat-assurance-bg:   #e8f2ec; --cat-assurance-text:   #3a7a5a;
   --cat-response-bg:    #e8f5fb; --cat-response-text:    #1a6a8a;
@@ -1562,7 +1581,7 @@ body.set-viewer-active { overflow: hidden; }
   .empty-message   { margin-bottom: var(--space-sm); }
   .btn-load-more   { width: 100%; margin-top: var(--space-sm); justify-content: center; font-size: var(--text-sm); }
   .song-item-card    { background: var(--color-surface); border: 1px solid var(--color-border); border-radius: var(--radius-md); overflow: hidden; margin-bottom: 8px; }
-  /* .item-index        { font-size: var(--text-sm); color: var(--color-text-muted); width: 24px; text-align: center; flex-shrink: 0; } */
+  .item-index        { font-size: var(--text-sm); color: var(--color-text-muted); width: 24px; text-align: center; flex-shrink: 0; } /* used by the set view song number (s/[token]/set) */
   .item-notes        { font-size: var(--text-sm); color: var(--color-text-muted); font-style: italic; margin-top: 2px; }
   .item-chevron      { color: var(--color-text-muted); display: flex; }
   .item-expanded     { border-top: 1px solid var(--color-border); padding: var(--space-md); background: var(--color-neutral-50); }
@@ -1894,6 +1913,16 @@ body.set-viewer-active { overflow: hidden; }
     justify-content: center;
     gap: 8px;
     color: var(--color-text-muted);
+  }
+  /* Signed-out gate on the shared Set view (s/[token]/set): stacked and centred. */
+  .set-signin-gate {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: var(--space-md);
+    max-width: 420px;
+    padding: var(--space-lg);
+    text-align: center;
   }
   .public-nav {
     background: var(--color-surface);
