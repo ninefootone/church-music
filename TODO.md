@@ -47,7 +47,7 @@ Next:
   - [x] Fix: Brevo calls in `utils/email.js` have no timeout — DONE 2026-10-03 (15s), plus reCAPTCHA check in `feedback.js` (timeout; a non-JSON Google reply no longer crashes the process).
   - [x] Unknown `/api` paths → JSON 404; error handler checks `res.headersSent` — DONE 2026-10-03.
 - [x] Sentry 2026-10-03 "AxiosError 404" on Delete plan: one delete fired two DELETEs (second → 404). `ConfirmModal` now runs its action once (button disabled while running and after success; re-enabled on error). Plan delete shows an error instead of failing silently — DONE 2026-10-04.
-- [ ] Frontend pass (started 2026-10-04). Re-run `python3 frontend/scripts/css-audit.py` after CSS work.
+- [x] Frontend pass (2026-10-04) — DONE apart from the optional items below. Re-run `python3 frontend/scripts/css-audit.py` after CSS work.
   - [x] Undefined CSS classes + undefined colour tokens (error text wasn't red; legal-page links indigo) — DONE 2026-10-04.
   - [x] `.btn:disabled` style (faded + not-allowed cursor, no hover change) — Jon approved, DONE 2026-10-04.
   - [x] Inline styles reviewed 2026-10-04: 165 (123 static). Decision: NOT migrating wholesale (cosmetic risk, no user benefit). Fixed only hard-coded colours that bypassed tokens: new `.btn-danger` (ConfirmModal danger + Settings warning), song-file edit error uses `.text-danger`. Left on purpose: the two Set viewers (dark chrome) and `DeleteAccountSection` (matches Clerk's account page).
@@ -56,7 +56,7 @@ Next:
   - [x] Song "Revert to original" and Settings "Regenerate invite code" now use `ConfirmModal` — DONE 2026-10-04. No browser `confirm()` left outside superadmin `/admin`.
   - [ ] Later, only if touched: `SetViewer.tsx` and `PublicSetViewer.tsx` duplicate ~15 inline-styled chrome elements — share one component/CSS when either next changes.
   - [x] `tsc --noUnusedLocals` one-off (2026-10-04): 18 unused locals/imports removed → 0. Found: song EDIT page still re-saved every link it loaded on each save (no link editor there any more) — removed. File row now shows "Deleting…". Left: unused callback parameters, and `CcliAutocomplete`'s `ccliValue` prop (passed, never read — harmless).
-  - [ ] Pages that GET then PUT whole objects.
+  - [x] Pages that GET then PUT whole objects — DONE 2026-10-04. All 20 frontend PUT/PATCH calls checked against their backend handlers: every one now either sends every field the handler writes or hits a handler that only updates sent fields. Fixed this session: plan details (28f04b0), song edit links (e72d3e4); hardened church PATCH so a request without `ccli_number` no longer blanks it.
   - [ ] Optional: delete ~22 dead rules in `@layer components` (listed by the audit; Tailwind already drops them from the build).
 - [x] Low items in `codebase-review.md` — DONE 2026-10-03 (only the unused-column drops remain, below).
   - [x] Malformed IDs → 404 (URL) / 400 (`x-church-id`) via shared `utils/ids.js` (`requireIdParams` on every router) — DONE 2026-10-03.

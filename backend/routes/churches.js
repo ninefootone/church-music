@@ -190,10 +190,14 @@ router.get('/:churchId', requireAuth, requireMembership, async (req, res, next) 
 // Update church settings (admin only)
 router.patch('/:churchId', requireAuth, requireAdmin, async (req, res, next) => {
   try {
-    const { name, ccli_number } = req.body;
+    const body = req.body || {};
+    const name = typeof body.name === 'string' ? body.name.trim() : '';
+    // Only fields that were sent are changed: a request without ccli_number used to blank it.
+    // The Settings page sends both; this keeps any future caller from wiping the CCLI number.
+    const hasCcli = 'ccli_number' in body;
     const church = await pool.query(
-      'UPDATE churches SET name = COALESCE($1, name), ccli_number = $2 WHERE id = $3 RETURNING *',
-      [name || null, ccli_number || null, req.churchId]
+      `UPDATE churches SET name = COALESCE($1, name)${hasCcli ? ', ccli_number = $3' : ''} WHERE id = $2 RETURNING *`,
+      hasCcli ? [name || null, req.churchId, body.ccli_number || null] : [name || null, req.churchId]
     );
     if (church.rows.length === 0) return res.status(404).json({ error: 'Not found' });
     res.json(church.rows[0]);
