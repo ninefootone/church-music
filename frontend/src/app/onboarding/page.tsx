@@ -3,14 +3,13 @@
 import { useState, useEffect } from 'react'
 import { useSearchParams } from 'next/navigation'
 import { useRouter } from 'next/navigation'
-import { useAuth, useUser, SignInButton } from '@clerk/nextjs'
+import { useAuth, SignInButton } from '@clerk/nextjs'
 import { ArrowLeft } from 'lucide-react'
 import api, { setAuthToken } from '@/lib/api'
 
 export default function OnboardingPage() {
   const router = useRouter()
   const { getToken, isSignedIn, isLoaded } = useAuth()
-  const { user } = useUser()
   const searchParams = useSearchParams()
   const [mode, setMode] = useState<'choose' | 'create' | 'join'>('choose')
   const [churchName, setChurchName] = useState('')

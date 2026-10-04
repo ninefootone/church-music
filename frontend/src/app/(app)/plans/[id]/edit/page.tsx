@@ -19,7 +19,6 @@ import {
 import {
   arrayMove,
   SortableContext,
-  sortableKeyboardCoordinates,
   useSortable,
   verticalListSortingStrategy,
 } from '@dnd-kit/sortable'
@@ -290,7 +289,6 @@ export default function PlanEditPage() {
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState('')
   const [planStatus, setPlanStatus] = useState<'draft' | 'published'>('published')
-  const [showSongPicker, setShowSongPicker] = useState(true)
   const [isMobile, setIsMobile] = useState(false)
   const [showTimings, setShowTimings] = useState(() => {
     if (typeof window === 'undefined') return false

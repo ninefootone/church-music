@@ -55,7 +55,8 @@ Next:
   - [x] Dashboard playlist delete uses `ConfirmModal` instead of the browser's `confirm()` popup — DONE 2026-10-04.
   - [x] Song "Revert to original" and Settings "Regenerate invite code" now use `ConfirmModal` — DONE 2026-10-04. No browser `confirm()` left outside superadmin `/admin`.
   - [ ] Later, only if touched: `SetViewer.tsx` and `PublicSetViewer.tsx` duplicate ~15 inline-styled chrome elements — share one component/CSS when either next changes.
-  - [ ] `tsc --noUnusedLocals` one-off, pages that GET then PUT whole objects.
+  - [x] `tsc --noUnusedLocals` one-off (2026-10-04): 18 unused locals/imports removed → 0. Found: song EDIT page still re-saved every link it loaded on each save (no link editor there any more) — removed. File row now shows "Deleting…". Left: unused callback parameters, and `CcliAutocomplete`'s `ccliValue` prop (passed, never read — harmless).
+  - [ ] Pages that GET then PUT whole objects.
   - [ ] Optional: delete ~22 dead rules in `@layer components` (listed by the audit; Tailwind already drops them from the build).
 - [x] Low items in `codebase-review.md` — DONE 2026-10-03 (only the unused-column drops remain, below).
   - [x] Malformed IDs → 404 (URL) / 400 (`x-church-id`) via shared `utils/ids.js` (`requireIdParams` on every router) — DONE 2026-10-03.

@@ -4,7 +4,7 @@ import { useState, useEffect } from 'react'
 import Link from 'next/link'
 import { useParams, useRouter } from 'next/navigation'
 import { format, parseISO } from 'date-fns'
-import { ArrowLeft, Share2, Plus, Music, BookOpen, Mic2, Trash2, ChevronDown, ChevronUp, FileText, ExternalLink, X, PlayCircle, Mail, LayoutTemplate } from 'lucide-react'
+import { ArrowLeft, Share2, Plus, Trash2, ChevronDown, ChevronUp, FileText, ExternalLink, X, PlayCircle, Mail, LayoutTemplate } from 'lucide-react'
 import { KeyBadge, CategoryBadge } from '@/components/ui/badges'
 import { useAuth } from '@clerk/nextjs'
 import { useChurch } from '@/context/ChurchContext'
@@ -280,13 +280,6 @@ function SongItem({ item, index, planId, canAnnotate, showTimings, showDurations
       )}
     </div>
   )
-}
-
-const typeIcon = (type: string) => {
-  if (type === 'song') return <Music size={14} />
-  if (type === 'reading') return <BookOpen size={14} />
-  if (type === 'sermon') return <Mic2 size={14} />
-  return null
 }
 
 export default function PlanDetailPage() {

@@ -2,10 +2,8 @@
 
 import { useState, useEffect } from 'react'
 import { format, parseISO } from 'date-fns'
-import { CategoryBadge } from '@/components/ui/badges'
 import { useChurch } from '@/context/ChurchContext'
 import api from '@/lib/api'
-import { Category } from '@/types'
 
 export default function StatsPage() {
   const { church, isAdmin } = useChurch()

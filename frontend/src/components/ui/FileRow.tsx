@@ -102,8 +102,8 @@ export function FileRow({ file, songId, defaultKey, isAdmin, downloadingId, dele
           </button>
         )}
         <div className="link-edit-footer">
-          <button type="button" onClick={() => onDelete(file.id)} className="btn btn-secondary btn-sm btn-danger-text btn-xs-text">
-            <Trash2 size={13} /> Delete
+          <button type="button" onClick={() => onDelete(file.id)} disabled={deletingId === file.id} className="btn btn-secondary btn-sm btn-danger-text btn-xs-text">
+            <Trash2 size={13} /> {deletingId === file.id ? 'Deleting…' : 'Delete'}
           </button>
           <div className="btn-group">
             <button type="button" onClick={() => setEditing(false)} className="btn btn-secondary btn-sm btn-xs-text">Cancel</button>

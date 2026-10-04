@@ -5,7 +5,7 @@ import { useAuth } from '@clerk/nextjs'
 import { useChurch } from '@/context/ChurchContext'
 import { CategoryBadge, KeyBadge } from '@/components/ui/badges'
 import api, { setAuthToken } from '@/lib/api'
-import { Sparkles, Youtube, Music, GripVertical, Search, X, ChevronRight, Tag, ExternalLink } from 'lucide-react'
+import { Sparkles, Youtube, Music, GripVertical, Search, X, Tag, ExternalLink } from 'lucide-react'
 import { DiscoverSongModal } from '@/components/ui/DiscoverSongModal'
 import {
   DndContext,

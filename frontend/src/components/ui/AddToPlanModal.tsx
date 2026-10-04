@@ -3,7 +3,7 @@
 import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import { X, Plus, Calendar } from 'lucide-react'
-import { format, parseISO, isFuture, isToday } from 'date-fns'
+import { format, parseISO } from 'date-fns'
 import api from '@/lib/api'
 
 interface AddToPlanModalProps {
