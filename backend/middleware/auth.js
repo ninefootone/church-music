@@ -1,6 +1,7 @@
 const { verifyToken, createClerkClient } = require('@clerk/backend');
 const Sentry = require('../instrument');
 const { isUuid } = require('../utils/ids');
+const { sendWelcomeEmail } = require('../utils/email');
 
 const clerkClient = createClerkClient({ secretKey: process.env.CLERK_SECRET_KEY });
 
@@ -51,10 +52,20 @@ const requireAuth = async (req, res, next) => {
     const imageUrl = clerkUser.imageUrl || null;
     const pool = require('../db/pool');
     const user = await pool.query(
-      'INSERT INTO users (clerk_id, email, name, image_url) VALUES ($1, $2, $3, $4) ON CONFLICT (clerk_id) DO UPDATE SET email = $2, name = $3, image_url = $4 RETURNING *',
+      // (xmax = 0) is true only when this statement INSERTED the row, i.e. a brand-new account.
+      'INSERT INTO users (clerk_id, email, name, image_url) VALUES ($1, $2, $3, $4) ON CONFLICT (clerk_id) DO UPDATE SET email = $2, name = $3, image_url = $4 RETURNING *, (xmax = 0) AS inserted',
       [payload.sub, email, name, imageUrl]
     );
-    req.user = user.rows[0];
+    const { inserted, ...row } = user.rows[0];
+    req.user = row;
+    if (inserted) {
+      // New sign-up (web or iPad, free or paid): welcome email. Fire-and-forget — a Brevo
+      // problem must never slow down or fail the sign-in itself.
+      sendWelcomeEmail({ email, firstName: clerkUser.firstName || '' }).catch((err) => {
+        console.warn('[welcome] email failed:', err.message);
+        Sentry.captureException(err);
+      });
+    }
   } catch (err) {
     return serviceUnavailable(res, err);
   }

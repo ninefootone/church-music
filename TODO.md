@@ -114,6 +114,7 @@ Next:
 - [ ] App Store listing + App Privacy answers (iPadOS 16.4+, no tracking); Privacy Policy URL = https://app.songstack.church/privacy.
 
 ## Done
+- [x] Welcome email for every NEW account (web or iPad, free or paid) — 2026-10-04. Brevo transactional template (copy edited in Brevo), id in Railway `BREVO_WELCOME_TEMPLATE_ID` (unset = off). Sent once when the `users` row is first created (`middleware/auth.js`, `RETURNING (xmax = 0) AS inserted`), fire-and-forget; failures logged + Sentry. Existing users don't get it. Param: `FIRSTNAME`.
 - [x] Lyrics on plan detail — expanding a song in the plan running order shows a "Show lyrics" toggle when the song has lyrics (`songs.lyrics`), rendered via the shared `LyricsDisplay`. Added `s.lyrics AS song_lyrics` to the authenticated plan-detail query only (public-share query left untouched — lyrics stay off shared links).
 - [x] Church-extensible categories — `categories` table (global + per-church); add/delete in Settings (usage counts, admin-only); data-driven dropdown on the song form and data-driven single-select filter chips on the songs page. Delete nulls `songs.category` (songs go uncategorised, not orphaned). See `categories.md`.
 - [x] Church-extensible tags + theme filtering — hybrid global/church tag vocabulary; multi-select tag filter on the songs page (`?tags=` AND-logic) delivering "searchable by theme"; Settings tag-management block with per-tag usage counts and informed delete. See `tags.md`.

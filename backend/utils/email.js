@@ -118,6 +118,53 @@ async function subscribeToListDoubleOptIn({ email, name, listId = 2 }) {
   })
 }
 
+// Sends a Brevo TRANSACTIONAL template (designed and edited in Brevo, not in code).
+// Sender / reply-to / subject come from the template; `params` fill {{ params.X }}.
+async function sendBrevoTemplate({ to, toName, templateId, params }) {
+  const data = JSON.stringify({
+    to: [{ email: to, ...(toName ? { name: toName } : {}) }],
+    templateId,
+    params: params || {},
+  })
+  return new Promise((resolve, reject) => {
+    const options = {
+      hostname: 'api.brevo.com',
+      path: '/v3/smtp/email',
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'api-key': process.env.BREVO_API_KEY,
+        'Content-Length': Buffer.byteLength(data),
+      },
+    }
+    const req = https.request(options, (res) => {
+      let body = ''
+      res.on('data', chunk => body += chunk)
+      res.on('end', () => resolve({ status: res.statusCode, body }))
+    })
+    req.on('error', reject)
+    applyTimeout(req)
+    req.write(data)
+    req.end()
+  })
+}
+
+// Welcome email for a NEW account (added 2026-10-04). Sent once, when the users row is
+// first created (middleware/auth.js). Template lives in Brevo: set BREVO_WELCOME_TEMPLATE_ID
+// on Railway; if unset, nothing is sent. Template params: FIRSTNAME (may be empty).
+async function sendWelcomeEmail({ email, firstName }) {
+  const templateId = parseInt(process.env.BREVO_WELCOME_TEMPLATE_ID, 10)
+  if (!templateId || !email) return { skipped: true }
+  const res = await sendBrevoTemplate({
+    to: email,
+    toName: firstName || undefined,
+    templateId,
+    params: { FIRSTNAME: firstName || '' },
+  })
+  if (res.status >= 300) throw new Error(`Brevo welcome email failed: ${res.status} ${res.body}`)
+  return res
+}
+
 async function getBrevoContactStatus({ email }) {
   return new Promise((resolve, reject) => {
     const options = {
@@ -194,4 +241,4 @@ function escapeHtml(value) {
     .replace(/'/g, '&#39;')
 }
 
-module.exports = { sendBrevoEmail, subscribeToList, subscribeToListDoubleOptIn, getBrevoContactStatus, unsubscribeFromList, deleteBrevoContact, escapeHtml }
+module.exports = { sendBrevoEmail, sendBrevoTemplate, sendWelcomeEmail, subscribeToList, subscribeToListDoubleOptIn, getBrevoContactStatus, unsubscribeFromList, deleteBrevoContact, escapeHtml }
