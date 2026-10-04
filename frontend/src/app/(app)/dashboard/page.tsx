@@ -5,6 +5,7 @@ import Link from 'next/link'
 import { format, parseISO } from 'date-fns'
 import { CategoryBadge, KeyBadge } from '@/components/ui/badges'
 import { PlaylistIcon } from '@/components/ui/PlaylistIcon'
+import { ConfirmModal } from '@/components/ui/ConfirmModal'
 import { useChurch } from '@/context/ChurchContext'
 import api from '@/lib/api'
 
@@ -23,6 +24,7 @@ export default function DashboardPage() {
   const [editName, setEditName] = useState('')
   const [editUrl, setEditUrl] = useState('')
   const [editType, setEditType] = useState('other')
+  const [pendingDeletePlaylist, setPendingDeletePlaylist] = useState<any | null>(null)
   const fetchedRef = useRef(false)
 
   useEffect(() => {
@@ -62,13 +64,15 @@ export default function DashboardPage() {
     }
   }
 
+  // Runs from the app's ConfirmModal (was the browser's own confirm() popup).
   const deletePlaylist = async (id: number) => {
-    if (!confirm('Delete this playlist?')) return
     try {
       await api.delete(`/api/playlists/${id}`)
       setPlaylists(prev => prev.filter(p => p.id !== id))
     } catch {
       alert('Failed to delete playlist.')
+    } finally {
+      setPendingDeletePlaylist(null)
     }
   }
 
@@ -290,7 +294,7 @@ export default function DashboardPage() {
                 {canManagePlaylists && (
                   <div style={{ display: 'flex', gap: '0.5rem', marginTop: '0.4rem' }}>
                     <button className="btn btn-ghost" onClick={() => { setEditingPlaylist(p); setEditName(p.name); setEditUrl(p.url); setEditType(p.type || 'other') }}>Edit</button>
-                    <button className="btn btn-ghost btn-danger-text" onClick={() => deletePlaylist(p.id)}>Delete</button>
+                    <button className="btn btn-ghost btn-danger-text" onClick={() => setPendingDeletePlaylist(p)}>Delete</button>
                   </div>
                 )}
               </div>
@@ -300,6 +304,16 @@ export default function DashboardPage() {
         </div>
 
       </div>
+      {pendingDeletePlaylist && (
+        <ConfirmModal
+          title="Delete playlist"
+          message={`Delete “${pendingDeletePlaylist.name}”? This removes the link from your dashboard; the playlist itself isn't affected.`}
+          confirmLabel="Delete playlist"
+          danger
+          onConfirm={() => deletePlaylist(pendingDeletePlaylist.id)}
+          onCancel={() => setPendingDeletePlaylist(null)}
+        />
+      )}
     </div>
   )
 }
