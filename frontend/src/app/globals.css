@@ -158,6 +158,11 @@ body.set-viewer-active { overflow: hidden; }
   .btn-primary:hover   { background: var(--color-brand-600); }
   .btn-secondary       { background: var(--color-neutral-100); color: var(--color-text-secondary); }
   .btn-secondary:hover { background: var(--color-neutral-200); color: var(--color-text-primary); }
+  /* Disabled buttons (saving states, a confirm already clicked, invalid forms) look disabled
+     and keep their normal colours on hover. Added 2026-10-04. */
+  .btn:disabled                { opacity: 0.55; cursor: not-allowed; }
+  .btn-primary:disabled:hover  { background: var(--color-brand-500); }
+  .btn-secondary:disabled:hover { background: var(--color-neutral-100); color: var(--color-text-secondary); }
   .btn-ghost {
     background: transparent;
     color: var(--color-brand-500);

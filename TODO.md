@@ -49,7 +49,7 @@ Next:
 - [x] Sentry 2026-10-03 "AxiosError 404" on Delete plan: one delete fired two DELETEs (second → 404). `ConfirmModal` now runs its action once (button disabled while running and after success; re-enabled on error). Plan delete shows an error instead of failing silently — DONE 2026-10-04.
 - [ ] Frontend pass (started 2026-10-04). Re-run `python3 frontend/scripts/css-audit.py` after CSS work.
   - [x] Undefined CSS classes + undefined colour tokens (error text wasn't red; legal-page links indigo) — DONE 2026-10-04.
-  - [ ] `.btn:disabled` style (disabled buttons look clickable) — awaiting Jon.
+  - [x] `.btn:disabled` style (faded + not-allowed cursor, no hover change) — Jon approved, DONE 2026-10-04.
   - [ ] Inline `style={{}}`, `tsc --noUnusedLocals` one-off, pages that GET then PUT whole objects.
   - [ ] Optional: delete ~22 dead rules in `@layer components` (listed by the audit; Tailwind already drops them from the build).
 - [x] Low items in `codebase-review.md` — DONE 2026-10-03 (only the unused-column drops remain, below).
