@@ -290,7 +290,7 @@ export default function DashboardPage() {
                 {canManagePlaylists && (
                   <div style={{ display: 'flex', gap: '0.5rem', marginTop: '0.4rem' }}>
                     <button className="btn btn-ghost" onClick={() => { setEditingPlaylist(p); setEditName(p.name); setEditUrl(p.url); setEditType(p.type || 'other') }}>Edit</button>
-                    <button className="btn btn-ghost" onClick={() => deletePlaylist(p.id)}>Delete</button>
+                    <button className="btn btn-ghost btn-danger-text" onClick={() => deletePlaylist(p.id)}>Delete</button>
                   </div>
                 )}
               </div>

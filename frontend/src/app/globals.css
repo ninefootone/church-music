@@ -195,7 +195,7 @@ body.set-viewer-active { overflow: hidden; }
     color: var(--color-brand-500);
     padding: 0;
   }
-  .btn-danger-text { color: #9a3a3a; }
+  .btn-danger-text { color: var(--color-danger); }  /* delete TRIGGER: red text on a secondary/ghost button; the CONFIRM uses .btn-danger */
   .btn-group        { display: flex; gap: 6px; flex-wrap: wrap; }
   .btn-compact-icon { padding: 7px 10px; font-size: var(--text-xs); gap: 4px; }
   .btn-xs           { font-size: var(--text-xs); padding: 5px 10px; }

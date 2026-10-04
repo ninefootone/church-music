@@ -315,7 +315,7 @@ export default function TeamPage() {
 
             {/* Footer */}
             <div className="manage-member-footer">
-              <button onClick={() => setShowRemoveConfirm(true)} className="btn-muted">
+              <button onClick={() => setShowRemoveConfirm(true)} className="btn btn-secondary btn-danger-text">
                 Remove member
               </button>
               <button onClick={() => setManageMember(null)} className="btn btn-ghost">
