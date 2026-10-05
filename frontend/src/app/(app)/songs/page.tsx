@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import Link from 'next/link'
 import { format, parseISO } from 'date-fns'
 import { Search, Plus, ChevronRight, ArrowUpDown, X, Tag } from 'lucide-react'
@@ -25,9 +25,16 @@ export default function SongsPage() {
   const [allCategories, setAllCategories] = useState<{ id: string; value: string; label: string; scope: 'global' | 'church' }[]>([])
   const isMasterLibrary = church?.id === process.env.NEXT_PUBLIC_MASTER_CHURCH_ID
 
+  // Each fetch gets a number; only the newest one is allowed to update the list.
+  // Without this, typing fires a request per keystroke and whichever reply lands
+  // LAST wins — so a slow reply for "Joyful N" could overwrite "Joyful Noise".
+  const latestRequest = useRef(0)
+
   useEffect(() => {
     if (!church) return
-    fetchSongs()
+    // Wait until typing pauses (300ms) before searching; other filters fire at once.
+    const timer = setTimeout(fetchSongs, search ? 300 : 0)
+    return () => clearTimeout(timer)
   }, [church, search, activeCategory, selectedTags, showRetired, showDraftOnly, sort])
 
   useEffect(() => {
@@ -37,6 +44,7 @@ export default function SongsPage() {
   }, [church])
 
   const fetchSongs = async () => {
+    const requestId = ++latestRequest.current
     try {
       setLoading(true)
       const params: Record<string, string> = {}
@@ -47,11 +55,13 @@ export default function SongsPage() {
       if (showDraftOnly) params.draft_only = 'true'
       if (sort !== 'title') params.sort = sort
       const { data } = await api.get('/api/songs', { params })
+      if (requestId !== latestRequest.current) return // a newer search has started
       setSongs(data)
     } catch (err) {
+      if (requestId !== latestRequest.current) return
       console.error('Failed to fetch songs:', err)
     } finally {
-      setLoading(false)
+      if (requestId === latestRequest.current) setLoading(false)
     }
   }
 
