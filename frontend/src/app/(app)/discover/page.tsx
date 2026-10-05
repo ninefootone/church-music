@@ -327,6 +327,8 @@ export default function DiscoverPage() {
   const [libraryImportedIds, setLibraryImportedIds] = useState<Record<string, string>>({})
   const [churchSongTitles, setChurchSongTitles] = useState<Record<string, string>>({})
   const librarySearchTimer = useRef<ReturnType<typeof setTimeout> | null>(null)
+  // Only the newest library request may update the list (see fetchLibrary).
+  const latestLibraryRequest = useRef(0)
 
   const [previewSongId, setPreviewSongId] = useState<string | null>(null)
 
@@ -368,6 +370,8 @@ export default function DiscoverPage() {
 
   // Fetch library results
   const fetchLibrary = useCallback(async (search: string, category: string, page: number, tags: string[] = [], author: string | null = null) => {
+    // Number each request; a slower, older reply must not overwrite a newer one.
+    const requestId = ++latestLibraryRequest.current
     setLibraryLoading(true)
     try {
       const params: Record<string, string> = { page: String(page) }
@@ -376,6 +380,7 @@ export default function DiscoverPage() {
       if (tags.length > 0) params.tags = tags.join(',')
       if (author) params.author = author
       const { data } = await api.get('/api/templates/library', { params })
+      if (requestId !== latestLibraryRequest.current) return // a newer request has started
       setLibrarySongs(data.songs)
       setLibraryTotal(data.total)
       setLibraryPages(data.pages)
@@ -392,7 +397,7 @@ export default function DiscoverPage() {
       setLibraryImportStates(prev => ({ ...states, ...prev }))
       setLibraryImportedIds(prev => ({ ...ids, ...prev }))
     } catch {} finally {
-      setLibraryLoading(false)
+      if (requestId === latestLibraryRequest.current) setLibraryLoading(false)
     }
   }, [churchSongTitles])
 
