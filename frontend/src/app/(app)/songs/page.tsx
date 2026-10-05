@@ -13,6 +13,7 @@ export default function SongsPage() {
   const { church, loading: churchLoading, canManageSongs } = useChurch()
   const [songs, setSongs] = useState<Song[]>([])
   const [loading, setLoading] = useState(true)
+  const [loadError, setLoadError] = useState(false)
   const [search, setSearch] = useState('')
   const [activeCategory, setActiveCategory] = useState<string>('all')
   const [showRetired, setShowRetired] = useState(false)
@@ -57,9 +58,11 @@ export default function SongsPage() {
       const { data } = await api.get('/api/songs', { params })
       if (requestId !== latestRequest.current) return // a newer search has started
       setSongs(data)
+      setLoadError(false)
     } catch (err) {
       if (requestId !== latestRequest.current) return
       console.error('Failed to fetch songs:', err)
+      setLoadError(true) // show a message instead of leaving the old list on screen
     } finally {
       if (requestId === latestRequest.current) setLoading(false)
     }
@@ -193,6 +196,11 @@ export default function SongsPage() {
       <div className="songs-table">
         {loading ? (
           <div className="songs-table-empty">Loading songs…</div>
+        ) : loadError ? (
+          <div className="songs-table-empty">
+            <span className="text-danger">Couldn&apos;t load songs. Check your connection and try again.</span>{' '}
+            <button type="button" className="btn-text" onClick={fetchSongs}>Try again</button>
+          </div>
         ) : songs.length === 0 ? (
           <div className="songs-table-empty">
             No songs found.{canManageSongs && <> <Link href="/songs/new" className="link">Add one?</Link></>}

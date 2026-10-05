@@ -320,6 +320,7 @@ export default function DiscoverPage() {
   const [showLibraryTagFilter, setShowLibraryTagFilter] = useState(false)
   const [librarySongs, setLibrarySongs] = useState<LibrarySong[]>([])
   const [libraryLoading, setLibraryLoading] = useState(false)
+  const [libraryError, setLibraryError] = useState(false)
   const [libraryPage, setLibraryPage] = useState(1)
   const [libraryTotal, setLibraryTotal] = useState(0)
   const [libraryPages, setLibraryPages] = useState(1)
@@ -381,6 +382,7 @@ export default function DiscoverPage() {
       if (author) params.author = author
       const { data } = await api.get('/api/templates/library', { params })
       if (requestId !== latestLibraryRequest.current) return // a newer request has started
+      setLibraryError(false)
       setLibrarySongs(data.songs)
       setLibraryTotal(data.total)
       setLibraryPages(data.pages)
@@ -396,7 +398,11 @@ export default function DiscoverPage() {
       }
       setLibraryImportStates(prev => ({ ...states, ...prev }))
       setLibraryImportedIds(prev => ({ ...ids, ...prev }))
-    } catch {} finally {
+    } catch (err) {
+      if (requestId !== latestLibraryRequest.current) return
+      console.error('Failed to load song library:', err)
+      setLibraryError(true) // show a message instead of leaving the old results on screen
+    } finally {
       if (requestId === latestLibraryRequest.current) setLibraryLoading(false)
     }
   }, [churchSongTitles])
@@ -668,6 +674,17 @@ export default function DiscoverPage() {
 
         {libraryLoading ? (
           <p className="text-muted dash-loading">Loading…</p>
+        ) : libraryError ? (
+          <div className="songs-table-empty">
+            <span className="text-danger">Couldn&apos;t load songs. Check your connection and try again.</span>{' '}
+            <button
+              type="button"
+              className="btn-text"
+              onClick={() => fetchLibrary(librarySearch, libraryCategory, libraryPage, selectedLibraryTags, libraryAuthorFilter)}
+            >
+              Try again
+            </button>
+          </div>
         ) : librarySongs.length === 0 ? (
           <div className="songs-table-empty">No songs found.</div>
         ) : (
