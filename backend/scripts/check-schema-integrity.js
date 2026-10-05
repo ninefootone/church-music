@@ -94,12 +94,12 @@ async function run() {
     const [{ n: staleSV }] = await q(`
       SELECT COUNT(*)::int n FROM songs
       WHERE search_vector IS DISTINCT FROM (
-        setweight(to_tsvector('english', coalesce(title,'')),'A') ||
-        setweight(to_tsvector('english', coalesce(author,'')),'B') ||
-        setweight(to_tsvector('english', coalesce(first_line,'')),'B') ||
-        setweight(to_tsvector('english', coalesce(bible_references,'')),'C') ||
-        setweight(to_tsvector('english', coalesce(notes,'')),'C') ||
-        setweight(to_tsvector('english', coalesce(lyrics,'')),'D'))
+        setweight(to_tsvector('simple', coalesce(title,'')),'A') ||
+        setweight(to_tsvector('simple', coalesce(author,'')),'B') ||
+        setweight(to_tsvector('simple', coalesce(first_line,'')),'B') ||
+        setweight(to_tsvector('simple', coalesce(bible_references,'')),'C') ||
+        setweight(to_tsvector('simple', coalesce(notes,'')),'C') ||
+        setweight(to_tsvector('simple', coalesce(lyrics,'')),'D'))
     `);
     // Stale rows = trigger not firing on edits (or never backfilled). WARN, since
     // refresh-search-vectors.js fixes it — but a missing trigger will let it recur.
@@ -108,7 +108,7 @@ async function run() {
     const [{ n: nullTV }] = await q(`
       SELECT COUNT(*)::int n FROM songs s
       WHERE EXISTS (SELECT 1 FROM song_tags st WHERE st.song_id=s.id)
-        AND (s.tag_search_vector IS NULL OR s.tag_search_vector = to_tsvector('english',''))`);
+        AND (s.tag_search_vector IS NULL OR s.tag_search_vector = to_tsvector('simple',''))`);
     record("no tagged song with empty tag_search_vector", nullTV === 0, `${nullTV} empty`);
  
     // --- GIN indexes ------------------------------------------------------

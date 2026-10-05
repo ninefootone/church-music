@@ -46,7 +46,7 @@ async function run() {
       SELECT COUNT(*)::int AS n
       FROM songs s
       WHERE EXISTS (SELECT 1 FROM song_tags st WHERE st.song_id = s.id)
-        AND (s.tag_search_vector IS NULL OR s.tag_search_vector = to_tsvector('english',''))
+        AND (s.tag_search_vector IS NULL OR s.tag_search_vector = to_tsvector('simple',''))
     `);
     console.log(`3. Songs that have tags but an empty tag_search_vector: ${stale.rows[0].n}` +
       (stale.rows[0].n > 0 ? '  <-- these will never match a tag search' : ''));
@@ -55,7 +55,7 @@ async function run() {
     const songs = await q(`
       SELECT s.id, s.title,
              s.tag_search_vector::text AS vec,
-             (s.tag_search_vector @@ plainto_tsquery('english', $1)) AS matches,
+             (s.tag_search_vector @@ plainto_tsquery('simple', $1)) AS matches,
              (SELECT string_agg(t.name, ', ') FROM song_tags st JOIN tags t ON t.id=st.tag_id WHERE st.song_id=s.id) AS tag_names
       FROM songs s
       WHERE EXISTS (
@@ -70,13 +70,13 @@ async function run() {
       console.log(`   - [${r.id}] "${r.title}"`);
       console.log(`       tags: ${r.tag_names}`);
       console.log(`       stored vector: ${r.vec || '(NULL)'}`);
-      console.log(`       matches plainto_tsquery('english','${term}'): ${r.matches}`);
+      console.log(`       matches plainto_tsquery('simple','${term}'): ${r.matches}`);
     }
  
     // 5. Sanity: what does the query itself return for this search term?
     const hit = await q(`
       SELECT COUNT(*)::int AS n FROM songs s
-      WHERE s.tag_search_vector @@ plainto_tsquery('english', $1)
+      WHERE s.tag_search_vector @@ plainto_tsquery('simple', $1)
     `, [term]);
     console.log(`\n5. Total songs whose tag vector matches "${term}": ${hit.rows[0].n}`);
  
@@ -86,9 +86,9 @@ async function run() {
       console.log('- Backfill needed: tag_search_vector was never populated for some/all tagged songs.');
       console.log('  Fix (safe, idempotent) — rebuild every song\'s tag vector from its tags:');
       console.log(`    UPDATE songs s SET tag_search_vector = COALESCE((`);
-      console.log(`      SELECT to_tsvector('english', string_agg(t.name, ' '))`);
+      console.log(`      SELECT to_tsvector('simple', string_agg(t.name, ' '))`);
       console.log(`      FROM song_tags st JOIN tags t ON t.id=st.tag_id WHERE st.song_id=s.id`);
-      console.log(`    ), to_tsvector('english',''));`);
+      console.log(`    ), to_tsvector('simple',''));`);
     }
     if (hasTrig && stale.rows[0].n === 0 && songs.rows.every(r => r.matches) && songs.rowCount > 0) {
       console.log('- Data looks correct. If search still fails, the problem is upstream of the DB');

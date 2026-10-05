@@ -10,6 +10,7 @@
  
 require('dotenv').config({ path: '.env.import' });
 const { Pool } = require('pg');
+const { toPrefixQuery } = require('../utils/search');
  
 if (!process.env.DATABASE_URL) {
   console.error('DATABASE_URL is not set. Pass it inline (see claude/running-backend-scripts.md).');
@@ -41,27 +42,27 @@ async function run() {
       return;
     }
  
-    const lex = await pool.query(`SELECT plainto_tsquery('english', $1)::text AS q`, [term]);
+    const lex = await pool.query(`SELECT to_tsquery('simple', $1)::text AS q`, [toPrefixQuery(term)]);
     console.log(`\nChurch ${churchId} — search "${term}" (tsquery ${lex.rows[0].q}):\n`);
  
     const rows = await pool.query(`
       SELECT s.title,
-        (to_tsvector('english', coalesce(s.title,''))            @@ plainto_tsquery('english',$1)) AS in_title,
-        (to_tsvector('english', coalesce(s.author,''))           @@ plainto_tsquery('english',$1)) AS in_author,
-        (to_tsvector('english', coalesce(s.first_line,''))       @@ plainto_tsquery('english',$1)) AS in_first_line,
-        (to_tsvector('english', coalesce(s.bible_references,'')) @@ plainto_tsquery('english',$1)) AS in_refs,
-        (to_tsvector('english', coalesce(s.notes,''))            @@ plainto_tsquery('english',$1)) AS in_notes,
-        (to_tsvector('english', coalesce(s.lyrics,''))           @@ plainto_tsquery('english',$1)) AS in_lyrics,
-        (s.tag_search_vector @@ plainto_tsquery('english',$1))   AS in_tags,
+        (to_tsvector('simple', coalesce(s.title,''))            @@ to_tsquery('simple',$3)) AS in_title,
+        (to_tsvector('simple', coalesce(s.author,''))           @@ to_tsquery('simple',$3)) AS in_author,
+        (to_tsvector('simple', coalesce(s.first_line,''))       @@ to_tsquery('simple',$3)) AS in_first_line,
+        (to_tsvector('simple', coalesce(s.bible_references,'')) @@ to_tsquery('simple',$3)) AS in_refs,
+        (to_tsvector('simple', coalesce(s.notes,''))            @@ to_tsquery('simple',$3)) AS in_notes,
+        (to_tsvector('simple', coalesce(s.lyrics,''))           @@ to_tsquery('simple',$3)) AS in_lyrics,
+        (s.tag_search_vector @@ to_tsquery('simple',$3))   AS in_tags,
         (s.title ILIKE '%'||$1||'%')                             AS title_ilike
       FROM songs s
       WHERE s.church_id = $2
         AND (s.retired = FALSE OR s.retired IS NULL)
-        AND (s.search_vector @@ plainto_tsquery('english',$1)
-             OR s.tag_search_vector @@ plainto_tsquery('english',$1)
+        AND (s.search_vector @@ to_tsquery('simple',$3)
+             OR s.tag_search_vector @@ to_tsquery('simple',$3)
              OR s.title ILIKE '%'||$1||'%')
       ORDER BY s.title
-    `, [term, churchId]);
+    `, [term, churchId, toPrefixQuery(term)]);
  
     let tagCount = 0, lyricOnly = 0, titleCount = 0;
     for (const r of rows.rows) {

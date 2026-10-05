@@ -10,12 +10,12 @@ async function run() {
 
     const result = await client.query(`
       UPDATE songs SET search_vector =
-        setweight(to_tsvector('english', coalesce(title, '')), 'A') ||
-        setweight(to_tsvector('english', coalesce(author, '')), 'B') ||
-        setweight(to_tsvector('english', coalesce(first_line, '')), 'B') ||
-        setweight(to_tsvector('english', coalesce(bible_references, '')), 'C') ||
-        setweight(to_tsvector('english', coalesce(notes, '')), 'C') ||
-        setweight(to_tsvector('english', coalesce(lyrics, '')), 'D')
+        setweight(to_tsvector('simple', coalesce(title, '')), 'A') ||
+        setweight(to_tsvector('simple', coalesce(author, '')), 'B') ||
+        setweight(to_tsvector('simple', coalesce(first_line, '')), 'B') ||
+        setweight(to_tsvector('simple', coalesce(bible_references, '')), 'C') ||
+        setweight(to_tsvector('simple', coalesce(notes, '')), 'C') ||
+        setweight(to_tsvector('simple', coalesce(lyrics, '')), 'D')
     `);
 
     console.log(`✓ Refreshed search_vector for ${result.rowCount} songs`);

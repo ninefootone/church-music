@@ -42,7 +42,7 @@ async function run() {
         END IF;
  
         UPDATE songs SET tag_search_vector = (
-          SELECT to_tsvector('english', coalesce(string_agg(t.name, ' '), ''))
+          SELECT to_tsvector('simple', coalesce(string_agg(t.name, ' '), ''))
           FROM song_tags st
           JOIN tags t ON t.id = st.tag_id
           WHERE st.song_id = affected_song_id
@@ -67,22 +67,22 @@ async function run() {
     // 3. Backfill every song's tag vector from its current tags.
     const upd = await client.query(`
       UPDATE songs s SET tag_search_vector = coalesce((
-        SELECT to_tsvector('english', string_agg(t.name, ' '))
+        SELECT to_tsvector('simple', string_agg(t.name, ' '))
         FROM song_tags st JOIN tags t ON t.id = st.tag_id
         WHERE st.song_id = s.id
-      ), to_tsvector('english', ''))
+      ), to_tsvector('simple', ''))
     `);
     console.log(`✓ tag_search_vector backfilled for ${upd.rowCount} songs`);
  
     // 4. Verify inside the same transaction before committing.
     const check = await client.query(`
       SELECT COUNT(*)::int AS n FROM songs
-      WHERE tag_search_vector @@ plainto_tsquery('english', 'Adoration')
+      WHERE tag_search_vector @@ plainto_tsquery('simple', 'Adoration')
     `);
     const stale = await client.query(`
       SELECT COUNT(*)::int AS n FROM songs s
       WHERE EXISTS (SELECT 1 FROM song_tags st WHERE st.song_id = s.id)
-        AND (s.tag_search_vector IS NULL OR s.tag_search_vector = to_tsvector('english',''))
+        AND (s.tag_search_vector IS NULL OR s.tag_search_vector = to_tsvector('simple',''))
     `);
     console.log(`\nVerify: songs matching tag search "Adoration" = ${check.rows[0].n} (was 0)`);
     console.log(`Verify: tagged songs still with an empty vector = ${stale.rows[0].n} (should be 0)`);

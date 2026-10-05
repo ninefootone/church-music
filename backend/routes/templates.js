@@ -6,6 +6,7 @@ requireIdParams(router, { id: 'Song not found' });
 const pool = require('../db/pool');
 const { requireAuth, requireMembership, requireAdmin, requirePermission } = require('../middleware/auth');
 const { songLimitReached, SONG_LIMIT_MESSAGE } = require('../utils/limits');
+const { toPrefixQuery } = require('../utils/search');
 const { r2, BUCKET } = require('./uploads');
 const { CopyObjectCommand } = require('@aws-sdk/client-s3');
 const { v4: uuidv4 } = require('uuid');
@@ -115,7 +116,7 @@ router.get('/library', requireAuth, async (req, res, next) => {
     let idx = 2;
 
     if (q && q.trim()) {
-      // tsvector full-text search — same approach as songs route.
+      // Prefix-match full-text search — same approach as songs route (utils/search.js).
       // Short strings (1-2 chars) fall back to title ILIKE prefix match.
       const trimmed = q.trim();
       if (trimmed.length <= 2) {
@@ -123,8 +124,8 @@ router.get('/library', requireAuth, async (req, res, next) => {
         params.push(`${trimmed}%`);
         idx++;
       } else {
-        query += ` AND (s.search_vector @@ plainto_tsquery('english', $${idx}) OR s.tag_search_vector @@ plainto_tsquery('english', $${idx}) OR s.title ILIKE $${idx + 1})`;
-        params.push(trimmed, `%${trimmed}%`);
+        query += ` AND (s.search_vector @@ to_tsquery('simple', $${idx}) OR s.tag_search_vector @@ to_tsquery('simple', $${idx}) OR s.title ILIKE $${idx + 1})`;
+        params.push(toPrefixQuery(trimmed), `%${trimmed}%`);
         idx += 2;
       }
     }
@@ -145,7 +146,7 @@ router.get('/library', requireAuth, async (req, res, next) => {
     }
 
     if (tag) {
-      query += ` AND s.tag_search_vector @@ plainto_tsquery('english', $${idx++})`;
+      query += ` AND s.tag_search_vector @@ plainto_tsquery('simple', $${idx++})`;
       params.push(tag);
     }
     for (const tagId of tagIds) {
@@ -179,8 +180,8 @@ router.get('/library', requireAuth, async (req, res, next) => {
         countParams.push(`${trimmed}%`);
         cidx++;
       } else {
-        countQuery += ` AND (s.search_vector @@ plainto_tsquery('english', $${cidx}) OR s.tag_search_vector @@ plainto_tsquery('english', $${cidx}) OR s.title ILIKE $${cidx + 1})`;
-        countParams.push(trimmed, `%${trimmed}%`);
+        countQuery += ` AND (s.search_vector @@ to_tsquery('simple', $${cidx}) OR s.tag_search_vector @@ to_tsquery('simple', $${cidx}) OR s.title ILIKE $${cidx + 1})`;
+        countParams.push(toPrefixQuery(trimmed), `%${trimmed}%`);
         cidx += 2;
       }
     }
@@ -193,7 +194,7 @@ router.get('/library', requireAuth, async (req, res, next) => {
       countParams.push(`%${escapeLikeValue(author.trim())}%`);
     }
     if (tag) {
-      countQuery += ` AND s.tag_search_vector @@ plainto_tsquery('english', $${cidx++})`;
+      countQuery += ` AND s.tag_search_vector @@ plainto_tsquery('simple', $${cidx++})`;
       countParams.push(tag);
     }
     for (const tagId of tagIds) {

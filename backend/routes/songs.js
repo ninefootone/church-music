@@ -7,6 +7,7 @@ const pool = require('../db/pool');
 const { requireAuth, requireMembership, requireAdmin, requirePermission } = require('../middleware/auth');
 const { songLimitReached, SONG_LIMIT_MESSAGE } = require('../utils/limits');
 const { cleanHttpUrl, BAD_URL_MESSAGE } = require('../utils/sanitize');
+const { toPrefixQuery } = require('../utils/search');
 const SONG_URL_FIELDS = ['youtube_url', 'ccli_url', 'copyright_link'];
 
 // Shared CCLI autocomplete (ccli_lookup). Only CURATOR churches set the shared
@@ -363,24 +364,24 @@ router.get('/', requireAuth, requireMembership, async (req, res, next) => {
       params.push(category);
     }
     if (search && search.trim()) {
-      // Use tsvector full-text search across song fields and tags.
-      // plainto_tsquery handles plain user input safely (no special syntax required).
-      // Falls back to ILIKE on title for very short strings (1-2 chars) where tsvector
-      // won't produce useful tokens.
+      // Full-text search across song fields and tags, matching the START of each
+      // word as typed ("joy" finds joyful; "joyful" does not find joy) — see
+      // utils/search.js. Vectors use the 'simple' config (no stemming).
+      // Falls back to ILIKE on title for very short strings (1-2 chars).
       const trimmed = search.trim();
       if (trimmed.length <= 2) {
         query += ` AND s.title ILIKE $${idx}`;
         params.push(`${trimmed}%`);
         idx++;
       } else {
-        query += ` AND (s.search_vector @@ plainto_tsquery('english', $${idx}) OR s.tag_search_vector @@ plainto_tsquery('english', $${idx}) OR s.title ILIKE $${idx + 1})`;
+        query += ` AND (s.search_vector @@ to_tsquery('simple', $${idx}) OR s.tag_search_vector @@ to_tsquery('simple', $${idx}) OR s.title ILIKE $${idx + 1})`;
         matchedOnSql = `, ARRAY_REMOVE(ARRAY[
-          CASE WHEN s.tag_search_vector @@ plainto_tsquery('english', $${idx}) THEN 'tag' END,
-          CASE WHEN to_tsvector('english', coalesce(s.title,'')) @@ plainto_tsquery('english', $${idx}) OR s.title ILIKE $${idx + 1} THEN 'title' END,
-          CASE WHEN to_tsvector('english', coalesce(s.lyrics,'')) @@ plainto_tsquery('english', $${idx}) THEN 'lyric' END,
-          CASE WHEN to_tsvector('english', coalesce(s.author,'') || ' ' || coalesce(s.first_line,'') || ' ' || coalesce(s.notes,'') || ' ' || coalesce(s.bible_references,'')) @@ plainto_tsquery('english', $${idx}) THEN 'other' END
+          CASE WHEN s.tag_search_vector @@ to_tsquery('simple', $${idx}) THEN 'tag' END,
+          CASE WHEN to_tsvector('simple', coalesce(s.title,'')) @@ to_tsquery('simple', $${idx}) OR s.title ILIKE $${idx + 1} THEN 'title' END,
+          CASE WHEN to_tsvector('simple', coalesce(s.lyrics,'')) @@ to_tsquery('simple', $${idx}) THEN 'lyric' END,
+          CASE WHEN to_tsvector('simple', coalesce(s.author,'') || ' ' || coalesce(s.first_line,'') || ' ' || coalesce(s.notes,'') || ' ' || coalesce(s.bible_references,'')) @@ to_tsquery('simple', $${idx}) THEN 'other' END
         ], NULL) AS matched_on`;
-        params.push(trimmed, `%${trimmed}%`);
+        params.push(toPrefixQuery(trimmed), `%${trimmed}%`);
         idx += 2;
       }
     }
@@ -412,17 +413,17 @@ router.get('/', requireAuth, requireMembership, async (req, res, next) => {
     if (search && search.trim().length > 2) {
       const trimmed = search.trim();
       // $idx = exact title, $idx+1 = partial title, $idx+2 = tsquery for ranking
-      params.push(trimmed, `%${trimmed}%`, trimmed);
+      params.push(trimmed, `%${trimmed}%`, toPrefixQuery(trimmed));
       query += `
         GROUP BY s.id
         ORDER BY
           (CASE
              WHEN s.title ILIKE $${idx} THEN 3
-             WHEN s.tag_search_vector @@ plainto_tsquery('english', $${idx + 2}) THEN 2
+             WHEN s.tag_search_vector @@ to_tsquery('simple', $${idx + 2}) THEN 2
              WHEN s.title ILIKE $${idx + 1} THEN 1
              ELSE 0
            END) DESC,
-          ts_rank(s.search_vector, plainto_tsquery('english', $${idx + 2})) DESC,
+          ts_rank(s.search_vector, to_tsquery('simple', $${idx + 2})) DESC,
           s.title ASC`;
       idx += 3;
     } else {
