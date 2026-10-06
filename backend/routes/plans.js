@@ -106,11 +106,11 @@ router.get('/my-upcoming', requireAuth, requireMembership, async function(req, r
 // (Plans → Overview, /plans/overview). Planners only (admin / "Add & edit plans"), drafts included.
 // Plans are numbered in date order across the whole church; the window starts at the first plan on
 // or after `from` (default today), shifted by `offset` (may be negative → earlier plans), `count` long.
-// Also returns, for songs in the window, every use within REPEAT_WINDOW_DAYS before the first / after
-// the last visible plan (for "sung 2 weeks ago" / "also planned 2 Nov"), and team unavailability
+// Also returns, for songs in the window, every use within `repeat_weeks` (1–12, default 4) before the
+// first / after the last visible plan (for "sung 2 weeks ago" / "also planned 2 Nov"). The page applies the
+// same limit to EACH column, so a note never depends on how many columns are shown. Team unavailability
 // overlapping the window. Dates come back as 'YYYY-MM-DD' strings (to_char) to avoid timezone shifts.
 // Defined before '/:id' routes so 'overview' isn't treated as a plan id.
-const REPEAT_WINDOW_DAYS = 28;
 router.get('/overview', requireAuth, requireMembership, async function(req, res, next) {
   try {
     if (!canSeeDraftPlans(req)) {
@@ -127,6 +127,10 @@ router.get('/overview', requireAuth, requireMembership, async function(req, res,
     let count = parseInt(req.query.count, 10);
     if (!Number.isFinite(count)) count = 6;
     count = Math.max(1, Math.min(12, count));
+    let repeatWeeks = parseInt(req.query.repeat_weeks, 10);
+    if (!Number.isFinite(repeatWeeks)) repeatWeeks = 4;
+    repeatWeeks = Math.max(1, Math.min(12, repeatWeeks));
+    const repeatDays = repeatWeeks * 7;
 
     const window = await pool.query(
       `WITH ordered AS (
@@ -165,7 +169,7 @@ router.get('/overview', requireAuth, requireMembership, async function(req, res,
     const start = anchor + offset;
     const plans = window.rows.map(({ total: _t, anchor: _a, rn: _r, ...p }) => p);
     const base = {
-      repeat_window_days: REPEAT_WINDOW_DAYS,
+      repeat_window_days: repeatDays,
       has_previous: start > 1,
       has_next: start + count - 1 < total,
       plans: [],
@@ -212,7 +216,7 @@ router.get('/overview', requireAuth, requireMembership, async function(req, res,
           WHERE p.church_id = $1 AND pi.song_id = ANY($2::uuid[])
             AND p.plan_date BETWEEN $3::date - $5::int AND $4::date + $5::int
           ORDER BY plan_date`,
-        [churchId, songIds, firstDate, lastDate, REPEAT_WINDOW_DAYS]
+        [churchId, songIds, firstDate, lastDate, repeatDays]
       );
     }
 

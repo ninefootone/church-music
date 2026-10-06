@@ -72,6 +72,8 @@ const COUNTS = [3, 4, 5, 6]
 // Literal class names (not built from strings) so the CSS is easy to find.
 const colsClass: Record<number, string> = { 3: 'po-grid po-cols-3', 4: 'po-grid po-cols-4', 5: 'po-grid po-cols-5', 6: 'po-grid po-cols-6' }
 const COUNT_KEY = 'plansOverview.count'
+const REPEAT_KEY = 'plansOverview.repeatWeeks'
+const REPEAT_OPTIONS = [2, 4, 6, 8, 12]
 const SHOW_KEY = 'plansOverview.show'
 
 function readStored<T>(key: string, fallback: T): T {
@@ -92,6 +94,24 @@ function writeStored(key: string, value: unknown) {
 
 const shortDate = (d: string) => format(parseISO(d), 'd MMM')
 
+// One line per person: someone singing, on keys and leading is three plan_musicians rows.
+// Grouped by member id, or by name for guests who aren't signed up.
+function groupMusicians(list: OverviewMusician[]) {
+  const out: (OverviewMusician & { roles: string[] })[] = []
+  const byKey = new Map<string, OverviewMusician & { roles: string[] }>()
+  for (const m of list) {
+    const key = m.user_id || `name:${m.name.trim().toLowerCase()}`
+    let e = byKey.get(key)
+    if (!e) {
+      e = { ...m, roles: [] }
+      byKey.set(key, e)
+      out.push(e)
+    }
+    if (m.role && !e.roles.includes(m.role)) e.roles.push(m.role)
+  }
+  return out
+}
+
 function agoLabel(days: number) {
   if (days < 7) return `${days} day${days === 1 ? '' : 's'} ago`
   const w = Math.round(days / 7)
@@ -103,6 +123,7 @@ export default function PlansOverviewPage() {
 
   const [count, setCount] = useState(5)
   const [show, setShow] = useState({ repeats: true, rota: true })
+  const [repeatWeeks, setRepeatWeeks] = useState(4)
   const [from, setFrom] = useState('') // '' = today
   const [offset, setOffset] = useState(0)
   const [data, setData] = useState<OverviewData | null>(null)
@@ -115,6 +136,8 @@ export default function PlansOverviewPage() {
     const c = readStored<number>(COUNT_KEY, 5)
     setCount(COUNTS.includes(c) ? c : 5)
     setShow({ repeats: true, rota: true, ...readStored(SHOW_KEY, {}) })
+    const w = readStored<number>(REPEAT_KEY, 4)
+    setRepeatWeeks(REPEAT_OPTIONS.includes(w) ? w : 4)
   }, [])
 
   // The app's main column is narrow by default; widen it while this page is open.
@@ -128,7 +151,7 @@ export default function PlansOverviewPage() {
     setLoading(true)
     setError(null)
     api
-      .get('/api/plans/overview', { params: { count, offset, ...(from ? { from } : {}) } })
+      .get('/api/plans/overview', { params: { count, offset, repeat_weeks: repeatWeeks, ...(from ? { from } : {}) } })
       .then((res) => {
         if (id === requestId.current) setData(res.data)
       })
@@ -139,7 +162,7 @@ export default function PlansOverviewPage() {
       .finally(() => {
         if (id === requestId.current) setLoading(false)
       })
-  }, [count, offset, from])
+  }, [count, offset, from, repeatWeeks])
 
   useEffect(() => {
     if (!church || churchLoading || !canAddPlans) return
@@ -149,6 +172,10 @@ export default function PlansOverviewPage() {
   const changeCount = (c: number) => {
     setCount(c)
     writeStored(COUNT_KEY, c)
+  }
+  const changeRepeatWeeks = (w: number) => {
+    setRepeatWeeks(w)
+    writeStored(REPEAT_KEY, w)
   }
   const toggleShow = (k: 'repeats' | 'rota') => {
     const next = { ...show, [k]: !show[k] }
@@ -164,9 +191,18 @@ export default function PlansOverviewPage() {
   }, [data])
 
   // Same-day uses don't count (morning and evening services often share songs on purpose).
+  // Each column only looks repeat_window_days either side of ITS OWN date, so a note doesn't
+  // appear or disappear depending on how many columns are on screen.
   const repeatNotes = (item: OverviewItem, plan: OverviewPlan) => {
-    if (!item.song_id) return []
-    const others = (usesBySong[item.song_id] || []).filter((u) => u.plan_id !== plan.id && u.plan_date !== plan.plan_date)
+    if (!item.song_id || !data) return []
+    const limit = data.repeat_window_days
+    const planDay = parseISO(plan.plan_date)
+    const others = (usesBySong[item.song_id] || []).filter(
+      (u) =>
+        u.plan_id !== plan.id &&
+        u.plan_date !== plan.plan_date &&
+        Math.abs(differenceInCalendarDays(planDay, parseISO(u.plan_date))) <= limit
+    )
     const notes: { kind: 'before' | 'after'; text: string }[] = []
     const before = others.filter((u) => u.plan_date < plan.plan_date).pop()
     const after = others.find((u) => u.plan_date > plan.plan_date)
@@ -279,6 +315,14 @@ export default function PlansOverviewPage() {
           <label className="po-check">
             <input type="checkbox" checked={show.repeats} onChange={() => toggleShow('repeats')} /> Song repeats
           </label>
+          {show.repeats && (
+            <label className="po-label">
+              within
+              <select className="input po-select" value={repeatWeeks} onChange={(e) => changeRepeatWeeks(Number(e.target.value))}>
+                {REPEAT_OPTIONS.map((w) => <option key={w} value={w}>{w} weeks</option>)}
+              </select>
+            </label>
+          )}
           <label className="po-check">
             <input type="checkbox" checked={show.rota} onChange={() => toggleShow('rota')} /> Rota counts
           </label>
@@ -358,12 +402,12 @@ export default function PlansOverviewPage() {
                     <p className="po-empty">None added</p>
                   ) : (
                     <ul>
-                      {plan.musicians.map((m) => {
+                      {groupMusicians(plan.musicians).map((m) => {
                         const un = unavailableNote(m, plan.plan_date)
                         return (
                           <li key={m.id} className={un ? 'po-musician po-musician-unavailable' : 'po-musician'} title={un || undefined}>
                             <span>{m.name}</span>
-                            {m.role && <span className="po-musician-role">{m.role}</span>}
+                            {m.roles.length > 0 && <span className="po-musician-role">{m.roles.join(', ')}</span>}
                             {un && <span className="po-unavailable"><AlertTriangle size={11} /> Unavailable</span>}
                           </li>
                         )
@@ -385,8 +429,8 @@ export default function PlansOverviewPage() {
         </div>
       )}
       <p className="po-footnote">
-        Song repeats look back and ahead {data?.repeat_window_days ? Math.round(data.repeat_window_days / 7) : 4} weeks.
-        Songs repeated on the same day aren&apos;t flagged.
+        Song repeats look {repeatWeeks} weeks back and ahead from each plan. Songs repeated on the same day aren&apos;t
+        flagged.
       </p>
     </div>
   )
