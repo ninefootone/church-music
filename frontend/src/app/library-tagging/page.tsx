@@ -4,7 +4,8 @@
 // song pages. Lives OUTSIDE the (app) group on purpose: helpers on the email allow-list
 // don't belong to the master church (or any church), so this page must not need a church.
 // Backend: backend/routes/libraryTagging.js. Owner = master-library admin (tags + flags);
-// tagger = email in LIBRARY_TAGGER_EMAILS (tags only).
+// tagger = email in LIBRARY_TAGGER_EMAILS (tags only). Suggested tags (song_tag_suggestions)
+// show dashed until someone accepts or dismisses them. See project doc library-tagging.md.
 
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { useAuth } from '@clerk/nextjs'
@@ -25,6 +26,7 @@ interface Song {
   has_lyrics: boolean
   file_count: number
   tag_ids: string[]
+  suggestion_ids: string[]
 }
 
 interface Tag {
@@ -32,8 +34,30 @@ interface Tag {
   name: string
 }
 
+interface TagInfo {
+  tag_id: string
+  added_by: string | null
+  added_at: string | null
+}
+
+interface Detail {
+  lyrics: string
+  tag_info: TagInfo[]
+}
+
+interface Contributor {
+  name: string
+  tag_count: number
+  song_count: number
+}
+
+interface TagState {
+  tag_ids: string[]
+  suggestion_ids: string[]
+}
+
 type StatusFilter = 'all' | 'draft' | 'live'
-type TagFilter = 'all' | 'none' | 'under3' | 'atleast3'
+type TagFilter = 'all' | 'none' | 'under3' | 'atleast3' | 'suggested'
 type YesNoFilter = 'all' | 'yes' | 'no'
 
 class ApiError extends Error {
@@ -44,6 +68,11 @@ class ApiError extends Error {
   }
 }
 
+function formatDate(iso: string | null) {
+  if (!iso) return ''
+  return new Date(iso).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' })
+}
+
 export default function LibraryTaggingPage() {
   const { isLoaded, isSignedIn, getToken } = useAuth()
 
@@ -51,14 +80,15 @@ export default function LibraryTaggingPage() {
   const [email, setEmail] = useState('')
   const [songs, setSongs] = useState<Song[]>([])
   const [tags, setTags] = useState<Tag[]>([])
+  const [contributors, setContributors] = useState<Contributor[]>([])
   const [loading, setLoading] = useState(true)
   const [loadError, setLoadError] = useState<string | null>(null)
   const [forbidden, setForbidden] = useState(false)
   const [actionError, setActionError] = useState<string | null>(null)
 
   const [selectedId, setSelectedId] = useState<string | null>(null)
-  const [lyrics, setLyrics] = useState<Record<string, string>>({})
-  const [lyricsError, setLyricsError] = useState<string | null>(null)
+  const [details, setDetails] = useState<Record<string, Detail>>({})
+  const [detailError, setDetailError] = useState<string | null>(null)
   const [pending, setPending] = useState<Set<string>>(new Set())
 
   const [search, setSearch] = useState('')
@@ -83,6 +113,12 @@ export default function LibraryTaggingPage() {
     [getToken]
   )
 
+  const loadContributors = useCallback(() => {
+    call('/contributors')
+      .then(setContributors)
+      .catch(() => {}) // header extra only — the page works without it
+  }, [call])
+
   const load = useCallback(async () => {
     setLoading(true)
     setLoadError(null)
@@ -94,13 +130,14 @@ export default function LibraryTaggingPage() {
       setEmail(me.email || '')
       setSongs(songRows)
       setTags(tagRows)
+      loadContributors()
     } catch (err) {
       if (err instanceof ApiError && err.status === 403) setForbidden(true)
       else setLoadError(err instanceof Error ? err.message : 'Could not load songs.')
     } finally {
       setLoading(false)
     }
-  }, [call])
+  }, [call, loadContributors])
 
   useEffect(() => {
     if (isLoaded && isSignedIn) load()
@@ -122,6 +159,7 @@ export default function LibraryTaggingPage() {
       if (tagFilter === 'none' && n !== 0) return false
       if (tagFilter === 'under3' && n >= 3) return false
       if (tagFilter === 'atleast3' && n < 3) return false
+      if (tagFilter === 'suggested' && s.suggestion_ids.length === 0) return false
       if (libraryFilter === 'yes' && !s.in_library) return false
       if (libraryFilter === 'no' && s.in_library) return false
       if (lyricsFilter === 'yes' && !s.has_lyrics) return false
@@ -131,27 +169,27 @@ export default function LibraryTaggingPage() {
   }, [songs, search, statusFilter, tagFilter, libraryFilter, lyricsFilter])
 
   const taggedCount = useMemo(() => songs.filter((s) => s.tag_ids.length > 0).length, [songs])
+  const suggestedCount = useMemo(() => songs.filter((s) => s.suggestion_ids.length > 0).length, [songs])
   const selected = songs.find((s) => s.id === selectedId) || null
 
-  // Fetch lyrics for the selected song (cached per song; ignores a reply for a song
-  // that's no longer selected).
-  const selectedHasLyrics = !!selected?.has_lyrics
+  // Fetch lyrics + "who added each tag" for the selected song (cached per song; ignores a
+  // reply for a song that's no longer selected).
   useEffect(() => {
-    if (!selectedId || !selectedHasLyrics || lyrics[selectedId] !== undefined) return
+    if (!selectedId || details[selectedId] !== undefined) return
     const id = selectedId
     let stale = false
-    setLyricsError(null)
-    call(`/songs/${id}/lyrics`)
-      .then((d) => {
-        if (!stale) setLyrics((prev) => ({ ...prev, [id]: d.lyrics || '' }))
+    setDetailError(null)
+    call(`/songs/${id}/detail`)
+      .then((d: Detail) => {
+        if (!stale) setDetails((prev) => ({ ...prev, [id]: d }))
       })
       .catch((err) => {
-        if (!stale) setLyricsError(err instanceof Error ? err.message : 'Could not load lyrics.')
+        if (!stale) setDetailError(err instanceof Error ? err.message : 'Could not load lyrics.')
       })
     return () => {
       stale = true
     }
-  }, [selectedId, selectedHasLyrics, lyrics, call])
+  }, [selectedId, details, call])
 
   // Arrow keys move through the (filtered) list when you're not typing in a box.
   useEffect(() => {
@@ -172,23 +210,35 @@ export default function LibraryTaggingPage() {
     return () => window.removeEventListener('keydown', onKey)
   }, [filtered, selectedId])
 
-  const setSongTags = (songId: string, tagIds: string[]) =>
-    setSongs((prev) => prev.map((s) => (s.id === songId ? { ...s, tag_ids: tagIds } : s)))
+  const applyState = (songId: string, state: TagState) =>
+    setSongs((prev) =>
+      prev.map((s) => (s.id === songId ? { ...s, tag_ids: state.tag_ids, suggestion_ids: state.suggestion_ids } : s))
+    )
 
-  const toggleTag = async (song: Song, tagId: string) => {
-    const key = `${song.id}:${tagId}`
+  // Keep the "added by" list in step with local changes; refetched next time the song is opened fresh.
+  const noteAdded = (songId: string, tagIds: string[]) =>
+    setDetails((prev) => {
+      const d = prev[songId]
+      if (!d) return prev
+      const known = new Set(d.tag_info.map((t) => t.tag_id))
+      const now = new Date().toISOString()
+      const extra = tagIds.filter((t) => !known.has(t)).map((t) => ({ tag_id: t, added_by: 'You', added_at: now }))
+      return { ...prev, [songId]: { ...d, tag_info: [...d.tag_info, ...extra] } }
+    })
+
+  const noteRemoved = (songId: string, tagId: string) =>
+    setDetails((prev) => {
+      const d = prev[songId]
+      if (!d) return prev
+      return { ...prev, [songId]: { ...d, tag_info: d.tag_info.filter((t) => t.tag_id !== tagId) } }
+    })
+
+  const withPending = async (key: string, fn: () => Promise<void>) => {
     if (pending.has(key)) return
-    const had = song.tag_ids.includes(tagId)
-    const before = song.tag_ids
     setActionError(null)
     setPending((p) => new Set(p).add(key))
-    setSongTags(song.id, had ? before.filter((t) => t !== tagId) : [...before, tagId])
     try {
-      const d = await call(`/songs/${song.id}/tags/${tagId}`, { method: had ? 'DELETE' : 'POST' })
-      setSongTags(song.id, d.tag_ids)
-    } catch (err) {
-      setSongTags(song.id, before)
-      setActionError(`Couldn't update tags on "${song.title}": ${err instanceof Error ? err.message : 'error'}`)
+      await fn()
     } finally {
       setPending((p) => {
         const n = new Set(p)
@@ -198,31 +248,72 @@ export default function LibraryTaggingPage() {
     }
   }
 
-  const toggleFlag = async (song: Song, flag: Flag) => {
-    const key = `${song.id}:${flag}`
-    if (pending.has(key)) return
-    const value = !song[flag]
-    setActionError(null)
-    setPending((p) => new Set(p).add(key))
-    setSongs((prev) => prev.map((s) => (s.id === song.id ? { ...s, [flag]: value } : s)))
-    try {
-      const d = await call(`/songs/${song.id}/flags`, { method: 'PATCH', body: JSON.stringify({ [flag]: value }) })
-      setSongs((prev) =>
-        prev.map((s) =>
-          s.id === song.id ? { ...s, is_draft: d.is_draft, in_library: d.in_library, share_all_data: d.share_all_data } : s
+  const toggleTag = (song: Song, tagId: string) =>
+    withPending(`${song.id}:${tagId}`, async () => {
+      const had = song.tag_ids.includes(tagId)
+      const before: TagState = { tag_ids: song.tag_ids, suggestion_ids: song.suggestion_ids }
+      applyState(song.id, {
+        tag_ids: had ? before.tag_ids.filter((t) => t !== tagId) : [...before.tag_ids, tagId],
+        suggestion_ids: before.suggestion_ids.filter((t) => t !== tagId),
+      })
+      try {
+        const d: TagState = await call(`/songs/${song.id}/tags/${tagId}`, { method: had ? 'DELETE' : 'POST' })
+        applyState(song.id, d)
+        if (had) noteRemoved(song.id, tagId)
+        else noteAdded(song.id, [tagId])
+      } catch (err) {
+        applyState(song.id, before)
+        setActionError(`Couldn't update tags on "${song.title}": ${err instanceof Error ? err.message : 'error'}`)
+      }
+    })
+
+  const dismissSuggestion = (song: Song, tagId: string) =>
+    withPending(`${song.id}:${tagId}`, async () => {
+      const before: TagState = { tag_ids: song.tag_ids, suggestion_ids: song.suggestion_ids }
+      applyState(song.id, { ...before, suggestion_ids: before.suggestion_ids.filter((t) => t !== tagId) })
+      try {
+        applyState(song.id, await call(`/songs/${song.id}/suggestions/${tagId}`, { method: 'DELETE' }))
+      } catch (err) {
+        applyState(song.id, before)
+        setActionError(`Couldn't dismiss suggestion on "${song.title}": ${err instanceof Error ? err.message : 'error'}`)
+      }
+    })
+
+  const acceptAll = (song: Song) =>
+    withPending(`${song.id}:accept-all`, async () => {
+      const before: TagState = { tag_ids: song.tag_ids, suggestion_ids: song.suggestion_ids }
+      applyState(song.id, {
+        tag_ids: Array.from(new Set([...before.tag_ids, ...before.suggestion_ids])),
+        suggestion_ids: [],
+      })
+      try {
+        const d: TagState = await call(`/songs/${song.id}/suggestions/accept`, { method: 'POST' })
+        applyState(song.id, d)
+        noteAdded(song.id, before.suggestion_ids)
+      } catch (err) {
+        applyState(song.id, before)
+        setActionError(`Couldn't accept suggestions on "${song.title}": ${err instanceof Error ? err.message : 'error'}`)
+      }
+    })
+
+  const toggleFlag = (song: Song, flag: Flag) =>
+    withPending(`${song.id}:${flag}`, async () => {
+      const value = !song[flag]
+      setSongs((prev) => prev.map((s) => (s.id === song.id ? { ...s, [flag]: value } : s)))
+      try {
+        const d = await call(`/songs/${song.id}/flags`, { method: 'PATCH', body: JSON.stringify({ [flag]: value }) })
+        setSongs((prev) =>
+          prev.map((s) =>
+            s.id === song.id
+              ? { ...s, is_draft: d.is_draft, in_library: d.in_library, share_all_data: d.share_all_data }
+              : s
+          )
         )
-      )
-    } catch (err) {
-      setSongs((prev) => prev.map((s) => (s.id === song.id ? { ...s, [flag]: !value } : s)))
-      setActionError(`Couldn't update "${song.title}": ${err instanceof Error ? err.message : 'error'}`)
-    } finally {
-      setPending((p) => {
-        const n = new Set(p)
-        n.delete(key)
-        return n
-      })
-    }
-  }
+      } catch (err) {
+        setSongs((prev) => prev.map((s) => (s.id === song.id ? { ...s, [flag]: !value } : s)))
+        setActionError(`Couldn't update "${song.title}": ${err instanceof Error ? err.message : 'error'}`)
+      }
+    })
 
   // ── Signed out / no access / loading ─────────────────────────────────────
   if (!isLoaded) return <div className="lt-message">Loading…</div>
@@ -261,6 +352,9 @@ export default function LibraryTaggingPage() {
   }
 
   const isOwner = role === 'owner'
+  const detail = selected ? details[selected.id] : undefined
+  const infoByTag: Record<string, TagInfo> = {}
+  for (const t of detail?.tag_info || []) infoByTag[t.tag_id] = t
 
   return (
     <div className="lt-page">
@@ -268,10 +362,22 @@ export default function LibraryTaggingPage() {
         <div>
           <h1>Library tagging</h1>
           <p className="lt-sub">
-            {taggedCount} of {songs.length} songs have tags · showing {filtered.length}
+            {taggedCount} of {songs.length} songs have tags · {suggestedCount} with suggestions to review · showing{' '}
+            {filtered.length}
             {email ? ` · signed in as ${email}` : ''}
             {isOwner ? '' : ' · you can add and remove tags'}
           </p>
+          {contributors.length > 0 && (
+            <p className="lt-sub">
+              Tags added:{' '}
+              {contributors.map((c, i) => (
+                <span key={c.name + i}>
+                  {i > 0 ? ' · ' : ''}
+                  {c.name} {c.tag_count} ({c.song_count} songs)
+                </span>
+              ))}
+            </p>
+          )}
         </div>
         <p className="lt-hint">Click a song to see its lyrics and tags. Use ↑ ↓ to move between songs.</p>
       </header>
@@ -295,6 +401,7 @@ export default function LibraryTaggingPage() {
           Tags
           <select className="input" value={tagFilter} onChange={(e) => setTagFilter(e.target.value as TagFilter)}>
             <option value="all">All</option>
+            <option value="suggested">Has suggestions</option>
             <option value="none">No tags</option>
             <option value="under3">Fewer than 3</option>
             <option value="atleast3">3 or more</option>
@@ -347,12 +454,15 @@ export default function LibraryTaggingPage() {
                     {s.author && <div className="lt-author">{s.author}</div>}
                   </td>
                   <td>
-                    {s.tag_ids.length === 0 ? (
+                    {s.tag_ids.length === 0 && s.suggestion_ids.length === 0 ? (
                       <span className="lt-none">No tags</span>
                     ) : (
                       <div className="lt-row-tags">
                         {s.tag_ids.map((id) => (
                           <span key={id} className="tag-chip">{tagName[id] || '…'}</span>
+                        ))}
+                        {s.suggestion_ids.map((id) => (
+                          <span key={`s-${id}`} className="lt-chip-suggested">{tagName[id] || '…'}?</span>
                         ))}
                       </div>
                     )}
@@ -392,15 +502,55 @@ export default function LibraryTaggingPage() {
                 </a>
               )}
 
+              {selected.suggestion_ids.length > 0 && (
+                <>
+                  <h3 className="lt-panel-heading">Suggested ({selected.suggestion_ids.length})</h3>
+                  <div className="lt-tag-picker">
+                    {selected.suggestion_ids.map((id) => (
+                      <span key={id} className="lt-suggestion">
+                        <button
+                          type="button"
+                          className="lt-suggestion-accept"
+                          disabled={pending.has(`${selected.id}:${id}`)}
+                          onClick={() => toggleTag(selected, id)}
+                          title="Add this tag"
+                        >
+                          + {tagName[id] || '…'}
+                        </button>
+                        <button
+                          type="button"
+                          className="lt-suggestion-dismiss"
+                          disabled={pending.has(`${selected.id}:${id}`)}
+                          onClick={() => dismissSuggestion(selected, id)}
+                          aria-label={`Dismiss ${tagName[id] || 'suggestion'}`}
+                          title="Dismiss suggestion"
+                        >
+                          ×
+                        </button>
+                      </span>
+                    ))}
+                  </div>
+                  <button
+                    type="button"
+                    className="btn btn-secondary btn-sm lt-accept-all"
+                    disabled={pending.has(`${selected.id}:accept-all`)}
+                    onClick={() => acceptAll(selected)}
+                  >
+                    Accept all suggestions
+                  </button>
+                </>
+              )}
+
               <h3 className="lt-panel-heading">Tags ({selected.tag_ids.length})</h3>
               <div className="lt-tag-picker">
                 {tags.map((t) => {
                   const on = selected.tag_ids.includes(t.id)
+                  const suggested = !on && selected.suggestion_ids.includes(t.id)
                   return (
                     <button
                       key={t.id}
                       type="button"
-                      className={on ? 'lt-tag lt-tag-on' : 'lt-tag'}
+                      className={on ? 'lt-tag lt-tag-on' : suggested ? 'lt-tag lt-tag-suggested' : 'lt-tag'}
                       disabled={pending.has(`${selected.id}:${t.id}`)}
                       onClick={() => toggleTag(selected, t.id)}
                       aria-pressed={on}
@@ -412,16 +562,39 @@ export default function LibraryTaggingPage() {
                 })}
               </div>
 
+              {selected.tag_ids.length > 0 && (
+                <>
+                  <h3 className="lt-panel-heading">Added by</h3>
+                  {!detail ? (
+                    <p className="lt-none">Loading…</p>
+                  ) : (
+                    <ul className="lt-added-by">
+                      {selected.tag_ids.map((id) => {
+                        const info = infoByTag[id]
+                        return (
+                          <li key={id}>
+                            <span className="lt-added-tag">{tagName[id] || '…'}</span>{' '}
+                            {info?.added_by
+                              ? `${info.added_by}${info.added_at ? ` · ${formatDate(info.added_at)}` : ''}`
+                              : 'before tracking'}
+                          </li>
+                        )
+                      })}
+                    </ul>
+                  )}
+                </>
+              )}
+
               <h3 className="lt-panel-heading">Lyrics</h3>
               {!selected.has_lyrics ? (
                 <p className="lt-none">No lyrics stored for this song.</p>
-              ) : lyricsError && lyrics[selected.id] === undefined ? (
-                <div className="error-box">{lyricsError}</div>
-              ) : lyrics[selected.id] === undefined ? (
+              ) : detailError && !detail ? (
+                <div className="error-box">{detailError}</div>
+              ) : !detail ? (
                 <p className="lt-none">Loading lyrics…</p>
               ) : (
                 <div className="lt-lyrics">
-                  <LyricsDisplay lyrics={lyrics[selected.id]} />
+                  <LyricsDisplay lyrics={detail.lyrics} />
                 </div>
               )}
             </>

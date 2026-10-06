@@ -547,8 +547,8 @@ router.post('/', requireAuth, requirePermission('can_manage_songs'), async (req,
       );
       for (const { id: tagId } of validTags) {
         await client.query(
-          'INSERT INTO song_tags (song_id, tag_id) VALUES ($1, $2) ON CONFLICT DO NOTHING',
-          [song.rows[0].id, tagId]
+          'INSERT INTO song_tags (song_id, tag_id, added_by) VALUES ($1, $2, $3) ON CONFLICT DO NOTHING',
+          [song.rows[0].id, tagId, req.user.id]
         );
       }
     }
@@ -682,22 +682,29 @@ router.put('/:id', requireAuth, requirePermission('can_manage_songs'), async (re
     }
     const saved = song.rows[0];
 
-    // Replace tags only when the caller sent a tags array. Insert only tags that
+    // Sync tags only when the caller sent a tags array. Insert only tags that
     // exist and are global or this church's own (a stale/foreign id is skipped).
+    // Only removes/adds what CHANGED, so tags left alone keep their added_by/added_at
+    // (who tagged it — shown on /library-tagging). Used to delete and re-add them all.
     if (Array.isArray(body.tags)) {
-      await client.query('DELETE FROM song_tags WHERE song_id = $1', [saved.id]);
+      let keepIds = [];
       if (body.tags.length > 0) {
         const { rows: validTags } = await client.query(
-          `SELECT id FROM tags
+          `SELECT id::text AS id FROM tags
            WHERE id::text = ANY($1::text[]) AND (church_id IS NULL OR church_id = $2)`,
           [body.tags.map(String), churchId]
         );
-        for (const { id: tagId } of validTags) {
-          await client.query(
-            'INSERT INTO song_tags (song_id, tag_id) VALUES ($1, $2) ON CONFLICT DO NOTHING',
-            [saved.id, tagId]
-          );
-        }
+        keepIds = validTags.map(r => r.id);
+      }
+      await client.query(
+        'DELETE FROM song_tags WHERE song_id = $1 AND NOT (tag_id::text = ANY($2::text[]))',
+        [saved.id, keepIds]
+      );
+      for (const tagId of keepIds) {
+        await client.query(
+          'INSERT INTO song_tags (song_id, tag_id, added_by) VALUES ($1, $2, $3) ON CONFLICT DO NOTHING',
+          [saved.id, tagId, req.user.id]
+        );
       }
     }
 

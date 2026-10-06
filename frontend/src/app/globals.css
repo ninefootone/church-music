@@ -3680,3 +3680,16 @@ select.input {
   .lt-table-wrap { max-height: 60vh; }
   .lt-panel { position: static; max-height: none; }
 }
+
+/* Library tagging — suggestions + attribution (2026-10-06) */
+.lt-chip-suggested { font-size: 0.75rem; border: 1px dashed var(--color-brand-300); color: var(--color-brand-600); border-radius: var(--radius-pill); padding: 1px 7px; }
+.lt-suggestion { display: inline-flex; align-items: stretch; border: 1px dashed var(--color-brand-400); border-radius: var(--radius-pill); overflow: hidden; background: var(--color-brand-50); }
+.lt-suggestion button { border: 0; background: transparent; cursor: pointer; font-size: 0.8125rem; color: var(--color-brand-700); }
+.lt-suggestion-accept { padding: 4px 6px 4px 10px; }
+.lt-suggestion-dismiss { padding: 4px 9px 4px 6px; border-left: 1px dashed var(--color-brand-300) !important; color: var(--color-text-muted) !important; }
+.lt-suggestion button:hover { background: var(--color-brand-100); }
+.lt-suggestion button:disabled { opacity: 0.6; cursor: wait; }
+.lt-accept-all { margin-top: 10px; }
+.lt-tag-suggested { border-style: dashed; border-color: var(--color-brand-400); color: var(--color-brand-700); }
+.lt-added-by { list-style: none; padding: 0; margin: 0; font-size: 0.8125rem; color: var(--color-text-secondary); display: flex; flex-direction: column; gap: 3px; }
+.lt-added-tag { font-weight: 500; color: var(--color-text-primary); }
