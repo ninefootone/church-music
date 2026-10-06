@@ -3693,3 +3693,6 @@ select.input {
 .lt-tag-suggested { border-style: dashed; border-color: var(--color-brand-400); color: var(--color-brand-700); }
 .lt-added-by { list-style: none; padding: 0; margin: 0; font-size: 0.8125rem; color: var(--color-text-secondary); display: flex; flex-direction: column; gap: 3px; }
 .lt-added-tag { font-weight: 500; color: var(--color-text-primary); }
+/* Library tagging — keep tag chips on one line; give the Tags column more room than the title */
+.lt-row-tags .tag-chip, .lt-chip-suggested { white-space: nowrap; display: inline-block; line-height: 1.5; }
+.lt-table th:first-child { width: 38%; }
