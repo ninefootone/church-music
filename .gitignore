@@ -20,3 +20,6 @@ next-env.d.ts
 .vercel
 .env.import
 backend/scripts/*.csv
+
+# Library tagging working files (contain lyrics — never commit)
+tagging-work/
