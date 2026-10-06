@@ -13,6 +13,7 @@ router.get('/', requireAuth, requireMembership, async function(req, res, next) {
       `SELECT id, start_date, end_date, note, created_at
        FROM member_unavailability
        WHERE church_id = $1 AND user_id = $2
+         AND end_date >= CURRENT_DATE -- hide dates that have passed (rows are kept)
        ORDER BY start_date ASC`,
       [req.churchId, req.user.id]
     );
@@ -114,6 +115,7 @@ router.get('/team', requireAuth, requireAdmin, async function(req, res, next) {
        FROM member_unavailability mu
        JOIN users u ON u.id = mu.user_id
        WHERE mu.church_id = $1
+         AND mu.end_date >= CURRENT_DATE -- hide dates that have passed (rows are kept)
        ORDER BY mu.start_date ASC, u.name ASC`,
       [req.churchId]
     );
