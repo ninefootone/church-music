@@ -102,6 +102,142 @@ router.get('/my-upcoming', requireAuth, requireMembership, async function(req, r
   }
 });
 
+// GET /api/plans/overview?from=YYYY-MM-DD&offset=0&count=6 — read-only multi-plan overview
+// (Plans → Overview, /plans/overview). Planners only (admin / "Add & edit plans"), drafts included.
+// Plans are numbered in date order across the whole church; the window starts at the first plan on
+// or after `from` (default today), shifted by `offset` (may be negative → earlier plans), `count` long.
+// Also returns, for songs in the window, every use within REPEAT_WINDOW_DAYS before the first / after
+// the last visible plan (for "sung 2 weeks ago" / "also planned 2 Nov"), and team unavailability
+// overlapping the window. Dates come back as 'YYYY-MM-DD' strings (to_char) to avoid timezone shifts.
+// Defined before '/:id' routes so 'overview' isn't treated as a plan id.
+const REPEAT_WINDOW_DAYS = 28;
+router.get('/overview', requireAuth, requireMembership, async function(req, res, next) {
+  try {
+    if (!canSeeDraftPlans(req)) {
+      return res.status(403).json({ error: 'Only admins and members who can add & edit plans can use the overview.' });
+    }
+    const churchId = req.churchId;
+    let from = req.query.from || null;
+    if (from !== null && !(/^\d{4}-\d{2}-\d{2}$/.test(from) && isIsoDate(from))) {
+      return res.status(400).json({ error: DATE_MESSAGE });
+    }
+    let offset = parseInt(req.query.offset, 10);
+    if (!Number.isFinite(offset)) offset = 0;
+    offset = Math.max(-1000, Math.min(1000, offset));
+    let count = parseInt(req.query.count, 10);
+    if (!Number.isFinite(count)) count = 6;
+    count = Math.max(1, Math.min(12, count));
+
+    const window = await pool.query(
+      `WITH ordered AS (
+         SELECT p.id, p.title, p.status, p.plan_date, p.plan_time, p.plan_start_time, p.plan_sort_order,
+                ROW_NUMBER() OVER (ORDER BY p.plan_date, p.plan_sort_order, p.plan_start_time NULLS LAST, p.created_at, p.id) AS rn
+           FROM plans p WHERE p.church_id = $1
+       ),
+       stats AS (
+         SELECT COUNT(*)::int AS total,
+                COALESCE(MIN(rn) FILTER (WHERE plan_date >= COALESCE($2::date, CURRENT_DATE)), COUNT(*) + 1)::int AS anchor
+           FROM ordered
+       )
+       SELECT o.id, o.title, o.status, to_char(o.plan_date, 'YYYY-MM-DD') AS plan_date, o.plan_time,
+              o.plan_start_time, o.plan_sort_order, s.total, s.anchor, o.rn::int AS rn
+         FROM ordered o CROSS JOIN stats s
+        WHERE o.rn >= s.anchor + $3 AND o.rn < s.anchor + $3 + $4
+        ORDER BY o.rn`,
+      [churchId, from, offset, count]
+    );
+
+    // Paging flags even when the window is empty (e.g. no upcoming plans yet).
+    let total, anchor;
+    if (window.rows.length) {
+      total = Number(window.rows[0].total);
+      anchor = Number(window.rows[0].anchor);
+    } else {
+      const st = await pool.query(
+        `SELECT COUNT(*)::int AS total,
+                (COUNT(*) FILTER (WHERE plan_date < COALESCE($2::date, CURRENT_DATE)) + 1)::int AS anchor
+           FROM plans WHERE church_id = $1`,
+        [churchId, from]
+      );
+      total = st.rows[0].total;
+      anchor = st.rows[0].anchor;
+    }
+    const start = anchor + offset;
+    const plans = window.rows.map(({ total: _t, anchor: _a, rn: _r, ...p }) => p);
+    const base = {
+      repeat_window_days: REPEAT_WINDOW_DAYS,
+      has_previous: start > 1,
+      has_next: start + count - 1 < total,
+      plans: [],
+      song_uses: [],
+      unavailability: [],
+    };
+    if (plans.length === 0) return res.json(base);
+
+    const planIds = plans.map((p) => p.id);
+    const firstDate = plans[0].plan_date;
+    const lastDate = plans[plans.length - 1].plan_date;
+
+    const [items, musicians, unavailability] = await Promise.all([
+      pool.query(
+        `SELECT pi.plan_id, pi.id, pi.type, pi.phase, pi.title, pi.position, pi.key_override, pi.duration_minutes,
+                s.id AS song_id, s.title AS song_title, s.default_key AS song_default_key,
+                s.default_duration AS song_default_duration
+           FROM plan_items pi LEFT JOIN songs s ON s.id = pi.song_id
+          WHERE pi.plan_id = ANY($1::uuid[])
+          ORDER BY pi.plan_id, pi.position`,
+        [planIds]
+      ),
+      pool.query(
+        `SELECT plan_id, id, name, role, user_id FROM plan_musicians
+          WHERE plan_id = ANY($1::uuid[]) ORDER BY created_at ASC`,
+        [planIds]
+      ),
+      pool.query(
+        `SELECT user_id, to_char(start_date, 'YYYY-MM-DD') AS start_date,
+                to_char(end_date, 'YYYY-MM-DD') AS end_date, note
+           FROM member_unavailability
+          WHERE church_id = $1 AND end_date >= $2::date AND start_date <= $3::date`,
+        [churchId, firstDate, lastDate]
+      ),
+    ]);
+
+    const songIds = [...new Set(items.rows.filter((i) => i.song_id).map((i) => i.song_id))];
+    let songUses = { rows: [] };
+    if (songIds.length) {
+      songUses = await pool.query(
+        `SELECT DISTINCT pi.song_id, p.id AS plan_id, to_char(p.plan_date, 'YYYY-MM-DD') AS plan_date,
+                p.title, p.status
+           FROM plan_items pi JOIN plans p ON p.id = pi.plan_id
+          WHERE p.church_id = $1 AND pi.song_id = ANY($2::uuid[])
+            AND p.plan_date BETWEEN $3::date - $5::int AND $4::date + $5::int
+          ORDER BY plan_date`,
+        [churchId, songIds, firstDate, lastDate, REPEAT_WINDOW_DAYS]
+      );
+    }
+
+    const byPlan = (rows) => {
+      const m = {};
+      for (const r of rows) {
+        const { plan_id, ...rest } = r;
+        (m[plan_id] = m[plan_id] || []).push(rest);
+      }
+      return m;
+    };
+    const itemsByPlan = byPlan(items.rows);
+    const musiciansByPlan = byPlan(musicians.rows);
+
+    res.json({
+      ...base,
+      plans: plans.map((p) => ({ ...p, items: itemsByPlan[p.id] || [], musicians: musiciansByPlan[p.id] || [] })),
+      song_uses: songUses.rows,
+      unavailability: unavailability.rows,
+    });
+  } catch (err) {
+    next(err);
+  }
+});
+
 router.get('/:id/musicians', requireAuth, requireMembership, async function(req, res, next) {
   try {
     const plan = await loadChurchPlan(req.params.id, req.churchId);
