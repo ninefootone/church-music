@@ -32,20 +32,35 @@ async function run() {
     const songs = await client.query('SELECT id::text AS id FROM songs WHERE church_id = $1', [process.env.MASTER_CHURCH_ID]);
     const masterSongs = new Set(songs.rows.map((r) => r.id));
 
-    let inserted = 0, alreadyTagged = 0, notMaster = 0;
+    // Build the full list in memory, then do ONE set-based insert (was ~2 queries per suggestion —
+    // thousands of round trips to Railway, minutes of silence).
+    let notMaster = 0;
     const unknownNames = new Set();
+    const songIds = [], tagIds = [];
     for (const [songId, names] of Object.entries(suggestions)) {
       if (!masterSongs.has(songId)) { notMaster++; continue; }
       for (const name of names) {
         const id = tagId.get(name);
         if (!id) { unknownNames.add(name); continue; }
-        const has = await client.query('SELECT 1 FROM song_tags WHERE song_id = $1 AND tag_id = $2', [songId, id]);
-        if (has.rows.length) { alreadyTagged++; continue; }
-        const r = await client.query(
-          'INSERT INTO song_tag_suggestions (song_id, tag_id) VALUES ($1, $2) ON CONFLICT DO NOTHING', [songId, id]);
-        inserted += r.rowCount;
+        songIds.push(songId);
+        tagIds.push(id);
       }
     }
+    console.log(`Checking ${songIds.length} suggestions…`);
+    const already = await client.query(
+      `SELECT COUNT(*)::int AS n FROM unnest($1::uuid[], $2::uuid[]) AS x(song_id, tag_id)
+        WHERE EXISTS (SELECT 1 FROM song_tags st WHERE st.song_id = x.song_id AND st.tag_id = x.tag_id)`,
+      [songIds, tagIds]
+    );
+    const alreadyTagged = already.rows[0].n;
+    const ins = await client.query(
+      `INSERT INTO song_tag_suggestions (song_id, tag_id)
+       SELECT x.song_id, x.tag_id FROM unnest($1::uuid[], $2::uuid[]) AS x(song_id, tag_id)
+        WHERE NOT EXISTS (SELECT 1 FROM song_tags st WHERE st.song_id = x.song_id AND st.tag_id = x.tag_id)
+       ON CONFLICT DO NOTHING`,
+      [songIds, tagIds]
+    );
+    const inserted = ins.rowCount;
 
     if (dryRun) await client.query('ROLLBACK');
     else await client.query('COMMIT');
