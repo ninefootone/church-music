@@ -27,10 +27,14 @@ export default function TeamPage() {
   const [showRemoveConfirm, setShowRemoveConfirm] = useState(false)
   const [activeTab, setActiveTab] = useState<'unavailability' | 'roles' | 'permissions'>('unavailability')
   const fetchedRef = useRef(false)
+  // True if any of the three loads failed. Shown as a banner: without it a failed
+  // load looked like an empty team or "No unavailability declared".
+  const [loadError, setLoadError] = useState(false)
 
-  useEffect(() => {
-    if (!church || fetchedRef.current) return
-    fetchedRef.current = true
+  function loadTeam() {
+    if (!church) return
+    setLoading(true)
+    setLoadError(false)
     Promise.all([
       api.get('/api/members').then(r => {
         const sorted = [...r.data].sort((a, b) => {
@@ -46,8 +50,17 @@ export default function TeamPage() {
         setAvailableRoles(names)
       }),
     ])
-      .catch(() => {})
+      .catch(err => {
+        console.error('Failed to load team:', err)
+        setLoadError(true)
+      })
       .finally(() => setLoading(false))
+  }
+
+  useEffect(() => {
+    if (!church || fetchedRef.current) return
+    fetchedRef.current = true
+    loadTeam()
   }, [church])
 
   if (!isAdmin) {
@@ -81,6 +94,13 @@ export default function TeamPage() {
           </button>
         </div>
         <p className="settings-section-desc">Click a team member to manage their role and permissions.</p>
+
+        {!loading && loadError && (
+          <p>
+            <span className="text-danger">Couldn&apos;t load all team details (members, availability or roles). Check your connection and try again.</span>{' '}
+            <button type="button" className="btn-text" onClick={loadTeam}>Try again</button>
+          </p>
+        )}
 
         {loading ? (
           <p className="text-muted">Loading…</p>

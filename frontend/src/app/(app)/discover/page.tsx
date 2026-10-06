@@ -306,6 +306,9 @@ export default function DiscoverPage() {
   const [importStates, setImportStates] = useState<Record<string, ImportState>>({})
   const [importedIds, setImportedIds] = useState<Record<string, string>>({})
   const [savingOrder, setSavingOrder] = useState(false)
+  // Curator actions (reorder / remove from Discover) used to fail silently.
+  const [curatorError, setCuratorError] = useState('')
+  const [carouselError, setCarouselError] = useState(false)
   const [togglingDiscover, setTogglingDiscover] = useState<Record<string, boolean>>({})
   const fetchedRef = useRef(false)
 
@@ -366,7 +369,10 @@ export default function DiscoverPage() {
       }
       setImportStates(preloaded)
       setImportedIds(preloadedIds)
-    }).catch(() => {}).finally(() => setCarouselLoading(false))
+    }).catch(err => {
+      console.error('Failed to load Discover:', err)
+      setCarouselError(true) // otherwise it said "No songs in Discover yet"
+    }).finally(() => setCarouselLoading(false))
   }, [church])
 
   // Fetch library results
@@ -438,12 +444,16 @@ export default function DiscoverPage() {
 
   const handleDiscoverToggle = async (song: DiscoverSong) => {
     setTogglingDiscover(s => ({ ...s, [song.id]: true }))
+    setCuratorError('')
     try {
       const token = await getToken()
       setAuthToken(token)
       await api.patch(`/api/songs/${song.id}/discover`, { in_discover: false })
       setSongs(s => s.filter(s => s.id !== song.id))
-    } catch {} finally {
+    } catch (err) {
+      console.error('Failed to remove from Discover:', err)
+      setCuratorError(`Couldn't remove "${song.title}" from Discover. Please try again.`)
+    } finally {
       setTogglingDiscover(s => ({ ...s, [song.id]: false }))
     }
   }
@@ -453,14 +463,21 @@ export default function DiscoverPage() {
     if (!over || active.id === over.id) return
     const oldIndex = songs.findIndex(s => s.id === active.id)
     const newIndex = songs.findIndex(s => s.id === over.id)
+    const previousOrder = songs
     const newOrder = arrayMove(songs, oldIndex, newIndex)
     setSongs(newOrder)
     setSavingOrder(true)
+    setCuratorError('')
     try {
       const token = await getToken()
       setAuthToken(token)
       await api.put('/api/templates/discover/order', { order: newOrder.map(s => s.id) })
-    } catch {} finally {
+    } catch (err) {
+      // Put the old order back so the screen matches what's saved.
+      console.error('Failed to save Discover order:', err)
+      setSongs(previousOrder)
+      setCuratorError("Couldn't save the new order, so it's been put back. Please try again.")
+    } finally {
       setSavingOrder(false)
     }
   }
@@ -524,9 +541,14 @@ export default function DiscoverPage() {
       {isMasterLibrary && savingOrder && (
         <p className="text-muted text-sm discover-saving">Saving order…</p>
       )}
+      {curatorError && (
+        <p className="text-sm text-danger discover-saving">{curatorError}</p>
+      )}
 
       {carouselLoading ? (
         <p className="text-muted dash-loading">Loading…</p>
+      ) : carouselError ? (
+        <p className="text-danger">Couldn&apos;t load Discover songs. Check your connection and refresh the page.</p>
       ) : songs.length === 0 ? (
         <div className="empty-state">
           <Sparkles size={32} className="empty-state-icon" />

@@ -22,13 +22,26 @@ export default function AvailabilityPage() {
   const [note, setNote] = useState('')
   const [saving, setSaving] = useState(false)
   const [error, setError] = useState('')
+  // Load failure is shown in place of the list — an empty list would wrongly
+  // suggest the person has no dates saved.
+  const [loadError, setLoadError] = useState(false)
+  const [listError, setListError] = useState('')
+
+  function loadEntries() {
+    setLoading(true)
+    setLoadError(false)
+    api.get('/api/unavailability')
+      .then(r => setEntries(r.data))
+      .catch(err => {
+        console.error('Failed to load unavailability:', err)
+        setLoadError(true)
+      })
+      .finally(() => setLoading(false))
+  }
 
   useEffect(() => {
     if (!church) return
-    api.get('/api/unavailability')
-      .then(r => setEntries(r.data))
-      .catch(() => {})
-      .finally(() => setLoading(false))
+    loadEntries()
   }, [church])
 
   async function handleAdd() {
@@ -55,11 +68,12 @@ export default function AvailabilityPage() {
   }
 
   async function handleDelete(id: string) {
+    setListError('')
     try {
       await api.delete(`/api/unavailability/${id}`)
       setEntries(prev => prev.filter(e => e.id !== id))
     } catch {
-      alert('Failed to remove entry. Please try again.')
+      setListError("Couldn't remove those dates. Please try again.")
     }
   }
 
@@ -134,8 +148,15 @@ export default function AvailabilityPage() {
       <div className="settings-card settings-card--spaced">
         <h2 className="settings-section-heading settings-section-heading--tight">Your unavailability</h2>
 
+        {listError && <p className="settings-hint settings-hint--error">{listError}</p>}
+
         {loading ? (
           <p className="text-muted">Loading…</p>
+        ) : loadError ? (
+          <p>
+            <span className="text-danger">Couldn&apos;t load your dates. Check your connection and try again.</span>{' '}
+            <button type="button" className="btn-text" onClick={loadEntries}>Try again</button>
+          </p>
         ) : entries.length === 0 ? (
           <p className="text-muted">No unavailability added yet.</p>
         ) : (
