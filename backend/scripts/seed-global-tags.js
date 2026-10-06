@@ -17,6 +17,7 @@ const GLOBAL_TAGS = [
   'Sending',
   'Communion',
   'Confession',
+  'Forgiveness',
   'Lament',
   'Intercession',
   'Adoration',
