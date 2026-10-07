@@ -64,7 +64,8 @@ export default function NewSongPage() {
     title: '', author: '', default_key: '', category: '' as Category | '',
     first_line: '', ccli_number: '', lyrics: '', tags: [] as string[],
     notes: '', bible_references: '', suggested_arrangement: '',
-    share_all_data: false, in_discover: false, discover_description: '',
+    share_all_data: false, copyright_info: '', copyright_link: '',
+    in_discover: false, discover_description: '',
     time_signature: '', tempo: '', in_library: false,
   })
   const [links, setLinks] = useState<SongLink[]>([])
@@ -298,6 +299,27 @@ export default function NewSongPage() {
               </div>
             )}
             <LyricsEditor value={form.lyrics} onChange={v => setForm(f => ({ ...f, lyrics: v }))} />
+          </div>
+
+          <div className="form-field">
+            <label className="label">Copyright</label>
+            <div className="form-subfield">
+              <input
+                className="input"
+                placeholder="e.g. Public domain / © 2024 Author Name. Used with permission."
+                value={form.copyright_info}
+                onChange={e => setForm(f => ({ ...f, copyright_info: e.target.value }))}
+              />
+            </div>
+            <div>
+              <label className="label">Copyright holder website <span className="label-note">(optional)</span></label>
+              <input
+                className="input"
+                placeholder="https://..."
+                value={form.copyright_link}
+                onChange={e => setForm(f => ({ ...f, copyright_link: e.target.value }))}
+              />
+            </div>
           </div>
 
           {isMasterLibrary && (
