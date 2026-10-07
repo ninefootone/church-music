@@ -101,7 +101,7 @@ async function pruneOldBackups() {
     const chunks = [];
     const write = (str) => chunks.push(str);
 
-    write(`-- Song Stack DB Backup\n-- Generated: ${new Date().toISOString()}\n`);
+    write(`-- SongStack DB Backup\n-- Generated: ${new Date().toISOString()}\n`);
     write(`-- Tables: ${tables.map(t => t.tablename).join(', ')}\n\n`);
     write(`SET session_replication_role = replica; -- disable FK checks during restore\n`);
 

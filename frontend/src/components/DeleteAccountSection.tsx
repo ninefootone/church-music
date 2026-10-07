@@ -53,7 +53,7 @@ export default function DeleteAccountSection() {
       <div style={box}>
         <h2 style={{ fontSize: 18, fontWeight: 700, margin: '0 0 8px' }}>Delete account</h2>
         <p style={{ margin: '0 0 16px', color: '#4b5563', fontSize: 14, lineHeight: 1.5 }}>
-          Permanently deletes your Song Stack account and personal data. This can&apos;t be undone.
+          Permanently deletes your SongStack account and personal data. This can&apos;t be undone.
         </p>
 
         {step === 'idle' || step === 'checking' ? (

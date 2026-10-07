@@ -1,4 +1,4 @@
-# Song Stack — TODO
+# SongStack — TODO
 
 ## Native app (iPad-first companion — React Native + Expo)
 

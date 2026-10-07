@@ -25,7 +25,7 @@ export function InviteMemberModal({ church, onClose }: InviteMemberModalProps) {
   }
 
   const copyLink = () => {
-    const text = `You've been invited to join ${church.name} on Song Stack.\n\n1. Go to ${inviteUrl}\n2. Sign in or create a free account\n3. Choose "Join an existing church" and enter this code: ${church.invite_code}`
+    const text = `You've been invited to join ${church.name} on SongStack.\n\n1. Go to ${inviteUrl}\n2. Sign in or create a free account\n3. Choose "Join an existing church" and enter this code: ${church.invite_code}`
     navigator.clipboard.writeText(text)
     setCopied(true)
     setTimeout(() => setCopied(false), 2000)

@@ -47,8 +47,8 @@ router.post('/', async (req, res) => {
 
     await sendBrevoEmail({
       to: 'hello@songstack.church',
-      toName: 'Song Stack',
-      subject: `[Song Stack Feedback] ${type || 'General'} from ${name}`,
+      toName: 'SongStack',
+      subject: `[SongStack Feedback] ${type || 'General'} from ${name}`,
       htmlContent: `
         <h2>New feedback received</h2>
         <p><strong>From:</strong> ${escapeHtml(name)} (${escapeHtml(email)})</p>

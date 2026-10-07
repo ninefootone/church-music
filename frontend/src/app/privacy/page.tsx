@@ -2,7 +2,7 @@ import Link from 'next/link'
 import LegalNavActions from '@/components/ui/LegalNavActions'
 
 export const metadata = {
-  title: 'Privacy & Cookie Policy | Song Stack',
+  title: 'Privacy & Cookie Policy | SongStack',
 }
 
 export default function PrivacyPage() {
@@ -11,7 +11,7 @@ export default function PrivacyPage() {
       <nav className="landing-nav">
         <div className="landing-nav-brand">
           <Link href="/">
-            <img src="/logo.svg" alt="Song Stack" className="landing-nav-logo" />
+            <img src="/logo.svg" alt="SongStack" className="landing-nav-logo" />
           </Link>
         </div>
         <LegalNavActions />
@@ -21,7 +21,7 @@ export default function PrivacyPage() {
         <h1>Privacy &amp; Cookie Policy</h1>
         <p className="legal-updated">Last updated: October 2026</p>
 
-        <p>This policy covers the Song Stack website (<strong>songstack.church</strong>), the web app (<strong>app.songstack.church</strong>) and the Song Stack iPad app (together, &ldquo;the Service&rdquo;), operated by <strong>ninefootone creative ltd</strong>, a company registered in England and Wales.</p>
+        <p>This policy covers the SongStack website (<strong>songstack.church</strong>), the web app (<strong>app.songstack.church</strong>) and the SongStack iPad app (together, &ldquo;the Service&rdquo;), operated by <strong>ninefootone creative ltd</strong>, a company registered in England and Wales.</p>
 
         <h2>1. What data we collect</h2>
         <p><strong>Account details.</strong> When you create an account we collect your name and email address via Clerk, our authentication provider. If you sign in with Google or Apple, Clerk receives the name and email address those services share with it. If you add a profile photo, Clerk stores it.</p>
@@ -88,7 +88,7 @@ export default function PrivacyPage() {
         <p>Some of these providers process data outside the UK; where they do, they rely on recognised safeguards such as the UK International Data Transfer Addendum or an adequacy decision.</p>
 
         <h2>8. Children</h2>
-        <p>Song Stack is a tool for churches and is not aimed at children. Accounts are for people aged 13 or over. Churches decide who they invite to use the Service, and a church that invites someone under 18 is responsible for having the permission of that person&apos;s parent or guardian.</p>
+        <p>SongStack is a tool for churches and is not aimed at children. Accounts are for people aged 13 or over. Churches decide who they invite to use the Service, and a church that invites someone under 18 is responsible for having the permission of that person&apos;s parent or guardian.</p>
 
         <h2>9. Changes to this policy</h2>
         <p>If we make significant changes we will update the date at the top of this page and, where appropriate, tell you by email or in the app.</p>
@@ -105,7 +105,7 @@ export default function PrivacyPage() {
           &nbsp;&middot;&nbsp;
           <Link href="/legal" className="footer-link">Legal</Link>
         </div>
-        <div className="footer-copy">Song Stack &copy; 2026 ninefootone creative ltd</div>
+        <div className="footer-copy">SongStack &copy; 2026 ninefootone creative ltd</div>
       </footer>
     </div>
   )

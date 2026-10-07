@@ -71,9 +71,9 @@ function GetHelpContent({ admins, loading, showForm, onShowForm, onFormSuccess }
         )}
       </div>
       <div className="help-content-block">
-        <h3 className="help-content-subheading">Song Stack support</h3>
+        <h3 className="help-content-subheading">SongStack support</h3>
         <p className="help-content-body">
-          Found a bug, got a feature request, or just want to say hello? Get in touch with the Song Stack team below.
+          Found a bug, got a feature request, or just want to say hello? Get in touch with the SongStack team below.
         </p>
         {showForm === 'sent' ? (
           <p className="help-content-body" style={{ color: 'var(--color-brand-500)', fontWeight: 600 }}>Thanks! We&apos;ll get back to you as soon as we can.</p>
@@ -81,7 +81,7 @@ function GetHelpContent({ admins, loading, showForm, onShowForm, onFormSuccess }
           <FeedbackForm onSuccess={onFormSuccess} />
         ) : (
           <button className="btn btn-ghost" onClick={onShowForm}>
-            Contact Song Stack →
+            Contact SongStack →
           </button>
         )}
       </div>
@@ -130,11 +130,11 @@ export default function HelpPage() {
       topics: [
         {
           id: 'what-is-song-stack',
-          title: 'What is Song Stack?',
+          title: 'What is SongStack?',
           content: () => (
             <div>
               <p className="help-content-body">
-                Song Stack is a tool for churches to manage their song library and plan worship services. It gives your whole team — musicians, band leaders, and admins — a shared space to organise music, build service plans, and share resources.
+                SongStack is a tool for churches to manage their song library and plan worship services. It gives your whole team — musicians, band leaders, and admins — a shared space to organise music, build service plans, and share resources.
               </p>
               <p className="help-content-body">
                 There are two main areas:
@@ -157,16 +157,16 @@ export default function HelpPage() {
           content: () => (
             <div>
               <p className="help-content-body">
-                You can sign in with an email and password, or with your Google or Apple account. The same account works on the website and in the Song Stack iPad app.
+                You can sign in with an email and password, or with your Google or Apple account. The same account works on the website and in the SongStack iPad app.
               </p>
               <p className="help-content-body">
-                Your account is tied to a church. If you&apos;ve been invited to join a church on Song Stack, follow the invite link in the message you received — this connects your account to that church automatically.
+                Your account is tied to a church. If you&apos;ve been invited to join a church on SongStack, follow the invite link in the message you received — this connects your account to that church automatically.
               </p>
               <p className="help-content-body">
                 If you need to join a church and don&apos;t have an invite link, ask one of your church admins. They can find the invite link on the Team page.
               </p>
               <p className="help-content-body">
-                <strong>Using Apple&apos;s Hide My Email?</strong> Apple then gives Song Stack a private relay address instead of your real one, which creates a separate account that isn&apos;t connected to your church yet. Enter your church&apos;s invite code to join it (on the website, or on the <strong>Join your church</strong> screen in the iPad app), or sign in with the email address you were invited with.
+                <strong>Using Apple&apos;s Hide My Email?</strong> Apple then gives SongStack a private relay address instead of your real one, which creates a separate account that isn&apos;t connected to your church yet. Enter your church&apos;s invite code to join it (on the website, or on the <strong>Join your church</strong> screen in the iPad app), or sign in with the email address you were invited with.
               </p>
             </div>
           ),
@@ -180,7 +180,7 @@ export default function HelpPage() {
                 Open the avatar menu in the top navigation and choose <strong>Account</strong>. There you can change your name and photo, update your email address and password, and connect or disconnect Google or Apple sign-in.
               </p>
               <p className="help-content-body">
-                Your name is what other people see on the Team page and on plans where you&apos;re listed as a musician. If you change it on the Account page, it updates across Song Stack automatically.
+                Your name is what other people see on the Team page and on plans where you&apos;re listed as a musician. If you change it on the Account page, it updates across SongStack automatically.
               </p>
               <p className="help-content-body">
                 Our <a href="/privacy" target="_blank" rel="noopener noreferrer" style={{ color: 'var(--color-brand-500)', fontWeight: 600 }}>privacy policy</a> explains what we store about you and how long we keep it.
@@ -242,7 +242,7 @@ export default function HelpPage() {
           content: () => (
             <div>
               <p className="help-content-body">
-                <strong>Discover</strong> is a shared library of songs — public-domain hymns and songs Song Stack has permission to share — kept separate from your church&apos;s own library. It&apos;s where you find new material and add it to your library in one tap.
+                <strong>Discover</strong> is a shared library of songs — public-domain hymns and songs SongStack has permission to share — kept separate from your church&apos;s own library. It&apos;s where you find new material and add it to your library in one tap.
               </p>
               <p className="help-content-body">
                 The page has two parts: a short list of <strong>curated highlights</strong> at the top, and a searchable <strong>Song library</strong> below. In the Song library you can search by title or author, filter by category, and filter by <strong>tag</strong> to browse by theme.
@@ -265,7 +265,7 @@ export default function HelpPage() {
                 <strong>Categories</strong> and <strong>tags</strong> organise your library in two different ways. Each song has exactly <strong>one category</strong> (chosen from a dropdown) and can carry <strong>any number of tags</strong>. Categories are broad buckets like Praise, Assurance or Response; tags describe themes like Grace, Advent or Communion, so songs are findable by subject.
               </p>
               <p className="help-content-body">
-                Both come in two kinds: a set of <strong>suggested</strong> options shared across Song Stack, plus your church&apos;s <strong>own</strong> options. Your church&apos;s categories and tags are private to your church — they never appear in Discover or in other churches&apos; libraries.
+                Both come in two kinds: a set of <strong>suggested</strong> options shared across SongStack, plus your church&apos;s <strong>own</strong> options. Your church&apos;s categories and tags are private to your church — they never appear in Discover or in other churches&apos; libraries.
               </p>
               <p className="help-content-body">
                 On the Songs page, use the category chips and the <strong>Tags</strong> filter to narrow the list. You can pick one category and combine it with several tags at once.
@@ -288,7 +288,7 @@ export default function HelpPage() {
                 Key fields to fill in:
               </p>
               <p className="help-content-body">
-                <strong>Title:</strong> how the song appears across Song Stack and in exported plans.
+                <strong>Title:</strong> how the song appears across SongStack and in exported plans.
               </p>
               <p className="help-content-body">
                 <strong>Default key:</strong> the key your church typically plays the song in. This can be overridden per plan.
@@ -331,7 +331,7 @@ export default function HelpPage() {
           content: () => (
             <div>
               <p className="help-content-body">
-                Song Stack supports two file types for each song:
+                SongStack supports two file types for each song:
               </p>
               <p className="help-content-body">
                 <strong>PDF:</strong> chord charts, sheet music, or any printable document. PDFs can be merged and downloaded as a single file from a plan&apos;s set picker.
@@ -482,7 +482,7 @@ export default function HelpPage() {
           content: () => (
             <div>
               <p className="help-content-body">
-                Every plan has a public share link that gives read-only access — useful for sharing with musicians who aren&apos;t on Song Stack. Anyone with the link can see the plan outline: the running order, song titles, authors, keys and capo, CCLI numbers, arrangements, and your team&apos;s notes. No account is needed for that.
+                Every plan has a public share link that gives read-only access — useful for sharing with musicians who aren&apos;t on SongStack. Anyone with the link can see the plan outline: the running order, song titles, authors, keys and capo, CCLI numbers, arrangements, and your team&apos;s notes. No account is needed for that.
               </p>
               <p className="help-content-body">
                 Sheet music, chord charts, full lyrics and Set mode are only shown to members of your church who are signed in. A visitor opening the same link sees the outline and a prompt to sign in. This keeps licensed material behind a team login — your CCL licence lets you reproduce it for your own team, not publish it openly on the web.
@@ -572,7 +572,7 @@ export default function HelpPage() {
           content: () => (
             <div>
               <p className="help-content-body">
-                If you know you&apos;re unavailable for a period — a holiday, a work trip, or anything else — you can log it in Song Stack so the people who plan services know not to schedule you.
+                If you know you&apos;re unavailable for a period — a holiday, a work trip, or anything else — you can log it in SongStack so the people who plan services know not to schedule you.
               </p>
               <p className="help-content-body">
                 Go to <strong>Manage my availability</strong> on the dashboard. Enter a start date, end date, and an optional note, then click <strong>Add</strong>. Your dates and note will be visible to church admins and members who can add &amp; edit plans when they add musicians to a plan.
@@ -630,7 +630,7 @@ export default function HelpPage() {
           content: () => (
             <div>
               <p className="help-content-body">
-                There are two roles in Song Stack:
+                There are two roles in SongStack:
               </p>
               <p className="help-content-body">
                 <strong>Admin:</strong> full access to everything, including team management, settings, and all songs and plans. A church always needs at least one admin — if you&apos;re the only admin and other members remain, make someone else an admin from the Team page before you delete your account.
@@ -651,7 +651,7 @@ export default function HelpPage() {
                 <strong>Manage playlists:</strong> can add, edit, and delete playlist links on the dashboard.
               </p>
               <p className="help-content-body">
-                <strong>Add notes to plan items:</strong> can add notes to items in a plan. In the Song Stack iPad app, it also lets them draw shared markings on a PDF — markings the whole church can see (everyone can hide or show them).
+                <strong>Add notes to plan items:</strong> can add notes to items in a plan. In the SongStack iPad app, it also lets them draw shared markings on a PDF — markings the whole church can see (everyone can hide or show them).
               </p>
               <p className="help-content-body">
                 To change a member&apos;s role or permissions, go to the <strong>Team</strong> page and click on their name.
@@ -668,7 +668,7 @@ export default function HelpPage() {
                 Go to the <strong>Team</strong> page and click on the member you want to remove. At the bottom of their details, click <strong>Remove from church</strong>. You&apos;ll be asked to confirm before anything is deleted.
               </p>
               <p className="help-content-body">
-                Removing a member revokes their access to your church&apos;s Song Stack. It doesn&apos;t delete their account — they could join a different church in future if invited.
+                Removing a member revokes their access to your church&apos;s SongStack. It doesn&apos;t delete their account — they could join a different church in future if invited.
               </p>
             </div>
           ),
@@ -684,7 +684,7 @@ export default function HelpPage() {
           content: () => (
             <div>
               <p className="help-content-body">
-                Go to <strong>Settings</strong> to update your church name and CCLI licence number. The church name appears across Song Stack and in exported plans and emails.
+                Go to <strong>Settings</strong> to update your church name and CCLI licence number. The church name appears across SongStack and in exported plans and emails.
               </p>
               <p className="help-content-body">
                 Your CCLI number is included in the header of any CCLI usage report you export from the Songs page. If you don&apos;t have a CCLI licence, leave this field blank — you can add it later.

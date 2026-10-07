@@ -14,7 +14,7 @@ export default function AppError({
   reset: () => void
 }) {
   useEffect(() => {
-    console.error('[Song Stack] Page error:', error)
+    console.error('[SongStack] Page error:', error)
     Sentry.captureException(error)
   }, [error])
 
@@ -23,7 +23,7 @@ export default function AppError({
       <div className="not-found-inner">
         <h1 className="not-found-title">Something went wrong</h1>
         <p className="not-found-body">
-          This page hit a problem, but the rest of Song Stack is still working.
+          This page hit a problem, but the rest of SongStack is still working.
           Try again, or head back to your dashboard. If it keeps happening, please let us know via Contact &amp; Feedback.
         </p>
         <button type="button" onClick={() => reset()} className="not-found-btn">

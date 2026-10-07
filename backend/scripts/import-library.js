@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 
 /**
- * Song Stack — Secondary Library Import Script
+ * SongStack — Secondary Library Import Script
  *
  * Imports songs from a music-ministry.org CSV export into the master library
  * with is_draft = true, in_library = false, in_discover = false.
@@ -174,7 +174,7 @@ async function uploadFileToR2(client, songId, buffer, filename, contentType, fil
 // --- Main ---
 
 async function main() {
-  console.log(`\nSong Stack Library Import ${DRY_RUN ? '(DRY RUN)' : ''}`);
+  console.log(`\nSongStack Library Import ${DRY_RUN ? '(DRY RUN)' : ''}`);
   console.log(`Reading: ${CSV_FILE}\n`);
 
   const raw = fs.readFileSync(CSV_FILE, 'utf-8');

@@ -38,7 +38,7 @@ export default function CookieConsent() {
   return (
     <div className="cookie-banner">
       <p className="cookie-banner-text">
-        We use analytics cookies to understand how Song Stack is used and improve the experience. See our{' '}
+        We use analytics cookies to understand how SongStack is used and improve the experience. See our{' '}
         <Link href="/privacy" className="cookie-banner-link">Privacy &amp; Cookie Policy</Link>.
       </p>
       <div className="cookie-banner-actions">

@@ -75,7 +75,7 @@ const requireAuth = async (req, res, next) => {
 function serviceUnavailable(res, err) {
   console.error('Auth unavailable:', err && err.message);
   Sentry.captureException(err);
-  return res.status(503).json({ error: 'Song Stack is having trouble right now. Please try again in a moment.' });
+  return res.status(503).json({ error: 'SongStack is having trouble right now. Please try again in a moment.' });
 }
 
 const requireMembership = async (req, res, next) => {

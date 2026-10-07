@@ -826,7 +826,7 @@ router.post('/:id/email', requireAuth, requireMembership, async function(req, re
 
     <div style="padding:20px 32px;background:#f8fafc;border-top:1px solid #e5e7eb;text-align:center;">
       <a href="${publicUrl}" style="display:inline-block;padding:10px 24px;background:#4b7fa5;color:#ffffff;text-decoration:none;border-radius:6px;font-size:14px;font-weight:600;">View Full Plan →</a>
-      <p style="margin:12px 0 0;font-size:12px;color:#9ca3af;">Sent via Song Stack · songstack.church</p>
+      <p style="margin:12px 0 0;font-size:12px;color:#9ca3af;">Sent via SongStack · songstack.church</p>
     </div>
 
   </div>

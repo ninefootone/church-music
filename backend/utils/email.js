@@ -10,7 +10,7 @@ function applyTimeout(req) {
 
 async function sendBrevoEmail({ to, toName, subject, htmlContent }) {
   const data = JSON.stringify({
-    sender: { name: 'Song Stack', email: 'noreply@songstack.church' },
+    sender: { name: 'SongStack', email: 'noreply@songstack.church' },
     to: [{ email: to, name: toName }],
     subject,
     htmlContent

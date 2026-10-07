@@ -63,7 +63,7 @@ export default function FeedbackForm({ onSuccess }: { onSuccess?: () => void } =
         {subscribe && <p>To join our mailing list, click the link in the confirmation email we&apos;ve just sent you.</p>}
         {isSignedIn
           ? <a href="/dashboard" className="btn btn-primary btn-back-link">Back to your library</a>
-          : <a href="/" className="btn btn-primary btn-back-link">Back to Song Stack</a>}
+          : <a href="/" className="btn btn-primary btn-back-link">Back to SongStack</a>}
       </div>
     )
   }
@@ -131,7 +131,7 @@ export default function FeedbackForm({ onSuccess }: { onSuccess?: () => void } =
           onChange={e => setSubscribe(e.target.checked)}
           className="feedback-subscribe-checkbox"
         />
-        Keep me updated about Song Stack news and new features
+        Keep me updated about SongStack news and new features
       </label>
 
       <button

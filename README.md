@@ -1,4 +1,4 @@
-# Song Stack
+# SongStack
 
 A song library and worship planning tool for churches.
 Built with Next.js · Node/Express · PostgreSQL · Clerk · Cloudflare R2.

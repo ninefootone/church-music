@@ -1,6 +1,6 @@
 {
-  "name": "Song Stack",
-  "short_name": "Song Stack",
+  "name": "SongStack",
+  "short_name": "SongStack",
   "start_url": "/dashboard",
   "scope": "/",
   "display": "standalone",

@@ -17,7 +17,7 @@ export default async function AppLayout({ children }: { children: React.ReactNod
           {children}
         </main>
         <footer className="app-footer">
-        <Link href="/dashboard"><img src="/logo.svg" alt="Song Stack" className="footer-logo" /></Link>
+        <Link href="/dashboard"><img src="/logo.svg" alt="SongStack" className="footer-logo" /></Link>
         <div className="footer-links">
           <Link href="/feedback" className="footer-link">Contact &amp; Feedback</Link>
           &nbsp;&middot;&nbsp;
@@ -27,7 +27,7 @@ export default async function AppLayout({ children }: { children: React.ReactNod
           &nbsp;&middot;&nbsp;
           <CookieSettingsLink />
         </div>
-        <div className="footer-copy">Song Stack &copy; 2026 <a href="https://www.ninefootone.co.uk/" target="_blank" rel="noopener noreferrer" className="footer-brand-link">ninefootone creative ltd</a></div>
+        <div className="footer-copy">SongStack &copy; 2026 <a href="https://www.ninefootone.co.uk/" target="_blank" rel="noopener noreferrer" className="footer-brand-link">ninefootone creative ltd</a></div>
       </footer>
       </div>
     </ChurchProvider>

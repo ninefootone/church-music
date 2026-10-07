@@ -2,7 +2,7 @@ import Link from 'next/link'
 import LegalNavActions from '@/components/ui/LegalNavActions'
 
 export const metadata = {
-  title: 'Support | Song Stack',
+  title: 'Support | SongStack',
 }
 
 // Public support page. Used as the App Store "Support URL", which Apple requires to show real contact details.
@@ -12,7 +12,7 @@ export default function SupportPage() {
       <nav className="landing-nav">
         <div className="landing-nav-brand">
           <Link href="/">
-            <img src="/logo.svg" alt="Song Stack" className="landing-nav-logo" />
+            <img src="/logo.svg" alt="SongStack" className="landing-nav-logo" />
           </Link>
         </div>
         <LegalNavActions />
@@ -33,10 +33,10 @@ export default function SupportPage() {
         <p>You can delete your account yourself at any time. On the website, open the avatar menu, choose <strong>Account</strong> and use <strong>Delete account</strong>. In the iPad app, go to <strong>Settings</strong> and use <strong>Delete account</strong> at the bottom. Our <Link href="/privacy">privacy policy</Link> explains what is removed.</p>
 
         <h2>Copyright concerns</h2>
-        <p>Churches add their own songs and files to Song Stack and are responsible for holding the licences they need. If you believe content on Song Stack infringes your copyright, email <a href="mailto:hello@songstack.church">hello@songstack.church</a> with details of the work and where it appears. We&apos;ll look into it and remove content where appropriate.</p>
+        <p>Churches add their own songs and files to SongStack and are responsible for holding the licences they need. If you believe content on SongStack infringes your copyright, email <a href="mailto:hello@songstack.church">hello@songstack.church</a> with details of the work and where it appears. We&apos;ll look into it and remove content where appropriate.</p>
 
         <h2>Who we are</h2>
-        <p>Song Stack is run by ninefootone creative ltd, a company registered in England and Wales. See also our <Link href="/privacy">Privacy &amp; Cookie Policy</Link> and <Link href="/legal">Terms</Link>.</p>
+        <p>SongStack is run by ninefootone creative ltd, a company registered in England and Wales. See also our <Link href="/privacy">Privacy &amp; Cookie Policy</Link> and <Link href="/legal">Terms</Link>.</p>
       </main>
 
       <footer className="app-footer">
@@ -49,7 +49,7 @@ export default function SupportPage() {
           &nbsp;&middot;&nbsp;
           <Link href="/legal" className="footer-link">Legal</Link>
         </div>
-        <div className="footer-copy">Song Stack &copy; 2026 ninefootone creative ltd</div>
+        <div className="footer-copy">SongStack &copy; 2026 ninefootone creative ltd</div>
       </footer>
     </div>
   )

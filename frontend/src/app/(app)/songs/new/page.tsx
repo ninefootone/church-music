@@ -153,7 +153,7 @@ export default function NewSongPage() {
         <div className="copyright-notice">
           <div className="copyright-notice__body">
             <strong>A note on copyright</strong>
-            <p>Song Stack is a planning tool. Storing complete lyrics or sheet music is only permitted if your church holds a valid <a href="https://uk.ccli.com/copyright-licences/" target="_blank" rel="noopener noreferrer" className="link-brand">CCLI Copyright Licence</a>. Music files (scores/lead sheets) require a separate <a href="https://uk.ccli.com/music-reproduction-licences/" target="_blank" rel="noopener noreferrer" className="link-brand">Music Reproduction Licence</a>. If in doubt, link to SongSelect instead of storing lyrics here.</p>
+            <p>SongStack is a planning tool. Storing complete lyrics or sheet music is only permitted if your church holds a valid <a href="https://uk.ccli.com/copyright-licences/" target="_blank" rel="noopener noreferrer" className="link-brand">CCLI Copyright Licence</a>. Music files (scores/lead sheets) require a separate <a href="https://uk.ccli.com/music-reproduction-licences/" target="_blank" rel="noopener noreferrer" className="link-brand">Music Reproduction Licence</a>. If in doubt, link to SongSelect instead of storing lyrics here.</p>
           </div>
           <button type="button" className="copyright-notice__dismiss" onClick={dismissCopyright}>
             Don't show again

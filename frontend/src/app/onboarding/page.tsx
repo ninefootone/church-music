@@ -79,7 +79,7 @@ export default function OnboardingPage() {
     <div className="onboarding-shell">
       <div className="onboarding-inner">
         <div className="onboarding-header">
-          <img src="/logo-strap.svg" alt="Song Stack" className="onboarding-logo" />
+          <img src="/logo-strap.svg" alt="SongStack" className="onboarding-logo" />
           <p className="onboarding-subtitle">
             Get started by creating a new church or joining an existing one.
           </p>
@@ -119,7 +119,7 @@ export default function OnboardingPage() {
             </label>
             <input className="onboarding-input" placeholder="e.g. 123456" value={ccliNumber} onChange={e => setCcliNumber(e.target.value)} />
             <p className="onboarding-ccli-hint">
-              Your CCLI licence number allows Song Stack to include it in usage reports. Don't have one? <a href="https://uk.ccli.com" target="_blank" rel="noopener noreferrer" className="link-brand">Get licensed at ccli.com</a>
+              Your CCLI licence number allows SongStack to include it in usage reports. Don't have one? <a href="https://uk.ccli.com" target="_blank" rel="noopener noreferrer" className="link-brand">Get licensed at ccli.com</a>
             </p>
             <div className="btn-group">
               <button type="button" onClick={() => setMode('choose')} className="btn btn-ghost btn-icon-label"><ArrowLeft size={16} /> Back</button>

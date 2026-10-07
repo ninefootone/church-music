@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 
 /**
- * Song Stack — WordPress Import Script (Direct DB + Direct R2 version)
+ * SongStack — WordPress Import Script (Direct DB + Direct R2 version)
  *
  * Reads a WP All Export CSV and imports songs + PDFs directly into Postgres
  * and R2, bypassing the API entirely — no Clerk token needed.
@@ -214,7 +214,7 @@ async function uploadFileToR2(client, songId, buffer, filename, contentType, fil
 // --- Main ---
 
 async function main() {
-  console.log(`\nSong Stack Import ${DRY_RUN ? '(DRY RUN)' : ''}${FILES_ONLY ? '(FILES ONLY)' : ''}`);
+  console.log(`\nSongStack Import ${DRY_RUN ? '(DRY RUN)' : ''}${FILES_ONLY ? '(FILES ONLY)' : ''}`);
   console.log(`Reading: ${CSV_FILE}\n`);
 
   const raw = fs.readFileSync(CSV_FILE, 'utf-8');

@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 
 /**
- * Song Stack — Awesome Cutlery Import Script
+ * SongStack — Awesome Cutlery Import Script
  *
  * Imports songs from an Awesome Cutlery CSV export into the master library.
  * - Downloads PDF files (Lead Sheet, Piano Music) and uploads to R2
@@ -165,7 +165,7 @@ async function uploadFileToR2(client, songId, buffer, filename, contentType, fil
 // --- Main ---
 
 async function main() {
-  console.log(`\nSong Stack — Awesome Cutlery Import ${DRY_RUN ? '(DRY RUN)' : ''}`);
+  console.log(`\nSongStack — Awesome Cutlery Import ${DRY_RUN ? '(DRY RUN)' : ''}`);
   console.log(`Reading: ${CSV_FILE}\n`);
 
   const raw  = fs.readFileSync(CSV_FILE, 'utf-8');

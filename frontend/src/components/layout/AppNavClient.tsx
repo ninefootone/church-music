@@ -21,7 +21,7 @@ export function AppNavClient() {
   const pathname = usePathname()
   const { church, loading, isAdmin } = useChurch()
   const { signOut, user } = useClerk()
-  const churchName = loading ? '…' : (church?.name || 'Song Stack')
+  const churchName = loading ? '…' : (church?.name || 'SongStack')
   const [desktopOpen, setDesktopOpen] = useState(false)
   const [mobileOpen, setMobileOpen] = useState(false)
 
@@ -38,7 +38,7 @@ export function AppNavClient() {
             <Link href="/dashboard" className="app-nav-brand" onClick={() => { setDesktopOpen(false); setMobileOpen(false) }}>
               {church?.logo_url
                 ? <img src={church.logo_url} alt={churchName} className="nav-church-logo" />
-                : <><img src="/logo-icon.svg" alt="Song Stack" className="nav-logo-icon" />{churchName}</>
+                : <><img src="/logo-icon.svg" alt="SongStack" className="nav-logo-icon" />{churchName}</>
               }
             </Link>
             <span className="app-nav-sep">·</span>

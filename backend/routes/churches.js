@@ -143,7 +143,7 @@ router.post('/join', requireAuth, async (req, res, next) => {
             to: admin.email,
             toName: adminName,
             subject: `New member joined ${church.rows[0].name}`,
-            htmlContent: `<p>Hi ${escapeHtml(adminName)},</p><p><strong>${escapeHtml(memberName)}</strong> (${escapeHtml(m.email)}) has just joined <strong>${escapeHtml(church.rows[0].name)}</strong> on Song Stack.</p><p>You can view and manage your team from your <a href="https://app.songstack.church/dashboard">dashboard</a>.</p><p>— Song Stack</p>`
+            htmlContent: `<p>Hi ${escapeHtml(adminName)},</p><p><strong>${escapeHtml(memberName)}</strong> (${escapeHtml(m.email)}) has just joined <strong>${escapeHtml(church.rows[0].name)}</strong> on SongStack.</p><p>You can view and manage your team from your <a href="https://app.songstack.church/dashboard">dashboard</a>.</p><p>— SongStack</p>`
           })
         }
       }

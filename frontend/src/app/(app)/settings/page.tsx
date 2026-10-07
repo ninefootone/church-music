@@ -479,7 +479,7 @@ export default function SettingsPage() {
       {activeTab === 'billing' && (
         <div className="settings-card">
           <h2 className="settings-section-heading settings-section-heading--tight">Billing</h2>
-          <p className="settings-section-desc">Manage your Song Stack subscription.</p>
+          <p className="settings-section-desc">Manage your SongStack subscription.</p>
           {!church?.free_access && (!church?.subscription_status || church?.subscription_status === 'free' || church?.subscription_status === 'canceled') ? (
             <div>
               <p className="settings-body-text settings-body-text--spaced">You're on the <strong>free plan</strong> — limited to 5 songs and 1 plan.</p>
@@ -524,13 +524,13 @@ export default function SettingsPage() {
       {activeTab === 'notifications' && (
         <div className="settings-grid-mailing settings-card">
           <h2 className="settings-section-heading settings-section-heading--tight">Email updates</h2>
-          <p className="settings-section-desc">Occasional news and updates about Song Stack. No spam, unsubscribe any time.</p>
+          <p className="settings-section-desc">Occasional news and updates about SongStack. No spam, unsubscribe any time.</p>
           {subscribed === null ? (
             <p className="settings-subtitle">Loading…</p>
           ) : (
             <div className="mailing-col">
               <p className="settings-body-text">
-                {subscribed ? 'You\'re subscribed to Song Stack updates.' : 'You\'re not currently subscribed.'}
+                {subscribed ? 'You\'re subscribed to SongStack updates.' : 'You\'re not currently subscribed.'}
               </p>
               <div>
                 <button onClick={handleMailingToggle} disabled={mailingLoading} className="btn btn-ghost btn-link-inline">

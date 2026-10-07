@@ -206,7 +206,7 @@ export default function PublicSetModePage() {
     <div className="app-shell">
       <nav className="public-nav">
         <div className="public-nav-inner">
-          <img src="/logo.svg" alt="Song Stack" className="public-nav-logo" />
+          <img src="/logo.svg" alt="SongStack" className="public-nav-logo" />
           <span className="public-nav-label">Set mode</span>
         </div>
       </nav>
@@ -332,7 +332,7 @@ export default function PublicSetModePage() {
       </main>
 
       <footer className="app-footer">
-        Song Stack &mdash; shared by your church
+        SongStack &mdash; shared by your church
       </footer>
     </div>
   )
