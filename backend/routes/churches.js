@@ -159,12 +159,14 @@ router.post('/join', requireAuth, async (req, res, next) => {
         if (memberResult.rows.length) {
           const m = memberResult.rows[0]
           const memberName = m.name || m.email
-          await sendBrevoEmail({
+          const sent = await sendBrevoEmail({
             to: admin.email,
             toName: adminName,
             subject: `New member joined ${church.rows[0].name}`,
             htmlContent: `<p>Hi ${escapeHtml(adminName)},</p><p><strong>${escapeHtml(memberName)}</strong> (${escapeHtml(m.email)}) has just joined <strong>${escapeHtml(church.rows[0].name)}</strong> on SongStack.</p><p>You can view and manage your team from your <a href="https://app.songstack.church/dashboard">dashboard</a>.</p><p>— SongStack</p>`
           })
+          // sendBrevoEmail resolves even when Brevo rejects the email — surface that.
+          if (sent.status >= 300) throw new Error(`Brevo ${sent.status}: ${sent.body}`)
         }
       }
     } catch (emailErr) {

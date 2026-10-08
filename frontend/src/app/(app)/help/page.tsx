@@ -152,6 +152,23 @@ export default function HelpPage() {
           ),
         },
         {
+          id: 'sample-content',
+          title: 'The sample songs and plan',
+          content: () => (
+            <div>
+              <p className="help-content-body">
+                When you set up a new church, SongStack adds three sample songs and a sample plan so you can see straight away how everything fits together. The songs come with lyrics, chord charts and sheet music, and are shared with permission from Joyful Noise, Awesome Cutlery and Ben Slee Music.
+              </p>
+              <p className="help-content-body">
+                The sample plan is a <strong>draft</strong> for a Sunday a week or two ahead, so only admins and members who can add &amp; edit plans see it. It shows a running order with songs and service items you can open, edit or try in the set viewer.
+              </p>
+              <p className="help-content-body">
+                Samples are marked <strong>Sample</strong> in your lists. They don&apos;t count towards the free plan&apos;s limit of 5 songs and 1 plan, so you can still add your own. Edit them, keep them or delete them whenever you like.
+              </p>
+            </div>
+          ),
+        },
+        {
           id: 'signing-in',
           title: 'Signing in and your account',
           content: () => (
@@ -534,6 +551,9 @@ export default function HelpPage() {
               </p>
               <p className="help-content-body">
                 The duplicate dialog also has a <strong>Title</strong> field, pre-filled with the original plan&apos;s title, so you can rename the copy as you create it.
+              </p>
+              <p className="help-content-body">
+                On the free plan, a duplicate counts as your one plan — including a copy of the sample plan.
               </p>
             </div>
           ),
