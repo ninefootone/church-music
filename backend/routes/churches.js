@@ -49,11 +49,26 @@ function recordJoinFail(userId) {
 }
 const generateShortId = () => Math.random().toString(36).substring(2, 6);
 
+// One church per person for now (multi-church is a possible future feature). The web app
+// only ever shows the first church from /mine (sorted by name), so a second membership
+// would silently swap someone into a different church. Revoked memberships don't count.
+const ONE_CHURCH_ERROR = "You're already a member of a church. Song Stack doesn't support belonging to more than one church yet — contact hello@songstack.church if you need to move.";
+async function hasActiveMembership(userId, exceptChurchId = null) {
+  const r = await pool.query(
+    `SELECT 1 FROM memberships
+     WHERE user_id = $1 AND role != 'revoked' AND ($2::uuid IS NULL OR church_id != $2)
+     LIMIT 1`,
+    [userId, exceptChurchId]
+  );
+  return r.rows.length > 0;
+}
+
 // Create a church
 router.post('/', requireAuth, async (req, res, next) => {
   try {
     const { name, ccli_number } = req.body;
     if (!name) return res.status(400).json({ error: 'Church name required' });
+    if (await hasActiveMembership(req.user.id)) return res.status(400).json({ error: ONE_CHURCH_ERROR });
 
     // Append short random ID to slug to avoid collisions
     const baseSlug = name.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, '')
@@ -122,6 +137,11 @@ router.post('/join', requireAuth, async (req, res, next) => {
       'SELECT * FROM memberships WHERE church_id = $1 AND user_id = $2',
       [church.rows[0].id, req.user.id]
     );
+    // Same-church cases (already a member / re-joining after removal) are handled below;
+    // only block when they belong to a DIFFERENT church.
+    if (await hasActiveMembership(req.user.id, church.rows[0].id)) {
+      return res.status(400).json({ error: ONE_CHURCH_ERROR });
+    }
     if (existing.rows.length > 0) {
       if (existing.rows[0].role === 'revoked') {
         await pool.query(
