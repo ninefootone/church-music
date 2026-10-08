@@ -52,7 +52,7 @@ const generateShortId = () => Math.random().toString(36).substring(2, 6);
 // One church per person for now (multi-church is a possible future feature). The web app
 // only ever shows the first church from /mine (sorted by name), so a second membership
 // would silently swap someone into a different church. Revoked memberships don't count.
-const ONE_CHURCH_ERROR = "You're already a member of a church. Song Stack doesn't support belonging to more than one church yet — contact hello@songstack.church if you need to move.";
+const ONE_CHURCH_ERROR = "You're already a member of a church. SongStack doesn't support belonging to more than one church yet — contact hello@songstack.church if you need to move.";
 async function hasActiveMembership(userId, exceptChurchId = null) {
   const r = await pool.query(
     `SELECT 1 FROM memberships

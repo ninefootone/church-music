@@ -183,6 +183,9 @@ export default function HelpPage() {
                 If you need to join a church and don&apos;t have an invite link, ask one of your church admins. They can find the invite link on the Team page.
               </p>
               <p className="help-content-body">
+                An account can belong to one church at a time. If you&apos;re already in a church, you won&apos;t be able to join or create another. If you need to move to a different church, email <strong>hello@songstack.church</strong>.
+              </p>
+              <p className="help-content-body">
                 <strong>Using Apple&apos;s Hide My Email?</strong> Apple then gives SongStack a private relay address instead of your real one, which creates a separate account that isn&apos;t connected to your church yet. Enter your church&apos;s invite code to join it (on the website, or on the <strong>Join your church</strong> screen in the iPad app), or sign in with the email address you were invited with.
               </p>
             </div>
@@ -379,6 +382,9 @@ export default function HelpPage() {
               <p className="help-content-body">
                 To see retired songs, use the <strong>Show retired</strong> toggle on the Songs page.
               </p>
+              <p className="help-content-body">
+                A song that&apos;s been used in a plan can&apos;t be deleted, because deleting it would remove it from those plans too. Retire it instead — it disappears from your library but your past plans stay intact.
+              </p>
             </div>
           ),
         },
@@ -402,7 +408,7 @@ export default function HelpPage() {
                 Once created, you&apos;ll land on the plan detail page where you can add songs, assign musicians, and manage the running order. (When you start from a template with song slots, you go straight into editing the plan so you can add the songs.)
               </p>
               <p className="help-content-body">
-                Plans are listed on the Plans page split into upcoming and past. The dashboard also shows your next few upcoming plans at a glance.
+                Plans are listed on the Plans page split into upcoming and past. The dashboard also shows your next few upcoming plans at a glance. To see several upcoming plans side by side, use the <strong>Overview</strong> button on the Plans page — see <strong>Planning several weeks at once</strong> below.
               </p>
             </div>
           ),
@@ -507,6 +513,9 @@ export default function HelpPage() {
               <p className="help-content-body">
                 Find the share link on the plan detail page. The link is unique to each plan and doesn&apos;t expire.
               </p>
+              <p className="help-content-body">
+                If the plan is still a <strong>draft</strong>, anyone opening the link sees &quot;This plan isn&apos;t published yet&quot;. Publish the plan before sending the link round.
+              </p>
             </div>
           ),
         },
@@ -577,6 +586,32 @@ export default function HelpPage() {
               </p>
               <p className="help-content-body">
                 Changing a template doesn&apos;t affect plans already made from it. To rename, edit or delete templates, go to <strong>Plans → Templates</strong> (admins can also use <strong>Settings → Plan templates</strong>). Saving and managing templates needs the <strong>Add &amp; edit plans</strong> permission.
+              </p>
+            </div>
+          ),
+        },
+        {
+          id: 'plans-overview',
+          title: 'Planning several weeks at once',
+          content: () => (
+            <div>
+              <p className="help-content-body">
+                The <strong>Overview</strong> button on the Plans page shows your upcoming plans side by side, so you can plan songs and rotas across several weeks rather than one service at a time. It&apos;s available to admins and members who can add &amp; edit plans, and it&apos;s designed for a laptop or desktop screen.
+              </p>
+              <p className="help-content-body">
+                Each column is one plan (so three services on a Sunday are three columns), including drafts. It shows the running order with keys, any empty song slots, the number of songs and total minutes, and the musicians — one line per person with their roles combined. A musician who has marked themselves unavailable for that date is shown in red with <strong>Unavailable</strong>.
+              </p>
+              <p className="help-content-body">
+                With <strong>Song repeats</strong> switched on, songs get a note such as &quot;Sung 2 weeks ago&quot; or &quot;Also planned 2 Nov&quot;. Choose how far to look with the <strong>within</strong> menu (2 to 12 weeks, default 4); it&apos;s measured from each plan&apos;s own date. Songs repeated on the same day aren&apos;t flagged, since morning and evening services often share songs on purpose.
+              </p>
+              <p className="help-content-body">
+                With <strong>Rota counts</strong> switched on, a line above the columns shows how many of the plans on screen each person is on. It&apos;s a count, not a warning — in a small church the same people may well play every week.
+              </p>
+              <p className="help-content-body">
+                Use <strong>Earlier</strong> and <strong>Later</strong> to move one plan at a time, <strong>From</strong> to jump to a date, and <strong>Today</strong> to come back. <strong>Plans shown</strong> sets how many columns you see. Your choices for Plans shown, Song repeats and Rota counts are remembered in your browser.
+              </p>
+              <p className="help-content-body">
+                The overview is read-only. Click a plan&apos;s heading to open it, or <strong>Edit plan</strong> at the bottom of the column to change it.
               </p>
             </div>
           ),

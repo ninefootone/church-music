@@ -121,7 +121,7 @@ export default function OnboardingPage() {
           <div className="onboarding-panel onboarding-panel--centered">
             <h2 className="onboarding-form-title">You're already in a church</h2>
             <p className="onboarding-tip">
-              Your account belongs to <strong>{existingChurch.name}</strong>. Song Stack doesn't support
+              Your account belongs to <strong>{existingChurch.name}</strong>. SongStack doesn't support
               belonging to more than one church yet. If you need to move, contact{' '}
               <a href="mailto:hello@songstack.church" className="link-brand">hello@songstack.church</a>.
             </p>
