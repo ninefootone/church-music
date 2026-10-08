@@ -8,6 +8,7 @@ import { ConfirmModal } from '@/components/ui/ConfirmModal'
 import { LiturgySnippetsManager } from '@/components/ui/LiturgySnippetsManager'
 import { PlanTemplatesManager } from '@/components/ui/PlanTemplatesManager'
 import { Copy, Check, RefreshCw, Plus, X } from 'lucide-react'
+import { isOnFreePlan } from '@/lib/freePlan'
 
 interface RoleItem {
   id?: string
@@ -480,7 +481,7 @@ export default function SettingsPage() {
         <div className="settings-card">
           <h2 className="settings-section-heading settings-section-heading--tight">Billing</h2>
           <p className="settings-section-desc">Manage your SongStack subscription.</p>
-          {!church?.free_access && (!church?.subscription_status || church?.subscription_status === 'free' || church?.subscription_status === 'canceled') ? (
+          {isOnFreePlan(church) ? (
             <div>
               <p className="settings-body-text settings-body-text--spaced">You're on the <strong>free plan</strong> — limited to 5 songs and 1 plan.</p>
               <div className="btn-group">

@@ -13,6 +13,7 @@ import CategorySelect from '@/components/ui/CategorySelect'
 import api, { setAuthToken } from '@/lib/api'
 import { LyricsEditor } from '@/components/ui/LyricsEditor'
 import { ArrangementBuilder } from '@/components/ui/ArrangementBuilder'
+import { isOnFreePlan, countOwn, FREE_SONG_LIMIT } from '@/lib/freePlan'
 
 type SongLink = { url: string; label: string; link_type: string }
 
@@ -47,10 +48,9 @@ export default function NewSongPage() {
 
   useEffect(() => {
     if (!church) return
-    const status = church.subscription_status
-    if (!church.free_access && (!status || status === 'free')) {
+    if (isOnFreePlan(church)) {
       api.get('/api/songs').then(r => {
-        if (r.data.length >= 5) setAtLimit(true)
+        if (countOwn(r.data) >= FREE_SONG_LIMIT) setAtLimit(true)
       }).catch(() => {})
     }
   }, [church])

@@ -7,6 +7,7 @@ import { useAuth } from '@clerk/nextjs'
 import { ArrowLeft } from 'lucide-react'
 import api, { setAuthToken } from '@/lib/api'
 import { useChurch } from '@/context/ChurchContext'
+import { isOnFreePlan, countOwn, FREE_PLAN_LIMIT } from '@/lib/freePlan'
 
 interface PlanTemplate {
   id: string
@@ -37,10 +38,9 @@ export default function NewPlanPage() {
 
   useEffect(() => {
     if (!church) return
-    const status = church.subscription_status
-    if (!church.free_access && (!status || status === 'free')) {
+    if (isOnFreePlan(church)) {
       api.get('/api/plans').then(r => {
-        if (r.data.length >= 1) setAtLimit(true)
+        if (countOwn(r.data) >= FREE_PLAN_LIMIT) setAtLimit(true)
       }).catch(() => {})
     }
     api.get('/api/plan-templates').then(r => setTemplates(r.data)).catch(() => {})

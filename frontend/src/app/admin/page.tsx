@@ -20,7 +20,7 @@ interface ChurchRow {
 }
 
 export default function SuperAdminPage() {
-  const { userId, getToken } = useAuth();
+  const { userId, getToken, isLoaded } = useAuth();
   const [churches, setChurches] = useState<ChurchRow[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -98,6 +98,15 @@ export default function SuperAdminPage() {
       setDeleting(null);
     }
   };
+
+  // Wait for Clerk: before it loads, userId is empty and every visitor looked "Not authorised".
+  if (!isLoaded) {
+    return (
+      <div className="admin-restricted">
+        <p>Loading...</p>
+      </div>
+    );
+  }
 
   if (!isAdmin) {
     return (

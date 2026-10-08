@@ -8,6 +8,7 @@ import { PlaylistIcon } from '@/components/ui/PlaylistIcon'
 import { ConfirmModal } from '@/components/ui/ConfirmModal'
 import { useChurch } from '@/context/ChurchContext'
 import api from '@/lib/api'
+import { isOnFreePlan } from '@/lib/freePlan'
 
 export default function DashboardPage() {
   const { church, loading: churchLoading, isAdmin, canManageSongs, canAddPlans, canManagePlaylists } = useChurch()
@@ -101,7 +102,7 @@ export default function DashboardPage() {
 
   return (
     <div>
-      {isAdmin && !church?.free_access && (!church?.subscription_status || church?.subscription_status === 'free') && (
+      {isAdmin && isOnFreePlan(church) && (
         <div className="card dash-upgrade-banner">
           <div className="dash-upgrade-inner">
             <div>
