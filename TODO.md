@@ -71,6 +71,8 @@ Next:
 
 ## Backlog
 
+- [ ] **Dashboard downloads the whole song library to show 4 songs (noted 2026-10-08).** `dashboard/page.tsx` calls `/api/songs` (full library) then shuffles client-side and keeps 4, plus uses the full list for the `is_sample` check. Fine now; gets slow on mobile for big libraries. Fix: backend `GET /api/songs?random=4` (`ORDER BY random() LIMIT 4`) + a cheap `has_samples` flag, and drop the full fetch.
+
 - [ ] Database schema migrations — adopt a migration runner (e.g. node-pg-migrate) or at minimum a `schema_migrations` table, so "has this migration run?" is recorded in the database rather than remembered. The one-off scripts in `backend/db/` and `backend/scripts/` are currently applied by hand with no record of what's been run — this is the ambiguity that made syncing across machines uncertain. Keep the existing scripts as history; route new schema changes through the runner.
 
 - [ ] Backend/frontend gate parity audit — the UI gates actions on flags (`free_access`, `subscription_status`, and role/permission flags like `can_manage_songs`) the backend must independently enforce. Divergences found & fixed: song limit, plan limit (tier gates), and the song-file routes in `uploads.js` (were `requireAdmin`, now `requirePermission('can_manage_songs')`). Still to audit: member/invite count, Stripe-gated features, and the plan/playlist permission routes. Backend is source of truth; frontend checks are UX only.
