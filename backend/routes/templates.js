@@ -8,8 +8,7 @@ const { requireAuth, requireMembership, requireAdmin, requirePermission } = requ
 const { songLimitReached, SONG_LIMIT_MESSAGE } = require('../utils/limits');
 const { toPrefixQuery } = require('../utils/search');
 const { r2, BUCKET } = require('./uploads');
-const { CopyObjectCommand } = require('@aws-sdk/client-s3');
-const { v4: uuidv4 } = require('uuid');
+const { copySongInto } = require('../utils/copySong');
 
 // Escapes literal % and _ (and the escape char itself) so a value passed into
 // an ILIKE pattern is matched as plain text, not as SQL wildcards. Used by the
@@ -352,96 +351,11 @@ router.post('/:id/import', requireAuth, requirePermission('can_manage_songs'), a
     client = await pool.connect();
     await client.query('BEGIN');
 
-    // Copy template to church — include extended fields if share_all_data is enabled
-    const song = await client.query(
-      `INSERT INTO songs (church_id, title, author, default_key, category, first_line, ccli_number,
-        suggested_arrangement, time_signature, tempo,
-        notes, bible_references, lyrics, copyright_info, copyright_link, is_template)
-       VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15,false) RETURNING *`,
-      [
-        churchId, t.title, t.author, t.default_key, t.category, t.first_line, t.ccli_number,
-        t.suggested_arrangement ?? null,
-        t.time_signature ?? null,
-        t.tempo ?? null,
-        t.share_all_data ? t.notes : null,
-        t.share_all_data ? t.bible_references : null,
-        t.share_all_data ? t.lyrics : null,
-        t.copyright_info ?? null,
-        t.copyright_link ?? null,
-      ]
-    );
-
-    // Copy tags. Reuse an existing shared (global) or own-church tag by name —
-    // preferring the shared default — and only create a church-owned tag when no
-    // match exists. Mirrors the dedupe in POST /songs/tags/church so an import
-    // never mints a private duplicate of a default-list tag.
-    const templateTags = await client.query(
-      `SELECT t.name FROM song_tags st JOIN tags t ON t.id = st.tag_id WHERE st.song_id = $1`,
-      [req.params.id]
-    );
-    for (const tag of templateTags.rows) {
-      const existingTag = await client.query(
-        `SELECT id FROM tags
-          WHERE (church_id IS NULL OR church_id = $1)
-            AND lower(name) = lower($2)
-          ORDER BY (church_id IS NOT NULL)
-          LIMIT 1`,
-        [churchId, tag.name]
-      );
-      let tagId;
-      if (existingTag.rows.length) {
-        tagId = existingTag.rows[0].id;
-      } else {
-        const newTag = await client.query(
-          `INSERT INTO tags (church_id, name) VALUES ($1, $2)
-           ON CONFLICT (church_id, name) DO UPDATE SET name = EXCLUDED.name RETURNING id`,
-          [churchId, tag.name]
-        );
-        tagId = newTag.rows[0].id;
-      }
-      await client.query(
-        'INSERT INTO song_tags (song_id, tag_id) VALUES ($1, $2) ON CONFLICT DO NOTHING',
-        [song.rows[0].id, tagId]
-      );
-    }
-
-    // Copy song files in R2 if share_all_data is enabled
-    if (t.share_all_data) {
-      const files = await client.query(
-        `SELECT * FROM song_files WHERE song_id = $1`,
-        [req.params.id]
-      );
-      for (const file of files.rows) {
-        const ext = file.r2_key.split('.').pop();
-        const newKey = `churches/${churchId}/songs/${song.rows[0].id}/${uuidv4()}.${ext}`;
-        await r2.send(new CopyObjectCommand({
-          Bucket: BUCKET,
-          CopySource: `${BUCKET}/${file.r2_key}`,
-          Key: newKey,
-        }));
-        await client.query(
-          `INSERT INTO song_files (song_id, file_type, label, key_of, r2_key) VALUES ($1,$2,$3,$4,$5)`,
-          [song.rows[0].id, file.file_type, file.label, file.key_of, newKey]
-        );
-      }
-    }
-
-    // Copy song_videos if share_all_data is enabled
-    if (t.share_all_data) {
-      const videos = await client.query(
-        `SELECT url, label, link_type, sort_order FROM song_videos WHERE song_id = $1`,
-        [req.params.id]
-      );
-      for (const v of videos.rows) {
-        await client.query(
-          `INSERT INTO song_videos (song_id, url, label, link_type, sort_order) VALUES ($1,$2,$3,$4,$5)`,
-          [song.rows[0].id, v.url, v.label, v.link_type, v.sort_order]
-        );
-      }
-    }
+    // Song, tags, files and links — shared with the new-church sample content.
+    const song = await copySongInto(client, t, churchId);
 
     await client.query('COMMIT');
-    res.status(201).json({ ...song.rows[0], share_all_data: t.share_all_data });
+    res.status(201).json({ ...song, share_all_data: t.share_all_data });
   } catch (err) {
     if (client) await client.query('ROLLBACK').catch(() => {});
     next(err);

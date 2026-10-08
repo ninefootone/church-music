@@ -6,6 +6,7 @@ requireIdParams(router, { churchId: 'Church not found', id: 'Not found' });
 const pool = require('../db/pool');
 const { requireAuth, requireAdmin, requireMembership } = require('../middleware/auth');
 const { sanitizeRichText } = require('../utils/sanitize');
+const { seedSampleContent } = require('../utils/sampleContent');
 const multer = require('multer');
 const { S3Client, PutObjectCommand } = require('@aws-sdk/client-s3');
 const { v4: uuidv4 } = require('uuid');
@@ -61,9 +62,10 @@ router.post('/', requireAuth, async (req, res, next) => {
     // Church + its first admin membership in one transaction: if the membership insert
     // failed, the church used to be left behind with no admin and nobody able to reach it.
     const client = await pool.connect();
+    let church;
     try {
       await client.query('BEGIN');
-      const church = await client.query(
+      church = await client.query(
         'INSERT INTO churches (name, slug, invite_code, created_by, ccli_number) VALUES ($1, $2, $3, $4, $5) RETURNING *',
         [name, slug, invite_code, req.user.id, ccli_number || null]
       );
@@ -72,13 +74,18 @@ router.post('/', requireAuth, async (req, res, next) => {
         [church.rows[0].id, req.user.id, 'admin']
       );
       await client.query('COMMIT');
-      res.status(201).json(church.rows[0]);
     } catch (err) {
       await client.query('ROLLBACK').catch(() => {});
       throw err;
     } finally {
       client.release();
     }
+
+    // Sample songs + a draft sample plan (don't count towards free limits). Runs after the
+    // commit and never throws, so a failure here can't stop the church being created.
+    // Awaited so the dashboard has them on first load.
+    const seeded = await seedSampleContent(church.rows[0].id, req.user.clerk_id);
+    res.status(201).json({ ...church.rows[0], sample_content: seeded });
   } catch (err) {
     next(err);
   }
