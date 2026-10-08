@@ -8,6 +8,7 @@ import { useChurch } from '@/context/ChurchContext'
 import { useRouter } from 'next/navigation'
 import api from '@/lib/api'
 import { DuplicatePlanModal } from '@/components/ui/DuplicatePlanModal'
+import { SampleBadge } from '@/components/ui/badges'
 
 interface Plan {
   id: string
@@ -18,6 +19,7 @@ interface Plan {
   title: string | null
   public_token: string
   status: 'draft' | 'published'
+  is_sample?: boolean
 }
 
 export default function PlansPage() {
@@ -68,6 +70,7 @@ export default function PlansPage() {
           {plan.title && <p className="dash-row-meta">{plan.title}</p>}
         </div>
         <div className="plan-card-right">
+          {plan.is_sample && <SampleBadge upper />}
           {plan.status === 'draft' && (
             <span className="badge badge-draft">DRAFT</span>
           )}
@@ -103,6 +106,7 @@ export default function PlansPage() {
             )}
           </span>
         </div>
+        {plan.is_sample && <SampleBadge upper />}
         {plan.status === 'draft' && (
           <span className="badge badge-draft">DRAFT</span>
         )}

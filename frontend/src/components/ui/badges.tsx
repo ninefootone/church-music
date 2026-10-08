@@ -35,6 +35,11 @@ export function DraftBadge() {
   return <span className="badge-draft">Draft</span>
 }
 
+// Sample content seeded into new churches (doesn't count towards free-plan limits).
+export function SampleBadge({ upper = false }: { upper?: boolean }) {
+  return <span className="badge badge-sample">{upper ? 'SAMPLE' : 'Sample'}</span>
+}
+
 // Why a song surfaced in a search result: tag / lyric / other-field match.
 // Title matches are self-evident, so they get no badge.
 // Full literal class names (never built with template strings) so Tailwind's

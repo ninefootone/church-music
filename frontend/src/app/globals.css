@@ -257,6 +257,12 @@ body.set-viewer-active { overflow: hidden; }
     padding: 4px 10px;
   }
 
+  /* Sample content seeded into new churches */
+  .badge-sample {
+    background: var(--color-neutral-100);
+    color: var(--color-neutral-600);
+  }
+
   /* ── Category badges ── */
   .cat-badge     { @apply badge; }
   .cat-praise    { background: var(--cat-praise-bg);    color: var(--cat-praise-text); }
@@ -571,6 +577,21 @@ body.set-viewer-active { overflow: hidden; }
     gap: var(--space-md);
   }
   .dash-upgrade-actions { display: flex; gap: var(--space-sm); }
+
+  /* One-off note explaining the sample songs/plan in a new church */
+  .dash-sample-notice {
+    margin-bottom: var(--space-md);
+    border-color: var(--color-brand-200);
+  }
+  .dash-sample-notice-inner {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    gap: var(--space-md);
+  }
+  .dash-sample-notice-text { flex: 1 1 320px; }
+  .dash-sample-notice-actions { display: flex; gap: var(--space-sm); flex-shrink: 0; }
   .dash-card-heading { font-weight: 600; margin: 0; }
   .dash-card-subtext {
     font-size: var(--text-sm);

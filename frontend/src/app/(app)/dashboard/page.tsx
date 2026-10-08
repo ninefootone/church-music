@@ -3,7 +3,7 @@
 import { useState, useEffect, useRef } from 'react'
 import Link from 'next/link'
 import { format, parseISO } from 'date-fns'
-import { CategoryBadge, KeyBadge } from '@/components/ui/badges'
+import { CategoryBadge, KeyBadge, SampleBadge } from '@/components/ui/badges'
 import { PlaylistIcon } from '@/components/ui/PlaylistIcon'
 import { ConfirmModal } from '@/components/ui/ConfirmModal'
 import { useChurch } from '@/context/ChurchContext'
@@ -27,13 +27,38 @@ export default function DashboardPage() {
   const [editType, setEditType] = useState('other')
   const [pendingDeletePlaylist, setPendingDeletePlaylist] = useState<any | null>(null)
   const fetchedRef = useRef(false)
+  // One-off note about the sample songs/plan seeded into new churches (utils/sampleContent.js).
+  const [hasSampleSongs, setHasSampleSongs] = useState(false)
+  const [samplePlan, setSamplePlan] = useState<any | null>(null)
+  const [sampleNoticeDismissed, setSampleNoticeDismissed] = useState(true)
+  const sampleNoticeKey = church ? `songstack_sample_notice_dismissed_${church.id}` : ''
+
+  useEffect(() => {
+    if (!sampleNoticeKey) return
+    try {
+      setSampleNoticeDismissed(localStorage.getItem(sampleNoticeKey) === 'true')
+    } catch {
+      setSampleNoticeDismissed(false)
+    }
+  }, [sampleNoticeKey])
+
+  const dismissSampleNotice = () => {
+    try { localStorage.setItem(sampleNoticeKey, 'true') } catch {}
+    setSampleNoticeDismissed(true)
+  }
 
   useEffect(() => {
     if (!church || fetchedRef.current) return
     fetchedRef.current = true
     Promise.all([
-      api.get('/api/songs').then(r => setSongs(r.data.slice(0, 4))),
-      api.get('/api/plans', { params: { upcoming: 'true' } }).then(r => setPlans(r.data.slice(0, 4))),
+      api.get('/api/songs').then(r => {
+        setSongs(r.data.slice(0, 4))
+        setHasSampleSongs(r.data.some((s: any) => s.is_sample))
+      }),
+      api.get('/api/plans', { params: { upcoming: 'true' } }).then(r => {
+        setPlans(r.data.slice(0, 4))
+        setSamplePlan(r.data.find((p: any) => p.is_sample) ?? null)
+      }),
       api.get('/api/plans/my-upcoming').then(r => setMyUpcoming(r.data)),
       api.get('/api/playlists').then(r => setPlaylists(r.data)),
     ]).finally(() => setLoading(false))
@@ -121,6 +146,27 @@ export default function DashboardPage() {
         </div>
       )}
 
+      {!loading && !sampleNoticeDismissed && (hasSampleSongs || samplePlan) && (
+        <div className="card dash-sample-notice">
+          <div className="dash-sample-notice-inner">
+            <div className="dash-sample-notice-text">
+              <p className="dash-card-heading">We&apos;ve added some examples to get you started</p>
+              <p className="dash-card-subtext">
+                {hasSampleSongs && <>Your library has three sample songs, shared with permission from Joyful Noise, Awesome Cutlery and Ben Slee Music. </>}
+                {samplePlan && <>There&apos;s also a sample plan for {format(parseISO(samplePlan.plan_date), 'd MMMM')} showing how a service comes together. </>}
+                {isOnFreePlan(church)
+                  ? <>They don&apos;t count towards your free plan&apos;s 5 songs and 1 plan, so you can still add your own. Edit or delete them whenever you like.</>
+                  : <>Edit or delete them whenever you like.</>}
+              </p>
+            </div>
+            <div className="dash-sample-notice-actions">
+              {samplePlan && <Link href={`/plans/${samplePlan.id}`} className="btn btn-ghost">View sample plan</Link>}
+              <button type="button" onClick={dismissSampleNotice} className="btn btn-primary">Got it</button>
+            </div>
+          </div>
+        </div>
+      )}
+
       <div className="dashboard-grid">
 
         {/* Songs */}
@@ -142,6 +188,7 @@ export default function DashboardPage() {
                   <div className="song-row-badges-mobile">
                     {song.default_key && <KeyBadge keyOf={song.default_key} />}
                     {song.category && <CategoryBadge category={song.category} />}
+                    {song.is_sample && <SampleBadge />}
                   </div>
                   <div className="dash-row-dates">
                     {song.last_sung && (
@@ -160,6 +207,7 @@ export default function DashboardPage() {
               <div className="song-row-badges-desktop">
                 {song.default_key && <KeyBadge keyOf={song.default_key} />}
                 {song.category && <CategoryBadge category={song.category} />}
+                {song.is_sample && <SampleBadge />}
               </div>
             </Link>
           ))}
@@ -186,6 +234,7 @@ export default function DashboardPage() {
                   </p>
                   {plan.title && <p className="dash-row-meta">{plan.title}</p>}
                 </div>
+                {plan.is_sample && <SampleBadge upper />}
                 <span className={`badge ${isToday(plan.plan_date) ? 'badge-today' : 'badge-upcoming'}`}>
                   {isToday(plan.plan_date) ? 'TODAY' : 'UPCOMING'}
                 </span>

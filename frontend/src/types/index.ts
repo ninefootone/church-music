@@ -84,6 +84,7 @@ export interface Song {
   retired: boolean
   is_draft: boolean
   in_library: boolean
+  is_sample?: boolean
   contributed_by: string | null
   created_at: string
   last_sung?: string | null
@@ -134,6 +135,7 @@ export interface Plan {
   title: string | null
   public_token: string
   created_at: string
+  is_sample?: boolean
   items?: PlanItem[]
 }
 
