@@ -3,6 +3,7 @@ const Sentry = require('@sentry/node');
 const router = express.Router();
 const { isIsoDate, isClockTime, DATE_MESSAGE, START_TIME_MESSAGE } = require('../utils/dates');
 const { requireIdParams, isUuid } = require('../utils/ids');
+const { planLimitReached, PLAN_LIMIT_MESSAGE } = require('../utils/limits');
 // Malformed IDs in the URL → 404 before any handler runs (see utils/ids.js).
 requireIdParams(router, { id: 'Plan not found', itemId: 'Plan item not found', musicianId: 'Musician not found' });
 const { sendBrevoEmail, escapeHtml } = require('../utils/email');
@@ -347,14 +348,8 @@ router.post('/', requireAuth, requirePermission('can_add_plans'), async function
     const churchId = req.churchId;
 
     // Free tier gate — max 1 plan (free_access churches are exempt)
-    const church = await pool.query('SELECT subscription_status, free_access FROM churches WHERE id = $1', [churchId]);
-    const status = church.rows[0]?.subscription_status;
-    const freeAccess = church.rows[0]?.free_access;
-    if (!freeAccess && (!status || status === 'free')) {
-      const count = await pool.query('SELECT COUNT(*) FROM plans WHERE church_id = $1', [churchId]);
-      if (parseInt(count.rows[0].count) >= 1) {
-        return res.status(403).json({ error: 'You have reached the 1 plan limit on the free plan. Upgrade in Settings to add more.' });
-      }
+    if (await planLimitReached(pool, churchId)) {
+      return res.status(403).json({ error: PLAN_LIMIT_MESSAGE, code: 'plan_limit' });
     }
 
     // Optional template: its running order is copied in, and its time/title/
@@ -866,6 +861,9 @@ router.post('/:id/duplicate', requireAuth, requirePermission('can_add_plans'), a
       [req.params.id, req.churchId]
     );
     if (source.rows.length === 0) return res.status(404).json({ error: 'Plan not found' });
+    if (await planLimitReached(pool, req.churchId)) {
+      return res.status(403).json({ error: PLAN_LIMIT_MESSAGE, code: 'plan_limit' });
+    }
     const orig = source.rows[0];
     const public_token = uuidv4();
 
