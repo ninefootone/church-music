@@ -7,6 +7,7 @@ const pool = require('../db/pool');
 const { requireAuth, requireAdmin, requireMembership } = require('../middleware/auth');
 const { sanitizeRichText } = require('../utils/sanitize');
 const { seedSampleContent } = require('../utils/sampleContent');
+const { notifyAdmin } = require('../utils/email');
 const multer = require('multer');
 const { S3Client, PutObjectCommand } = require('@aws-sdk/client-s3');
 const { v4: uuidv4 } = require('uuid');
@@ -86,6 +87,18 @@ router.post('/', requireAuth, async (req, res, next) => {
     // Awaited so the dashboard has them on first load.
     const seeded = await seedSampleContent(church.rows[0].id, req.user.clerk_id);
     res.status(201).json({ ...church.rows[0], sample_content: seeded });
+
+    // Tell the SongStack team (after replying — never delays or fails church creation).
+    notifyAdmin({
+      subject: `New church: ${name}`,
+      heading: 'New church created',
+      rows: [
+        ['Church', name],
+        ['Created by', `${req.user.name || ''} ${req.user.email ? `(${req.user.email})` : ''}`.trim()],
+        ['CCLI number', ccli_number],
+        ['Sample content', `${seeded.songs} song(s), sample plan ${seeded.plan ? 'created' : 'NOT created'}`],
+      ],
+    }).catch((err) => console.warn('[notify] new church email failed:', err.message));
   } catch (err) {
     next(err);
   }

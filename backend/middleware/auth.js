@@ -1,7 +1,7 @@
 const { verifyToken, createClerkClient } = require('@clerk/backend');
 const Sentry = require('../instrument');
 const { isUuid } = require('../utils/ids');
-const { sendWelcomeEmail } = require('../utils/email');
+const { sendWelcomeEmail, notifyAdmin } = require('../utils/email');
 
 const clerkClient = createClerkClient({ secretKey: process.env.CLERK_SECRET_KEY });
 
@@ -63,6 +63,21 @@ const requireAuth = async (req, res, next) => {
       // problem must never slow down or fail the sign-in itself.
       sendWelcomeEmail({ email, firstName: clerkUser.firstName || '' }).catch((err) => {
         console.warn('[welcome] email failed:', err.message);
+        Sentry.captureException(err);
+      });
+      // And tell the SongStack team. Also fire-and-forget.
+      const providers = (clerkUser.externalAccounts || []).map((a) => a.provider).filter(Boolean);
+      notifyAdmin({
+        subject: `New sign-up: ${name || email}`,
+        heading: 'New SongStack account',
+        rows: [
+          ['Name', name],
+          ['Email', email],
+          ['Signed up with', providers.length ? providers.join(', ') : 'email'],
+          ['Note', 'They may not have created or joined a church yet — a separate email follows if they create one.'],
+        ],
+      }).catch((err) => {
+        console.warn('[notify] new account email failed:', err.message);
         Sentry.captureException(err);
       });
     }

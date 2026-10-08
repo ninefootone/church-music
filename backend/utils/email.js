@@ -149,6 +149,26 @@ async function sendBrevoTemplate({ to, toName, templateId, params }) {
   })
 }
 
+// Internal notification to the SongStack team (added 2026-10-08): new accounts and new
+// churches. Goes to ADMIN_NOTIFY_EMAIL on Railway, default hello@songstack.church.
+// `rows` is [label, value] pairs (values are escaped here). Throws on a Brevo error so the
+// caller's .catch() logs it — sendBrevoEmail itself resolves even on a 4xx/5xx.
+async function notifyAdmin({ subject, heading, rows }) {
+  const to = process.env.ADMIN_NOTIFY_EMAIL || 'hello@songstack.church'
+  const list = rows
+    .filter(([, value]) => value !== undefined && value !== null && value !== '')
+    .map(([label, value]) => `<p><strong>${escapeHtml(label)}:</strong> ${escapeHtml(value)}</p>`)
+    .join('')
+  const res = await sendBrevoEmail({
+    to,
+    toName: 'SongStack',
+    subject: `[SongStack] ${subject}`,
+    htmlContent: `<h2>${escapeHtml(heading)}</h2>${list}<p><a href="https://app.songstack.church/admin">Open /admin</a></p>`,
+  })
+  if (res.status >= 300) throw new Error(`Brevo admin notification failed: ${res.status} ${res.body}`)
+  return res
+}
+
 // Welcome email for a NEW account (added 2026-10-04). Sent once, when the users row is
 // first created (middleware/auth.js). Template lives in Brevo: set BREVO_WELCOME_TEMPLATE_ID
 // on Railway; if unset, nothing is sent. Template params: FIRSTNAME (may be empty).
@@ -241,4 +261,4 @@ function escapeHtml(value) {
     .replace(/'/g, '&#39;')
 }
 
-module.exports = { sendBrevoEmail, sendBrevoTemplate, sendWelcomeEmail, subscribeToList, subscribeToListDoubleOptIn, getBrevoContactStatus, unsubscribeFromList, deleteBrevoContact, escapeHtml }
+module.exports = { sendBrevoEmail, sendBrevoTemplate, sendWelcomeEmail, notifyAdmin, subscribeToList, subscribeToListDoubleOptIn, getBrevoContactStatus, unsubscribeFromList, deleteBrevoContact, escapeHtml }
