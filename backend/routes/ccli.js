@@ -12,7 +12,8 @@ router.get('/', requireAuth, requireMembership, async (req, res, next) => {
 
     // Songs from curator churches. `src` is the actual source song behind the
     // ccli_lookup row (the curator church's song with this CCLI number); we pull
-    // its time signature, BPM and suggested arrangement, plus its GLOBAL tags.
+    // its time signature, BPM, suggested arrangement and copyright line/website,
+    // plus its GLOBAL tags.
     // Only global tags are returned because their ids are portable across churches
     // — a curator's own church-scoped tag id would not validate for the importer.
     const { rows: curatorRows } = await pool.query(`
@@ -31,6 +32,8 @@ router.get('/', requireAuth, requireMembership, async (req, res, next) => {
         src.time_signature,
         src.tempo,
         src.suggested_arrangement,
+        src.copyright_info,
+        src.copyright_link,
         COALESCE(
           (SELECT json_agg(json_build_object('id', t.id, 'name', t.name) ORDER BY t.name)
              FROM song_tags st
@@ -42,7 +45,8 @@ router.get('/', requireAuth, requireMembership, async (req, res, next) => {
       FROM ccli_lookup cl
       INNER JOIN churches c ON c.id = cl.source_church_id
       LEFT JOIN LATERAL (
-        SELECT s2.id, s2.time_signature, s2.tempo, s2.suggested_arrangement
+        SELECT s2.id, s2.time_signature, s2.tempo, s2.suggested_arrangement,
+               s2.copyright_info, s2.copyright_link
         FROM songs s2
         WHERE s2.church_id = cl.source_church_id
           AND s2.ccli_number = cl.ccli_number
@@ -69,6 +73,8 @@ router.get('/', requireAuth, requireMembership, async (req, res, next) => {
         s.time_signature,
         s.tempo,
         s.suggested_arrangement,
+        s.copyright_info,
+        s.copyright_link,
         COALESCE(
           (SELECT json_agg(json_build_object('id', t.id, 'name', t.name) ORDER BY t.name)
              FROM song_tags st

@@ -180,6 +180,8 @@ export default function NewSongPage() {
                 time_signature: f.time_signature || extras.time_signature,
                 tempo: f.tempo || extras.tempo,
                 suggested_arrangement: f.suggested_arrangement || extras.suggested_arrangement,
+                copyright_info: f.copyright_info || extras.copyright_info,
+                copyright_link: f.copyright_link || extras.copyright_link,
                 tags: f.tags.length ? f.tags : extras.tags,
               }))}
             />

@@ -15,6 +15,8 @@ type CcliEntry = {
   time_signature?: string | null
   tempo?: number | null
   suggested_arrangement?: string | null
+  copyright_info?: string | null
+  copyright_link?: string | null
   tags?: { id: string; name: string }[]
 }
 
@@ -27,7 +29,7 @@ type Props = {
   onFirstLineChange?: (firstLine: string) => void
   onDefaultKeyChange?: (key: string) => void
   onCategoryChange?: (category: string) => void
-  onExtras?: (extras: { time_signature: string; tempo: string; suggested_arrangement: string; tags: string[] }) => void
+  onExtras?: (extras: { time_signature: string; tempo: string; suggested_arrangement: string; copyright_info: string; copyright_link: string; tags: string[] }) => void
   onBlur?: () => void
 }
 
@@ -93,6 +95,8 @@ export default function CcliAutocomplete({
       time_signature: entry.time_signature || '',
       tempo: entry.tempo != null ? String(entry.tempo) : '',
       suggested_arrangement: entry.suggested_arrangement || '',
+      copyright_info: entry.copyright_info || '',
+      copyright_link: entry.copyright_link || '',
       tags: (entry.tags || []).map(t => t.id),
     })
     setSuggestions([])
