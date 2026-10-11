@@ -79,6 +79,7 @@ Next:
 - [ ] Decide: restrict `GET /api/templates/:id/detail` lyrics to church members — today any signed-in user (now incl. /browse users) gets lyrics of every share_all_data library song.
 - [ ] Give Music Ministry the link `https://<live domain>/browse` once some songs are cleared. /browse isn't linked from the app; onboarding only shows "Back to the song library" to people who've used it before (localStorage flag).
 - [ ] Maybe later: MM's "service planner" is a list of songs — if MM users keep one list per service, /browse's single Favourites list is weaker; named lists would match it.
+- Gotcha (2026-10-11): live `song_files` has NO `filename` column — `db/history/migrate.js` is stale. Check columns against the live code (e.g. the INSERT in `routes/uploads.js`), not that file.
 - [ ] No in-app help needed for /browse while it stays low-key (browse users can't reach /help). Add a topic if it goes mainstream.
 
 ## Backlog

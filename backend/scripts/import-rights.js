@@ -40,7 +40,7 @@ async function run() {
     const { rows: songs } = await client.query(
       `SELECT s.id, s.title, s.author, s.rights_status, s.copyright_info, s.is_draft, s.in_library,
               s.in_discover, s.share_all_data,
-              COALESCE((SELECT json_agg(json_build_object('type', f.file_type, 'label', f.label, 'filename', f.filename))
+              COALESCE((SELECT json_agg(json_build_object('type', f.file_type, 'label', f.label, 'key', f.key_of))
                           FROM song_files f WHERE f.song_id = s.id), '[]') AS files
          FROM songs s
         WHERE s.church_id = $1 AND (s.retired = false OR s.retired IS NULL)

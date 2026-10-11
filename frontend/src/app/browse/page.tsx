@@ -31,7 +31,6 @@ interface SongFile {
   file_type: string
   label: string | null
   key_of: string | null
-  filename: string | null
   url: string
 }
 
@@ -367,7 +366,7 @@ export default function BrowsePage() {
                         {detail.files.map((f) => (
                           <li key={f.id}>
                             <a href={f.url} target="_blank" rel="noreferrer">
-                              {f.label || f.filename || f.file_type}{f.key_of ? ` (${f.key_of})` : ''} ↓
+                              {f.label || f.file_type}{f.key_of ? ` (${f.key_of})` : ''} ↓
                             </a>
                           </li>
                         ))}

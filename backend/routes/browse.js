@@ -140,7 +140,7 @@ router.get('/songs/:id', async (req, res, next) => {
     song.files = [];
     if (song.free) {
       const f = await pool.query(
-        'SELECT id, file_type, label, key_of, filename, r2_key, edited_r2_key FROM song_files WHERE song_id = $1 ORDER BY key_of, file_type',
+        'SELECT id, file_type, label, key_of, r2_key, edited_r2_key FROM song_files WHERE song_id = $1 ORDER BY key_of, file_type',
         [song.id]
       );
       song.files = await Promise.all(
@@ -149,7 +149,6 @@ router.get('/songs/:id', async (req, res, next) => {
           file_type: file.file_type,
           label: file.label,
           key_of: file.key_of,
-          filename: file.filename,
           url: await getSignedUrl(r2, new GetObjectCommand({ Bucket: BUCKET, Key: file.edited_r2_key || file.r2_key }), {
             expiresIn: 3600,
           }),
