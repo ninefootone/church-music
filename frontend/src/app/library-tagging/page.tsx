@@ -6,6 +6,9 @@
 // Backend: backend/routes/libraryTagging.js. Owner = master-library admin (tags + flags);
 // tagger = email in LIBRARY_TAGGER_EMAILS (tags only). Suggested tags (song_tag_suggestions)
 // show dashed until someone accepts or dismisses them. See project doc library-tagging.md.
+// Rights (owner only to edit): rights_status is research about the SONG; files_cleared is the owner's
+// manual check of the actual files and is the only thing that allows free download on /browse.
+// See project doc song-rights-and-discover-only.md.
 
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { useAuth } from '@clerk/nextjs'
@@ -15,6 +18,26 @@ const API = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001'
 
 type Role = 'owner' | 'tagger'
 type Flag = 'is_draft' | 'in_library' | 'share_all_data'
+type RightsStatus = 'public_domain' | 'pd_words' | 'mm_owned' | 'partner' | 'copyright' | 'unknown'
+
+const RIGHTS_LABEL: Record<RightsStatus, string> = {
+  public_domain: 'Public domain',
+  pd_words: 'PD words only',
+  mm_owned: 'Music Ministry',
+  partner: 'Partner artist',
+  copyright: 'In copyright',
+  unknown: 'Unknown',
+}
+const RIGHTS_HELP: Record<RightsStatus, string> = {
+  public_domain: 'Words and usual tune are out of copyright (UK and US). The file can still be a copyright arrangement — check it.',
+  pd_words: 'Words are out of copyright but the tune or arrangement may not be. Only clear if the file uses a PD tune and no modern arrangement.',
+  mm_owned: "Music Ministry's own song or arrangement. Only clear once you have MM's written OK.",
+  partner: "Covered by a partner artist's agreement. Only clear if that agreement allows free downloads.",
+  copyright: 'In copyright. Not eligible for free download.',
+  unknown: 'Not identified yet. Not eligible for free download.',
+}
+// Statuses where the owner is allowed to tick "files cleared" (backend enforces the same list).
+const CLEARABLE: RightsStatus[] = ['public_domain', 'pd_words', 'mm_owned', 'partner']
 
 interface Song {
   id: string
@@ -23,6 +46,11 @@ interface Song {
   is_draft: boolean
   in_library: boolean
   share_all_data: boolean
+  in_discover: boolean
+  rights_status: RightsStatus | null
+  rights_note: string | null
+  copyright_info: string | null
+  files_cleared: boolean
   has_lyrics: boolean
   file_count: number
   tag_ids: string[]
@@ -40,9 +68,19 @@ interface TagInfo {
   added_at: string | null
 }
 
+interface SongFile {
+  id: string
+  file_type: string
+  label: string | null
+  key_of: string | null
+  filename: string | null
+  url: string
+}
+
 interface Detail {
   lyrics: string
   tag_info: TagInfo[]
+  files: SongFile[]
 }
 
 interface Contributor {
@@ -59,6 +97,7 @@ interface TagState {
 type StatusFilter = 'all' | 'draft' | 'live'
 type TagFilter = 'all' | 'none' | 'under3' | 'atleast3' | 'suggested'
 type YesNoFilter = 'all' | 'yes' | 'no'
+type RightsFilter = 'all' | 'to_check' | 'cleared' | 'unassessed' | RightsStatus
 
 class ApiError extends Error {
   status: number
@@ -96,6 +135,8 @@ export default function LibraryTaggingPage() {
   const [tagFilter, setTagFilter] = useState<TagFilter>('all')
   const [libraryFilter, setLibraryFilter] = useState<YesNoFilter>('all')
   const [lyricsFilter, setLyricsFilter] = useState<YesNoFilter>('all')
+  const [rightsFilter, setRightsFilter] = useState<RightsFilter>('all')
+  const [noteDraft, setNoteDraft] = useState('')
 
   const rowRefs = useRef<Record<string, HTMLTableRowElement | null>>({})
 
@@ -164,13 +205,28 @@ export default function LibraryTaggingPage() {
       if (libraryFilter === 'no' && s.in_library) return false
       if (lyricsFilter === 'yes' && !s.has_lyrics) return false
       if (lyricsFilter === 'no' && s.has_lyrics) return false
+      if (rightsFilter === 'to_check') {
+        // Could be given away free, has files, not yet checked by a person.
+        if (!s.rights_status || !CLEARABLE.includes(s.rights_status) || s.files_cleared || s.file_count === 0) return false
+      } else if (rightsFilter === 'cleared') {
+        if (!s.files_cleared) return false
+      } else if (rightsFilter === 'unassessed') {
+        if (s.rights_status) return false
+      } else if (rightsFilter !== 'all' && s.rights_status !== rightsFilter) return false
       return true
     })
-  }, [songs, search, statusFilter, tagFilter, libraryFilter, lyricsFilter])
+  }, [songs, search, statusFilter, tagFilter, libraryFilter, lyricsFilter, rightsFilter])
 
   const taggedCount = useMemo(() => songs.filter((s) => s.tag_ids.length > 0).length, [songs])
   const suggestedCount = useMemo(() => songs.filter((s) => s.suggestion_ids.length > 0).length, [songs])
+  const pdCount = useMemo(() => songs.filter((s) => s.rights_status === 'public_domain').length, [songs])
+  const clearedCount = useMemo(() => songs.filter((s) => s.files_cleared).length, [songs])
   const selected = songs.find((s) => s.id === selectedId) || null
+
+  // The rights note box edits a local copy; it saves on blur.
+  useEffect(() => {
+    setNoteDraft(selected?.rights_note || '')
+  }, [selected?.id, selected?.rights_note])
 
   // Fetch lyrics + "who added each tag" for the selected song (cached per song; ignores a
   // reply for a song that's no longer selected).
@@ -296,6 +352,30 @@ export default function LibraryTaggingPage() {
       }
     })
 
+  // Owner-only rights edits (status, note, files cleared) — same PATCH as the flags.
+  const patchRights = (
+    song: Song,
+    body: Partial<Pick<Song, 'rights_status' | 'rights_note' | 'files_cleared'>>,
+    key: string
+  ) =>
+    withPending(`${song.id}:${key}`, async () => {
+      const before = { rights_status: song.rights_status, rights_note: song.rights_note, files_cleared: song.files_cleared }
+      setSongs((prev) => prev.map((s) => (s.id === song.id ? { ...s, ...body } : s)))
+      try {
+        const d = await call(`/songs/${song.id}/flags`, { method: 'PATCH', body: JSON.stringify(body) })
+        setSongs((prev) =>
+          prev.map((s) =>
+            s.id === song.id
+              ? { ...s, rights_status: d.rights_status, rights_note: d.rights_note, files_cleared: d.files_cleared }
+              : s
+          )
+        )
+      } catch (err) {
+        setSongs((prev) => prev.map((s) => (s.id === song.id ? { ...s, ...before } : s)))
+        setActionError(`Couldn't update rights on "${song.title}": ${err instanceof Error ? err.message : 'error'}`)
+      }
+    })
+
   const toggleFlag = (song: Song, flag: Flag) =>
     withPending(`${song.id}:${flag}`, async () => {
       const value = !song[flag]
@@ -367,6 +447,9 @@ export default function LibraryTaggingPage() {
             {email ? ` · signed in as ${email}` : ''}
             {isOwner ? '' : ' · you can add and remove tags'}
           </p>
+          <p className="lt-sub">
+            Rights: {pdCount} public domain · {clearedCount} with files cleared for free download
+          </p>
           {contributors.length > 0 && (
             <p className="lt-sub">
               Tags added:{' '}
@@ -416,6 +499,18 @@ export default function LibraryTaggingPage() {
           </select>
         </label>
         <label>
+          Rights
+          <select className="input" value={rightsFilter} onChange={(e) => setRightsFilter(e.target.value as RightsFilter)}>
+            <option value="all">All</option>
+            <option value="to_check">Files to check (could be free)</option>
+            <option value="cleared">Files cleared</option>
+            {(Object.keys(RIGHTS_LABEL) as RightsStatus[]).map((r) => (
+              <option key={r} value={r}>{RIGHTS_LABEL[r]}</option>
+            ))}
+            <option value="unassessed">Not assessed</option>
+          </select>
+        </label>
+        <label>
           Lyrics
           <select className="input" value={lyricsFilter} onChange={(e) => setLyricsFilter(e.target.value as YesNoFilter)}>
             <option value="all">All</option>
@@ -452,6 +547,12 @@ export default function LibraryTaggingPage() {
                   <td>
                     <div className="lt-title">{s.title}</div>
                     {s.author && <div className="lt-author">{s.author}</div>}
+                    {s.rights_status && (
+                      <div className="lt-rights-row">
+                        <span className={`lt-rights lt-rights-${s.rights_status}`}>{RIGHTS_LABEL[s.rights_status]}</span>
+                        {s.files_cleared && <span className="lt-rights lt-rights-cleared">✓ Files cleared</span>}
+                      </div>
+                    )}
                   </td>
                   <td>
                     {s.tag_ids.length === 0 && s.suggestion_ids.length === 0 ? (
@@ -500,6 +601,81 @@ export default function LibraryTaggingPage() {
                 <a className="lt-open-link" href={`/songs/${selected.id}`} target="_blank" rel="noreferrer">
                   Open song page ↗
                 </a>
+              )}
+
+              <h3 className="lt-panel-heading">Rights</h3>
+              {isOwner ? (
+                <div className="lt-rights-panel">
+                  <select
+                    className="input"
+                    value={selected.rights_status || ''}
+                    disabled={pending.has(`${selected.id}:rights_status`)}
+                    onChange={(e) =>
+                      patchRights(
+                        selected,
+                        { rights_status: (e.target.value || null) as RightsStatus | null },
+                        'rights_status'
+                      )
+                    }
+                  >
+                    <option value="">Not assessed</option>
+                    {(Object.keys(RIGHTS_LABEL) as RightsStatus[]).map((r) => (
+                      <option key={r} value={r}>{RIGHTS_LABEL[r]}</option>
+                    ))}
+                  </select>
+                  {selected.rights_status && <p className="lt-rights-help">{RIGHTS_HELP[selected.rights_status]}</p>}
+                  <textarea
+                    className="input lt-rights-note"
+                    rows={3}
+                    placeholder="Why — writers' dates, tune, arrangement"
+                    value={noteDraft}
+                    onChange={(e) => setNoteDraft(e.target.value)}
+                    onBlur={() => {
+                      if (noteDraft.trim() !== (selected.rights_note || '').trim()) {
+                        patchRights(selected, { rights_note: noteDraft.trim() || null }, 'rights_note')
+                      }
+                    }}
+                  />
+                  <p className="lt-rights-copyright">
+                    <strong>Copyright field:</strong> {selected.copyright_info || <em>empty</em>}
+                  </p>
+
+                  <h4 className="lt-panel-subheading">Files ({selected.file_count})</h4>
+                  {selected.file_count === 0 ? (
+                    <p className="lt-none">No files.</p>
+                  ) : !detail ? (
+                    <p className="lt-none">Loading files…</p>
+                  ) : (
+                    <ul className="lt-file-list">
+                      {detail.files.map((f) => (
+                        <li key={f.id}>
+                          <a href={f.url} target="_blank" rel="noreferrer">
+                            {f.label || f.filename || f.file_type}
+                            {f.key_of ? ` (${f.key_of})` : ''} ↗
+                          </a>
+                        </li>
+                      ))}
+                    </ul>
+                  )}
+                  <label className="lt-cleared">
+                    <input
+                      type="checkbox"
+                      checked={selected.files_cleared}
+                      disabled={
+                        pending.has(`${selected.id}:files_cleared`) ||
+                        (!selected.files_cleared &&
+                          (!selected.rights_status || !CLEARABLE.includes(selected.rights_status)))
+                      }
+                      onChange={() => patchRights(selected, { files_cleared: !selected.files_cleared }, 'files_cleared')}
+                    />
+                    I&apos;ve checked every file: no copyright arrangement, tune or words — safe to give away free
+                  </label>
+                </div>
+              ) : (
+                <p className="lt-none">
+                  {selected.rights_status ? RIGHTS_LABEL[selected.rights_status] : 'Not assessed'}
+                  {selected.files_cleared ? ' · files cleared' : ''}
+                </p>
               )}
 
               {selected.suggestion_ids.length > 0 && (

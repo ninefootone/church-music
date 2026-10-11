@@ -22,6 +22,7 @@ const annotationRoutes = require('./routes/annotations');
 const accountRoutes = require('./routes/account');
 const planTemplateRoutes = require('./routes/planTemplates');
 const libraryTaggingRoutes = require('./routes/libraryTagging');
+const browseRoutes = require('./routes/browse');
 
 const app = express();
 
@@ -54,6 +55,7 @@ app.use('/api/superadmin', superAdminRoutes);
 app.use('/api/account', accountRoutes);
 app.use('/api/plan-templates', planTemplateRoutes);
 app.use('/api/library-tagging', libraryTaggingRoutes);
+app.use('/api/browse', browseRoutes);
 
 // Unknown /api/... paths: JSON 404 (Express's default is an HTML "Cannot GET" page).
 app.use('/api', (req, res) => res.status(404).json({ error: 'Not found' }));

@@ -69,6 +69,18 @@ Next:
   - [x] Dead `POST /api/templates/contribute` removed (no callers; its church-less pending songs had no review path) — DONE 2026-10-03. Read-only `backend/scripts/check-contributed-songs.js` run by Jon 2026-10-03: no leftover rows.
 - [ ] Drop unused columns `plan_items.duration_mins`, `memberships.can_edit_any_plan` and unused table `church_plan_item_types` — with the migration runner below.
 
+## Song rights + Discover-only /browse (built 2026-10-11 — see project doc `song-rights-and-discover-only.md`)
+
+- [ ] Deploy (push), then run `backend/migrations/add-song-rights-and-favourites.js` on prod.
+- [ ] `backend/scripts/import-rights.js --dry-run`, then for real (`--set-copyright` optional). Send `tagging-work/rights-dbcheck.json` to Claude for a cross-check against the copyright text MM's import stored.
+- [ ] Work /library-tagging → Rights → "Files to check": open each file, tick "files cleared" only if no © arrangement/tune/words.
+- [ ] Get Music Ministry's permission IN WRITING with a list of what they own (originals + arrangements). Verbal only so far.
+- [ ] Check partner agreements (Awesome Cutlery, Ben Slee, Joyful Noise) allow free downloads to non-church users.
+- [ ] Decide: restrict `GET /api/templates/:id/detail` lyrics to church members — today any signed-in user (now incl. /browse users) gets lyrics of every share_all_data library song.
+- [ ] Give Music Ministry the link `https://<live domain>/browse` once some songs are cleared. /browse isn't linked from the app; onboarding only shows "Back to the song library" to people who've used it before (localStorage flag).
+- [ ] Maybe later: MM's "service planner" is a list of songs — if MM users keep one list per service, /browse's single Favourites list is weaker; named lists would match it.
+- [ ] No in-app help needed for /browse while it stays low-key (browse users can't reach /help). Add a topic if it goes mainstream.
+
 ## Backlog
 
 - [ ] **Dashboard downloads the whole song library to show 4 songs (noted 2026-10-08).** `dashboard/page.tsx` calls `/api/songs` (full library) then shuffles client-side and keeps 4, plus uses the full list for the `is_sample` check. Fine now; gets slow on mobile for big libraries. Fix: backend `GET /api/songs?random=4` (`ORDER BY random() LIMIT 4`) + a cheap `has_samples` flag, and drop the full fetch.

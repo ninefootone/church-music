@@ -5,6 +5,14 @@ const { requireIdParams } = require('../utils/ids');
 requireIdParams(router, { id: 'Song not found', tagId: 'Tag not found' });
 const pool = require('../db/pool');
 const { requireAuth } = require('../middleware/auth');
+const { GetObjectCommand } = require('@aws-sdk/client-s3');
+const { getSignedUrl } = require('@aws-sdk/s3-request-presigner');
+const { r2, BUCKET } = require('./uploads');
+
+// Rights research for the SONG (see migrations/add-song-rights-and-favourites.js). files_cleared is
+// the owner's manual "I've opened the files and they're safe to give away" — the only thing that lets
+// a file be downloaded on the churchless /browse page.
+const RIGHTS_STATUSES = ['public_domain', 'pd_words', 'mm_owned', 'partner', 'copyright', 'unknown'];
 
 // Bulk tagging page for the master library (/library-tagging). See project doc library-tagging.md.
 // Two kinds of editor:
@@ -123,6 +131,9 @@ router.get('/songs', async (req, res, next) => {
               COALESCE(s.is_draft, false)       AS is_draft,
               COALESCE(s.in_library, false)     AS in_library,
               COALESCE(s.share_all_data, false) AS share_all_data,
+              COALESCE(s.in_discover, false)    AS in_discover,
+              s.rights_status, s.rights_note, s.copyright_info,
+              COALESCE(s.files_cleared, false)  AS files_cleared,
               (s.lyrics IS NOT NULL AND btrim(s.lyrics) <> '') AS has_lyrics,
               (SELECT COUNT(*)::int FROM song_files f WHERE f.song_id = s.id) AS file_count,
               COALESCE((SELECT array_agg(st.tag_id::text)
@@ -158,7 +169,27 @@ router.get('/songs/:id/detail', async (req, res, next) => {
         WHERE st.song_id = $1`,
       [req.params.id]
     );
-    res.json({ lyrics: rows[0].lyrics || '', tag_info: who.rows });
+    // Files (with 1h signed links) for the owner only, so the rights check can be done from this page.
+    let files = [];
+    if (req.libraryRole === 'owner') {
+      const f = await pool.query(
+        'SELECT id, file_type, label, key_of, filename, r2_key, edited_r2_key FROM song_files WHERE song_id = $1 ORDER BY key_of, file_type',
+        [req.params.id]
+      );
+      files = await Promise.all(
+        f.rows.map(async (file) => ({
+          id: file.id,
+          file_type: file.file_type,
+          label: file.label,
+          key_of: file.key_of,
+          filename: file.filename,
+          url: await getSignedUrl(r2, new GetObjectCommand({ Bucket: BUCKET, Key: file.edited_r2_key || file.r2_key }), {
+            expiresIn: 3600,
+          }),
+        }))
+      );
+    }
+    res.json({ lyrics: rows[0].lyrics || '', tag_info: who.rows, files });
   } catch (err) {
     next(err);
   }
@@ -245,7 +276,8 @@ router.delete('/songs/:id/suggestions/:tagId', async (req, res, next) => {
 });
 
 // PATCH /api/library-tagging/songs/:id/flags → owner only.
-// Body: any of { is_draft, in_library, share_all_data } as true/false.
+// Body: any of { is_draft, in_library, share_all_data, files_cleared } as true/false,
+// rights_status (one of RIGHTS_STATUSES or null), rights_note (string or null).
 // share_all_data also sets is_template/template_status, exactly as PUT /api/songs/:id does.
 router.patch('/songs/:id/flags', requireOwner, async (req, res, next) => {
   try {
@@ -256,12 +288,42 @@ router.patch('/songs/:id/flags', requireOwner, async (req, res, next) => {
       params.push(val);
       sets.push(`${col} = $${params.length}`);
     };
-    for (const f of ['is_draft', 'in_library', 'share_all_data']) {
+    for (const f of ['is_draft', 'in_library', 'share_all_data', 'files_cleared']) {
       if (f in body && typeof body[f] !== 'boolean') {
         return res.status(400).json({ error: `${f} must be true or false` });
       }
     }
+    if ('rights_status' in body && body.rights_status !== null && !RIGHTS_STATUSES.includes(body.rights_status)) {
+      return res.status(400).json({ error: 'Unknown rights status' });
+    }
+    if ('rights_note' in body && body.rights_note !== null && typeof body.rights_note !== 'string') {
+      return res.status(400).json({ error: 'rights_note must be text' });
+    }
+    // Guard: files can only be cleared for free download on a song whose rights status allows it.
+    // Change the status first (deliberately) if the research was wrong.
+    if (body.files_cleared === true) {
+      let status = body.rights_status;
+      if (!('rights_status' in body)) {
+        const cur = await pool.query('SELECT rights_status FROM songs WHERE id = $1 AND church_id = $2', [
+          req.params.id,
+          process.env.MASTER_CHURCH_ID,
+        ]);
+        if (cur.rows.length === 0) return res.status(404).json({ error: 'Song not found' });
+        status = cur.rows[0].rights_status;
+      }
+      if (!['public_domain', 'pd_words', 'mm_owned', 'partner'].includes(status)) {
+        return res.status(400).json({
+          error: 'Set a rights status of Public domain, PD words, Music Ministry or Partner before clearing files.',
+        });
+      }
+    }
+    if ('rights_status' in body && ['copyright', 'unknown', null].includes(body.rights_status) && !('files_cleared' in body)) {
+      set('files_cleared', false); // moving a song back to copyright/unknown un-clears its files
+    }
     if ('is_draft' in body) set('is_draft', body.is_draft);
+    if ('files_cleared' in body) set('files_cleared', body.files_cleared);
+    if ('rights_status' in body) set('rights_status', body.rights_status);
+    if ('rights_note' in body) set('rights_note', body.rights_note === null ? null : body.rights_note.trim() || null);
     if ('in_library' in body) set('in_library', body.in_library);
     if ('share_all_data' in body) {
       set('share_all_data', body.share_all_data);
@@ -275,7 +337,8 @@ router.patch('/songs/:id/flags', requireOwner, async (req, res, next) => {
       `UPDATE songs SET ${sets.join(', ')}
         WHERE id = $${params.length - 1} AND church_id = $${params.length}
         RETURNING id, COALESCE(is_draft, false) AS is_draft, COALESCE(in_library, false) AS in_library,
-                  COALESCE(share_all_data, false) AS share_all_data`,
+                  COALESCE(share_all_data, false) AS share_all_data,
+                  COALESCE(files_cleared, false) AS files_cleared, rights_status, rights_note`,
       params
     );
     if (rows.length === 0) return res.status(404).json({ error: 'Song not found' });

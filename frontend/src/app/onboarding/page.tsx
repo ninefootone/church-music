@@ -26,6 +26,18 @@ export default function OnboardingPage() {
 
   const redirectUrl = typeof window !== 'undefined' ? window.location.href : ''
 
+  // /browse (free song library) is deliberately NOT advertised here — it's reached by a link on the
+  // Music Ministry site. But someone who has already used it and lands here (e.g. after signing in
+  // from the home page) needs a way back. /browse sets this flag; per browser, best effort.
+  const [showBrowse, setShowBrowse] = useState(false)
+  useEffect(() => {
+    try {
+      setShowBrowse(localStorage.getItem('songstack.browseUser') === '1')
+    } catch {
+      // storage blocked — just don't show the link
+    }
+  }, [])
+
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
 
@@ -147,6 +159,12 @@ export default function OnboardingPage() {
               <div className="onboarding-choice-title">Join an existing church</div>
               <div className="onboarding-choice-desc">Enter an invite code from your church admin</div>
             </button>
+            {showBrowse && (
+              <a href="/browse" className="onboarding-choice-btn onboarding-choice-btn--quiet">
+                <div className="onboarding-choice-title">Back to the song library</div>
+                <div className="onboarding-choice-desc">Keep browsing songs and your favourites without setting up a church</div>
+              </a>
+            )}
           </div>
         )}
 
