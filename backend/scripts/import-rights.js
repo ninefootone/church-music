@@ -49,7 +49,11 @@ async function run() {
     );
 
     await client.query('BEGIN');
+    // If something else holds a lock on songs, fail after 15s instead of hanging silently.
+    await client.query("SET LOCAL lock_timeout = '15s'");
     const check = [];
+    const upd = { ids: [], statuses: [], notes: [] };
+    const pdIds = [];
     const notInFile = [];
     for (const s of songs) {
       const r = research[s.id];
@@ -65,15 +69,30 @@ async function run() {
       if (keepDb) { counts.skippedAlreadySet++; }
       else {
         counts.updated++;
-        if (!DRY) {
-          await client.query('UPDATE songs SET rights_status = $1, rights_note = $2 WHERE id = $3',
-            [r.rights_status, r.rights_note, s.id]);
-        }
+        upd.ids.push(s.id); upd.statuses.push(r.rights_status); upd.notes.push(r.rights_note);
       }
       if (SET_COPYRIGHT && effective === 'public_domain' && !(s.copyright_info || '').trim()) {
         counts.copyrightTextSet++;
-        if (!DRY) await client.query('UPDATE songs SET copyright_info = $1 WHERE id = $2', [PD_TEXT, s.id]);
+        pdIds.push(s.id);
       }
+    }
+    // One UPDATE per kind of change (not one per song) — 514 round trips to Railway was slow.
+    if (!DRY && upd.ids.length) {
+      console.log(`Writing rights for ${upd.ids.length} songs…`);
+      await client.query(
+        `UPDATE songs s SET rights_status = v.status, rights_note = v.note
+           FROM unnest($1::uuid[], $2::text[], $3::text[]) AS v(id, status, note)
+          WHERE s.id = v.id AND s.church_id = $4`,
+        [upd.ids, upd.statuses, upd.notes, process.env.MASTER_CHURCH_ID]
+      );
+    }
+    if (!DRY && pdIds.length) {
+      console.log(`Writing copyright text for ${pdIds.length} songs…`);
+      await client.query(
+        `UPDATE songs SET copyright_info = $1
+          WHERE id = ANY($2::uuid[]) AND church_id = $3 AND (copyright_info IS NULL OR btrim(copyright_info) = '')`,
+        [PD_TEXT, pdIds, process.env.MASTER_CHURCH_ID]
+      );
     }
     if (DRY) await client.query('ROLLBACK'); else await client.query('COMMIT');
 
