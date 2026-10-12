@@ -273,6 +273,13 @@ function LibraryRow({
 // that part of the info panel simply doesn't render.
 const PARTNER_ARTISTS = [
   {
+    name: 'Awesome Cutlery',
+    author: 'Awesome Cutlery',
+    logo: '/Awesome-Cutlery-logo-sq.svg',
+    description: 'Our mission is to help families worship Jesus together.',
+    website: 'https://www.awesomecutlery.com/',
+  },
+  {
     name: 'Ben Slee Music',
     author: 'Ben Slee',
     logo: '/Ben-Slee-logo-sq.svg',
@@ -287,11 +294,11 @@ const PARTNER_ARTISTS = [
     website: 'https://joyfulnoisemusic.co.uk/',
   },
   {
-    name: 'Awesome Cutlery',
-    author: 'Awesome Cutlery',
-    logo: '/Awesome-Cutlery-logo-sq.svg',
-    description: 'Our mission is to help families worship Jesus together.',
-    website: 'https://www.awesomecutlery.com/',
+    name: 'Sovereign Grace Music',
+    author: 'Sovereign Grace Music',
+    logo: '/Sovereign-Grace-Logo-Square.png',
+    description: 'We exist to glorify God by making disciples through the power of the Holy Spirit.',
+    website: 'https://www.sovereigngracemusic.com/',
   },
 ]
 
