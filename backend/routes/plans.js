@@ -284,7 +284,9 @@ router.get('/:id', requireAuth, requireMembership, async function(req, res, next
         s.ccli_number AS song_ccli_number,
         s.suggested_arrangement AS song_suggested_arrangement,
         s.lyrics AS song_lyrics,
-        s.default_duration AS song_default_duration
+        s.default_duration AS song_default_duration,
+        COALESCE((SELECT JSON_AGG(jsonb_build_object('url', v.url, 'label', v.label, 'link_type', v.link_type) ORDER BY v.sort_order, v.id)
+                  FROM song_videos v WHERE v.song_id = s.id), '[]') AS song_links
        FROM plan_items si
        LEFT JOIN songs s ON s.id = si.song_id
        WHERE si.plan_id = $1
