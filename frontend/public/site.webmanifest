@@ -1,6 +1,6 @@
 {
-  "name": "SongStack",
-  "short_name": "SongStack",
+  "name": "SongStack Web",
+  "short_name": "SongStack Web",
   "start_url": "/dashboard",
   "scope": "/",
   "display": "standalone",
@@ -8,13 +8,13 @@
   "background_color": "#ffffff",
   "icons": [
     {
-      "src": "/web-app-manifest-192x192.png",
+      "src": "/web-app-manifest-192x192.png?v=2",
       "sizes": "192x192",
       "type": "image/png",
       "purpose": "maskable"
     },
     {
-      "src": "/web-app-manifest-512x512.png",
+      "src": "/web-app-manifest-512x512.png?v=2",
       "sizes": "512x512",
       "type": "image/png",
       "purpose": "maskable"

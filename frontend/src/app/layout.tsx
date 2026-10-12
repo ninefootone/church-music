@@ -17,9 +17,15 @@ export const metadata: Metadata = {
       { url: '/favicon-96x96.png', sizes: '96x96', type: 'image/png' },
       { url: '/favicon.svg', type: 'image/svg+xml' },
     ],
+    // Home-screen shortcut icon: white with a blue note — the reverse of the iPad app's icon, so the two can be told
+    // apart on a home screen. Bump ?v= when the image changes (iOS/CDNs cache it).
     apple: [
-      { url: '/apple-touch-icon.png' },
+      { url: '/apple-touch-icon.png?v=2' },
     ],
+  },
+  // Default name when someone adds the website to their home screen ("SongStack" is the iPad app).
+  appleWebApp: {
+    title: 'SongStack Web',
   },
 }
 
