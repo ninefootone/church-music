@@ -138,9 +138,9 @@ async function createSongDB(client, data) {
   const res = await client.query(
     `INSERT INTO songs (
       church_id, title, author, default_key, first_line, lyrics,
-      ccli_number, ccli_url, youtube_url, notes, bible_references,
+      ccli_number, ccli_url, notes, bible_references,
       suggested_arrangement
-    ) VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12)
+    ) VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11)
     RETURNING *`,
     [
       CHURCH_ID,
@@ -151,7 +151,6 @@ async function createSongDB(client, data) {
       data.lyrics || null,
       data.ccli_number || null,
       data.ccli_url || null,
-      data.youtube_url || null,
       data.notes || null,
       data.bible_references || null,
       data.suggested_arrangement || null,

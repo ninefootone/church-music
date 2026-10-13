@@ -8,7 +8,7 @@ const { requireAuth, requireMembership, requireAdmin, requirePermission } = requ
 const { songLimitReached, SONG_LIMIT_MESSAGE } = require('../utils/limits');
 const { cleanHttpUrl, BAD_URL_MESSAGE } = require('../utils/sanitize');
 const { toPrefixQuery } = require('../utils/search');
-const SONG_URL_FIELDS = ['youtube_url', 'ccli_url', 'copyright_link'];
+const SONG_URL_FIELDS = ['ccli_url', 'copyright_link'];
 
 // Shared CCLI autocomplete (ccli_lookup). Only CURATOR churches set the shared
 // title/author/first line/key/category (decided with Jon 2026-10-02) — before, any
@@ -518,7 +518,7 @@ router.post('/', requireAuth, requirePermission('can_manage_songs'), async (req,
       return res.status(403).json({ error: SONG_LIMIT_MESSAGE, code: 'song_limit' });
     }
 
-    const { title, author, default_key, category, first_line, lyrics, ccli_number, youtube_url, notes, bible_references, suggested_arrangement, ccli_url, share_all_data, copyright_info, copyright_link, in_discover, discover_description, tags, time_signature, tempo, default_duration, in_library } = req.body;
+    const { title, author, default_key, category, first_line, lyrics, ccli_number, notes, bible_references, suggested_arrangement, ccli_url, share_all_data, copyright_info, copyright_link, in_discover, discover_description, tags, time_signature, tempo, default_duration, in_library } = req.body;
 
     const isMasterLibrary = churchId === process.env.MASTER_CHURCH_ID;
     const discoverEnabled = isMasterLibrary && (in_discover ?? false);
@@ -531,9 +531,9 @@ router.post('/', requireAuth, requirePermission('can_manage_songs'), async (req,
     await client.query('BEGIN');
 
     const song = await client.query(
-      `INSERT INTO songs (church_id, title, author, default_key, category, first_line, lyrics, ccli_number, youtube_url, notes, bible_references, suggested_arrangement, ccli_url, share_all_data, copyright_info, copyright_link, in_discover, discover_description, time_signature, tempo, default_duration, in_library)
-       VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15,$16,$17,$18,$19,$20,$21,$22) RETURNING *`,
-      [churchId, title.trim(), author, default_key, category, first_line, lyrics, ccli_number, youtube_url, notes, bible_references, suggested_arrangement, ccli_url, shareEnabled, copyright_info ?? null, copyright_link ?? null, discoverEnabled, discover_description ?? null, time_signature ?? null, tempo ? parseInt(tempo) : null, default_duration ? parseInt(default_duration) : null, libraryEnabled]
+      `INSERT INTO songs (church_id, title, author, default_key, category, first_line, lyrics, ccli_number, notes, bible_references, suggested_arrangement, ccli_url, share_all_data, copyright_info, copyright_link, in_discover, discover_description, time_signature, tempo, default_duration, in_library)
+       VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15,$16,$17,$18,$19,$20,$21) RETURNING *`,
+      [churchId, title.trim(), author, default_key, category, first_line, lyrics, ccli_number, notes, bible_references, suggested_arrangement, ccli_url, shareEnabled, copyright_info ?? null, copyright_link ?? null, discoverEnabled, discover_description ?? null, time_signature ?? null, tempo ? parseInt(tempo) : null, default_duration ? parseInt(default_duration) : null, libraryEnabled]
     );
 
     // Handle tags — insert only tags that exist and are global or this church's own.
@@ -605,11 +605,11 @@ router.patch('/:id/retire', requireAuth, requirePermission('can_manage_songs'), 
 //
 // Only the fields PRESENT in the request body are changed. It used to overwrite
 // every column, so any field the edit form doesn't send (default_duration,
-// ccli_url, youtube_url) was wiped on every save, and tags were deleted even when
+// ccli_url) was wiped on every save, and tags were deleted even when
 // none were sent. To clear a field, send it as '' / null.
 // Song row, tags and the CCLI lookup are written in one transaction.
 const SONG_TEXT_FIELDS = ['title', 'author', 'default_key', 'category', 'first_line', 'lyrics', 'ccli_number',
-  'youtube_url', 'notes', 'bible_references', 'suggested_arrangement', 'ccli_url', 'copyright_info',
+  'notes', 'bible_references', 'suggested_arrangement', 'ccli_url', 'copyright_info',
   'copyright_link', 'discover_description', 'time_signature'];
 const SONG_INT_FIELDS = ['tempo', 'default_duration'];
 

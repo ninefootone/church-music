@@ -58,7 +58,6 @@ export interface Song {
   first_line: string | null
   lyrics: string | null
   ccli_number: string | null
-  youtube_url: string | null
   ccli_url: string | null
   notes: string | null
   bible_references: string | null
