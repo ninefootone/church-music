@@ -84,6 +84,8 @@ Next:
 
 ## Backlog
 
+- [ ] **ChordPro font size isn't remembered (noted 2026-10-13).** Cause: `ChordProViewer.tsx` (L20) and `SetViewer.tsx` (L53) hold size in plain `useState(15)` — never saved, so every open resets to 15px. Fix: save per song in `localStorage` (key e.g. `songstack.cpFont.<songId>`, or per file id if a song has several ChordPro files), and fall back to the last size used anywhere before 15. In `SetViewer` load each song's saved size when moving to it and re-run `remeasure` (pagination depends on size). Decide whether `PublicSetViewer` (fixed at 15, no controls) gets the same. CHECK: does the iPad app (`song-stack-app` ChordPro viewer) have the same problem? If so, same idea using AsyncStorage, shipped by OTA.
+
 - [ ] **Dashboard downloads the whole song library to show 4 songs (noted 2026-10-08).** `dashboard/page.tsx` calls `/api/songs` (full library) then shuffles client-side and keeps 4, plus uses the full list for the `is_sample` check. Fine now; gets slow on mobile for big libraries. Fix: backend `GET /api/songs?random=4` (`ORDER BY random() LIMIT 4`) + a cheap `has_samples` flag, and drop the full fetch.
 
 - [ ] Database schema migrations — adopt a migration runner (e.g. node-pg-migrate) or at minimum a `schema_migrations` table, so "has this migration run?" is recorded in the database rather than remembered. The one-off scripts in `backend/db/` and `backend/scripts/` are currently applied by hand with no record of what's been run — this is the ambiguity that made syncing across machines uncertain. Keep the existing scripts as history; route new schema changes through the runner.
