@@ -320,10 +320,12 @@ router.get('/public/:token', async function(req, res, next) {
       `SELECT si.type, si.phase, si.title, si.notes, si.content, si.key_override, si.position,
         si.custom_arrangement, si.duration_minutes,
         s.id AS song_id, s.title AS song_title, s.author AS song_author,
-        s.default_key AS song_default_key, s.youtube_url AS song_youtube_url,
+        s.default_key AS song_default_key,
         s.ccli_number AS song_ccli_number,
         s.suggested_arrangement AS song_suggested_arrangement,
-        s.default_duration AS song_default_duration
+        s.default_duration AS song_default_duration,
+        COALESCE((SELECT JSON_AGG(jsonb_build_object('url', v.url, 'label', v.label, 'link_type', v.link_type) ORDER BY v.sort_order, v.id)
+                  FROM song_videos v WHERE v.song_id = s.id), '[]') AS song_links
        FROM plan_items si
        LEFT JOIN songs s ON s.id = si.song_id
        WHERE si.plan_id = $1
