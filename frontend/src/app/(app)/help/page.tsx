@@ -437,7 +437,7 @@ export default function HelpPage() {
                 To remove a song from a plan, open the plan and use the x button next to the song. This only removes it from the plan — the song stays in your library.
               </p>
               <p className="help-content-body">
-                Click a song in the running order to expand it. This reveals its sheet music, arrangement and CCLI details. If the song has lyrics saved in the library, a <strong>Show lyrics</strong> button appears here too — handy for checking the words while planning, without opening the song separately.
+                Click a song in the running order to expand it. This reveals its sheet music, arrangement, CCLI details and any <strong>links</strong> saved on the song (YouTube, Spotify, Apple Music and so on) — click a link to open it in a new tab. If the song has lyrics saved in the library, a <strong>Show lyrics</strong> button appears here too — handy for checking the words while planning, without opening the song separately.
               </p>
             </div>
           ),
@@ -505,7 +505,7 @@ export default function HelpPage() {
           content: () => (
             <div>
               <p className="help-content-body">
-                Every plan has a public share link that gives read-only access — useful for sharing with musicians who aren&apos;t on SongStack. Anyone with the link can see the plan outline: the running order, song titles, authors, keys and capo, CCLI numbers, arrangements, and your team&apos;s notes. No account is needed for that.
+                Every plan has a public share link that gives read-only access — useful for sharing with musicians who aren&apos;t on SongStack. Anyone with the link can see the plan outline: the running order, song titles, authors, keys and capo, CCLI numbers, arrangements, the song&apos;s links (YouTube, Spotify, Apple Music and so on), and your team&apos;s notes. No account is needed for that.
               </p>
               <p className="help-content-body">
                 Sheet music, chord charts, full lyrics and Set mode are only shown to members of your church who are signed in. A visitor opening the same link sees the outline and a prompt to sign in. This keeps licensed material behind a team login — your CCL licence lets you reproduce it for your own team, not publish it openly on the web.
