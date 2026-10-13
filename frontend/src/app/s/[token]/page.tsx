@@ -47,6 +47,9 @@ function SongItem({ item, index, token, churchId, showTimings, showDurations, ca
   }
 
   const isSong = item.type === 'song'
+  const youtubeLink = Array.isArray(item.song_links)
+    ? item.song_links.find((l: { link_type: string | null }) => !l.link_type || l.link_type === 'youtube')
+    : null
   const hasContent = !isSong && !!item.content
   const canExpand = isSong || hasContent
 
@@ -88,9 +91,9 @@ function SongItem({ item, index, token, churchId, showTimings, showDurations, ca
           {isSong && (item.key_override || item.song_default_key) && (
             <span className="badge-key">{(item.key_override || item.song_default_key || '').replace(/♯/g, '#').replace(/♭/g, 'b')}</span>
           )}
-          {isSong && item.song_youtube_url && (
+          {isSong && youtubeLink && (
             <a
-              href={item.song_youtube_url}
+              href={youtubeLink.url}
               target="_blank"
               rel="noopener noreferrer"
               onClick={e => e.stopPropagation()}
@@ -159,6 +162,33 @@ function SongItem({ item, index, token, churchId, showTimings, showDurations, ca
             <p className="text-sm text-muted text-italic">
               No sheet music uploaded for this song yet.
             </p>
+          )}
+
+          {Array.isArray(item.song_links) && item.song_links.length > 0 && (
+            <div className="song-section">
+              <p className="sub-section-label">Links</p>
+              <div className="file-group">
+                {item.song_links.map((link: { url: string; label: string | null; link_type: string | null }, i: number) => {
+                  const typeLabel = link.link_type === 'spotify' ? 'Spotify'
+                    : link.link_type === 'apple_music' ? 'Apple Music'
+                    : link.link_type === 'other' ? 'Link'
+                    : 'YouTube'
+                  return (
+                    <a
+                      key={i}
+                      href={link.url}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="file-download-btn"
+                    >
+                      <PlayCircle size={14} />
+                      {link.label || typeLabel}
+                      <ExternalLink size={12} className="icon-faded" />
+                    </a>
+                  )
+                })}
+              </div>
+            </div>
           )}
 
           {(item.custom_arrangement || item.song_suggested_arrangement) && (() => {
