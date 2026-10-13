@@ -205,6 +205,32 @@ function SongItem({ item, index, planId, canAnnotate, showTimings, showDurations
               No sheet music uploaded for this song yet.
             </p>
           )}
+          {Array.isArray(item.song_links) && item.song_links.length > 0 && (
+            <div className="song-section">
+              <p className="sub-section-label">Links</p>
+              <div className="file-group">
+                {item.song_links.map((link: { url: string; label: string | null; link_type: string | null }, i: number) => {
+                  const typeLabel = link.link_type === 'spotify' ? 'Spotify'
+                    : link.link_type === 'apple_music' ? 'Apple Music'
+                    : link.link_type === 'other' ? 'Link'
+                    : 'YouTube'
+                  return (
+                    <a
+                      key={i}
+                      href={link.url}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="file-download-btn"
+                    >
+                      <PlayCircle size={14} />
+                      {link.label || typeLabel}
+                      <ExternalLink size={12} className="icon-faded" />
+                    </a>
+                  )
+                })}
+              </div>
+            </div>
+          )}
           {editingArrangement ? (
             <div className="song-section" onClick={e => e.stopPropagation()}>
               <p className="sub-section-label">Custom arrangement</p>
