@@ -115,11 +115,7 @@ export function AppNavClient() {
                             </p>
                           </div>
                         </div>
-                        {visibleLinks.map(link => (
-                          <Link key={link.href} href={link.href} className={`app-nav-mobile-link ${isActive(link.href) ? 'is-active' : ''}`} onClick={() => setDesktopOpen(false)}>
-                            {'dropdownLabel' in link ? link.dropdownLabel : link.label}
-                          </Link>
-                        ))}
+                        {/* Page links live in the top bar on desktop, so the dropdown is account-only */}
                         <ChurchSwitcher onNavigate={() => setDesktopOpen(false)} />
                         <div className="nav-dropdown-footer">
                           <Link href="/account" className={`app-nav-mobile-link nav-signout-btn ${isActive('/account') ? 'is-active' : ''}`} onClick={() => setDesktopOpen(false)}>

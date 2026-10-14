@@ -2232,6 +2232,19 @@ body.set-viewer-active { overflow: hidden; }
 .nav-church-option.is-active { color: var(--color-brand-600); }
 .nav-church-option-name { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 
+/* Desktop account dropdown: account-only (page links are in the top bar), tighter rows, and
+   capped to the viewport so the bottom items are always reachable on short screens */
+.nav-dropdown {
+  max-height: calc(100dvh - 80px);
+  overflow-y: auto;
+  overscroll-behavior: contain;
+}
+.nav-dropdown .nav-dropdown-user { padding: 12px 16px; }
+.nav-dropdown .app-nav-mobile-link { padding: 8px 16px; font-size: var(--text-base); }
+.nav-dropdown .nav-dropdown-section-label { padding: 4px 16px; }
+.nav-dropdown .nav-dropdown-churches { border-top: none; margin-top: 0; padding-top: 0; }
+.nav-dropdown .nav-dropdown-footer { margin-top: var(--space-xs); padding: var(--space-xs) 0 0; }
+
 /* ============================================================
    TIPTAP / LYRICS EDITOR
 ============================================================ */
