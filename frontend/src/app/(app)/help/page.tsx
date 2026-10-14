@@ -148,6 +148,9 @@ export default function HelpPage() {
               <p className="help-content-body">
                 Your role determines what you can do. Admins have full access. Members can view the library and plans they&apos;re part of. Admins can grant additional permissions to individual members from the Team page.
               </p>
+              <p className="help-content-body">
+                <strong>Getting around:</strong> on a computer, every page is in the bar along the top. On a phone, use the tabs along the bottom (Home, Songs, Plans and Discover). <strong>Stats</strong> (and, for admins, <strong>Team</strong> and <strong>Church settings</strong>) are in the menu under your picture, top right, along with your account and sign out. You can also reach Stats from <strong>Song stats</strong> on the home page.
+              </p>
             </div>
           ),
         },
@@ -183,7 +186,7 @@ export default function HelpPage() {
                 If you need to join a church and don&apos;t have an invite link, ask one of your church admins. They can find the invite link on the Team page.
               </p>
               <p className="help-content-body">
-                You can belong to more than one church — for example if you play at two churches. Open the menu (your picture, top right, or the menu button on a phone) and choose <strong>Join or create another church</strong>, or just open another church&apos;s invite link. When you&apos;re in more than one, the same menu lists <strong>Your churches</strong>: pick one to switch. SongStack remembers your choice on each browser. For now the iPad app only shows the first of your churches in alphabetical order.
+                You can belong to more than one church — for example if you play at two churches. Open the menu (your picture, top right) and choose <strong>Join or create another church</strong>, or just open another church&apos;s invite link. When you&apos;re in more than one, the same menu lists <strong>Your churches</strong>: pick one to switch. SongStack remembers your choice on each browser. For now the iPad app only shows the first of your churches in alphabetical order.
               </p>
               <p className="help-content-body">
                 <strong>Using Apple&apos;s Hide My Email?</strong> Apple then gives SongStack a private relay address instead of your real one, which creates a separate account that isn&apos;t connected to your church yet. Enter your church&apos;s invite code to join it (on the website, or on the <strong>Join your church</strong> screen in the iPad app), or sign in with the email address you were invited with.
@@ -742,7 +745,7 @@ export default function HelpPage() {
                 Go to <strong>Settings</strong> to update your church name and CCLI licence number. The church name appears across SongStack and in exported plans and emails.
               </p>
               <p className="help-content-body">
-                Your CCLI number is included in the header of any CCLI usage report you export from the Songs page. If you don&apos;t have a CCLI licence, leave this field blank — you can add it later.
+                Your CCLI number is included in the header of any CCLI usage report you export from the Stats page. If you don&apos;t have a CCLI licence, leave this field blank — you can add it later.
               </p>
             </div>
           ),
