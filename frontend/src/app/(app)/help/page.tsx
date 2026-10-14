@@ -183,7 +183,7 @@ export default function HelpPage() {
                 If you need to join a church and don&apos;t have an invite link, ask one of your church admins. They can find the invite link on the Team page.
               </p>
               <p className="help-content-body">
-                An account can belong to one church at a time. If you&apos;re already in a church, you won&apos;t be able to join or create another. If you need to move to a different church, email <strong>hello@songstack.church</strong>.
+                You can belong to more than one church — for example if you play at two churches. Open the menu (your picture, top right, or the menu button on a phone) and choose <strong>Join or create another church</strong>, or just open another church&apos;s invite link. When you&apos;re in more than one, the same menu lists <strong>Your churches</strong>: pick one to switch. SongStack remembers your choice on each browser. For now the iPad app only shows the first of your churches in alphabetical order.
               </p>
               <p className="help-content-body">
                 <strong>Using Apple&apos;s Hide My Email?</strong> Apple then gives SongStack a private relay address instead of your real one, which creates a separate account that isn&apos;t connected to your church yet. Enter your church&apos;s invite code to join it (on the website, or on the <strong>Join your church</strong> screen in the iPad app), or sign in with the email address you were invited with.

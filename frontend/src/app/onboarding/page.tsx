@@ -6,6 +6,7 @@ import { useRouter } from 'next/navigation'
 import { useAuth, SignInButton } from '@clerk/nextjs'
 import { ArrowLeft } from 'lucide-react'
 import api, { setAuthToken } from '@/lib/api'
+import { rememberChurchId } from '@/lib/activeChurch'
 
 export default function OnboardingPage() {
   const router = useRouter()
@@ -41,15 +42,16 @@ export default function OnboardingPage() {
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
 
-  // One church per person (enforced by the backend too). If the signed-in user already
-  // belongs to a church, don't offer create/join: with no invite code just go to the
-  // dashboard; with an invite code (they opened someone's link) explain why they can't join.
+  // People can belong to more than one church. If the signed-in user is already in one and
+  // arrived with neither an invite code nor ?add=1 (the "Join or create another church" link
+  // in the menu), they didn't mean to be here — send them to the dashboard. Otherwise show the
+  // normal choices, with a note naming the church(es) they're already in and a way back.
   // 'checking' hides the choices until we know, so they don't flash up first.
-  const [existingChurch, setExistingChurch] = useState<{ name: string } | null | 'checking'>('checking')
+  const [existingChurches, setExistingChurches] = useState<{ name: string }[] | 'checking'>('checking')
 
   useEffect(() => {
     if (!isLoaded) return
-    if (!isSignedIn) { setExistingChurch(null); return }
+    if (!isSignedIn) { setExistingChurches([]); return }
     let cancelled = false
     ;(async () => {
       try {
@@ -58,18 +60,21 @@ export default function OnboardingPage() {
         const { data } = await api.get('/api/churches/mine')
         if (cancelled) return
         if (Array.isArray(data) && data.length > 0) {
-          if (!searchParams.get('code')) { router.replace('/dashboard'); return }
-          setExistingChurch({ name: data[0].name })
+          if (!searchParams.get('code') && !searchParams.get('add')) { router.replace('/dashboard'); return }
+          setExistingChurches(data.map((c: { name: string }) => ({ name: c.name })))
         } else {
-          setExistingChurch(null)
+          setExistingChurches([])
         }
       } catch {
-        // Couldn't check — show the normal screen; the backend still blocks a second church.
-        if (!cancelled) setExistingChurch(null)
+        // Couldn't check — just show the normal screen.
+        if (!cancelled) setExistingChurches([])
       }
     })()
     return () => { cancelled = true }
   }, [isLoaded, isSignedIn, getToken, searchParams, router])
+
+  const ready = existingChurches !== 'checking'
+  const alreadyMember = Array.isArray(existingChurches) && existingChurches.length > 0
 
   async function getAuthenticatedApi() {
     const token = await getToken()
@@ -93,7 +98,9 @@ export default function OnboardingPage() {
     setError('')
     try {
       const client = await getAuthenticatedApi()
-      await client.post('/api/churches', { name: churchName, ccli_number: ccliNumber || undefined })
+      const { data: created } = await client.post('/api/churches', { name: churchName, ccli_number: ccliNumber || undefined })
+      // Open the dashboard in the new church, not whichever church they were last using.
+      if (created?.id) rememberChurchId(created.id)
       await subscribeUser()
       router.push('/dashboard')
     } catch (err: any) {
@@ -108,7 +115,8 @@ export default function OnboardingPage() {
     setError('')
     try {
       const client = await getAuthenticatedApi()
-      await client.post('/api/churches/join', { invite_code: inviteCode })
+      const { data: joined } = await client.post('/api/churches/join', { invite_code: inviteCode })
+      if (joined?.id) rememberChurchId(joined.id)
       await subscribeUser()
       router.push('/dashboard')
     } catch (err: any) {
@@ -122,34 +130,26 @@ export default function OnboardingPage() {
       <div className="onboarding-inner">
         <div className="onboarding-header">
           <img src="/logo-strap.svg" alt="SongStack" className="onboarding-logo" />
-          {existingChurch === null && (
+          {existingChurches !== 'checking' && existingChurches.length === 0 && (
             <p className="onboarding-subtitle">
               Get started by creating a new church or joining an existing one.
             </p>
           )}
+          {existingChurches !== 'checking' && existingChurches.length > 0 && (
+            <p className="onboarding-subtitle">
+              You're already in {existingChurches.map(c => c.name).join(', ')}. You can join or create
+              another church too — switch between them from the menu.
+            </p>
+          )}
         </div>
 
-        {existingChurch !== 'checking' && existingChurch !== null && (
-          <div className="onboarding-panel onboarding-panel--centered">
-            <h2 className="onboarding-form-title">You're already in a church</h2>
-            <p className="onboarding-tip">
-              Your account belongs to <strong>{existingChurch.name}</strong>. SongStack doesn't support
-              belonging to more than one church yet. If you need to move, contact{' '}
-              <a href="mailto:hello@songstack.church" className="link-brand">hello@songstack.church</a>.
-            </p>
-            <button type="button" onClick={() => router.push('/dashboard')} className="btn btn-primary btn-full">
-              Go to your dashboard
-            </button>
-          </div>
-        )}
-
-        {existingChurch === null && error && (
+        {ready && error && (
           <div className="settings-error">
             {error}
           </div>
         )}
 
-        {existingChurch === null && mode === 'choose' && (
+        {ready && mode === 'choose' && (
           <div className="onboarding-choices">
             <button onClick={() => setMode('create')} className="onboarding-choice-btn">
               <div className="onboarding-choice-title">Create a new church</div>
@@ -159,6 +159,12 @@ export default function OnboardingPage() {
               <div className="onboarding-choice-title">Join an existing church</div>
               <div className="onboarding-choice-desc">Enter an invite code from your church admin</div>
             </button>
+            {alreadyMember && (
+              <button type="button" onClick={() => router.push('/dashboard')} className="onboarding-choice-btn onboarding-choice-btn--quiet">
+                <div className="onboarding-choice-title">Back to your dashboard</div>
+                <div className="onboarding-choice-desc">Carry on in the church you were using</div>
+              </button>
+            )}
             {showBrowse && (
               <a href="/browse" className="onboarding-choice-btn onboarding-choice-btn--quiet">
                 <div className="onboarding-choice-title">Back to the song library</div>
@@ -168,7 +174,7 @@ export default function OnboardingPage() {
           </div>
         )}
 
-        {existingChurch === null && mode === 'create' && (
+        {ready && mode === 'create' && (
           <form onSubmit={handleCreate} className="onboarding-panel">
             <h2 className="onboarding-form-title">Create your church</h2>
             <p className="onboarding-tip">
@@ -194,7 +200,7 @@ export default function OnboardingPage() {
           </form>
         )}
 
-        {existingChurch === null && mode === 'join' && isLoaded && !isSignedIn && (
+        {ready && mode === 'join' && isLoaded && !isSignedIn && (
           <div className="onboarding-panel onboarding-panel--centered">
             <h2 className="onboarding-form-title">Sign in to join</h2>
             <p className="onboarding-tip">
@@ -206,7 +212,7 @@ export default function OnboardingPage() {
           </div>
         )}
 
-        {existingChurch === null && mode === 'join' && isLoaded && isSignedIn && (
+        {ready && mode === 'join' && isLoaded && isSignedIn && (
           <form onSubmit={handleJoin} className="onboarding-panel">
             <h2 className="onboarding-form-title onboarding-form-title--lg">Join a church</h2>
             <label className="settings-label">
