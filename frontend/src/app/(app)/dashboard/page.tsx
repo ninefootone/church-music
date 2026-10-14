@@ -217,8 +217,9 @@ export default function DashboardPage() {
               </div>
             </Link>
           ))}
-          <div className="card-footer">
+          <div className="card-footer card-footer--split">
             <Link href="/songs" className="btn btn-ghost">View all songs →</Link>
+            <Link href="/stats" className="btn btn-ghost">Song stats →</Link>
           </div>
         </div>
 
