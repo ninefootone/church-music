@@ -2,6 +2,7 @@ import { auth } from '@clerk/nextjs/server'
 import { redirect } from 'next/navigation'
 import { ChurchProvider } from '@/context/ChurchContext'
 import { AppNavClient } from '@/components/layout/AppNavClient'
+import { MobileTabBar } from '@/components/layout/MobileTabBar'
 import Link from 'next/link'
 import CookieSettingsLink from '@/components/ui/CookieSettingsLink'
 
@@ -29,6 +30,7 @@ export default async function AppLayout({ children }: { children: React.ReactNod
         </div>
         <div className="footer-copy">SongStack &copy; 2026 <a href="https://www.ninefootone.co.uk/" target="_blank" rel="noopener noreferrer" className="footer-brand-link">ninefootone creative ltd</a></div>
       </footer>
+      <MobileTabBar />
       </div>
     </ChurchProvider>
   )
