@@ -68,7 +68,7 @@ export function AppNavClient() {
             <Link href="/dashboard" className="app-nav-brand" onClick={() => { setDesktopOpen(false); setMobileOpen(false) }}>
               {church?.logo_url
                 ? <img src={church.logo_url} alt={churchName} className="nav-church-logo" />
-                : <><img src="/logo-icon.svg" alt="SongStack" className="nav-logo-icon" />{churchName}</>
+                : <><img src="/logo-icon.svg" alt="SongStack" className="nav-logo-icon" /><span className="app-nav-brand-name">{churchName}</span></>
               }
             </Link>
             <span className="app-nav-sep">·</span>

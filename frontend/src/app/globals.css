@@ -2114,8 +2114,13 @@ body.set-viewer-active { overflow: hidden; }
   letter-spacing: -0.01em;
   text-decoration: none;
   white-space: nowrap;
-  flex-shrink: 0;
+  /* The brand gives way first when space is tight (mid-width screens, long church names):
+     the name truncates with an ellipsis so the page links never get pushed off the bar */
+  flex-shrink: 1;
+  min-width: 0;
+  max-width: 260px;
 }
+.app-nav-brand-name { min-width: 0; overflow: hidden; text-overflow: ellipsis; }
 .app-nav-brand svg      { color: var(--color-brand-500); flex-shrink: 0; }
 .app-nav-sep            { color: var(--color-border); margin: 0 4px; font-size: 20px; flex-shrink: 0; }
 .app-nav-links          { display: flex; align-items: center; gap: 2px; flex-shrink: 0; }
