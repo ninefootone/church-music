@@ -4,7 +4,7 @@ import { useState } from 'react'
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
 import { useClerk } from '@clerk/nextjs'
-import { Menu, X, LogOut, HelpCircle, Home, BarChart2, UserCircle } from 'lucide-react'
+import { Menu, X, LogOut, HelpCircle, Home, BarChart2, UserCircle, Check, Plus } from 'lucide-react'
 import { useChurch } from '@/context/ChurchContext'
 
 const navLinks = [
@@ -16,6 +16,36 @@ const navLinks = [
   { href: '/settings',  label: 'Settings',                adminOnly: true  },
   { href: '/stats',     label: <BarChart2 size={16} strokeWidth={2.5} />,   dropdownLabel: 'Stats', adminOnly: false },
 ]
+
+// Church list + "join or create another" link, shown in the avatar dropdown (desktop) and the
+// hamburger menu (mobile). The list only appears for people in more than one church.
+function ChurchSwitcher({ onNavigate }: { onNavigate: () => void }) {
+  const { church, churches, switchChurch } = useChurch()
+  return (
+    <div className="nav-dropdown-churches">
+      {churches.length > 1 && (
+        <>
+          <p className="nav-dropdown-section-label">Your churches</p>
+          {churches.map(c => (
+            <button
+              key={c.id}
+              type="button"
+              onClick={() => { onNavigate(); switchChurch(c.id) }}
+              className={`app-nav-mobile-link nav-signout-btn nav-church-option ${c.id === church?.id ? 'is-active' : ''}`}
+              aria-current={c.id === church?.id ? 'true' : undefined}
+            >
+              <span className="nav-church-option-name">{c.name}</span>
+              {c.id === church?.id && <Check size={16} />}
+            </button>
+          ))}
+        </>
+      )}
+      <Link href="/onboarding?add=1" className="app-nav-mobile-link nav-signout-btn" onClick={onNavigate}>
+        <Plus size={16} /> Join or create another church
+      </Link>
+    </div>
+  )
+}
 
 export function AppNavClient() {
   const pathname = usePathname()
@@ -90,6 +120,7 @@ export function AppNavClient() {
                             {'dropdownLabel' in link ? link.dropdownLabel : link.label}
                           </Link>
                         ))}
+                        <ChurchSwitcher onNavigate={() => setDesktopOpen(false)} />
                         <div className="nav-dropdown-footer">
                           <Link href="/account" className={`app-nav-mobile-link nav-signout-btn ${isActive('/account') ? 'is-active' : ''}`} onClick={() => setDesktopOpen(false)}>
                             <UserCircle size={16} /> Account
@@ -139,6 +170,7 @@ export function AppNavClient() {
                 {'dropdownLabel' in link ? link.dropdownLabel : link.label}
               </Link>
             ))}
+            <ChurchSwitcher onNavigate={() => setMobileOpen(false)} />
             <div className="nav-dropdown-footer">
               <Link href="/account" className={`app-nav-mobile-link nav-signout-btn ${isActive('/account') ? 'is-active' : ''}`} onClick={() => setMobileOpen(false)}>
                 <UserCircle size={16} /> Account

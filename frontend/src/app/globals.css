@@ -2216,6 +2216,18 @@ body.set-viewer-active { overflow: hidden; }
   display: flex; align-items: center; gap: 10px;
   color: var(--color-text-secondary);
 }
+/* Church switcher (multi-church) — sits between the page links and the Account/Sign out footer */
+.nav-dropdown-churches {
+  border-top: 1px solid var(--color-border);
+  margin-top: var(--space-xs); padding-top: var(--space-sm);
+}
+.nav-dropdown-section-label {
+  padding: 4px var(--space-lg);
+  font-size: var(--text-sm); font-weight: 600; color: var(--color-text-muted);
+}
+.nav-church-option { justify-content: space-between; }
+.nav-church-option.is-active { color: var(--color-brand-600); }
+.nav-church-option-name { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 
 /* ============================================================
    TIPTAP / LYRICS EDITOR
