@@ -2186,7 +2186,10 @@ body.set-viewer-active { overflow: hidden; }
 .nav-backdrop         { position: fixed; inset: 0; z-index: 98; }
 .nav-backdrop--dim    { background: rgba(0,0,0,0.2); }
 .nav-dropdown {
-  position: absolute; top: calc(100% + 10px); right: 0; width: 260px;
+  position: absolute; top: calc(100% + 10px); right: 0;
+  /* Grows to fit its longest line (e.g. "Join or create another church") instead of wrapping;
+     capped so long church names / emails ellipsise rather than stretching it across the page */
+  width: max-content; min-width: 260px; max-width: min(360px, calc(100vw - 32px));
   background: var(--color-surface); border: 1px solid var(--color-border);
   border-radius: var(--radius-lg); box-shadow: var(--shadow-md);
   z-index: 99; padding-bottom: var(--space-sm);
