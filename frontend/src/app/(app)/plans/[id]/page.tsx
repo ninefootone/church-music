@@ -296,6 +296,13 @@ function SongItem({ item, index, planId, canAnnotate, showTimings, showDurations
               )}
             </div>
           )}
+          {item.song_id && (
+            <div className="song-section">
+              <Link href={`/songs/${item.song_id}`} className="btn-inline-link">
+                Open full song page →
+              </Link>
+            </div>
+          )}
         </div>
       )}
 
