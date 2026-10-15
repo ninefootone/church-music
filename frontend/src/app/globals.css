@@ -3883,6 +3883,13 @@ body.plans-overview-active .app-main-content { max-width: 1680px; }
 .po-item-remove { flex-shrink: 0; display: inline-flex; align-items: center; background: none; border: none; padding: 2px; cursor: pointer; color: var(--color-text-muted); opacity: 0.6; font-style: normal; }
 .po-item-remove:hover { opacity: 1; color: var(--color-danger); }
 .po-add-song { align-self: flex-start; }
+.po-sortable { display: flex; align-items: flex-start; gap: 4px; background: var(--color-surface); }
+.po-item-body { flex: 1; min-width: 0; }
+.po-drag-handle { flex-shrink: 0; display: inline-flex; align-items: center; background: none; border: none; padding: 2px 0; margin-top: 1px; cursor: grab; color: var(--color-text-muted); opacity: 0.35; touch-action: none; font-style: normal; }
+.po-sortable:hover .po-drag-handle, .po-drag-handle:focus-visible { opacity: 1; }
+.po-drag-handle:active { cursor: grabbing; }
+.po-drag-handle:disabled { cursor: wait; }
+.po-dragging { position: relative; z-index: 2; opacity: 0.85; box-shadow: var(--shadow-md); border-radius: var(--radius-sm); }
 .po-picker { max-width: 560px; max-height: 85vh; display: flex; flex-direction: column; }
 .po-picker-sub { font-size: 0.8125rem; color: var(--color-text-secondary); margin: 0 0 10px; }
 .po-picker-search { display: flex; align-items: center; gap: 6px; margin-bottom: 10px; color: var(--color-text-muted); }

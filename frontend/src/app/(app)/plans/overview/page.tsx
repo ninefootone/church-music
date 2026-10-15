@@ -2,14 +2,34 @@
 
 // Plans → Overview (/plans/overview): several upcoming plans side by side, so songs and rotas
 // can be chosen with the weeks around them in view (see project doc plans-overview.md).
-// Musicians can be added, changed and removed here, and songs added, chosen for a slot, swapped
-// and removed — always via the single-item routes, never the whole-list PUT /items. Other items
+// Musicians can be added, changed and removed here, and songs added, chosen for a slot, swapped,
+// removed and every item dragged into a new order within its plan — always via the single-item
+// routes (reorder: PUT /items/order, 409 if the plan changed elsewhere), never the whole-list PUT /items. Other items
 // (readings, prayers, rich content), keys and arrangements are edited in the normal plan builder.
 // Data: GET /api/plans/overview (planners only, drafts included).
 
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import Link from 'next/link'
-import { ArrowLeft, ChevronLeft, ChevronRight, Plus, AlertTriangle, X } from 'lucide-react'
+import { ArrowLeft, ChevronLeft, ChevronRight, Plus, AlertTriangle, X, GripVertical } from 'lucide-react'
+import {
+  DndContext,
+  closestCenter,
+  KeyboardSensor,
+  PointerSensor,
+  TouchSensor,
+  useSensor,
+  useSensors,
+  type DragEndEvent,
+} from '@dnd-kit/core'
+import {
+  arrayMove,
+  SortableContext,
+  sortableKeyboardCoordinates,
+  useSortable,
+  verticalListSortingStrategy,
+} from '@dnd-kit/sortable'
+import { CSS } from '@dnd-kit/utilities'
+import type { ReactNode } from 'react'
 import { differenceInCalendarDays, format, parseISO } from 'date-fns'
 import api from '@/lib/api'
 import { useChurch } from '@/context/ChurchContext'
@@ -120,6 +140,32 @@ function groupMusicians(list: OverviewMusician[]) {
   return out
 }
 
+// One draggable row. Only the grip starts a drag, so clicking a song title still opens the picker.
+function SortableRow({ id, className, disabled, children }: { id: string; className: string; disabled: boolean; children: ReactNode }) {
+  const { attributes, listeners, setNodeRef, setActivatorNodeRef, transform, transition, isDragging } = useSortable({ id, disabled })
+  return (
+    <li
+      ref={setNodeRef}
+      style={{ transform: CSS.Translate.toString(transform), transition }}
+      className={`${className} po-sortable${isDragging ? ' po-dragging' : ''}`}
+    >
+      <button
+        type="button"
+        ref={setActivatorNodeRef}
+        className="po-drag-handle"
+        aria-label="Drag to reorder"
+        title="Drag to reorder"
+        disabled={disabled}
+        {...attributes}
+        {...listeners}
+      >
+        <GripVertical size={12} />
+      </button>
+      <div className="po-item-body">{children}</div>
+    </li>
+  )
+}
+
 function agoLabel(days: number) {
   if (days < 7) return `${days} day${days === 1 ? '' : 's'} ago`
   const w = Math.round(days / 7)
@@ -144,6 +190,13 @@ export default function PlansOverviewPage() {
   const [actionError, setActionError] = useState<string | null>(null)
   const [songPicker, setSongPicker] = useState<{ plan: OverviewPlan; mode: SongPickerMode } | null>(null)
   const [confirmRemoveItem, setConfirmRemoveItem] = useState<{ plan: OverviewPlan; item: OverviewItem } | null>(null)
+  const [reorderingPlanId, setReorderingPlanId] = useState<string | null>(null)
+
+  const sensors = useSensors(
+    useSensor(PointerSensor, { activationConstraint: { distance: 5 } }),
+    useSensor(TouchSensor, { activationConstraint: { delay: 150, tolerance: 5 } }),
+    useSensor(KeyboardSensor, { coordinateGetter: sortableKeyboardCoordinates })
+  )
 
   // Remembered per browser; read after mount so the server render and first client render match.
   useEffect(() => {
@@ -215,6 +268,36 @@ export default function PlansOverviewPage() {
     } finally {
       setConfirmRemoveItem(null)
       load()
+    }
+  }
+
+  const setPlanItems = (planId: string, items: OverviewItem[]) =>
+    setData((d) => (d ? { ...d, plans: d.plans.map((p) => (p.id === planId ? { ...p, items } : p)) } : d))
+
+  // Shows the new order straight away, then saves it. If the plan was changed elsewhere since the
+  // overview loaded (409) — or the save fails — the overview reloads instead of keeping a guess.
+  const reorder = async (plan: OverviewPlan, e: DragEndEvent) => {
+    const { active, over } = e
+    if (!over || active.id === over.id) return
+    const from = plan.items.findIndex((i) => i.id === active.id)
+    const to = plan.items.findIndex((i) => i.id === over.id)
+    if (from < 0 || to < 0) return
+    const moved = arrayMove(plan.items, from, to)
+    setPlanItems(plan.id, moved)
+    setReorderingPlanId(plan.id)
+    setActionError(null)
+    try {
+      const res = await api.put(`/api/plans/${plan.id}/items/order`, { item_ids: moved.map((i) => i.id) })
+      setPlanItems(plan.id, res.data.items)
+    } catch (err: any) {
+      setActionError(
+        err?.response?.status === 409
+          ? 'That plan was changed somewhere else, so the overview has been reloaded. Please try again.'
+          : "Couldn't save the new order. Please try again."
+      )
+      load()
+    } finally {
+      setReorderingPlanId(null)
     }
   }
 
@@ -414,15 +497,18 @@ export default function PlansOverviewPage() {
                   {plan.status === 'draft' && <span className="badge badge-draft">DRAFT</span>}
                 </Link>
 
+                <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={(e) => reorder(plan, e)}>
+                <SortableContext items={plan.items.map((i) => i.id)} strategy={verticalListSortingStrategy}>
                 <ol className="po-items">
                   {plan.items.length === 0 && <li className="po-empty">Nothing added yet</li>}
                   {plan.items.map((item) => {
+                    const dragDisabled = reorderingPlanId === plan.id
                     if (item.type === 'song') {
                       const k = item.key_override || item.song_default_key
                       const notes = show.repeats ? repeatNotes(item, plan) : []
                       const title = item.song_title || 'Song'
                       return (
-                        <li key={item.id} className="po-item po-item-song">
+                        <SortableRow key={item.id} id={item.id} disabled={dragDisabled} className="po-item po-item-song">
                           <div className="po-item-row">
                             <button
                               type="button"
@@ -448,12 +534,12 @@ export default function PlansOverviewPage() {
                               {n.kind === 'before' && <AlertTriangle size={11} />} {n.text}
                             </div>
                           ))}
-                        </li>
+                        </SortableRow>
                       )
                     }
                     if (isSongSlot(item)) {
                       return (
-                        <li key={item.id} className="po-item po-item-slot">
+                        <SortableRow key={item.id} id={item.id} disabled={dragDisabled} className="po-item po-item-slot">
                           <div className="po-item-row">
                             <button
                               type="button"
@@ -473,16 +559,18 @@ export default function PlansOverviewPage() {
                               <X size={12} />
                             </button>
                           </div>
-                        </li>
+                        </SortableRow>
                       )
                     }
                     return (
-                      <li key={item.id} className="po-item po-item-other">
+                      <SortableRow key={item.id} id={item.id} disabled={dragDisabled} className="po-item po-item-other">
                         {nonSongLabel(item)}
-                      </li>
+                      </SortableRow>
                     )
                   })}
                 </ol>
+                </SortableContext>
+                </DndContext>
                 <button type="button" className="po-musician-add po-add-song" onClick={() => openSongPicker(plan, { kind: 'add' })}>
                   <Plus size={12} /> Add song
                 </button>
