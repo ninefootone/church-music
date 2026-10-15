@@ -2,7 +2,7 @@
 
 import { useEffect, useRef, useState } from 'react'
 import { RotateCcw, AlertTriangle } from 'lucide-react'
-import { renderChordPro } from '@/lib/chordproRender'
+import { renderChordPro, lintChordPro, type ChordProWarning } from '@/lib/chordproRender'
 import { ConfirmModal } from '@/components/ui/ConfirmModal'
 
 // Full-screen ChordPro editor: raw text on the left, live preview on the right.
@@ -32,6 +32,8 @@ export function ChordProEditor({
   // half-typed "[G" doesn't blank the preview on every keystroke.
   const [html, setHtml] = useState<string | null>(null)
   const [parseError, setParseError] = useState<{ line: number | null } | null>(null)
+  const [warnings, setWarnings] = useState<ChordProWarning[]>([])
+  const sourceRef = useRef<HTMLTextAreaElement>(null)
   const [tab, setTab] = useState<'edit' | 'preview'>('edit')
   const [confirmDiscard, setConfirmDiscard] = useState(false)
   const [confirmRevert, setConfirmRevert] = useState(false)
@@ -46,6 +48,7 @@ export function ChordProEditor({
         if (cancelled) return
         if (result.ok) { setHtml(result.html); setParseError(null) }
         else setParseError({ line: result.line })
+        setWarnings(lintChordPro(content))
       })
     }, delay)
     return () => { cancelled = true; clearTimeout(timer) }
@@ -53,6 +56,19 @@ export function ChordProEditor({
 
   const changed = content !== originalContent
   const requestClose = () => { if (changed) setConfirmDiscard(true); else onClose() }
+
+  // Put the cursor at the start of a line in the source (and show the Edit tab on phones).
+  const goToLine = (line: number | null) => {
+    const el = sourceRef.current
+    if (!el || !line) return
+    setTab('edit')
+    const lines = content.split('\n')
+    const start = lines.slice(0, line - 1).reduce((n, l) => n + l.length + 1, 0)
+    el.focus()
+    el.setSelectionRange(start, start + (lines[line - 1]?.length ?? 0))
+    const lineHeight = parseFloat(getComputedStyle(el).lineHeight) || 22
+    el.scrollTop = Math.max(0, (line - 4) * lineHeight)
+  }
 
   const errorText = parseError
     ? `${parseError.line ? `Line ${parseError.line}: ` : ''}unfinished chord or {directive} — check for a missing ] or }.`
@@ -91,6 +107,7 @@ export function ChordProEditor({
 
       <div className="chordpro-editor-panes">
         <textarea
+          ref={sourceRef}
           className="chordpro-editor-source"
           value={content}
           onChange={e => onChange(e.target.value)}
@@ -101,10 +118,23 @@ export function ChordProEditor({
         />
         <div className="chordpro-editor-preview">
           {errorText && (
-            <p className="chordpro-editor-message">
+            <button type="button" className="chordpro-editor-message chordpro-editor-message--blocking" onClick={() => goToLine(parseError?.line ?? null)}>
               <AlertTriangle size={14} className="icon-warning" />
-              <span>{errorText}{html ? ' The preview shows the last version that worked.' : ''}</span>
-            </p>
+              <span>{errorText}{html ? ' The preview shows the last version that worked.' : ''} Fix this to save.</span>
+            </button>
+          )}
+          {warnings.length > 0 && (
+            <div className="chordpro-editor-message chordpro-editor-warnings">
+              <AlertTriangle size={14} className="icon-warning" />
+              <ul>
+                {warnings.slice(0, 5).map((w, i) => (
+                  <li key={i}>
+                    <button type="button" className="chordpro-editor-warning-link" onClick={() => goToLine(w.line)}>Line {w.line}</button>: {w.message}
+                  </li>
+                ))}
+                {warnings.length > 5 && <li>…and {warnings.length - 5} more.</li>}
+              </ul>
+            </div>
           )}
           {html !== null && (
             <div className="chordpro-render chordpro-content" dangerouslySetInnerHTML={{ __html: html }} />

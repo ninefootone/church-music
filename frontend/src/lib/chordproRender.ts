@@ -66,3 +66,114 @@ export async function renderChordPro(text: string, transposeSemitones = 0): Prom
 
   return { ok: true, html: DOMPurify.sanitize(titleBlock + body) }
 }
+
+// ── Lint ────────────────────────────────────────────────────────────────────
+// ChordSheetJS is lenient: "[GAmazing [C]grace" (a deleted "]") parses as one chord
+// called "GAmazing [C", a stray "]" becomes lyrics, and a misspelt directive like
+// {start_of_chrous} is silently dropped. These checks catch what the parser lets
+// through. They are WARNINGS — shown in the editor but never block saving, because a
+// valid but unusual file must not become unsaveable.
+
+export interface ChordProWarning { line: number; message: string }
+
+const KNOWN_DIRECTIVES = new Set([
+  'title', 't', 'subtitle', 'st', 'artist', 'composer', 'lyricist', 'arranger', 'copyright', 'album', 'year',
+  'key', 'time', 'tempo', 'duration', 'capo', 'meta', 'sorttitle',
+  'comment', 'c', 'comment_italic', 'ci', 'comment_box', 'cb', 'highlight',
+  'chorus', 'new_page', 'np', 'new_physical_page', 'npp', 'column_break', 'colb', 'columns', 'col',
+  'pagetype', 'titles', 'define', 'chord', 'transpose', 'image',
+  'textfont', 'textsize', 'textcolour', 'textcolor', 'chordfont', 'chordsize', 'chordcolour', 'chordcolor',
+  'tabfont', 'tabsize', 'tabcolour', 'tabcolor',
+  'soc', 'eoc', 'sov', 'eov', 'sob', 'eob', 'sot', 'eot', 'sog', 'eog',
+])
+const SECTION_ABBR: Record<string, string> = { c: 'chorus', v: 'verse', b: 'bridge', t: 'tab', g: 'grid' }
+// tab/grid left out: too short — "tag" (a common worship section) is one letter from "tab".
+const STANDARD_SECTIONS = ['chorus', 'verse', 'bridge']
+
+// Custom sections ({start_of_intro}) are valid ChordPro, so only flag names that are a
+// likely typo of a standard one ({start_of_chrous}).
+function nearMiss(name: string): string | null {
+  for (const target of STANDARD_SECTIONS) {
+    if (name === target || ['tab', 'grid'].includes(name)) return null
+    const d: number[][] = Array.from({ length: name.length + 1 }, (_, i) => [i])
+    for (let j = 1; j <= target.length; j++) d[0][j] = j
+    for (let i = 1; i <= name.length; i++)
+      for (let j = 1; j <= target.length; j++)
+        d[i][j] = Math.min(d[i - 1][j] + 1, d[i][j - 1] + 1, d[i - 1][j - 1] + (name[i - 1] === target[j - 1] ? 0 : 1))
+    if (d[name.length][target.length] <= 2) return target
+  }
+  return null
+}
+
+// Root A–G (any case so "[am]" isn't flagged), no spaces or brackets. Annotations ([*Riff]),
+// N.C. and simple rhythm marks are allowed.
+const CHORD_RE = /^\(?[A-Ga-g][#b♯♭]?[^\s[\]]*\)?$/
+const isChordOk = (c: string) =>
+  c.startsWith('*') || /^(N\.?C\.?|x|%|\||\/|-)$/i.test(c) || CHORD_RE.test(c)
+
+export function lintChordPro(text: string): ChordProWarning[] {
+  const warnings: ChordProWarning[] = []
+  let openSection: { name: string; line: number } | null = null
+  const lines = text.split(/\r?\n/)
+
+  lines.forEach((raw, i) => {
+    const line = i + 1
+    const t = raw.trim()
+    if (!t || t.startsWith('#')) return
+
+    if (t.startsWith('{')) {
+      const m = t.match(/^\{\s*([A-Za-z_][\w-]*)/)
+      if (!m) return // missing name / missing } — the parser reports those
+      const name = m[1].toLowerCase()
+      let section: string | null = null
+      let isStart = false
+      const long = name.match(/^(start|end)_of_(\w+)$/)
+      const short = name.match(/^(s|e)o([cvbtg])$/)
+      if (long) { isStart = long[1] === 'start'; section = long[2] }
+      else if (short) { isStart = short[1] === 's'; section = SECTION_ABBR[short[2]] }
+      else if (!KNOWN_DIRECTIVES.has(name) && !name.startsWith('x_')) {
+        warnings.push({ line, message: `{${m[1]}} isn't a ChordPro directive — it will be ignored.` })
+      }
+      if (section && isStart) {
+        const guess = nearMiss(section)
+        if (guess) warnings.push({ line, message: `{start_of_${section}} — did you mean {start_of_${guess}}?` })
+      }
+      if (section) {
+        if (isStart) {
+          if (openSection) warnings.push({ line, message: `{start_of_${section}} starts before {start_of_${openSection.name}} (line ${openSection.line}) is ended.` })
+          openSection = { name: section, line }
+        } else if (!openSection) {
+          warnings.push({ line, message: `{end_of_${section}} has no matching start.` })
+        } else {
+          if (openSection.name !== section) warnings.push({ line, message: `{end_of_${section}} ends a ${openSection.name} started on line ${openSection.line}.` })
+          openSection = null
+        }
+      }
+      return
+    }
+
+    // Tab and grid blocks are free-form — don't check brackets in them.
+    if (openSection && (openSection.name === 'tab' || openSection.name === 'grid')) return
+
+    let open = -1
+    for (let p = 0; p < raw.length; p++) {
+      const ch = raw[p]
+      if (ch === '[') {
+        if (open !== -1) { warnings.push({ line, message: `A chord opened with [ isn't closed with ] before the next [.` }); return }
+        open = p
+      } else if (ch === ']') {
+        if (open === -1) { warnings.push({ line, message: `Stray ] with no [ before it.` }); return }
+        const chord = raw.slice(open + 1, p).trim()
+        if (!chord) warnings.push({ line, message: `Empty chord [].` })
+        else if (!isChordOk(chord)) warnings.push({ line, message: `[${chord}] doesn't look like a chord.` })
+        open = -1
+      }
+    }
+    // An unclosed [ at the end of the line is a parser error — reported there.
+  })
+
+  // (cast: TS can't see the forEach callback reassigning openSection)
+  const unclosed = openSection as { name: string; line: number } | null
+  if (unclosed) warnings.push({ line: unclosed.line, message: `{start_of_${unclosed.name}} is never ended.` })
+  return warnings
+}
