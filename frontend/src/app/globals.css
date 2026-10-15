@@ -3689,8 +3689,9 @@ select.input {
 .chordpro-scroll       { flex: 1; overflow-y: auto; padding: var(--space-lg); }
 .chordpro-content      { max-width: 800px; margin: 0 auto; }
 
-/* ── ChordPro Editor (split view) ── z-index sits below .modal-overlay (100) so ConfirmModal shows on top */
-.chordpro-editor          { position: fixed; inset: 0; z-index: 95; display: flex; flex-direction: column; background: var(--color-bg); }
+/* ── ChordPro Editor (split view) ── z-index above the sticky app nav (100), same as the viewer.
+   Its confirm boxes are rendered INSIDE the editor so they stack above it. */
+.chordpro-editor          { position: fixed; inset: 0; z-index: 300; display: flex; flex-direction: column; background: var(--color-bg); }
 .chordpro-editor-toolbar  { flex-wrap: wrap; }
 .chordpro-editor-actions  { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; }
 .chordpro-editor-panes    { flex: 1; min-height: 0; display: grid; grid-template-columns: 1fr 1fr; }

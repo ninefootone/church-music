@@ -19,7 +19,7 @@ interface ChordProEditorProps {
   onChange: (content: string) => void
   onSave: () => void
   onClose: () => void
-  onRevert: () => void
+  onRevert: () => Promise<void>
 }
 
 const RENDER_DELAY_MS = 300
@@ -34,6 +34,7 @@ export function ChordProEditor({
   const [parseError, setParseError] = useState<{ line: number | null } | null>(null)
   const [tab, setTab] = useState<'edit' | 'preview'>('edit')
   const [confirmDiscard, setConfirmDiscard] = useState(false)
+  const [confirmRevert, setConfirmRevert] = useState(false)
   const firstRender = useRef(true)
 
   useEffect(() => {
@@ -63,7 +64,7 @@ export function ChordProEditor({
         <span className="chordpro-title">Edit ChordPro · {title}</span>
         <div className="chordpro-editor-actions">
           {hasEdits && (
-            <button onClick={onRevert} className="btn btn-secondary btn-sm btn-danger-text">
+            <button onClick={() => setConfirmRevert(true)} className="btn btn-secondary btn-sm btn-danger-text">
               <RotateCcw size={13} /> Revert to original
             </button>
           )}
@@ -111,6 +112,16 @@ export function ChordProEditor({
         </div>
       </div>
 
+      {confirmRevert && (
+        <ConfirmModal
+          title="Revert to original"
+          message="Revert to the original uploaded file? Your edits will be deleted."
+          confirmLabel="Revert"
+          danger
+          onConfirm={async () => { await onRevert(); setConfirmRevert(false) }}
+          onCancel={() => setConfirmRevert(false)}
+        />
+      )}
       {confirmDiscard && (
         <ConfirmModal
           title="Discard changes?"

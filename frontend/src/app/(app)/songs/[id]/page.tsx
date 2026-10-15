@@ -40,7 +40,6 @@ export default function SongDetailPage() {
   const [editingLinkId, setEditingLinkId] = useState<string | null>(null)
   const [editingLinkForm, setEditingLinkForm] = useState<{ url: string; label: string; link_type: string }>({ url: '', label: '', link_type: 'youtube' })
   const [showDeleteLink, setShowDeleteLink] = useState<string | null>(null)
-  const [showRevertConfirm, setShowRevertConfirm] = useState(false)
   const [discoverImageUrl, setDiscoverImageUrl] = useState<string | null>(null)
   const [chordProEdit, setChordProEdit] = useState<{ fileId: string; content: string; originalContent: string; hasEdits: boolean } | null>(null)
   const [editSaving, setEditSaving] = useState(false)
@@ -191,7 +190,7 @@ export default function SongDetailPage() {
   }
 
   // Throws away the edited ChordPro copy and reloads the original into the editor.
-  // Confirmed with the app's ConfirmModal (was the browser's confirm() popup).
+  // Confirmed inside ChordProEditor (its ConfirmModal must render inside the editor to stack above it).
   const revertChordPro = async () => {
     if (!song || !chordProEdit) return
     try {
@@ -202,8 +201,6 @@ export default function SongDetailPage() {
       setChordProEdit({ fileId: chordProEdit.fileId, content: text, originalContent: text, hasEdits: false })
     } catch {
       alert('Revert failed. Please try again.')
-    } finally {
-      setShowRevertConfirm(false)
     }
   }
 
@@ -257,17 +254,7 @@ export default function SongDetailPage() {
           onChange={content => setChordProEdit(prev => prev ? { ...prev, content } : null)}
           onSave={saveChordPro}
           onClose={() => { setChordProEdit(null); setEditError(null) }}
-          onRevert={() => setShowRevertConfirm(true)}
-        />
-      )}
-      {showRevertConfirm && chordProEdit && (
-        <ConfirmModal
-          title="Revert to original"
-          message="Revert to the original uploaded file? Your edits will be deleted."
-          confirmLabel="Revert"
-          danger
-          onConfirm={revertChordPro}
-          onCancel={() => setShowRevertConfirm(false)}
+          onRevert={revertChordPro}
         />
       )}
 
