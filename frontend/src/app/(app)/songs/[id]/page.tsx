@@ -4,9 +4,10 @@ import { useState, useEffect, useCallback } from 'react'
 import Link from 'next/link'
 import { useParams, useRouter } from 'next/navigation'
 import { format, parseISO } from 'date-fns'
-import { ArrowLeft, ExternalLink, Edit, Plus, Trash2, RotateCcw } from 'lucide-react'
+import { ArrowLeft, ExternalLink, Edit, Plus, Trash2 } from 'lucide-react'
 import { FileRow } from '@/components/ui/FileRow'
 import { ChordProViewer } from '@/components/ui/ChordProViewer'
+import { ChordProEditor } from '@/components/ui/ChordProEditor'
 import { CategoryBadge, KeyBadge } from '@/components/ui/badges'
 import { LyricsDisplay } from '@/components/ui/LyricsDisplay'
 import { FileUploadModal } from '@/components/ui/FileUploadModal'
@@ -172,6 +173,23 @@ export default function SongDetailPage() {
     }
   }
 
+  const saveChordPro = async () => {
+    if (!song || !chordProEdit) return
+    setEditSaving(true)
+    setEditError(null)
+    try {
+      await api.put(
+        `/api/uploads/songs/${song.id}/files/${chordProEdit.fileId}/chordpro`,
+        { content: chordProEdit.content }
+      )
+      setChordProEdit(null)
+    } catch {
+      setEditError('Save failed. Please try again.')
+    } finally {
+      setEditSaving(false)
+    }
+  }
+
   // Throws away the edited ChordPro copy and reloads the original into the editor.
   // Confirmed with the app's ConfirmModal (was the browser's confirm() popup).
   const revertChordPro = async () => {
@@ -228,58 +246,19 @@ export default function SongDetailPage() {
         />
       )}
 
-      {chordProEdit && (
-        <div className="modal-overlay">
-          <div className="modal-panel modal-panel--flex" style={{ maxWidth: 720 }}>
-            <div className="modal-header--bordered" style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
-              <span className="modal-title" style={{ margin: 0 }}>Edit ChordPro</span>
-              <div style={{ display: 'flex', gap: 8, alignItems: 'center', flexWrap: 'wrap' }}>
-                {chordProEdit.hasEdits && (
-                  <button
-                    onClick={() => setShowRevertConfirm(true)}
-                    className="btn btn-secondary btn-sm btn-danger-text"
-                  >
-                    <RotateCcw size={13} /> Revert to original
-                  </button>
-                )}
-                <button onClick={() => { setChordProEdit(null); setEditError(null) }} className="btn btn-secondary btn-sm">Cancel</button>
-                <button
-                  onClick={async () => {
-                    if (!song) return
-                    setEditSaving(true)
-                    setEditError(null)
-                    try {
-                      await api.put(
-                        `/api/uploads/songs/${song.id}/files/${chordProEdit.fileId}/chordpro`,
-                        { content: chordProEdit.content }
-                      )
-                      setChordProEdit(prev => prev ? { ...prev, hasEdits: true } : null)
-                      setChordProEdit(null)
-                    } catch {
-                      setEditError('Save failed. Please check your ChordPro syntax and try again.')
-                    } finally {
-                      setEditSaving(false)
-                    }
-                  }}
-                  disabled={editSaving || chordProEdit.content === chordProEdit.originalContent}
-                  className="btn btn-primary btn-sm"
-                >
-                  {editSaving ? 'Saving…' : 'Save'}
-                </button>
-              </div>
-            </div>
-            <textarea
-              value={chordProEdit.content}
-              onChange={e => setChordProEdit(prev => prev ? { ...prev, content: e.target.value } : null)}
-              className="modal-scroll-body"
-              style={{ fontFamily: 'monospace', fontSize: 13, lineHeight: 1.6, border: 'none', outline: 'none', resize: 'none', minHeight: 400 }}
-              spellCheck={false}
-            />
-            {editError && (
-              <p className="modal-footer--padded text-danger" style={{ fontSize: 13, margin: 0 }}>{editError}</p>
-            )}
-          </div>
-        </div>
+      {chordProEdit && song && (
+        <ChordProEditor
+          title={song.title}
+          content={chordProEdit.content}
+          originalContent={chordProEdit.originalContent}
+          hasEdits={chordProEdit.hasEdits}
+          saving={editSaving}
+          error={editError}
+          onChange={content => setChordProEdit(prev => prev ? { ...prev, content } : null)}
+          onSave={saveChordPro}
+          onClose={() => { setChordProEdit(null); setEditError(null) }}
+          onRevert={() => setShowRevertConfirm(true)}
+        />
       )}
       {showRevertConfirm && chordProEdit && (
         <ConfirmModal

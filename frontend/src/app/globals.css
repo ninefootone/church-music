@@ -3689,6 +3689,26 @@ select.input {
 .chordpro-scroll       { flex: 1; overflow-y: auto; padding: var(--space-lg); }
 .chordpro-content      { max-width: 800px; margin: 0 auto; }
 
+/* ── ChordPro Editor (split view) ── z-index sits below .modal-overlay (100) so ConfirmModal shows on top */
+.chordpro-editor          { position: fixed; inset: 0; z-index: 95; display: flex; flex-direction: column; background: var(--color-bg); }
+.chordpro-editor-toolbar  { flex-wrap: wrap; }
+.chordpro-editor-actions  { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; }
+.chordpro-editor-panes    { flex: 1; min-height: 0; display: grid; grid-template-columns: 1fr 1fr; }
+.chordpro-editor-source   { font-family: ui-monospace, SFMono-Regular, Menlo, monospace; font-size: 14px; line-height: 1.6; padding: var(--space-lg); border: none; border-right: 1px solid var(--color-border); outline: none; resize: none; background: var(--color-surface); color: var(--color-text-primary); min-height: 0; height: 100%; width: 100%; }
+.chordpro-editor-preview  { overflow-y: auto; padding: var(--space-lg); font-size: 15px; min-height: 0; }
+.chordpro-editor-message  { display: flex; align-items: flex-start; gap: 8px; margin: 0 0 var(--space-md); padding: 8px 12px; font-size: var(--text-sm); color: var(--color-text-secondary); background: var(--color-warning-bg, #fffbeb); border: 1px solid var(--color-warning-border, #fcd34d); border-radius: var(--radius-sm); }
+.chordpro-editor-message--error { margin: var(--space-sm) var(--space-lg); color: var(--color-danger); background: none; border-color: var(--color-danger); }
+.chordpro-editor-tabs     { display: none; }
+@media (max-width: 899px) {
+  .chordpro-editor-panes  { grid-template-columns: 1fr; }
+  .chordpro-editor-source { border-right: none; }
+  .chordpro-editor-tabs   { display: flex; border-bottom: 1px solid var(--color-border); background: var(--color-surface); flex-shrink: 0; }
+  .chordpro-editor-tab    { flex: 1; padding: 10px; background: none; border: none; border-bottom: 2px solid transparent; font-size: var(--text-sm); font-weight: 600; color: var(--color-text-muted); cursor: pointer; }
+  .chordpro-editor-tab--active { color: var(--color-brand-600); border-bottom-color: var(--color-brand-600); }
+  .chordpro-editor--tab-edit .chordpro-editor-preview { display: none; }
+  .chordpro-editor--tab-preview .chordpro-editor-source { display: none; }
+}
+
 /* ── FileUploadModal ── */
 .drop-zone           { border: 2px dashed var(--color-border); border-radius: var(--radius-md); padding: var(--space-lg); text-align: center; cursor: pointer; background: var(--color-neutral-50); transition: all var(--transition-fast); }
 .drop-zone-heading   { font-size: var(--text-base); font-weight: 500; color: var(--color-text-secondary); margin-bottom: 4px; }
