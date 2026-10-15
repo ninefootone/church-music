@@ -3,7 +3,7 @@
 // Plans → Overview (/plans/overview): several upcoming plans side by side, so songs and rotas
 // can be chosen with the weeks around them in view (see project doc plans-overview.md).
 // Musicians can be added, changed and removed here; songs added, chosen for a slot, swapped and
-// removed; service items and song slots added (title only); and every item dragged into a new order within its plan — always via the single-item
+// removed; service items and song slots added (title only) and removed; and every item dragged into a new order within its plan — always via the single-item
 // routes (reorder: PUT /items/order, 409 if the plan changed elsewhere), never the whole-list PUT /items. Other items
 // (readings, prayers, rich content), keys and arrangements are edited in the normal plan builder.
 // Data: GET /api/plans/overview (planners only, drafts included).
@@ -258,8 +258,8 @@ export default function PlansOverviewPage() {
     setSongPicker({ plan, mode })
   }
 
-  // Song or slot removal (other item types are only removed in the builder). A 404 means it was
-  // already removed elsewhere — reload either way so the column matches the database.
+  // Removes one item of any type. A 404 means it was already removed elsewhere — reload either
+  // way so the column matches the database.
   const removeItem = async () => {
     if (!confirmRemoveItem) return
     const { plan, item } = confirmRemoveItem
@@ -566,7 +566,18 @@ export default function PlansOverviewPage() {
                     }
                     return (
                       <SortableRow key={item.id} id={item.id} disabled={dragDisabled} className="po-item po-item-other">
-                        {nonSongLabel(item)}
+                        <div className="po-item-row">
+                          <span className="po-item-label">{nonSongLabel(item)}</span>
+                          <button
+                            type="button"
+                            className="po-item-remove"
+                            aria-label={`Remove ${nonSongLabel(item)}`}
+                            title={`Remove ${nonSongLabel(item)}`}
+                            onClick={() => { setActionError(null); setConfirmRemoveItem({ plan, item }) }}
+                          >
+                            <X size={12} />
+                          </button>
+                        </div>
                       </SortableRow>
                     )
                   })}
@@ -694,11 +705,17 @@ export default function PlansOverviewPage() {
 
       {confirmRemoveItem && (
         <ConfirmModal
-          title={confirmRemoveItem.item.type === 'song' ? 'Remove song?' : 'Remove slot?'}
+          title={
+            confirmRemoveItem.item.type === 'song' ? 'Remove song?'
+              : isSongSlot(confirmRemoveItem.item) ? 'Remove slot?'
+              : 'Remove item?'
+          }
           message={
             confirmRemoveItem.item.type === 'song'
               ? `Remove "${confirmRemoveItem.item.song_title || 'this song'}" from ${confirmRemoveItem.plan.title || 'this plan'}? Its key, arrangement and notes for this plan go with it.`
-              : `Remove this "song to be chosen" slot from ${confirmRemoveItem.plan.title || 'this plan'}?`
+              : isSongSlot(confirmRemoveItem.item)
+                ? `Remove this "song to be chosen" slot from ${confirmRemoveItem.plan.title || 'this plan'}?`
+                : `Remove "${nonSongLabel(confirmRemoveItem.item)}" from ${confirmRemoveItem.plan.title || 'this plan'}? Any wording and notes added to it in this plan go with it.`
           }
           confirmLabel="Remove"
           danger
