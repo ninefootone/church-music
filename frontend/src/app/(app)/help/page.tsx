@@ -599,7 +599,7 @@ export default function HelpPage() {
           content: () => (
             <div>
               <p className="help-content-body">
-                The <strong>Overview</strong> button on the Plans page shows your upcoming plans side by side, so you can plan songs and rotas across several weeks rather than one service at a time. It&apos;s available to admins and members who can add &amp; edit plans, and it&apos;s designed for a laptop or desktop screen.
+                The <strong>Overview</strong> button on the Plans page shows your upcoming plans side by side, so you can plan songs and rotas across several weeks rather than one service at a time. It&apos;s available to admins and members who can add &amp; edit plans, and it&apos;s designed for a laptop, desktop or an iPad held sideways (the button is hidden on phones and smaller screens).
               </p>
               <p className="help-content-body">
                 Each column is one plan (so three services on a Sunday are three columns), including drafts. It shows the running order with keys, any empty song slots, the number of songs and total minutes, and the musicians — one line per person with their roles combined. A musician who has marked themselves unavailable for that date is shown in red with <strong>Unavailable</strong>.
@@ -614,7 +614,13 @@ export default function HelpPage() {
                 Use <strong>Earlier</strong> and <strong>Later</strong> to move one plan at a time, <strong>From</strong> to jump to a date, and <strong>Today</strong> to come back. <strong>Plans shown</strong> sets how many columns you see. Your choices for Plans shown, Song repeats and Rota counts are remembered in your browser.
               </p>
               <p className="help-content-body">
-                The overview is read-only. Click a plan&apos;s heading to open it, or <strong>Edit plan</strong> at the bottom of the column to change it.
+                You can make quick changes right in a column, and they save straight away. <strong>Add song</strong> opens a song picker where each song shows when it was last sung before that plan and when it&apos;s next planned, so you can avoid repeats as you choose; the song goes at the end of the plan. Click a <strong>song</strong> to swap it for another (its key and arrangement for that plan are cleared; notes are kept), or a <strong>Song to be chosen</strong> slot to fill it.
+              </p>
+              <p className="help-content-body">
+                <strong>Add item</strong> adds a service item from your church&apos;s list, an item with a title of your own, or a song slot. Drag the grip on the left of any row to change the order, and use the <strong>×</strong> on a row to remove it from that plan (you&apos;ll be asked to confirm). In the Musicians box, <strong>Add</strong> adds someone, clicking a name changes the person or their roles, and <strong>×</strong> removes them.
+              </p>
+              <p className="help-content-body">
+                Keys, arrangements, notes and the wording of service items are changed in the plan itself — click a plan&apos;s heading to open it, or <strong>Edit plan</strong> at the bottom of the column. If you have the same plan open for editing in another tab, save or close it before making changes in the overview: saving the plan editor afterwards puts back the version it had open.
               </p>
             </div>
           ),
