@@ -572,6 +572,154 @@ router.patch('/:id/items/:itemId/notes', requireAuth, requireMembership, async f
   }
 });
 
+// ── Single-item song edits (Plans overview) ────────────────────────────────────────────
+// The builder saves with PUT /:id/items, which deletes and re-inserts the WHOLE list. The
+// overview must not do that (two places editing the same plan = last save silently wins, and
+// every item gets a new id). These routes each change one thing, inside a transaction that
+// locks the plan row, and leave every other item — notes, arrangements, rich content — alone.
+// Each returns the plan's items in the same shape as GET /overview so the column can redraw.
+
+const OVERVIEW_ITEM_COLUMNS = `pi.id, pi.type, pi.phase, pi.title, pi.position, pi.key_override, pi.duration_minutes,
+  s.id AS song_id, s.title AS song_title, s.default_key AS song_default_key,
+  s.default_duration AS song_default_duration`;
+
+async function overviewItems(client, planId) {
+  const r = await client.query(
+    `SELECT ${OVERVIEW_ITEM_COLUMNS}
+       FROM plan_items pi LEFT JOIN songs s ON s.id = pi.song_id
+      WHERE pi.plan_id = $1 ORDER BY pi.position, pi.id`,
+    [planId]
+  );
+  return r.rows;
+}
+
+// Positions back to 0..n-1 in their current order (after an insert or delete).
+async function renumberItems(client, planId) {
+  await client.query(
+    `UPDATE plan_items pi SET position = o.rn - 1
+       FROM (SELECT id, ROW_NUMBER() OVER (ORDER BY position, id) AS rn FROM plan_items WHERE plan_id = $1) o
+      WHERE pi.id = o.id AND pi.position IS DISTINCT FROM o.rn - 1`,
+    [planId]
+  );
+}
+
+// Runs `work(client)` in a transaction with the plan row locked, after the church + edit checks.
+// `work` returns { status, body } to send a non-200 (e.g. 400/404/409), or nothing for success.
+async function withEditablePlan(req, res, next, work) {
+  let client;
+  try {
+    const plan = await loadChurchPlan(req.params.id, req.churchId);
+    if (!plan) return res.status(404).json({ error: 'Not found' });
+    if (!canEditPlan(req, plan)) return res.status(403).json({ error: 'Not authorised' });
+    client = await pool.connect();
+    await client.query('BEGIN');
+    await client.query('SELECT id FROM plans WHERE id = $1 FOR UPDATE', [req.params.id]);
+    const fail = await work(client);
+    if (fail) {
+      await client.query('ROLLBACK');
+      return res.status(fail.status).json(fail.body);
+    }
+    const items = await overviewItems(client, req.params.id);
+    await client.query('COMMIT');
+    res.json({ items });
+  } catch (err) {
+    if (client) await client.query('ROLLBACK').catch(() => {});
+    next(err);
+  } finally {
+    if (client) client.release();
+  }
+}
+
+// The song must be one of THIS church's songs (same rule as PUT /:id/items).
+async function loadChurchSong(client, songId, churchId) {
+  if (!isUuid(songId)) return null;
+  const r = await client.query('SELECT id, default_duration FROM songs WHERE id = $1 AND church_id = $2', [songId, churchId]);
+  return r.rows[0] || null;
+}
+
+const SONG_NOT_FOUND = { status: 400, body: { error: 'That song was not found in this church' } };
+const ITEM_NOT_FOUND = { status: 404, body: { error: 'Plan item not found' } };
+
+// POST /:id/items — add one song. Body: { song_id, position? } (0-based; omitted or too big = end).
+router.post('/:id/items', requireAuth, requireMembership, function(req, res, next) {
+  const { song_id, position } = req.body || {};
+  withEditablePlan(req, res, next, async (client) => {
+    const song = await loadChurchSong(client, song_id, req.churchId);
+    if (!song) return SONG_NOT_FOUND;
+    const countRes = await client.query('SELECT COUNT(*)::int AS n FROM plan_items WHERE plan_id = $1', [req.params.id]);
+    const n = countRes.rows[0].n;
+    if (n >= 300) return { status: 400, body: { error: 'Too many items (max 300)' } };
+    await renumberItems(client, req.params.id);
+    let pos = parseInt(position, 10);
+    if (!Number.isFinite(pos) || pos < 0 || pos > n) pos = n;
+    await client.query('UPDATE plan_items SET position = position + 1 WHERE plan_id = $1 AND position >= $2', [req.params.id, pos]);
+    // key_override stays NULL so the song's default key shows (the builder fills it on next open).
+    await client.query(
+      `INSERT INTO plan_items (plan_id, type, song_id, position, duration_minutes, phase)
+       VALUES ($1, 'song', $2, $3, $4, 'service')`,
+      [req.params.id, song.id, pos, song.default_duration || null]
+    );
+  });
+});
+
+// PATCH /:id/items/:itemId/song — put a song into a "song to be chosen" slot, or swap the song
+// on a song row. Key and arrangement belong to the old song, so they're cleared; notes are kept.
+// A slot's label ("Opening song") is dropped, as the builder does when it fills a slot.
+router.patch('/:id/items/:itemId/song', requireAuth, requireMembership, function(req, res, next) {
+  const { song_id } = req.body || {};
+  withEditablePlan(req, res, next, async (client) => {
+    const song = await loadChurchSong(client, song_id, req.churchId);
+    if (!song) return SONG_NOT_FOUND;
+    const item = await client.query('SELECT type, duration_minutes FROM plan_items WHERE id = $1 AND plan_id = $2', [req.params.itemId, req.params.id]);
+    if (item.rows.length === 0) return ITEM_NOT_FOUND;
+    const it = item.rows[0];
+    if (it.type !== 'song' && it.type !== 'song_slot') {
+      return { status: 400, body: { error: 'Only songs and song slots can have a song chosen' } };
+    }
+    // A slot may carry a planned length from its template; a song's own length wins over it.
+    const duration = song.default_duration || (it.type === 'song_slot' ? it.duration_minutes : null) || null;
+    await client.query(
+      `UPDATE plan_items SET type = 'song', song_id = $1, title = NULL, key_override = NULL,
+              custom_arrangement = NULL, duration_minutes = $2
+        WHERE id = $3 AND plan_id = $4`,
+      [song.id, duration, req.params.itemId, req.params.id]
+    );
+  });
+});
+
+// DELETE /:id/items/:itemId — remove one item (any type), then close the gap in positions.
+router.delete('/:id/items/:itemId', requireAuth, requireMembership, function(req, res, next) {
+  withEditablePlan(req, res, next, async (client) => {
+    const del = await client.query('DELETE FROM plan_items WHERE id = $1 AND plan_id = $2', [req.params.itemId, req.params.id]);
+    if (del.rowCount === 0) return ITEM_NOT_FOUND;
+    await renumberItems(client, req.params.id);
+  });
+});
+
+// PUT /:id/items/order — reorder only. Body: { item_ids: [every item id, in the new order] }.
+// The ids must be exactly the plan's current items; if not, someone changed the plan elsewhere
+// since the page loaded → 409, and the page reloads instead of guessing.
+router.put('/:id/items/order', requireAuth, requireMembership, function(req, res, next) {
+  const raw = req.body && req.body.item_ids;
+  const ids = Array.isArray(raw) && raw.every(isUuid) ? raw.map((x) => x.toLowerCase()) : null;
+  if (!ids || ids.length > 300 || new Set(ids).size !== ids.length) {
+    return res.status(400).json({ error: 'item_ids must be a list of plan item ids' });
+  }
+  withEditablePlan(req, res, next, async (client) => {
+    const cur = await client.query('SELECT id FROM plan_items WHERE plan_id = $1', [req.params.id]);
+    const current = new Set(cur.rows.map((r) => r.id));
+    if (current.size !== ids.length || !ids.every((id) => current.has(id))) {
+      return { status: 409, body: { error: 'This plan was changed somewhere else. Reloading the latest version.' } };
+    }
+    await client.query(
+      `UPDATE plan_items pi SET position = o.ord - 1
+         FROM unnest($2::uuid[]) WITH ORDINALITY AS o(id, ord)
+        WHERE pi.id = o.id AND pi.plan_id = $1`,
+      [req.params.id, ids]
+    );
+  });
+});
+
 router.post('/:id/musicians', requireAuth, requireMembership, async function(req, res, next) {
 
   try {
