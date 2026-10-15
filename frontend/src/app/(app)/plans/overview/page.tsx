@@ -207,6 +207,17 @@ export default function PlansOverviewPage() {
     setShow({ repeats: true, rota: true, ...readStored(SHOW_KEY, {}) })
     const w = readStored<number>(REPEAT_KEY, 4)
     setRepeatWeeks(REPEAT_OPTIONS.includes(w) ? w : 4)
+    // ?from=YYYY-MM-DD (e.g. back from creating a plan): start there, then tidy the URL so a later
+    // refresh doesn't keep jumping back to that date.
+    try {
+      const f = new URLSearchParams(window.location.search).get('from')
+      if (f && /^\d{4}-\d{2}-\d{2}$/.test(f)) {
+        setFrom(f)
+        window.history.replaceState(null, '', window.location.pathname)
+      }
+    } catch {
+      // ignore — starts from today
+    }
   }, [])
 
   // The app's main column is narrow by default; widen it while this page is open.
@@ -391,7 +402,7 @@ export default function PlansOverviewPage() {
       <div className="page-header">
         <h1 className="page-title">Plans overview</h1>
         <div className="page-header-actions">
-          <Link href="/plans/new" className="btn btn-primary"><Plus size={16} /> Add new plan</Link>
+          <Link href="/plans/new?from=overview" className="btn btn-primary"><Plus size={16} /> Add new plan</Link>
         </div>
       </div>
 
@@ -483,7 +494,7 @@ export default function PlansOverviewPage() {
         <p className="text-muted">Loading…</p>
       ) : plans.length === 0 ? (
         <div className="card card-empty">
-          <p className="text-muted">No plans from this date on. <Link href="/plans/new" className="link">Add one</Link></p>
+          <p className="text-muted">No plans from this date on. <Link href="/plans/new?from=overview" className="link">Add one</Link></p>
         </div>
       ) : (
         <div className={`${colsClass[count] || colsClass[5]}${loading ? ' po-grid--loading' : ''}`}>
@@ -654,7 +665,7 @@ export default function PlansOverviewPage() {
             )
           })}
           {!data?.has_next && plans.length < count && (
-            <Link href="/plans/new" className="po-col po-col-new">
+            <Link href="/plans/new?from=overview" className="po-col po-col-new">
               <Plus size={20} />
               <span>New plan</span>
             </Link>

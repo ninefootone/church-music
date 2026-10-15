@@ -46,6 +46,16 @@ export default function NewPlanPage() {
     api.get('/api/plan-templates').then(r => setTemplates(r.data)).catch(() => {})
   }, [church])
   const [form, setForm] = useState(EMPTY_FORM)
+  // Opened from the Plans overview (?from=overview): Back and Create return there, showing the
+  // new plan's date. Read from window (not useSearchParams, which needs a Suspense boundary).
+  const [fromOverview, setFromOverview] = useState(false)
+  useEffect(() => {
+    try {
+      setFromOverview(new URLSearchParams(window.location.search).get('from') === 'overview')
+    } catch {
+      // ignore — behaves like a normal New plan page
+    }
+  }, [])
 
   const template = templates.find(t => t.id === templateId) ?? null
   const slotCount = template ? template.items.filter(i => i.type === 'song_slot').length : 0
@@ -76,8 +86,10 @@ export default function NewPlanPage() {
         status,
         ...(template ? { template_id: template.id } : {}),
       })
-      // From a template, go straight to the builder to add the songs.
-      router.push(template ? `/plans/${data.id}/edit` : `/plans/${data.id}`)
+      // From the overview: back there, starting at the new plan's date (template slots can be filled
+      // in its column). Otherwise, from a template go straight to the builder to add the songs.
+      if (fromOverview) router.push(`/plans/overview?from=${encodeURIComponent(form.plan_date)}`)
+      else router.push(template ? `/plans/${data.id}/edit` : `/plans/${data.id}`)
     } catch (err: any) {
       setError(err.response?.data?.error || 'Failed to create plan')
       setLoading(false)
@@ -86,7 +98,9 @@ export default function NewPlanPage() {
 
   return (
     <div>
-      <Link href="/plans" className="back-link"><ArrowLeft size={14} /> Back to plans</Link>
+      {fromOverview
+        ? <Link href="/plans/overview" className="back-link"><ArrowLeft size={14} /> Back to overview</Link>
+        : <Link href="/plans" className="back-link"><ArrowLeft size={14} /> Back to plans</Link>}
       <h1 className="page-title page-title--spaced">New plan</h1>
       {atLimit && (
         <div className="error-box">
