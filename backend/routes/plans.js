@@ -667,12 +667,35 @@ async function loadChurchSong(client, songId, churchId) {
 const SONG_NOT_FOUND = { status: 400, body: { error: 'That song was not found in this church' } };
 const ITEM_NOT_FOUND = { status: 404, body: { error: 'Plan item not found' } };
 
-// POST /:id/items — add one song. Body: { song_id, position? } (0-based; omitted or too big = end).
+// POST /:id/items — add one item. Position: { position? } (0-based; omitted or too big = end).
+//   { song_id }                    → a song (from this church's songs)
+//   { snippet_id }                 → a service item copied from this church's Service items library
+//                                    (title, rich content and note — same as the builder's chips)
+//   { type: 'custom', title }      → a service item with just a title ("Other" / the default chips)
+//   { type: 'song_slot', title? }  → a "song to be chosen" slot, with an optional label
 router.post('/:id/items', requireAuth, requireMembership, function(req, res, next) {
-  const { song_id, position } = req.body || {};
+  const { song_id, snippet_id, type, title, position } = req.body || {};
   withEditablePlan(req, res, next, async (client) => {
-    const song = await loadChurchSong(client, song_id, req.churchId);
-    if (!song) return SONG_NOT_FOUND;
+    let row;
+    if (song_id != null) {
+      const song = await loadChurchSong(client, song_id, req.churchId);
+      if (!song) return SONG_NOT_FOUND;
+      // key_override stays NULL so the song's default key shows (the builder fills it on next open).
+      row = { type: 'song', song_id: song.id, title: null, notes: null, content: null, duration: song.default_duration || null };
+    } else if (snippet_id != null) {
+      const snip = isUuid(snippet_id)
+        ? await client.query('SELECT title, content, note FROM church_liturgy_snippets WHERE id = $1 AND church_id = $2', [snippet_id, req.churchId])
+        : { rows: [] };
+      if (snip.rows.length === 0) return { status: 400, body: { error: 'That service item was not found in this church' } };
+      const sn = snip.rows[0];
+      row = { type: 'custom', song_id: null, title: sn.title, notes: sn.note || null, content: sanitizeRichText(sn.content), duration: null };
+    } else if (type === 'custom' || type === 'song_slot') {
+      const t = typeof title === 'string' ? title.trim().slice(0, 200) : '';
+      if (type === 'custom' && !t) return { status: 400, body: { error: 'Give the item a title' } };
+      row = { type, song_id: null, title: t || null, notes: null, content: null, duration: null };
+    } else {
+      return { status: 400, body: { error: 'Choose a song or a service item to add' } };
+    }
     const countRes = await client.query('SELECT COUNT(*)::int AS n FROM plan_items WHERE plan_id = $1', [req.params.id]);
     const n = countRes.rows[0].n;
     if (n >= 300) return { status: 400, body: { error: 'Too many items (max 300)' } };
@@ -680,11 +703,10 @@ router.post('/:id/items', requireAuth, requireMembership, function(req, res, nex
     let pos = parseInt(position, 10);
     if (!Number.isFinite(pos) || pos < 0 || pos > n) pos = n;
     await client.query('UPDATE plan_items SET position = position + 1 WHERE plan_id = $1 AND position >= $2', [req.params.id, pos]);
-    // key_override stays NULL so the song's default key shows (the builder fills it on next open).
     await client.query(
-      `INSERT INTO plan_items (plan_id, type, song_id, position, duration_minutes, phase)
-       VALUES ($1, 'song', $2, $3, $4, 'service')`,
-      [req.params.id, song.id, pos, song.default_duration || null]
+      `INSERT INTO plan_items (plan_id, type, song_id, title, notes, content, position, duration_minutes, phase)
+       VALUES ($1, $2, $3, $4, $5, $6, $7, $8, 'service')`,
+      [req.params.id, row.type, row.song_id, row.title, row.notes, row.content, pos, row.duration]
     );
   });
 });

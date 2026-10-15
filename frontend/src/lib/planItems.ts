@@ -9,3 +9,16 @@ export function nonSongLabel(item: { type: string; title?: string | null }): str
   if (isSongSlot(item)) return item.title ? `${item.title} — song to be chosen` : 'Song to be chosen'
   return item.title || item.type.charAt(0).toUpperCase() + item.type.slice(1)
 }
+
+// Service item chips shown when a church has no Service items library of its own
+// (plan builder + Plans overview). Added as 'custom' items with just this title.
+export const DEFAULT_SERVICE_ITEMS: { title: string; content?: string | null; note?: string | null }[] = [
+  { title: 'Welcome' },
+  { title: 'Prayer' },
+  { title: 'Confession' },
+  { title: 'Assurance' },
+  { title: 'Reading' },
+  { title: 'Sermon' },
+  { title: 'Communion' },
+  { title: 'Announcement' },
+]

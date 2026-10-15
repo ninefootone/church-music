@@ -3882,7 +3882,9 @@ body.plans-overview-active .app-main-content { max-width: 1680px; }
 .po-item-pick:hover { text-decoration: underline; }
 .po-item-remove { flex-shrink: 0; display: inline-flex; align-items: center; background: none; border: none; padding: 2px; cursor: pointer; color: var(--color-text-muted); opacity: 0.6; font-style: normal; }
 .po-item-remove:hover { opacity: 1; color: var(--color-danger); }
-.po-add-song { align-self: flex-start; }
+.po-add-row { display: flex; gap: 14px; }
+.po-adder-row { display: flex; gap: 8px; align-items: center; }
+.po-adder-row .input { flex: 1; min-width: 0; }
 .po-sortable { display: flex; align-items: flex-start; gap: 4px; background: var(--color-surface); }
 .po-item-body { flex: 1; min-width: 0; }
 .po-drag-handle { flex-shrink: 0; display: inline-flex; align-items: center; background: none; border: none; padding: 2px 0; margin-top: 1px; cursor: grab; color: var(--color-text-muted); opacity: 0.35; touch-action: none; font-style: normal; }

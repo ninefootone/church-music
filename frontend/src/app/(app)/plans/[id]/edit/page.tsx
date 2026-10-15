@@ -29,17 +29,8 @@ import api from '@/lib/api'
 import { ArrangementBuilder } from '@/components/ui/ArrangementBuilder'
 import { RichTextEditor } from '@/components/ui/RichTextEditor'
 import { ConfirmModal } from '@/components/ui/ConfirmModal'
+import { DEFAULT_SERVICE_ITEMS } from '@/lib/planItems'
 
-const DEFAULT_SERVICE_ITEMS = [
-  { title: 'Welcome' },
-  { title: 'Prayer' },
-  { title: 'Confession' },
-  { title: 'Assurance' },
-  { title: 'Reading' },
-  { title: 'Sermon' },
-  { title: 'Communion' },
-  { title: 'Announcement' },
-]
 
 const SERVICE_ITEMS_LIMIT = 8
 

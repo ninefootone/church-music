@@ -2,8 +2,8 @@
 
 // Plans → Overview (/plans/overview): several upcoming plans side by side, so songs and rotas
 // can be chosen with the weeks around them in view (see project doc plans-overview.md).
-// Musicians can be added, changed and removed here, and songs added, chosen for a slot, swapped,
-// removed and every item dragged into a new order within its plan — always via the single-item
+// Musicians can be added, changed and removed here; songs added, chosen for a slot, swapped and
+// removed; service items and song slots added (title only); and every item dragged into a new order within its plan — always via the single-item
 // routes (reorder: PUT /items/order, 409 if the plan changed elsewhere), never the whole-list PUT /items. Other items
 // (readings, prayers, rich content), keys and arrangements are edited in the normal plan builder.
 // Data: GET /api/plans/overview (planners only, drafts included).
@@ -38,6 +38,7 @@ import { isSongSlot, nonSongLabel } from '@/lib/planItems'
 import { PlanMusicianModal, type ExistingMusician } from '@/components/ui/PlanMusicianModal'
 import { OverviewSongPicker, type SongPickerMode } from '@/components/ui/OverviewSongPicker'
 import { ConfirmModal } from '@/components/ui/ConfirmModal'
+import { OverviewItemAdder } from '@/components/ui/OverviewItemAdder'
 
 interface OverviewItem {
   id: string
@@ -191,6 +192,7 @@ export default function PlansOverviewPage() {
   const [songPicker, setSongPicker] = useState<{ plan: OverviewPlan; mode: SongPickerMode } | null>(null)
   const [confirmRemoveItem, setConfirmRemoveItem] = useState<{ plan: OverviewPlan; item: OverviewItem } | null>(null)
   const [reorderingPlanId, setReorderingPlanId] = useState<string | null>(null)
+  const [itemAdderPlan, setItemAdderPlan] = useState<OverviewPlan | null>(null)
 
   const sensors = useSensors(
     useSensor(PointerSensor, { activationConstraint: { distance: 5 } }),
@@ -571,9 +573,14 @@ export default function PlansOverviewPage() {
                 </ol>
                 </SortableContext>
                 </DndContext>
-                <button type="button" className="po-musician-add po-add-song" onClick={() => openSongPicker(plan, { kind: 'add' })}>
-                  <Plus size={12} /> Add song
-                </button>
+                <div className="po-add-row">
+                  <button type="button" className="po-musician-add" onClick={() => openSongPicker(plan, { kind: 'add' })}>
+                    <Plus size={12} /> Add song
+                  </button>
+                  <button type="button" className="po-musician-add" onClick={() => { setActionError(null); setItemAdderPlan(plan) }}>
+                    <Plus size={12} /> Add item
+                  </button>
+                </div>
 
                 <div className="po-col-meta">
                   {songCount} song{songCount === 1 ? '' : 's'}
@@ -669,6 +676,19 @@ export default function PlansOverviewPage() {
           onChosen={() => load()}
           onConflict={(msg) => { setActionError(msg); load() }}
           onClose={() => setSongPicker(null)}
+        />
+      )}
+
+      {itemAdderPlan && church && (
+        <OverviewItemAdder
+          key={itemAdderPlan.id}
+          planId={itemAdderPlan.id}
+          planTitle={itemAdderPlan.title || 'Untitled plan'}
+          planDate={itemAdderPlan.plan_date}
+          churchId={church.id}
+          onAdded={() => load()}
+          onConflict={(msg) => { setActionError(msg); load() }}
+          onClose={() => setItemAdderPlan(null)}
         />
       )}
 
