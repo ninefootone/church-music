@@ -132,7 +132,8 @@ export default function PlansPage() {
         <h1 className="page-title">Plans</h1>
         {canAddPlans && (
           <div className="page-header-actions">
-            <Link href="/plans/overview" className="btn btn-secondary">Overview</Link>
+            {/* Overview is a wide multi-column page, so the button is hidden below 940px (the page still works if reached directly). */}
+            <Link href="/plans/overview" className="btn btn-secondary hide-mobile">Overview</Link>
             <Link href="/plans/templates" className="btn btn-secondary">Templates</Link>
             <Link href="/plans/new" className="btn btn-primary">
               <Plus size={16} /> Add new plan
