@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react'
 import { X, ChevronUp, ChevronDown } from 'lucide-react'
-import DOMPurify from 'dompurify'
+import { renderChordPro, semitonesBetween } from '@/lib/chordproRender'
 
 const KEYS = ['C', 'C#', 'Db', 'D', 'Eb', 'E', 'F', 'F#', 'Gb', 'G', 'Ab', 'A', 'Bb', 'B']
 
@@ -20,42 +20,21 @@ export function ChordProViewer({ content, originalKey, songKey, label, onClose }
   const [fontSize, setFontSize] = useState(15)
 
   useEffect(() => {
-    async function render() {
-      try {
-        const { default: ChordSheetJS } = await import('chordsheetjs')
-        const parser = new ChordSheetJS.ChordProParser()
-        const song = parser.parse(content)
-
-        const formatter = new ChordSheetJS.HtmlDivFormatter()
-        if (selectedKey && (originalKey || songKey)) {
-          const fromKey = originalKey || songKey || 'C'
-          if (selectedKey !== fromKey) {
-            const CHROMATIC = ['C', 'C#', 'D', 'D#', 'E', 'F', 'F#', 'G', 'G#', 'A', 'A#', 'B']
-            const normalize = (k: string) => k.replace('Db','C#').replace('Eb','D#').replace('Gb','F#').replace('Ab','G#').replace('Bb','A#')
-            const fromIdx = CHROMATIC.indexOf(normalize(fromKey))
-            const toIdx = CHROMATIC.indexOf(normalize(selectedKey))
-            if (fromIdx !== -1 && toIdx !== -1) {
-              let semitones = toIdx - fromIdx
-              if (semitones < 0) semitones += 12
-              const transposed = song.transpose(semitones)
-              setRendered(DOMPurify.sanitize(formatter.format(transposed)))
-              return
-            }
-          }
-        }
-
-        setRendered(DOMPurify.sanitize(formatter.format(song)))
-      } catch (err) {
-        console.error('ChordPro render error:', err)
-        // Fallback: show raw content, escaped — never trust unparsed ChordPro as HTML
-        const escaped = content
-          .replace(/&/g, '&amp;')
-          .replace(/</g, '&lt;')
-          .replace(/>/g, '&gt;')
-        setRendered(`<pre style="font-family: monospace; white-space: pre-wrap;">${escaped}</pre>`)
-      }
-    }
-    render()
+    let cancelled = false
+    const fromKey = originalKey || songKey
+    const semitones = selectedKey && fromKey ? semitonesBetween(fromKey, selectedKey) : 0
+    renderChordPro(content, semitones).then(result => {
+      if (cancelled) return
+      if (result.ok) { setRendered(result.html); return }
+      console.error('ChordPro render error:', result.message)
+      // Fallback: show raw content, escaped — never trust unparsed ChordPro as HTML
+      const escaped = content
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+      setRendered(`<pre style="font-family: monospace; white-space: pre-wrap;">${escaped}</pre>`)
+    })
+    return () => { cancelled = true }
   }, [content, selectedKey, originalKey, songKey])
 
   return (
