@@ -243,6 +243,33 @@ router.get('/overview', requireAuth, requireMembership, async function(req, res,
   }
 });
 
+// GET /:id/song-history — for the Plans overview song picker: for every song this church has
+// used, the nearest use BEFORE this plan's date and the nearest AFTER it (any other plan, drafts
+// included; same-day plans ignored, like the overview's repeat notes). Planners only.
+router.get('/:id/song-history', requireAuth, requireMembership, async function(req, res, next) {
+  try {
+    if (!canSeeDraftPlans(req)) return res.status(403).json({ error: 'Not authorised' });
+    const plan = await pool.query(
+      `SELECT id, to_char(plan_date, 'YYYY-MM-DD') AS plan_date FROM plans WHERE id = $1 AND church_id = $2`,
+      [req.params.id, req.churchId]
+    );
+    if (plan.rows.length === 0) return res.status(404).json({ error: 'Not found' });
+    const planDate = plan.rows[0].plan_date;
+    const uses = await pool.query(
+      `SELECT pi.song_id,
+              to_char(MAX(p.plan_date) FILTER (WHERE p.plan_date < $3::date), 'YYYY-MM-DD') AS last_before,
+              to_char(MIN(p.plan_date) FILTER (WHERE p.plan_date > $3::date), 'YYYY-MM-DD') AS next_after
+         FROM plan_items pi JOIN plans p ON p.id = pi.plan_id
+        WHERE p.church_id = $1 AND p.id <> $2 AND pi.song_id IS NOT NULL
+        GROUP BY pi.song_id`,
+      [req.churchId, req.params.id, planDate]
+    );
+    res.json({ plan_date: planDate, uses: uses.rows });
+  } catch (err) {
+    next(err);
+  }
+});
+
 router.get('/:id/musicians', requireAuth, requireMembership, async function(req, res, next) {
   try {
     const plan = await loadChurchPlan(req.params.id, req.churchId);

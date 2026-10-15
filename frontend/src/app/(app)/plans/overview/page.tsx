@@ -2,8 +2,9 @@
 
 // Plans → Overview (/plans/overview): several upcoming plans side by side, so songs and rotas
 // can be chosen with the weeks around them in view (see project doc plans-overview.md).
-// Musicians can be added, changed and removed here via the small per-row musician endpoints —
-// never the whole-list PUT /items. Everything else is edited in the normal plan builder.
+// Musicians can be added, changed and removed here, and songs added, chosen for a slot, swapped
+// and removed — always via the single-item routes, never the whole-list PUT /items. Other items
+// (readings, prayers, rich content), keys and arrangements are edited in the normal plan builder.
 // Data: GET /api/plans/overview (planners only, drafts included).
 
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
@@ -15,6 +16,8 @@ import { useChurch } from '@/context/ChurchContext'
 import { KeyBadge } from '@/components/ui/badges'
 import { isSongSlot, nonSongLabel } from '@/lib/planItems'
 import { PlanMusicianModal, type ExistingMusician } from '@/components/ui/PlanMusicianModal'
+import { OverviewSongPicker, type SongPickerMode } from '@/components/ui/OverviewSongPicker'
+import { ConfirmModal } from '@/components/ui/ConfirmModal'
 
 interface OverviewItem {
   id: string
@@ -139,6 +142,8 @@ export default function PlansOverviewPage() {
   const [musicianModal, setMusicianModal] = useState<{ plan: OverviewPlan; existing?: ExistingMusician } | null>(null)
   const [removing, setRemoving] = useState<string | null>(null) // first row id of the person being removed
   const [actionError, setActionError] = useState<string | null>(null)
+  const [songPicker, setSongPicker] = useState<{ plan: OverviewPlan; mode: SongPickerMode } | null>(null)
+  const [confirmRemoveItem, setConfirmRemoveItem] = useState<{ plan: OverviewPlan; item: OverviewItem } | null>(null)
 
   // Remembered per browser; read after mount so the server render and first client render match.
   useEffect(() => {
@@ -189,6 +194,26 @@ export default function PlansOverviewPage() {
       setActionError(`Couldn't remove ${m.name}. Please try again.`)
     } finally {
       setRemoving(null)
+      load()
+    }
+  }
+
+  const openSongPicker = (plan: OverviewPlan, mode: SongPickerMode) => {
+    setActionError(null)
+    setSongPicker({ plan, mode })
+  }
+
+  // Song or slot removal (other item types are only removed in the builder). A 404 means it was
+  // already removed elsewhere — reload either way so the column matches the database.
+  const removeItem = async () => {
+    if (!confirmRemoveItem) return
+    const { plan, item } = confirmRemoveItem
+    try {
+      await api.delete(`/api/plans/${plan.id}/items/${item.id}`)
+    } catch (err: any) {
+      if (err?.response?.status !== 404) setActionError("Couldn't remove that. Please try again.")
+    } finally {
+      setConfirmRemoveItem(null)
       load()
     }
   }
@@ -395,11 +420,28 @@ export default function PlansOverviewPage() {
                     if (item.type === 'song') {
                       const k = item.key_override || item.song_default_key
                       const notes = show.repeats ? repeatNotes(item, plan) : []
+                      const title = item.song_title || 'Song'
                       return (
                         <li key={item.id} className="po-item po-item-song">
                           <div className="po-item-row">
-                            <span className="po-item-title">{item.song_title || 'Song'}</span>
+                            <button
+                              type="button"
+                              className="po-item-pick po-item-title"
+                              title="Swap for another song"
+                              onClick={() => openSongPicker(plan, { kind: 'swap', itemId: item.id, currentTitle: title })}
+                            >
+                              {title}
+                            </button>
                             {k && <KeyBadge keyOf={k} />}
+                            <button
+                              type="button"
+                              className="po-item-remove"
+                              aria-label={`Remove ${title}`}
+                              title={`Remove ${title}`}
+                              onClick={() => { setActionError(null); setConfirmRemoveItem({ plan, item }) }}
+                            >
+                              <X size={12} />
+                            </button>
                           </div>
                           {notes.map((n) => (
                             <div key={n.kind} className={n.kind === 'before' ? 'po-note po-note-before' : 'po-note po-note-after'}>
@@ -409,13 +451,41 @@ export default function PlansOverviewPage() {
                         </li>
                       )
                     }
+                    if (isSongSlot(item)) {
+                      return (
+                        <li key={item.id} className="po-item po-item-slot">
+                          <div className="po-item-row">
+                            <button
+                              type="button"
+                              className="po-item-pick"
+                              title="Choose a song for this slot"
+                              onClick={() => openSongPicker(plan, { kind: 'fill', itemId: item.id, label: item.title })}
+                            >
+                              {nonSongLabel(item)}
+                            </button>
+                            <button
+                              type="button"
+                              className="po-item-remove"
+                              aria-label="Remove this slot"
+                              title="Remove this slot"
+                              onClick={() => { setActionError(null); setConfirmRemoveItem({ plan, item }) }}
+                            >
+                              <X size={12} />
+                            </button>
+                          </div>
+                        </li>
+                      )
+                    }
                     return (
-                      <li key={item.id} className={isSongSlot(item) ? 'po-item po-item-slot' : 'po-item po-item-other'}>
+                      <li key={item.id} className="po-item po-item-other">
                         {nonSongLabel(item)}
                       </li>
                     )
                   })}
                 </ol>
+                <button type="button" className="po-musician-add po-add-song" onClick={() => openSongPicker(plan, { kind: 'add' })}>
+                  <Plus size={12} /> Add song
+                </button>
 
                 <div className="po-col-meta">
                   {songCount} song{songCount === 1 ? '' : 's'}
@@ -496,6 +566,36 @@ export default function PlansOverviewPage() {
           // onAdd runs after every successful save (adds and removals), so one reload covers both.
           onAdd={() => load()}
           onClose={() => setMusicianModal(null)}
+        />
+      )}
+
+      {songPicker && (
+        <OverviewSongPicker
+          key={`${songPicker.plan.id}:${songPicker.mode.kind}:${'itemId' in songPicker.mode ? songPicker.mode.itemId : ''}`}
+          planId={songPicker.plan.id}
+          planTitle={songPicker.plan.title || 'Untitled plan'}
+          planDate={songPicker.plan.plan_date}
+          mode={songPicker.mode}
+          repeatWeeks={repeatWeeks}
+          inPlanSongIds={songPicker.plan.items.map((i) => i.song_id).filter((x): x is string => !!x)}
+          onChosen={() => load()}
+          onConflict={(msg) => { setActionError(msg); load() }}
+          onClose={() => setSongPicker(null)}
+        />
+      )}
+
+      {confirmRemoveItem && (
+        <ConfirmModal
+          title={confirmRemoveItem.item.type === 'song' ? 'Remove song?' : 'Remove slot?'}
+          message={
+            confirmRemoveItem.item.type === 'song'
+              ? `Remove "${confirmRemoveItem.item.song_title || 'this song'}" from ${confirmRemoveItem.plan.title || 'this plan'}? Its key, arrangement and notes for this plan go with it.`
+              : `Remove this "song to be chosen" slot from ${confirmRemoveItem.plan.title || 'this plan'}?`
+          }
+          confirmLabel="Remove"
+          danger
+          onConfirm={removeItem}
+          onCancel={() => setConfirmRemoveItem(null)}
         />
       )}
 
