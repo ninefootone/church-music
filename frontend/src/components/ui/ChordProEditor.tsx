@@ -1,8 +1,8 @@
 'use client'
 
-import { useEffect, useRef, useState } from 'react'
+import { useEffect, useMemo, useRef, useState } from 'react'
 import { RotateCcw, AlertTriangle } from 'lucide-react'
-import { renderChordPro, lintChordPro, type ChordProWarning } from '@/lib/chordproRender'
+import { renderChordPro, lintChordPro } from '@/lib/chordproRender'
 import { ConfirmModal } from '@/components/ui/ConfirmModal'
 
 // Full-screen ChordPro editor: raw text on the left, live preview on the right.
@@ -32,7 +32,6 @@ export function ChordProEditor({
   // half-typed "[G" doesn't blank the preview on every keystroke.
   const [html, setHtml] = useState<string | null>(null)
   const [parseError, setParseError] = useState<{ line: number | null } | null>(null)
-  const [warnings, setWarnings] = useState<ChordProWarning[]>([])
   const sourceRef = useRef<HTMLTextAreaElement>(null)
   const [tab, setTab] = useState<'edit' | 'preview'>('edit')
   const [confirmDiscard, setConfirmDiscard] = useState(false)
@@ -48,13 +47,17 @@ export function ChordProEditor({
         if (cancelled) return
         if (result.ok) { setHtml(result.html); setParseError(null) }
         else setParseError({ line: result.line })
-        setWarnings(lintChordPro(content))
       })
     }, delay)
     return () => { cancelled = true; clearTimeout(timer) }
   }, [content])
 
   const changed = content !== originalContent
+  // Checks run on every keystroke (cheap) so Save can never slip through on a broken line.
+  const issues = useMemo(() => lintChordPro(content), [content])
+  const errors = issues.filter(i => i.severity === 'error')
+  const warnings = issues.filter(i => i.severity === 'warning')
+  const blocked = !!parseError || errors.length > 0
   const requestClose = () => { if (changed) setConfirmDiscard(true); else onClose() }
 
   // Put the cursor at the start of a line in the source (and show the Edit tab on phones).
@@ -70,9 +73,7 @@ export function ChordProEditor({
     el.scrollTop = Math.max(0, (line - 4) * lineHeight)
   }
 
-  const errorText = parseError
-    ? `${parseError.line ? `Line ${parseError.line}: ` : ''}unfinished chord or {directive} — check for a missing ] or }.`
-    : null
+  const errorText = !!parseError
 
   return (
     <div className={tab === 'edit' ? 'chordpro-editor chordpro-editor--tab-edit' : 'chordpro-editor chordpro-editor--tab-preview'}>
@@ -87,8 +88,8 @@ export function ChordProEditor({
           <button onClick={requestClose} className="btn btn-secondary btn-sm">Cancel</button>
           <button
             onClick={onSave}
-            disabled={saving || !changed || !!parseError}
-            title={parseError ? 'Fix the ChordPro error before saving' : undefined}
+            disabled={saving || !changed || blocked}
+            title={blocked ? 'Fix the ChordPro errors before saving' : undefined}
             className="btn btn-primary btn-sm"
           >
             {saving ? 'Saving…' : 'Save'}
@@ -117,11 +118,28 @@ export function ChordProEditor({
           aria-label="ChordPro source"
         />
         <div className="chordpro-editor-preview">
-          {errorText && (
-            <button type="button" className="chordpro-editor-message chordpro-editor-message--blocking" onClick={() => goToLine(parseError?.line ?? null)}>
+          {(errorText || errors.length > 0) && (
+            <div className="chordpro-editor-message chordpro-editor-message--blocking">
               <AlertTriangle size={14} className="icon-warning" />
-              <span>{errorText}{html ? ' The preview shows the last version that worked.' : ''} Fix this to save.</span>
-            </button>
+              <ul>
+                {errorText && (
+                  <li>
+                    {parseError?.line
+                      ? <button type="button" className="chordpro-editor-warning-link" onClick={() => goToLine(parseError.line)}>Line {parseError.line}</button>
+                      : null}
+                    {parseError?.line ? ': ' : ''}Unfinished chord or {'{directive}'} — check for a missing ] or {'}'}.
+                    {html ? ' The preview shows the last version that worked.' : ''}
+                  </li>
+                )}
+                {errors.slice(0, 5).map((w, i) => (
+                  <li key={i}>
+                    <button type="button" className="chordpro-editor-warning-link" onClick={() => goToLine(w.line)}>Line {w.line}</button>: {w.message}
+                  </li>
+                ))}
+                {errors.length > 5 && <li>…and {errors.length - 5} more.</li>}
+                <li><strong>Fix {errorText && errors.length === 0 ? 'this' : 'these'} to save.</strong></li>
+              </ul>
+            </div>
           )}
           {warnings.length > 0 && (
             <div className="chordpro-editor-message chordpro-editor-warnings">
@@ -133,6 +151,7 @@ export function ChordProEditor({
                   </li>
                 ))}
                 {warnings.length > 5 && <li>…and {warnings.length - 5} more.</li>}
+                <li className="text-muted">These won&apos;t stop you saving.</li>
               </ul>
             </div>
           )}

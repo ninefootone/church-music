@@ -71,10 +71,11 @@ export async function renderChordPro(text: string, transposeSemitones = 0): Prom
 // ChordSheetJS is lenient: "[GAmazing [C]grace" (a deleted "]") parses as one chord
 // called "GAmazing [C", a stray "]" becomes lyrics, and a misspelt directive like
 // {start_of_chrous} is silently dropped. These checks catch what the parser lets
-// through. They are WARNINGS — shown in the editor but never block saving, because a
-// valid but unusual file must not become unsaveable.
+// through. Severity 'error' = the band would see something broken (blocks Save);
+// 'warning' = unusual but may be intended (shown, never blocks — a valid but odd
+// file, e.g. a SongSelect export, must not become unsaveable).
 
-export interface ChordProWarning { line: number; message: string }
+export interface ChordProWarning { line: number; message: string; severity: 'error' | 'warning' }
 
 const KNOWN_DIRECTIVES = new Set([
   'title', 't', 'subtitle', 'st', 'artist', 'composer', 'lyricist', 'arranger', 'copyright', 'album', 'year',
@@ -85,22 +86,34 @@ const KNOWN_DIRECTIVES = new Set([
   'textfont', 'textsize', 'textcolour', 'textcolor', 'chordfont', 'chordsize', 'chordcolour', 'chordcolor',
   'tabfont', 'tabsize', 'tabcolour', 'tabcolor',
   'soc', 'eoc', 'sov', 'eov', 'sob', 'eob', 'sot', 'eot', 'sog', 'eog',
+  // SongSelect exports add these
+  'ccli', 'ccli_license', 'ccli_song_number', 'footer', 'publisher', 'admin',
 ])
+// Typo targets for directives that change what's shown (unknown directives are otherwise
+// ignored harmlessly, so they get no message).
+const IMPORTANT_DIRECTIVES = ['title', 'subtitle', 'artist', 'comment', 'comment_italic', 'comment_box', 'chorus', 'capo', 'key', 'tempo']
 const SECTION_ABBR: Record<string, string> = { c: 'chorus', v: 'verse', b: 'bridge', t: 'tab', g: 'grid' }
 // tab/grid left out: too short — "tag" (a common worship section) is one letter from "tab".
 const STANDARD_SECTIONS = ['chorus', 'verse', 'bridge']
+const SKIP_SECTIONS = ['tab', 'grid']
 
 // Custom sections ({start_of_intro}) are valid ChordPro, so only flag names that are a
 // likely typo of a standard one ({start_of_chrous}).
-function nearMiss(name: string): string | null {
-  for (const target of STANDARD_SECTIONS) {
-    if (name === target || ['tab', 'grid'].includes(name)) return null
+// Up to 1 edit for short words, 2 for 6+ letters ("chrous" → chorus, but "ccli" ≠ "colb").
+function nearMiss(name: string, targets: string[], skip: string[] = []): string | null {
+  if (targets.includes(name) || skip.includes(name)) return null
+  for (const target of targets) {
     const d: number[][] = Array.from({ length: name.length + 1 }, (_, i) => [i])
     for (let j = 1; j <= target.length; j++) d[0][j] = j
     for (let i = 1; i <= name.length; i++)
       for (let j = 1; j <= target.length; j++)
+      {
         d[i][j] = Math.min(d[i - 1][j] + 1, d[i][j - 1] + 1, d[i - 1][j - 1] + (name[i - 1] === target[j - 1] ? 0 : 1))
-    if (d[name.length][target.length] <= 2) return target
+        // swapped neighbours ("titel") count as one edit
+        if (i > 1 && j > 1 && name[i - 1] === target[j - 2] && name[i - 2] === target[j - 1])
+          d[i][j] = Math.min(d[i][j], d[i - 2][j - 2] + 1)
+      }
+    if (d[name.length][target.length] <= (target.length >= 6 ? 2 : 1)) return target
   }
   return null
 }
@@ -132,20 +145,21 @@ export function lintChordPro(text: string): ChordProWarning[] {
       if (long) { isStart = long[1] === 'start'; section = long[2] }
       else if (short) { isStart = short[1] === 's'; section = SECTION_ABBR[short[2]] }
       else if (!KNOWN_DIRECTIVES.has(name) && !name.startsWith('x_')) {
-        warnings.push({ line, message: `{${m[1]}} isn't a ChordPro directive — it will be ignored.` })
+        const guess = nearMiss(name, IMPORTANT_DIRECTIVES)
+        if (guess) warnings.push({ line, severity: 'warning', message: `{${m[1]}} — did you mean {${guess}}? As written it's ignored.` })
       }
       if (section && isStart) {
-        const guess = nearMiss(section)
-        if (guess) warnings.push({ line, message: `{start_of_${section}} — did you mean {start_of_${guess}}?` })
+        const guess = nearMiss(section, STANDARD_SECTIONS, SKIP_SECTIONS)
+        if (guess) warnings.push({ line, severity: 'warning', message: `{start_of_${section}} — did you mean {start_of_${guess}}?` })
       }
       if (section) {
         if (isStart) {
-          if (openSection) warnings.push({ line, message: `{start_of_${section}} starts before {start_of_${openSection.name}} (line ${openSection.line}) is ended.` })
+          if (openSection) warnings.push({ line, severity: 'warning', message: `{start_of_${section}} starts before {start_of_${openSection.name}} (line ${openSection.line}) is ended.` })
           openSection = { name: section, line }
         } else if (!openSection) {
-          warnings.push({ line, message: `{end_of_${section}} has no matching start.` })
+          warnings.push({ line, severity: 'warning', message: `{end_of_${section}} has no matching start.` })
         } else {
-          if (openSection.name !== section) warnings.push({ line, message: `{end_of_${section}} ends a ${openSection.name} started on line ${openSection.line}.` })
+          if (openSection.name !== section) warnings.push({ line, severity: 'warning', message: `{end_of_${section}} ends a ${openSection.name} started on line ${openSection.line}.` })
           openSection = null
         }
       }
@@ -159,13 +173,13 @@ export function lintChordPro(text: string): ChordProWarning[] {
     for (let p = 0; p < raw.length; p++) {
       const ch = raw[p]
       if (ch === '[') {
-        if (open !== -1) { warnings.push({ line, message: `A chord opened with [ isn't closed with ] before the next [.` }); return }
+        if (open !== -1) { warnings.push({ line, severity: 'error', message: `A chord opened with [ isn't closed with ] before the next [.` }); return }
         open = p
       } else if (ch === ']') {
-        if (open === -1) { warnings.push({ line, message: `Stray ] with no [ before it.` }); return }
+        if (open === -1) { warnings.push({ line, severity: 'error', message: `Stray ] with no [ before it.` }); return }
         const chord = raw.slice(open + 1, p).trim()
-        if (!chord) warnings.push({ line, message: `Empty chord [].` })
-        else if (!isChordOk(chord)) warnings.push({ line, message: `[${chord}] doesn't look like a chord.` })
+        if (!chord) warnings.push({ line, severity: 'warning', message: `Empty chord [].` })
+        else if (!isChordOk(chord)) warnings.push({ line, severity: 'warning', message: `[${chord}] doesn't look like a chord.` })
         open = -1
       }
     }
@@ -174,6 +188,6 @@ export function lintChordPro(text: string): ChordProWarning[] {
 
   // (cast: TS can't see the forEach callback reassigning openSection)
   const unclosed = openSection as { name: string; line: number } | null
-  if (unclosed) warnings.push({ line: unclosed.line, message: `{start_of_${unclosed.name}} is never ended.` })
+  if (unclosed) warnings.push({ line: unclosed.line, severity: 'warning', message: `{start_of_${unclosed.name}} is never ended.` })
   return warnings
 }

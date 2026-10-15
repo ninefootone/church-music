@@ -3700,9 +3700,8 @@ select.input {
 .chordpro-editor-message  { display: flex; align-items: flex-start; gap: 8px; margin: 0 0 var(--space-md); padding: 8px 12px; font-size: var(--text-sm); color: var(--color-text-secondary); background: var(--color-warning-bg, #fffbeb); border: 1px solid var(--color-warning-border, #fcd34d); border-radius: var(--radius-sm); }
 .chordpro-editor-message--error { margin: var(--space-sm) var(--space-lg); color: var(--color-danger); background: none; border-color: var(--color-danger); }
 .chordpro-editor-tabs     { display: none; }
-.chordpro-editor-message--blocking { width: 100%; text-align: left; cursor: pointer; font: inherit; font-size: var(--text-sm); }
 .chordpro-editor-warnings { background: var(--color-surface); }
-.chordpro-editor-warnings ul { margin: 0; padding: 0; list-style: none; display: flex; flex-direction: column; gap: 4px; }
+.chordpro-editor-message ul { margin: 0; padding: 0; list-style: none; display: flex; flex-direction: column; gap: 4px; }
 .chordpro-editor-warning-link { background: none; border: none; padding: 0; font: inherit; font-weight: 600; color: var(--color-brand-600); text-decoration: underline; cursor: pointer; }
 @media (max-width: 899px) {
   .chordpro-editor-panes  { grid-template-columns: 1fr; }
