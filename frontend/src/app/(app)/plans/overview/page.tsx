@@ -1,18 +1,20 @@
 'use client'
 
-// Plans → Overview (/plans/overview): read-only view of several upcoming plans side by side,
-// so songs and rotas can be chosen with the weeks around them in view. Stage 1 of the
-// multi-plan planner (see project doc plans-overview.md). Never writes anything — clicking a
-// column opens the normal plan page. Data: GET /api/plans/overview (planners only, drafts included).
+// Plans → Overview (/plans/overview): several upcoming plans side by side, so songs and rotas
+// can be chosen with the weeks around them in view (see project doc plans-overview.md).
+// Musicians can be added, changed and removed here via the small per-row musician endpoints —
+// never the whole-list PUT /items. Everything else is edited in the normal plan builder.
+// Data: GET /api/plans/overview (planners only, drafts included).
 
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import Link from 'next/link'
-import { ArrowLeft, ChevronLeft, ChevronRight, Plus, AlertTriangle } from 'lucide-react'
+import { ArrowLeft, ChevronLeft, ChevronRight, Plus, AlertTriangle, X } from 'lucide-react'
 import { differenceInCalendarDays, format, parseISO } from 'date-fns'
 import api from '@/lib/api'
 import { useChurch } from '@/context/ChurchContext'
 import { KeyBadge } from '@/components/ui/badges'
 import { isSongSlot, nonSongLabel } from '@/lib/planItems'
+import { PlanMusicianModal, type ExistingMusician } from '@/components/ui/PlanMusicianModal'
 
 interface OverviewItem {
   id: string
@@ -96,17 +98,20 @@ const shortDate = (d: string) => format(parseISO(d), 'd MMM')
 
 // One line per person: someone singing, on keys and leading is three plan_musicians rows.
 // Grouped by member id, or by name for guests who aren't signed up.
+// `rows` keeps every underlying row (id + role) so the person can be changed or removed as a whole.
+type GroupedMusician = OverviewMusician & { roles: string[]; rows: { id: string; role: string }[] }
 function groupMusicians(list: OverviewMusician[]) {
-  const out: (OverviewMusician & { roles: string[] })[] = []
-  const byKey = new Map<string, OverviewMusician & { roles: string[] }>()
+  const out: GroupedMusician[] = []
+  const byKey = new Map<string, GroupedMusician>()
   for (const m of list) {
     const key = m.user_id || `name:${m.name.trim().toLowerCase()}`
     let e = byKey.get(key)
     if (!e) {
-      e = { ...m, roles: [] }
+      e = { ...m, roles: [], rows: [] }
       byKey.set(key, e)
       out.push(e)
     }
+    e.rows.push({ id: m.id, role: m.role || '' })
     if (m.role && !e.roles.includes(m.role)) e.roles.push(m.role)
   }
   return out
@@ -130,6 +135,10 @@ export default function PlansOverviewPage() {
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
   const requestId = useRef(0)
+  // Add (no `existing`) or change a musician on one plan.
+  const [musicianModal, setMusicianModal] = useState<{ plan: OverviewPlan; existing?: ExistingMusician } | null>(null)
+  const [removing, setRemoving] = useState<string | null>(null) // first row id of the person being removed
+  const [actionError, setActionError] = useState<string | null>(null)
 
   // Remembered per browser; read after mount so the server render and first client render match.
   useEffect(() => {
@@ -168,6 +177,21 @@ export default function PlansOverviewPage() {
     if (!church || churchLoading || !canAddPlans) return
     load()
   }, [church, churchLoading, canAddPlans, load])
+
+  // Removes the person from that plan (every role row). The overview is reloaded afterwards so
+  // rota counts and unavailability stay right; the old columns stay on screen while it loads.
+  const removeMusician = async (planId: string, m: GroupedMusician) => {
+    setRemoving(m.rows[0].id)
+    setActionError(null)
+    try {
+      await Promise.all(m.rows.map((r) => api.delete(`/api/plans/${planId}/musicians/${r.id}`)))
+    } catch {
+      setActionError(`Couldn't remove ${m.name}. Please try again.`)
+    } finally {
+      setRemoving(null)
+      load()
+    }
+  }
 
   const changeCount = (c: number) => {
     setCount(c)
@@ -338,6 +362,8 @@ export default function PlansOverviewPage() {
         </p>
       )}
 
+      {actionError && <div className="error-box po-action-error">{actionError}</div>}
+
       {error ? (
         <div className="po-message">
           <div className="error-box">{error}</div>
@@ -397,18 +423,49 @@ export default function PlansOverviewPage() {
                 </div>
 
                 <div className="po-musicians">
-                  <h3 className="po-subhead">Musicians</h3>
+                  <div className="po-musicians-head">
+                    <h3 className="po-subhead">Musicians</h3>
+                    <button
+                      type="button"
+                      className="po-musician-add"
+                      onClick={() => { setActionError(null); setMusicianModal({ plan }) }}
+                    >
+                      <Plus size={12} /> Add
+                    </button>
+                  </div>
                   {plan.musicians.length === 0 ? (
                     <p className="po-empty">None added</p>
                   ) : (
                     <ul>
                       {groupMusicians(plan.musicians).map((m) => {
                         const un = unavailableNote(m, plan.plan_date)
+                        const busy = removing === m.rows[0].id
                         return (
                           <li key={m.id} className={un ? 'po-musician po-musician-unavailable' : 'po-musician'} title={un || undefined}>
-                            <span>{m.name}</span>
-                            {m.roles.length > 0 && <span className="po-musician-role">{m.roles.join(', ')}</span>}
-                            {un && <span className="po-unavailable"><AlertTriangle size={11} /> Unavailable</span>}
+                            <button
+                              type="button"
+                              className="po-musician-change"
+                              title="Change person or roles"
+                              disabled={busy}
+                              onClick={() => {
+                                setActionError(null)
+                                setMusicianModal({ plan, existing: { name: m.name, user_id: m.user_id, rows: m.rows } })
+                              }}
+                            >
+                              <span>{m.name}</span>
+                              {m.roles.length > 0 && <span className="po-musician-role">{m.roles.join(', ')}</span>}
+                              {un && <span className="po-unavailable"><AlertTriangle size={11} /> Unavailable</span>}
+                            </button>
+                            <button
+                              type="button"
+                              className="po-musician-remove"
+                              aria-label={`Remove ${m.name}`}
+                              title={`Remove ${m.name}`}
+                              disabled={busy}
+                              onClick={() => removeMusician(plan.id, m)}
+                            >
+                              <X size={12} />
+                            </button>
                           </li>
                         )
                       })}
@@ -428,6 +485,20 @@ export default function PlansOverviewPage() {
           )}
         </div>
       )}
+      {musicianModal && church && (
+        <PlanMusicianModal
+          // A fresh modal per person/plan, so its form state never carries over.
+          key={`${musicianModal.plan.id}:${musicianModal.existing?.rows[0]?.id || 'new'}`}
+          planId={musicianModal.plan.id}
+          planDate={musicianModal.plan.plan_date}
+          churchId={church.id}
+          existing={musicianModal.existing}
+          // onAdd runs after every successful save (adds and removals), so one reload covers both.
+          onAdd={() => load()}
+          onClose={() => setMusicianModal(null)}
+        />
+      )}
+
       <p className="po-footnote">
         Song repeats look {repeatWeeks} weeks back and ahead from each plan. Songs repeated on the same day aren&apos;t
         flagged.

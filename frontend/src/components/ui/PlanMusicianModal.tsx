@@ -14,22 +14,35 @@ interface Member {
 
 const DEFAULT_ROLES = ['Vocals', 'Keys', 'Guitar', 'Bass', 'Drums']
 
+// Passed when CHANGING someone already on the plan (Plans overview). plan_musicians has one row
+// per role, so a person is several rows; `rows` are theirs, with the row id for each role.
+export interface ExistingMusician {
+  name: string
+  user_id: string | null
+  rows: { id: string; role: string }[]
+}
+
 interface Props {
   planId: string
   planDate: string
   churchId: string
+  existing?: ExistingMusician
   onAdd: (musicians: { id: string; name: string; role: string; user_id: string | null }[]) => void
+  onRemove?: (removedIds: string[]) => void
   onClose: () => void
 }
 
-export function PlanMusicianModal({ planId, planDate, churchId, onAdd, onClose }: Props) {
+export function PlanMusicianModal({ planId, planDate, churchId, existing, onAdd, onRemove, onClose }: Props) {
   const [members, setMembers] = useState<Member[]>([])
   const [availableRoles, setAvailableRoles] = useState<string[]>([])
-  const [query, setQuery] = useState('')
-  const [selectedMember, setSelectedMember] = useState<Member | null>(null)
+  // Editing a guest: their name starts in the search box. Editing a member: they start selected.
+  const [query, setQuery] = useState(existing && !existing.user_id ? existing.name : '')
+  const [selectedMember, setSelectedMember] = useState<Member | null>(
+    existing?.user_id ? { id: '', name: existing.name, email: '', user_id: existing.user_id } : null
+  )
   const [unavailabilityWarning, setUnavailabilityWarning] = useState<string | null>(null)
   const [guestName, setGuestName] = useState('')
-  const [selectedRoles, setSelectedRoles] = useState<string[]>([])
+  const [selectedRoles, setSelectedRoles] = useState<string[]>(existing ? existing.rows.map(r => r.role) : [])
   const [customRole, setCustomRole] = useState('')
   const [showCustom, setShowCustom] = useState(false)
   const [saving, setSaving] = useState(false)
@@ -77,6 +90,10 @@ export function PlanMusicianModal({ planId, planDate, churchId, onAdd, onClose }
 
   const canSubmit = finalName.length > 0 && allRoles.length > 0
 
+  // Roles already chosen that aren't in the church's list (custom ones, or a member's default
+  // roles) still need a chip, otherwise they'd be saved without the user seeing them.
+  const roleChips = [...availableRoles, ...selectedRoles.filter(r => !availableRoles.includes(r))]
+
   const toggleRole = (r: string) => {
     setSelectedRoles(prev => prev.includes(r) ? prev.filter(x => x !== r) : [...prev, r])
   }
@@ -86,16 +103,30 @@ export function PlanMusicianModal({ planId, planDate, churchId, onAdd, onClose }
     setSaving(true)
     setError('')
     try {
+      // Changing someone: same person → only add/remove the roles that changed; a different
+      // person → add all the new rows and remove all the old ones. New rows are added BEFORE old
+      // ones are removed, so a failure part-way leaves an extra row rather than losing someone.
+      const newUserId = selectedMember?.user_id || null
+      const samePerson = !!existing && newUserId === existing.user_id &&
+        (!!existing.user_id || finalName.trim().toLowerCase() === existing.name.trim().toLowerCase())
+      const oldRoles = existing ? existing.rows.map(r => r.role) : []
+      const rolesToAdd = samePerson ? allRoles.filter(r => !oldRoles.includes(r)) : allRoles
+      const idsToRemove = !existing ? [] : samePerson
+        ? existing.rows.filter(r => !allRoles.includes(r.role)).map(r => r.id)
+        : existing.rows.map(r => r.id)
+
       const results = await Promise.all(
-        allRoles.map(role =>
+        rolesToAdd.map(role =>
           api.post(`/api/plans/${planId}/musicians`, {
             name: finalName,
             role,
-            user_id: selectedMember?.user_id || null,
+            user_id: newUserId,
           }).then(r => r.data)
         )
       )
+      await Promise.all(idsToRemove.map(rid => api.delete(`/api/plans/${planId}/musicians/${rid}`)))
       onAdd(results)
+      if (idsToRemove.length > 0) onRemove?.(idsToRemove)
       onClose()
     } catch {
       setError('Failed to save. Please try again.')
@@ -112,7 +143,7 @@ export function PlanMusicianModal({ planId, planDate, churchId, onAdd, onClose }
 
         {/* Header */}
         <div className="modal-header">
-          <h2 className="modal-title">Add musician</h2>
+          <h2 className="modal-title">{existing ? 'Change musician' : 'Add musician'}</h2>
           <button onClick={onClose} className="modal-close">
             <X size={20} />
           </button>
@@ -182,7 +213,7 @@ export function PlanMusicianModal({ planId, planDate, churchId, onAdd, onClose }
             Role / instrument <span className="label-note">(select one or more)</span>
           </label>
           <div className="file-group">
-            {availableRoles.map(r => (
+            {roleChips.map(r => (
               <button
                 key={r}
                 onClick={() => toggleRole(r)}
@@ -229,7 +260,9 @@ export function PlanMusicianModal({ planId, planDate, churchId, onAdd, onClose }
           style={{ opacity: canSubmit ? 1 : 0.5 }}
         >
           <UserPlus size={16} />
-          {saving ? 'Adding…' : `Add${allRoles.length > 1 ? ` (${allRoles.length} roles)` : ''}`}
+          {existing
+            ? (saving ? 'Saving…' : 'Save changes')
+            : (saving ? 'Adding…' : `Add${allRoles.length > 1 ? ` (${allRoles.length} roles)` : ''}`)}
         </button>
       </div>
     </div>
