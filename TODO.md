@@ -137,7 +137,7 @@ Next:
 - [x] Fix `/api/superadmin/churches/:id` delete ordering — DONE 2026-10-02 (ba2dad3): DB first in one transaction (plans, then church), R2 files after. Not yet tested on live.
 - [x] `requireAuth` returns 503 (not 401) when the DB or Clerk is unreachable — DONE 2026-10-03. 401 only for a missing/expired/invalid token or a deleted Clerk user. Also stores the PRIMARY email and dropped a wasted query.
 - [ ] `/health` pinging the DB — judgement call, not done: a DB-dependent health check can block Railway deploys during a DB outage. Keep `/health` as liveness unless we add a separate `/health/db`.
-- [ ] Backend → Railway private DB address (`…railway.internal:5432`) instead of the public proxy host; do at a quiet time, confirm `Server running on port` in the deploy log (the boot-time migration that printed `Migration complete` was removed 2026-10-02) and that the app loads.
+- [x] Backend → Railway private DB address — DONE 2026-10-22 (Railway breach restore: ${{Postgres.DATABASE_URL}}, TCP proxy removed; see project doc railway-breach-2026-10.md). Was: (`…railway.internal:5432`) instead of the public proxy host; do at a quiet time, confirm `Server running on port` in the deploy log (the boot-time migration that printed `Migration complete` was removed 2026-10-02) and that the app loads.
 - [ ] iPad app: if the signed-in account is deleted elsewhere (e.g. on the web) the app shows "You're offline" — detect session-invalid vs offline and sign out.
 - [ ] App Store listing + App Privacy answers (iPadOS 16.4+, no tracking); Privacy Policy URL = https://app.songstack.church/privacy.
 
