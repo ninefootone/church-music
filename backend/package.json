@@ -1,6 +1,9 @@
 {
   "name": "church-music-backend",
   "version": "0.1.0",
+  "engines": {
+    "node": ">=22.23.4 <23"
+  },
   "scripts": {
     "dev": "nodemon index.js",
     "start": "node index.js"
