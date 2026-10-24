@@ -2314,26 +2314,35 @@ select.input {
   .app-nav-sep,
   .app-nav-links        { display: none; }
 
+  /* Floating pill: inset from the edges, lifted above the home indicator, frosted background */
   .mobile-tabbar {
     display: grid; grid-template-columns: repeat(4, 1fr);
-    position: fixed; left: 0; right: 0; bottom: 0; z-index: 45;
+    position: fixed; z-index: 45;
+    left: 12px; right: 12px;
+    bottom: calc(10px + env(safe-area-inset-bottom));
+    max-width: 440px; margin: 0 auto;
+    padding: 4px;
     background: var(--color-surface);
-    border-top: 1px solid var(--color-border);
-    box-shadow: 0 -2px 8px rgba(0,0,0,0.04);
-    padding-bottom: env(safe-area-inset-bottom);
+    background: color-mix(in srgb, var(--color-surface) 82%, transparent);
+    -webkit-backdrop-filter: saturate(180%) blur(16px);
+    backdrop-filter: saturate(180%) blur(16px);
+    border: 1px solid var(--color-border);
+    border-radius: 22px;
+    box-shadow: 0 6px 24px rgba(0,0,0,0.12), 0 1px 3px rgba(0,0,0,0.06);
   }
   .mobile-tab {
     display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 2px;
-    height: 58px;
+    height: 52px;
+    border-radius: 18px;
     font-size: 11px; font-weight: 600;
     color: var(--color-text-muted); text-decoration: none;
     -webkit-tap-highlight-color: transparent;
   }
-  .mobile-tab.is-active { color: var(--color-brand-600); }
+  .mobile-tab.is-active { color: var(--color-brand-600); background: var(--color-brand-50); }
   body.set-viewer-active .mobile-tabbar { display: none; }
   /* Keep the page footer + cookie banner clear of the bar */
-  body:has(.mobile-tabbar) .app-shell { padding-bottom: calc(58px + env(safe-area-inset-bottom)); }
-  body:has(.mobile-tabbar) .cookie-banner { bottom: calc(58px + 1rem + env(safe-area-inset-bottom)); }
+  body:has(.mobile-tabbar) .app-shell { padding-bottom: calc(82px + env(safe-area-inset-bottom)); }
+  body:has(.mobile-tabbar) .cookie-banner { bottom: calc(70px + 1rem + env(safe-area-inset-bottom)); }
   .hide-desktop { display: block; }
 
   /* Account menu becomes a bottom sheet on phones */
