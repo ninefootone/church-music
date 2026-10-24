@@ -5,7 +5,7 @@
 //
 //   GET    /api/plan-templates                 any member
 //   POST   /api/plan-templates                 { plan_id, name }   save a plan as a new template
-//   PUT    /api/plan-templates/:id             { name, title, plan_time, plan_start_time, plan_sort_order, pre_service_notes }
+//   PUT    /api/plan-templates/:id             { name, title, plan_time, plan_start_time, plan_sort_order, pre_service_notes, extra_times? }
 //   PUT    /api/plan-templates/:id/from-plan   { plan_id }         overwrite running order etc. from a plan
 //   DELETE /api/plan-templates/:id
 // Writes need admin or can_add_plans (same people who can create plans).
@@ -14,6 +14,7 @@ const express = require('express');
 const router = express.Router();
 const { requireIdParams, isUuid } = require('../utils/ids');
 const { isClockTime, START_TIME_MESSAGE } = require('../utils/dates');
+const { parseExtraTimes } = require('../utils/extraTimes');
 // Malformed IDs in the URL → 404 before any handler runs (see utils/ids.js).
 requireIdParams(router, { id: 'Template not found' });
 const pool = require('../db/pool');
@@ -22,12 +23,12 @@ const { normaliseTemplateItems, cleanText } = require('../utils/planTemplateItem
 
 const canWrite = requirePermission('can_add_plans');
 
-const COLUMNS = 'id, name, title, plan_time, plan_start_time, plan_sort_order, pre_service_notes, items, updated_at';
+const COLUMNS = 'id, name, title, plan_time, plan_start_time, extra_times, plan_sort_order, pre_service_notes, items, updated_at';
 
 // Loads a plan (scoped to the church) and turns it into template fields.
 async function snapshotPlan(planId, churchId) {
   const plan = await pool.query(
-    'SELECT title, plan_time, plan_start_time, plan_sort_order, pre_service_notes FROM plans WHERE id=$1 AND church_id=$2',
+    'SELECT title, plan_time, plan_start_time, extra_times, plan_sort_order, pre_service_notes FROM plans WHERE id=$1 AND church_id=$2',
     [planId, churchId]
   );
   if (plan.rows.length === 0) return null;
@@ -40,6 +41,7 @@ async function snapshotPlan(planId, churchId) {
     title: p.title || null,
     plan_time: p.plan_time || null,
     plan_start_time: p.plan_start_time || null,
+    extra_times: p.extra_times || [],
     plan_sort_order: p.plan_sort_order ?? 0,
     pre_service_notes: p.pre_service_notes || null,
     items: normaliseTemplateItems(items.rows),
@@ -69,9 +71,9 @@ router.post('/', requireAuth, canWrite, async function(req, res, next) {
     if (!snap) return res.status(404).json({ error: 'Plan not found' });
 
     const result = await pool.query(
-      `INSERT INTO plan_templates (church_id, name, title, plan_time, plan_start_time, plan_sort_order, pre_service_notes, items, created_by)
-       VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9) RETURNING ${COLUMNS}`,
-      [req.churchId, name, snap.title, snap.plan_time, snap.plan_start_time, snap.plan_sort_order, snap.pre_service_notes, JSON.stringify(snap.items), req.user.clerk_id]
+      `INSERT INTO plan_templates (church_id, name, title, plan_time, plan_start_time, plan_sort_order, pre_service_notes, items, created_by, extra_times)
+       VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10) RETURNING ${COLUMNS}`,
+      [req.churchId, name, snap.title, snap.plan_time, snap.plan_start_time, snap.plan_sort_order, snap.pre_service_notes, JSON.stringify(snap.items), req.user.clerk_id, snap.extra_times]
     );
     res.status(201).json(result.rows[0]);
   } catch (err) {
@@ -87,10 +89,18 @@ router.put('/:id', requireAuth, canWrite, async function(req, res, next) {
       return res.status(400).json({ error: START_TIME_MESSAGE });
     }
     const sortOrder = parseInt(req.body.plan_sort_order, 10);
+    // extra_times only changes when sent (the current template editor doesn't send it).
+    let extraTimes = null;
+    if ('extra_times' in req.body) {
+      const extra = parseExtraTimes(req.body.extra_times);
+      if (extra.error) return res.status(400).json({ error: extra.error });
+      extraTimes = extra.value;
+    }
 
     const result = await pool.query(
       `UPDATE plan_templates
-         SET name=$1, title=$2, plan_time=$3, plan_start_time=$4, plan_sort_order=$5, pre_service_notes=$6, updated_at=NOW()
+         SET name=$1, title=$2, plan_time=$3, plan_start_time=$4, plan_sort_order=$5, pre_service_notes=$6,
+             extra_times=COALESCE($9::time[], extra_times), updated_at=NOW()
        WHERE id=$7 AND church_id=$8 RETURNING ${COLUMNS}`,
       [
         name,
@@ -101,6 +111,7 @@ router.put('/:id', requireAuth, canWrite, async function(req, res, next) {
         cleanText(req.body.pre_service_notes, 5000),
         req.params.id,
         req.churchId,
+        extraTimes,
       ]
     );
     if (result.rows.length === 0) return res.status(404).json({ error: 'Template not found' });
@@ -119,9 +130,9 @@ router.put('/:id/from-plan', requireAuth, canWrite, async function(req, res, nex
 
     const result = await pool.query(
       `UPDATE plan_templates
-         SET title=$1, plan_time=$2, plan_start_time=$3, plan_sort_order=$4, pre_service_notes=$5, items=$6, updated_at=NOW()
+         SET title=$1, plan_time=$2, plan_start_time=$3, plan_sort_order=$4, pre_service_notes=$5, items=$6, extra_times=$9, updated_at=NOW()
        WHERE id=$7 AND church_id=$8 RETURNING ${COLUMNS}`,
-      [snap.title, snap.plan_time, snap.plan_start_time, snap.plan_sort_order, snap.pre_service_notes, JSON.stringify(snap.items), req.params.id, req.churchId]
+      [snap.title, snap.plan_time, snap.plan_start_time, snap.plan_sort_order, snap.pre_service_notes, JSON.stringify(snap.items), req.params.id, req.churchId, snap.extra_times]
     );
     if (result.rows.length === 0) return res.status(404).json({ error: 'Template not found' });
     res.json(result.rows[0]);

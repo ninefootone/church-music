@@ -4,6 +4,7 @@ const router = express.Router();
 const { isIsoDate, isClockTime, DATE_MESSAGE, START_TIME_MESSAGE } = require('../utils/dates');
 const { requireIdParams, isUuid } = require('../utils/ids');
 const { planLimitReached, PLAN_LIMIT_MESSAGE } = require('../utils/limits');
+const { parseExtraTimes } = require('../utils/extraTimes');
 // Malformed IDs in the URL → 404 before any handler runs (see utils/ids.js).
 requireIdParams(router, { id: 'Plan not found', itemId: 'Plan item not found', musicianId: 'Musician not found' });
 const { sendBrevoEmail, escapeHtml } = require('../utils/email');
@@ -47,25 +48,6 @@ function canSeeDraftPlans(req) {
   return req.membership.role === 'admin' || !!req.membership.can_add_plans;
 }
 
-// Multi-service plans (2026-10-24, project doc multi-service-plans.md): extra_times are further
-// start times for an IDENTICAL repeat of the plan (plan_start_time is the first service). CCLI export
-// and stats count each song once per service. Accepts an array of 'HH:MM' / 'HH:MM:SS'; returns them
-// as sorted, de-duplicated 'HH:MM' strings, or an error message. Max 3 (DB constraint matches).
-const MAX_EXTRA_TIMES = 3;
-function parseExtraTimes(value) {
-  if (value === null || value === undefined) return { value: [] };
-  if (!Array.isArray(value)) return { error: 'Extra service times must be a list of times' };
-  const times = [];
-  for (const t of value) {
-    if (t === '' || t === null) continue;
-    if (!isClockTime(t)) return { error: START_TIME_MESSAGE };
-    const hhmm = t.slice(0, 5);
-    if (!times.includes(hhmm)) times.push(hhmm);
-  }
-  if (times.length > MAX_EXTRA_TIMES) return { error: `A plan can have at most ${MAX_EXTRA_TIMES} extra service times` };
-  times.sort();
-  return { value: times };
-}
 
 router.get('/', requireAuth, requireMembership, async function(req, res, next) {
   try {
@@ -429,7 +411,7 @@ router.post('/', requireAuth, requirePermission('can_add_plans'), async function
     const plan_sort_order = pick('plan_sort_order') ?? 0;
     const title = pick('title') || null;
     const pre_service_notes = pick('pre_service_notes') || null;
-    const extra = parseExtraTimes(req.body.extra_times);
+    const extra = parseExtraTimes(pick('extra_times'));
     if (extra.error) return res.status(400).json({ error: extra.error });
     const planStatus = ['draft', 'published'].includes(req.body.status) ? req.body.status : 'published';
     const public_token = uuidv4();
