@@ -47,6 +47,26 @@ function canSeeDraftPlans(req) {
   return req.membership.role === 'admin' || !!req.membership.can_add_plans;
 }
 
+// Multi-service plans (2026-10-24, project doc multi-service-plans.md): extra_times are further
+// start times for an IDENTICAL repeat of the plan (plan_start_time is the first service). CCLI export
+// and stats count each song once per service. Accepts an array of 'HH:MM' / 'HH:MM:SS'; returns them
+// as sorted, de-duplicated 'HH:MM' strings, or an error message. Max 3 (DB constraint matches).
+const MAX_EXTRA_TIMES = 3;
+function parseExtraTimes(value) {
+  if (value === null || value === undefined) return { value: [] };
+  if (!Array.isArray(value)) return { error: 'Extra service times must be a list of times' };
+  const times = [];
+  for (const t of value) {
+    if (t === '' || t === null) continue;
+    if (!isClockTime(t)) return { error: START_TIME_MESSAGE };
+    const hhmm = t.slice(0, 5);
+    if (!times.includes(hhmm)) times.push(hhmm);
+  }
+  if (times.length > MAX_EXTRA_TIMES) return { error: `A plan can have at most ${MAX_EXTRA_TIMES} extra service times` };
+  times.sort();
+  return { value: times };
+}
+
 router.get('/', requireAuth, requireMembership, async function(req, res, next) {
   try {
     const churchId = req.churchId;
@@ -84,7 +104,7 @@ router.get('/my-upcoming', requireAuth, requireMembership, async function(req, r
     // Upcoming and then got "Plan not found" when opening it.)
     const canSeeDrafts = req.membership.role === 'admin' || req.membership.can_add_plans;
     const result = await pool.query(
-      `SELECT p.id, p.plan_date, p.plan_time, p.plan_start_time, p.plan_sort_order, p.title, p.status,
+      `SELECT p.id, p.plan_date, p.plan_time, p.plan_start_time, p.extra_times, p.plan_sort_order, p.title, p.status,
               STRING_AGG(pm.role, ', ' ORDER BY pm.role) AS musician_roles
        FROM plans p
        JOIN plan_musicians pm ON pm.plan_id = p.id
@@ -135,7 +155,7 @@ router.get('/overview', requireAuth, requireMembership, async function(req, res,
 
     const window = await pool.query(
       `WITH ordered AS (
-         SELECT p.id, p.title, p.status, p.plan_date, p.plan_time, p.plan_start_time, p.plan_sort_order,
+         SELECT p.id, p.title, p.status, p.plan_date, p.plan_time, p.plan_start_time, p.extra_times, p.plan_sort_order,
                 ROW_NUMBER() OVER (ORDER BY p.plan_date, p.plan_sort_order, p.plan_start_time NULLS LAST, p.created_at, p.id) AS rn
            FROM plans p WHERE p.church_id = $1
        ),
@@ -145,7 +165,7 @@ router.get('/overview', requireAuth, requireMembership, async function(req, res,
            FROM ordered
        )
        SELECT o.id, o.title, o.status, to_char(o.plan_date, 'YYYY-MM-DD') AS plan_date, o.plan_time,
-              o.plan_start_time, o.plan_sort_order, s.total, s.anchor, o.rn::int AS rn
+              o.plan_start_time, o.extra_times, o.plan_sort_order, s.total, s.anchor, o.rn::int AS rn
          FROM ordered o CROSS JOIN stats s
         WHERE o.rn >= s.anchor + $3 AND o.rn < s.anchor + $3 + $4
         ORDER BY o.rn`,
@@ -333,7 +353,7 @@ router.get('/public/:token', async function(req, res, next) {
     // church_id, which the signed-in Set view sends as x-church-id). Not created_by,
     // public_token, timestamps, etc.
     const plan = await pool.query(
-      `SELECT id, church_id, status, title, plan_date, plan_time, plan_start_time, plan_sort_order, pre_service_notes
+      `SELECT id, church_id, status, title, plan_date, plan_time, plan_start_time, extra_times, plan_sort_order, pre_service_notes
          FROM plans WHERE public_token = $1`,
       [req.params.token]
     );
@@ -409,6 +429,8 @@ router.post('/', requireAuth, requirePermission('can_add_plans'), async function
     const plan_sort_order = pick('plan_sort_order') ?? 0;
     const title = pick('title') || null;
     const pre_service_notes = pick('pre_service_notes') || null;
+    const extra = parseExtraTimes(req.body.extra_times);
+    if (extra.error) return res.status(400).json({ error: extra.error });
     const planStatus = ['draft', 'published'].includes(req.body.status) ? req.body.status : 'published';
     const public_token = uuidv4();
 
@@ -416,8 +438,8 @@ router.post('/', requireAuth, requirePermission('can_add_plans'), async function
     try {
       await client.query('BEGIN');
       const plan = await client.query(
-        'INSERT INTO plans (church_id, plan_date, plan_time, plan_start_time, plan_sort_order, title, public_token, created_by, status, pre_service_notes) VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10) RETURNING *',
-        [churchId, plan_date, plan_time, plan_start_time, plan_sort_order, title, public_token, req.user.clerk_id, planStatus, pre_service_notes]
+        'INSERT INTO plans (church_id, plan_date, plan_time, plan_start_time, plan_sort_order, title, public_token, created_by, status, pre_service_notes, extra_times) VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11) RETURNING *',
+        [churchId, plan_date, plan_time, plan_start_time, plan_sort_order, title, public_token, req.user.clerk_id, planStatus, pre_service_notes, extra.value]
       );
       if (template) await insertTemplateItems(client, plan.rows[0].id, template.items);
       await client.query('COMMIT');
@@ -451,6 +473,12 @@ router.put('/:id', requireAuth, requireMembership, async function(req, res, next
     if ('plan_start_time' in body && body.plan_start_time && !isClockTime(body.plan_start_time)) {
       return res.status(400).json({ error: START_TIME_MESSAGE });
     }
+    let extraTimes;
+    if ('extra_times' in body) {
+      const extra = parseExtraTimes(body.extra_times);
+      if (extra.error) return res.status(400).json({ error: extra.error });
+      extraTimes = extra.value;
+    }
     const sets = [];
     const params = [];
     const set = (col, val) => { params.push(val); sets.push(`${col}=$${params.length}`); };
@@ -463,6 +491,7 @@ router.put('/:id', requireAuth, requireMembership, async function(req, res, next
     }
     if ('title' in body) set('title', body.title ?? null);
     if ('pre_service_notes' in body) set('pre_service_notes', body.pre_service_notes || null);
+    if (extraTimes !== undefined) set('extra_times', extraTimes);
     if (['draft', 'published'].includes(body.status)) set('status', body.status);
     if (sets.length === 0) return res.status(400).json({ error: 'Nothing to update' });
     params.push(req.params.id, req.churchId);
@@ -1067,6 +1096,13 @@ router.post('/:id/duplicate', requireAuth, requirePermission('can_add_plans'), a
     }
     const orig = source.rows[0];
     const public_token = uuidv4();
+    // Extra service times carry over unless the caller sends its own list.
+    let extraTimes = orig.extra_times || [];
+    if ('extra_times' in req.body) {
+      const extra = parseExtraTimes(req.body.extra_times);
+      if (extra.error) return res.status(400).json({ error: extra.error });
+      extraTimes = extra.value;
+    }
 
     // Plan + items + musicians in one transaction, so a failure can't leave a
     // half-copied draft behind.
@@ -1074,9 +1110,9 @@ router.post('/:id/duplicate', requireAuth, requirePermission('can_add_plans'), a
     await client.query('BEGIN');
 
     const newPlan = await client.query(
-      `INSERT INTO plans (church_id, plan_date, plan_time, plan_start_time, plan_sort_order, title, public_token, created_by, status, pre_service_notes)
-       VALUES ($1,$2,$3,$4,$5,$6,$7,$8,'draft',$9) RETURNING *`,
-      [req.churchId, plan_date, plan_time, plan_start_time ?? orig.plan_start_time, plan_sort_order ?? orig.plan_sort_order, title ?? orig.title, public_token, req.user.clerk_id, orig.pre_service_notes ?? null]
+      `INSERT INTO plans (church_id, plan_date, plan_time, plan_start_time, plan_sort_order, title, public_token, created_by, status, pre_service_notes, extra_times)
+       VALUES ($1,$2,$3,$4,$5,$6,$7,$8,'draft',$9,$10) RETURNING *`,
+      [req.churchId, plan_date, plan_time, plan_start_time ?? orig.plan_start_time, plan_sort_order ?? orig.plan_sort_order, title ?? orig.title, public_token, req.user.clerk_id, orig.pre_service_notes ?? null, extraTimes]
     );
     const newId = newPlan.rows[0].id;
 
