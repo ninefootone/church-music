@@ -8,6 +8,8 @@ import { ArrowLeft } from 'lucide-react'
 import api, { setAuthToken } from '@/lib/api'
 import { useChurch } from '@/context/ChurchContext'
 import { isOnFreePlan, countOwn, FREE_PLAN_LIMIT } from '@/lib/freePlan'
+import ExtraTimesInput from '@/components/ui/ExtraTimesInput'
+import { extraTimesError, cleanExtraTimes } from '@/lib/planTimes'
 
 interface PlanTemplate {
   id: string
@@ -15,12 +17,13 @@ interface PlanTemplate {
   title: string | null
   plan_time: string | null
   plan_start_time: string | null
+  extra_times?: string[]
   plan_sort_order: number
   pre_service_notes: string | null
   items: { type: string }[]
 }
 
-const EMPTY_FORM = { plan_date: '', plan_time: '', plan_start_time: '', plan_sort_order: 0, title: '' }
+const EMPTY_FORM = { plan_date: '', plan_time: '', plan_start_time: '', plan_sort_order: 0, title: '', extra_times: [] as string[] }
 
 function formatTime(hhmm: string): string {
   return hhmm ? new Date(`1970-01-01T${hhmm}`).toLocaleTimeString('en-GB', { hour: 'numeric', minute: '2-digit', hour12: true }) : ''
@@ -72,17 +75,21 @@ export default function NewPlanPage() {
       plan_time: start ? formatTime(start) : (t?.plan_time ?? ''),
       plan_sort_order: t?.plan_sort_order ?? 0,
       title: t?.title ?? '',
+      extra_times: (t?.extra_times ?? []).map(x => x.slice(0, 5)),
     }))
   }
 
   const handleSubmit = async (status: 'draft' | 'published') => {
     if (!form.plan_date) { setError('Date is required'); return }
+    const timesError = extraTimesError(form.plan_start_time, form.extra_times)
+    if (timesError) { setError(timesError); return }
     setLoading(true); setError('')
     try {
       const token = await getToken()
       setAuthToken(token)
       const { data } = await api.post('/api/plans', {
         ...form,
+        extra_times: cleanExtraTimes(form.extra_times),
         status,
         ...(template ? { template_id: template.id } : {}),
       })
@@ -152,6 +159,11 @@ export default function NewPlanPage() {
               const val = e.target.value
               setForm(f => ({ ...f, plan_start_time: val, plan_time: formatTime(val) }))
             }} />
+            <ExtraTimesInput
+              startTime={form.plan_start_time}
+              value={form.extra_times}
+              onChange={times => setForm(f => ({ ...f, extra_times: times }))}
+            />
           </div>
           <div>
             <label className="label">Title <span className="label-note">(optional)</span></label>
