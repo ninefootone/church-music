@@ -4016,3 +4016,11 @@ body.plans-overview-active .app-main-content { max-width: 1680px; }
   .br-upgrade { flex-direction: column; align-items: flex-start; }
 }
 .onboarding-choice-btn--quiet { display: block; text-decoration: none; background: transparent; border-style: dashed; }
+
+/* Multi-service plans — "Also at" times (ExtraTimesInput.tsx). Outside @layer so never purged. */
+.extra-times { display: flex; flex-direction: column; gap: 8px; margin-top: 10px; }
+.extra-times-row { display: flex; align-items: center; gap: 10px; }
+.extra-times-label { font-size: var(--text-sm); color: var(--color-text-muted); min-width: 52px; }
+.extra-times-input { max-width: 160px; }
+.extra-times-add { align-self: flex-start; display: inline-flex; align-items: center; gap: 6px; }
+.extra-times-note { font-size: var(--text-sm); color: var(--color-text-muted); margin: 2px 0 0; line-height: 1.5; }

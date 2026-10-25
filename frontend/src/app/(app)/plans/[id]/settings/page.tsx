@@ -7,6 +7,8 @@ import { useAuth } from '@clerk/nextjs'
 import { ArrowLeft } from 'lucide-react'
 import { useChurch } from '@/context/ChurchContext'
 import api, { setAuthToken } from '@/lib/api'
+import ExtraTimesInput from '@/components/ui/ExtraTimesInput'
+import { extraTimesError, cleanExtraTimes } from '@/lib/planTimes'
 
 export default function PlanSettingsPage() {
   const { id } = useParams()
@@ -16,7 +18,9 @@ export default function PlanSettingsPage() {
   const [loading, setLoading] = useState(true)
   const [saving, setSaving] = useState(false)
   const [error, setError] = useState('')
-  const [form, setForm] = useState({ plan_date: '', plan_time: '', plan_start_time: '', plan_sort_order: 0, title: '' })
+  const [form, setForm] = useState<{ plan_date: string; plan_time: string; plan_start_time: string; plan_sort_order: number; title: string; extra_times: string[] }>(
+    { plan_date: '', plan_time: '', plan_start_time: '', plan_sort_order: 0, title: '', extra_times: [] }
+  )
 
   useEffect(() => {
     if (!id || churchLoading) return
@@ -29,6 +33,7 @@ export default function PlanSettingsPage() {
           plan_start_time: s.plan_start_time ? s.plan_start_time.slice(0, 5) : '',
           plan_sort_order: s.plan_sort_order ?? 0,
           title: s.title ?? '',
+          extra_times: (s.extra_times ?? []).map((t: string) => t.slice(0, 5)),
         })
       })
       .catch(() => setError('Failed to load plan'))
@@ -37,11 +42,13 @@ export default function PlanSettingsPage() {
 
   const handleSave = async () => {
     if (!form.plan_date) { setError('Date is required'); return }
+    const timesError = extraTimesError(form.plan_start_time, form.extra_times)
+    if (timesError) { setError(timesError); return }
     setSaving(true); setError('')
     try {
       const token = await getToken()
       setAuthToken(token)
-      await api.put(`/api/plans/${id}`, form)
+      await api.put(`/api/plans/${id}`, { ...form, extra_times: cleanExtraTimes(form.extra_times) })
       router.push(`/plans/${id}`)
     } catch (err: any) {
       setError(err.response?.data?.error || 'Failed to save')
@@ -83,6 +90,11 @@ export default function PlanSettingsPage() {
                 ))}
               </div>
             )}
+            <ExtraTimesInput
+              startTime={form.plan_start_time}
+              value={form.extra_times}
+              onChange={times => setForm(f => ({ ...f, extra_times: times }))}
+            />
           </div>
           <div>
             <label className="label">Title <span className="label-note">(optional)</span></label>

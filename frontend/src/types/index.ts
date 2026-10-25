@@ -131,6 +131,8 @@ export interface Plan {
   church_id: string
   plan_date: string
   plan_time: string | null
+  plan_start_time?: string | null
+  extra_times?: string[]          // further start times for an identical repeat (multi-service-plans.md)
   title: string | null
   public_token: string
   created_at: string
