@@ -3,6 +3,8 @@
 import { useState } from 'react'
 import { X } from 'lucide-react'
 import api from '@/lib/api'
+import ExtraTimesInput from '@/components/ui/ExtraTimesInput'
+import { extraTimesError, cleanExtraTimes } from '@/lib/planTimes'
 
 interface Props {
   plan: {
@@ -10,6 +12,7 @@ interface Props {
     plan_date: string
     plan_time: string | null
     plan_start_time: string | null
+    extra_times?: string[]
     plan_sort_order: number
     title: string | null
   }
@@ -21,12 +24,16 @@ export function DuplicatePlanModal({ plan, onClose, onDuplicated }: Props) {
   const [date, setDate] = useState(plan.plan_date?.slice(0, 10) ?? '')
   const [time, setTime] = useState(plan.plan_start_time ? plan.plan_start_time.slice(0, 5) : '')
   const [title, setTitle] = useState(plan.title ?? '')
+  // Shown (and editable) so a changed start time can't leave a hidden, earlier extra time behind.
+  const [extraTimes, setExtraTimes] = useState<string[]>((plan.extra_times ?? []).map(t => t.slice(0, 5)))
   const [saving, setSaving] = useState(false)
   const [error, setError] = useState('')
 
   const handleSubmit = async () => {
     if (!date) { setError('Date is required'); return }
     if (!time) { setError('Time is required'); return }
+    const timesError = extraTimesError(time, extraTimes)
+    if (timesError) { setError(timesError); return }
     setSaving(true)
     setError('')
     try {
@@ -39,6 +46,7 @@ export function DuplicatePlanModal({ plan, onClose, onDuplicated }: Props) {
         plan_start_time: time || null,
         plan_sort_order: plan.plan_sort_order ?? 0,
         title: title.trim() || null,
+        extra_times: cleanExtraTimes(extraTimes),
       })
       onDuplicated(res.data.id)
     } catch (err: any) {
@@ -91,6 +99,7 @@ export function DuplicatePlanModal({ plan, onClose, onDuplicated }: Props) {
               onChange={e => setTime(e.target.value)}
               required
             />
+            <ExtraTimesInput startTime={time} value={extraTimes} onChange={setExtraTimes} />
           </div>
 
           {error && <div className="error-box">{error}</div>}

@@ -15,6 +15,7 @@ interface Plan {
   plan_date: string
   plan_time: string | null
   plan_start_time: string | null
+  extra_times?: string[]
   plan_sort_order: number
   title: string | null
   public_token: string
