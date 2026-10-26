@@ -26,3 +26,12 @@ export function extraTimesError(startTime: string, extraTimes: string[]): string
 export function cleanExtraTimes(extraTimes: string[]): string[] {
   return extraTimes.filter(Boolean).map(t => t.slice(0, 5))
 }
+
+// The time line shown for a plan: "9:15 am", or "9:15 am & 11:00 am" when it repeats.
+// Uses plan_start_time when set, otherwise the free-text plan_time. '' when there is no time.
+export function planTimeLabel(plan: { plan_time?: string | null; plan_start_time?: string | null; extra_times?: string[] | null }): string {
+  const first = plan.plan_start_time ? formatClock(plan.plan_start_time) : (plan.plan_time ?? '')
+  if (!first) return ''
+  const extras = (plan.extra_times ?? []).map(formatClock)
+  return [first, ...extras].join(' & ')
+}

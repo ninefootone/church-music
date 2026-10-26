@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation'
 import { X, Plus, Calendar } from 'lucide-react'
 import { format, parseISO } from 'date-fns'
 import api from '@/lib/api'
+import { planTimeLabel } from '@/lib/planTimes'
 
 interface AddToPlanModalProps {
   song: {
@@ -130,7 +131,7 @@ export function AddToPlanModal({ song, onClose }: AddToPlanModalProps) {
                 <div className="dash-row-content">
                   <p className="dash-row-title">
                     {format(parseISO(plan.plan_date), 'd MMMM yyyy')}
-                    {plan.plan_time && <span className="plan-time-muted"> · {plan.plan_time}</span>}
+                    {planTimeLabel(plan) && <span className="plan-time-muted"> · {planTimeLabel(plan)}</span>}
                   </p>
                   {plan.title && <p className="dash-row-meta">{plan.title}</p>}
                 </div>

@@ -19,6 +19,7 @@ import { ArrangementBuilder } from '@/components/ui/ArrangementBuilder'
 import { LyricsDisplay } from '@/components/ui/LyricsDisplay'
 import { RichTextDisplay, LITURGY_ALLOWED_TAGS } from '@/components/ui/RichTextDisplay'
 import { isSongSlot, nonSongLabel } from '@/lib/planItems'
+import { planTimeLabel } from '@/lib/planTimes'
 
 interface SongFile {
   id: string
@@ -422,12 +423,8 @@ export default function PlanDetailPage() {
             <h1 className="plan-detail-title">
               {format(parseISO(plan.plan_date), 'd MMMM yyyy')}
             </h1>
-            {(plan.plan_start_time || plan.plan_time) && (
-              <p className="plan-detail-meta">
-                {plan.plan_start_time
-                  ? new Date(`1970-01-01T${plan.plan_start_time}`).toLocaleTimeString('en-GB', { hour: 'numeric', minute: '2-digit', hour12: true })
-                  : plan.plan_time}
-              </p>
+            {planTimeLabel(plan) && (
+              <p className="plan-detail-meta">{planTimeLabel(plan)}</p>
             )}
             {plan.title && (
               <p className="plan-detail-meta text-muted">{plan.title}</p>

@@ -4,7 +4,7 @@ const router = express.Router();
 const { isIsoDate, isClockTime, DATE_MESSAGE, START_TIME_MESSAGE } = require('../utils/dates');
 const { requireIdParams, isUuid } = require('../utils/ids');
 const { planLimitReached, PLAN_LIMIT_MESSAGE } = require('../utils/limits');
-const { parseExtraTimes } = require('../utils/extraTimes');
+const { parseExtraTimes, planTimeLabel } = require('../utils/extraTimes');
 // Malformed IDs in the URL → 404 before any handler runs (see utils/ids.js).
 requireIdParams(router, { id: 'Plan not found', itemId: 'Plan item not found', musicianId: 'Musician not found' });
 const { sendBrevoEmail, escapeHtml } = require('../utils/email');
@@ -999,7 +999,8 @@ router.post('/:id/email', requireAuth, requireMembership, async function(req, re
       ? `<div style="padding:12px 16px;font-size:13px;color:#4b5563;white-space:pre-line;border-bottom:1px solid #e5e7eb;">${escapeHtml(plan.pre_service_notes)}</div>`
       : ''
     const planTitle = plan.title ? ` — ${escapeHtml(plan.title)}` : ''
-    const planTime = plan.plan_time ? `<p style="margin:4px 0 0;color:rgba(255,255,255,0.75);font-size:14px;">${escapeHtml(plan.plan_time)}</p>` : ''
+    const planTimeText = planTimeLabel(plan)
+    const planTime = planTimeText ? `<p style="margin:4px 0 0;color:rgba(255,255,255,0.75);font-size:14px;">${escapeHtml(planTimeText)}</p>` : ''
     const publicUrl = `${process.env.FRONTEND_URL || 'https://songstack.church'}/s/${plan.public_token}`
 
     const htmlContent = `

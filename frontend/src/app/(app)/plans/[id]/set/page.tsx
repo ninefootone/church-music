@@ -9,6 +9,7 @@ import { PDFDocument } from 'pdf-lib'
 import { useRouter } from 'next/navigation'
 import api from '@/lib/api'
 import { useChurch } from '@/context/ChurchContext'
+import { planTimeLabel } from '@/lib/planTimes'
 
 interface SongFile {
   id: string
@@ -251,7 +252,7 @@ export default function SetModePage() {
         </h1>
         <p className="plan-detail-meta">
           {format(parseISO(plan.plan_date), 'd MMMM yyyy')}
-          {plan.plan_time && ` · ${plan.plan_time}`}
+          {planTimeLabel(plan) && ` · ${planTimeLabel(plan)}`}
           {plan.title && ` · ${plan.title}`}
         </p>
         <p className="set-instructions">

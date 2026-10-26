@@ -39,6 +39,7 @@ import { PlanMusicianModal, type ExistingMusician } from '@/components/ui/PlanMu
 import { OverviewSongPicker, type SongPickerMode } from '@/components/ui/OverviewSongPicker'
 import { ConfirmModal } from '@/components/ui/ConfirmModal'
 import { OverviewItemAdder } from '@/components/ui/OverviewItemAdder'
+import { planTimeLabel } from '@/lib/planTimes'
 
 interface OverviewItem {
   id: string
@@ -505,7 +506,7 @@ export default function PlansOverviewPage() {
               <section key={plan.id} className="po-col">
                 <Link href={`/plans/${plan.id}`} className="po-col-head">
                   <span className="po-col-date">{format(parseISO(plan.plan_date), 'EEE d MMM')}</span>
-                  {plan.plan_time && <span className="po-col-time">{plan.plan_time}</span>}
+                  {planTimeLabel(plan) && <span className="po-col-time">{planTimeLabel(plan)}</span>}
                   <span className="po-col-title">{plan.title || 'Untitled plan'}</span>
                   {plan.status === 'draft' && <span className="badge badge-draft">DRAFT</span>}
                 </Link>

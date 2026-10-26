@@ -18,6 +18,7 @@ import { parseArrangement } from '@/lib/arrangement'
 import { useChurch } from '@/context/ChurchContext'
 import { AddToPlanModal } from '@/components/ui/AddToPlanModal'
 import { ConfirmModal } from '@/components/ui/ConfirmModal'
+import { planTimeLabel } from '@/lib/planTimes'
 
 export default function SongDetailPage() {
   const { id } = useParams()
@@ -585,7 +586,7 @@ export default function SongDetailPage() {
                   {s.plan_date ? format(parseISO(s.plan_date), 'd MMMM yyyy') : ''}
                 </span>
                 {s.key_override && <KeyBadge keyOf={s.key_override} />}
-                <span className="text-muted recent-plan-time">{s.plan_time}</span>
+                <span className="text-muted recent-plan-time">{planTimeLabel(s)}</span>
               </Link>
             ))}
           </>

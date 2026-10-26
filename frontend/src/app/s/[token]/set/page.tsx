@@ -7,6 +7,7 @@ import { ArrowLeft, FileText, Loader2, Code, Play } from 'lucide-react'
 import { useRouter } from 'next/navigation'
 import { useAuth } from '@clerk/nextjs'
 import axios from 'axios'
+import { planTimeLabel } from '@/lib/planTimes'
 
 const API = process.env.NEXT_PUBLIC_API_URL
 
@@ -222,7 +223,7 @@ export default function PublicSetModePage() {
           </h1>
           <p className="plan-detail-meta">
             {format(parseISO(plan.plan_date), 'd MMMM yyyy')}
-            {plan.plan_time && ` · ${plan.plan_time}`}
+            {planTimeLabel(plan) && ` · ${planTimeLabel(plan)}`}
             {plan.title && ` · ${plan.title}`}
           </p>
           <p className="set-instructions">

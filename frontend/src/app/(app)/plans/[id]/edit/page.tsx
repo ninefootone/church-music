@@ -30,6 +30,7 @@ import { ArrangementBuilder } from '@/components/ui/ArrangementBuilder'
 import { RichTextEditor } from '@/components/ui/RichTextEditor'
 import { ConfirmModal } from '@/components/ui/ConfirmModal'
 import { DEFAULT_SERVICE_ITEMS } from '@/lib/planItems'
+import { planTimeLabel } from '@/lib/planTimes'
 
 
 const SERVICE_ITEMS_LIMIT = 8
@@ -475,8 +476,8 @@ export default function PlanEditPage() {
           </Link>
           <h1 className="page-title">
             {format(parseISO(plan.plan_date), 'd MMMM yyyy')}
-            {(plan.plan_start_time || plan.plan_time) && (
-              <span className="page-title-meta"> · {plan.plan_start_time ? new Date(`1970-01-01T${plan.plan_start_time}`).toLocaleTimeString('en-GB', { hour: 'numeric', minute: '2-digit', hour12: true }) : plan.plan_time}</span>
+            {planTimeLabel(plan) && (
+              <span className="page-title-meta"> · {planTimeLabel(plan)}</span>
             )}
           </h1>
           <Link href={`/plans/${id}/settings`} className="edit-details-link">

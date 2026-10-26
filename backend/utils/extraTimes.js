@@ -19,4 +19,20 @@ function parseExtraTimes(value) {
   return { value: times };
 }
 
-module.exports = { parseExtraTimes, MAX_EXTRA_TIMES };
+// '11:00' / '11:00:00' → '11:00 am' (matches the web's en-GB format). For emails.
+function formatClock(t) {
+  if (!t) return '';
+  const [h, m] = String(t).split(':');
+  const hour = parseInt(h, 10);
+  if (!Number.isFinite(hour)) return '';
+  return `${hour % 12 || 12}:${m} ${hour < 12 ? 'am' : 'pm'}`;
+}
+
+// "9:15 am & 11:00 am" — plan_start_time (or plan_time) plus extra_times.
+function planTimeLabel(plan) {
+  const first = plan.plan_start_time ? formatClock(plan.plan_start_time) : (plan.plan_time || '');
+  if (!first) return '';
+  return [first, ...(plan.extra_times || []).map(formatClock)].join(' & ');
+}
+
+module.exports = { parseExtraTimes, MAX_EXTRA_TIMES, formatClock, planTimeLabel };

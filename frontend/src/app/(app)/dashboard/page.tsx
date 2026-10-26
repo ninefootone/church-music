@@ -9,6 +9,7 @@ import { ConfirmModal } from '@/components/ui/ConfirmModal'
 import { useChurch } from '@/context/ChurchContext'
 import api from '@/lib/api'
 import { isOnFreePlan } from '@/lib/freePlan'
+import { planTimeLabel } from '@/lib/planTimes'
 
 export default function DashboardPage() {
   const { church, loading: churchLoading, isAdmin, canManageSongs, canAddPlans, canManagePlaylists } = useChurch()
@@ -237,7 +238,7 @@ export default function DashboardPage() {
               <Link key={plan.id} href={`/plans/${plan.id}`} className="dash-row">
                 <div className="dash-row-content">
                   <p className="dash-row-title">
-                    {format(date, 'd MMM')}{plan.plan_time ? ` · ${plan.plan_time}` : ''}
+                    {format(date, 'd MMM')}{planTimeLabel(plan) ? ` · ${planTimeLabel(plan)}` : ''}
                   </p>
                   {plan.title && <p className="dash-row-meta">{plan.title}</p>}
                 </div>
@@ -297,7 +298,7 @@ export default function DashboardPage() {
                 <Link key={plan.id} href={`/plans/${plan.id}`} className="dash-row">
                   <div className="dash-row-content">
                     <p className="dash-row-title">
-                      {format(date, 'd MMM yyyy')}{plan.plan_time ? ` · ${plan.plan_time}` : ''}
+                      {format(date, 'd MMM yyyy')}{planTimeLabel(plan) ? ` · ${planTimeLabel(plan)}` : ''}
                     </p>
                     {plan.title && <p className="dash-row-meta">{plan.title}</p>}
                     {plan.musician_roles && <p className="dash-row-meta">{plan.musician_roles}</p>}

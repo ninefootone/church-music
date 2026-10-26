@@ -479,7 +479,7 @@ router.get('/:id', requireAuth, requireMembership, async (req, res, next) => {
 
     // Recent plans
     const recentPlans = await pool.query(
-      `SELECT srv.id, srv.plan_date, srv.plan_time, si.key_override
+      `SELECT srv.id, srv.plan_date, srv.plan_time, srv.plan_start_time, srv.extra_times, si.key_override
        FROM plan_items si
        JOIN plans srv ON srv.id = si.plan_id
        WHERE si.song_id = $1 AND srv.church_id = $2 AND srv.plan_date <= NOW()

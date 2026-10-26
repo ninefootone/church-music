@@ -9,6 +9,7 @@ import { useRouter } from 'next/navigation'
 import api from '@/lib/api'
 import { DuplicatePlanModal } from '@/components/ui/DuplicatePlanModal'
 import { SampleBadge } from '@/components/ui/badges'
+import { planTimeLabel } from '@/lib/planTimes'
 
 interface Plan {
   id: string
@@ -64,8 +65,8 @@ export default function PlansPage() {
         <div className="dash-row-content">
           <p className="plan-date">
             {format(parseISO(plan.plan_date), 'd MMMM yyyy')}
-            {plan.plan_time && (
-              <span className="plan-time"> · {plan.plan_time}</span>
+            {planTimeLabel(plan) && (
+              <span className="plan-time"> · {planTimeLabel(plan)}</span>
             )}
           </p>
           {plan.title && <p className="dash-row-meta">{plan.title}</p>}
@@ -99,8 +100,8 @@ export default function PlansPage() {
         <div className="dash-row-content">
           <span className="past-plan-date">
             {format(parseISO(plan.plan_date), 'd MMM yyyy')}
-            {plan.plan_time && (
-              <span className="plan-time-muted"> · {plan.plan_time}</span>
+            {planTimeLabel(plan) && (
+              <span className="plan-time-muted"> · {planTimeLabel(plan)}</span>
             )}
             {plan.title && (
               <span className="plan-time-muted"> — {plan.title}</span>

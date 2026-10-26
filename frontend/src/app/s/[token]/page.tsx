@@ -9,6 +9,7 @@ import { useAuth } from '@clerk/nextjs'
 import { RichTextDisplay, LITURGY_ALLOWED_TAGS } from '@/components/ui/RichTextDisplay'
 import { parseArrangement } from '@/lib/arrangement'
 import { isSongSlot, nonSongLabel } from '@/lib/planItems'
+import { planTimeLabel } from '@/lib/planTimes'
 
 const API = process.env.NEXT_PUBLIC_API_URL
 
@@ -276,12 +277,8 @@ export default function PublicPlanPage() {
           <h1 className="page-title page-title--tight">
             {format(parseISO(plan.plan_date), 'd MMMM yyyy')}
           </h1>
-          {(plan.plan_start_time || plan.plan_time) && (
-            <p className="plan-detail-meta">
-              {plan.plan_start_time
-                ? new Date(`1970-01-01T${plan.plan_start_time}`).toLocaleTimeString('en-GB', { hour: 'numeric', minute: '2-digit', hour12: true })
-                : plan.plan_time}
-            </p>
+          {planTimeLabel(plan) && (
+            <p className="plan-detail-meta">{planTimeLabel(plan)}</p>
           )}
           {plan.title && (
             <p className="plan-detail-meta">{plan.title}</p>
