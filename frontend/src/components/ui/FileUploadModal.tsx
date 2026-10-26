@@ -38,23 +38,50 @@ export function FileUploadModal({ songId, defaultKey, onClose, onUploaded }: Fil
   const [entries, setEntries] = useState<FileEntry[]>([])
   const [uploading, setUploading] = useState(false)
   const inputRef = useRef<HTMLInputElement>(null)
+  const [dragActive, setDragActive] = useState(false)
 
-  const handleFilesChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const files = Array.from(e.target.files || [])
-    if (!files.length) return
+  const ACCEPTED = /\.(pdf|cho|chordpro|txt)$/i
 
-    const newEntries: FileEntry[] = files.map(f => ({
-      id: Math.random().toString(36).slice(2),
-      file: f,
-      fileType: 'chords',
-      label: 'Chord chart',
-      keyOf: defaultKey || '',
-      status: 'pending',
-    }))
+  const addFiles = (files: File[]) => {
+    const valid = files.filter(f => ACCEPTED.test(f.name))
+    if (!valid.length) return
+
+    const newEntries: FileEntry[] = valid.map(f => {
+      const isChordPro = /\.(cho|chordpro)$/i.test(f.name)
+      return {
+        id: Math.random().toString(36).slice(2),
+        file: f,
+        fileType: isChordPro ? 'chordpro' : 'chords',
+        label: isChordPro ? 'ChordPro' : 'Chord chart',
+        keyOf: defaultKey || '',
+        status: 'pending' as const,
+      }
+    })
 
     setEntries(prev => [...prev, ...newEntries])
+  }
+
+  const handleFilesChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    addFiles(Array.from(e.target.files || []))
     // Reset input so the same file can be re-added if needed
     e.target.value = ''
+  }
+
+  const handleDragOver = (e: React.DragEvent) => {
+    e.preventDefault()
+    if (!uploading) setDragActive(true)
+  }
+
+  const handleDragLeave = (e: React.DragEvent) => {
+    // Ignore leave events fired when moving over child elements
+    if (!e.currentTarget.contains(e.relatedTarget as Node)) setDragActive(false)
+  }
+
+  const handleDrop = (e: React.DragEvent) => {
+    e.preventDefault()
+    setDragActive(false)
+    if (uploading) return
+    addFiles(Array.from(e.dataTransfer.files || []))
   }
 
   const updateEntry = (id: string, patch: Partial<FileEntry>) => {
@@ -122,7 +149,11 @@ export function FileUploadModal({ songId, defaultKey, onClose, onUploaded }: Fil
   const pendingCount = entries.filter(e => e.status === 'pending' || e.status === 'error').length
 
   return (
-    <div className="modal-overlay modal-overlay--front">
+    <div
+      className="modal-overlay modal-overlay--front"
+      onDragOver={e => e.preventDefault()}
+      onDrop={e => e.preventDefault()}
+    >
       <div onClick={onClose} className="modal-backdrop" />
 
       <div className="modal-panel">
@@ -136,7 +167,14 @@ export function FileUploadModal({ songId, defaultKey, onClose, onUploaded }: Fil
         <form onSubmit={handleSubmit} className="modal-form">
 
           {/* Drop zone */}
-          <div onClick={() => inputRef.current?.click()} className="drop-zone">
+          <div
+            onClick={() => inputRef.current?.click()}
+            onDragOver={handleDragOver}
+            onDragEnter={handleDragOver}
+            onDragLeave={handleDragLeave}
+            onDrop={handleDrop}
+            className={`drop-zone${dragActive ? ' drop-zone--active' : ''}`}
+          >
             <input
               ref={inputRef}
               type="file"
@@ -146,7 +184,9 @@ export function FileUploadModal({ songId, defaultKey, onClose, onUploaded }: Fil
               className="visually-hidden-input"
             />
             <Upload size={24} className="empty-icon" />
-            <p className="drop-zone-heading">Click to choose files</p>
+            <p className="drop-zone-heading">
+              {dragActive ? 'Drop files to add them' : 'Drag files here or click to choose'}
+            </p>
             <p className="drop-zone-hint">PDF or ChordPro · max 20MB each · multiple files supported</p>
           </div>
 

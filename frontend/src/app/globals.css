@@ -3731,6 +3731,7 @@ select.input {
 
 /* ── FileUploadModal ── */
 .drop-zone           { border: 2px dashed var(--color-border); border-radius: var(--radius-md); padding: var(--space-lg); text-align: center; cursor: pointer; background: var(--color-neutral-50); transition: all var(--transition-fast); }
+.drop-zone--active   { border-color: var(--color-brand-500, #4a7fa5); background: var(--color-brand-50, #eef4f9); }
 .drop-zone-heading   { font-size: var(--text-base); font-weight: 500; color: var(--color-text-secondary); margin-bottom: 4px; }
 .drop-zone-hint      { font-size: var(--text-sm); color: var(--color-text-muted); }
 .file-entry-card     { border-radius: var(--radius-md); padding: var(--space-md); }
