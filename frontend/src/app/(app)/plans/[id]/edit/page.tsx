@@ -31,11 +31,11 @@ import { RichTextEditor } from '@/components/ui/RichTextEditor'
 import { ConfirmModal } from '@/components/ui/ConfirmModal'
 import { DEFAULT_SERVICE_ITEMS } from '@/lib/planItems'
 import { planTimeLabel } from '@/lib/planTimes'
+import { KEYS } from '@/lib/keys'
 
 
 const SERVICE_ITEMS_LIMIT = 8
 
-const KEYS = ['C', 'C#', 'Db', 'D', 'Eb', 'E', 'F', 'F#', 'Gb', 'G', 'Ab', 'A', 'Bb', 'B', 'Cm', 'C#m', 'Dm', 'Ebm', 'Em', 'Fm', 'F#m', 'Gm', 'Abm', 'Am', 'Bbm', 'Bm']
 
 function normaliseKey(key: string | null | undefined): string {
   if (!key) return ''

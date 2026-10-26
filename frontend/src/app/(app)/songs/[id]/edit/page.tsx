@@ -14,6 +14,7 @@ import api, { setAuthToken } from '@/lib/api'
 import { LyricsEditor } from '@/components/ui/LyricsEditor'
 import { ArrangementBuilder } from '@/components/ui/ArrangementBuilder'
 import TagInput from '@/components/ui/TagInput'
+import { KEYS } from '@/lib/keys'
 
 export default function EditSongPage() {
   const { id } = useParams()
@@ -35,7 +36,7 @@ export default function EditSongPage() {
   const [discoverImageUrl, setDiscoverImageUrl] = useState<string | null>(null)
   const [discoverImageUploading, setDiscoverImageUploading] = useState(false)
 
-  const keys = ['C', 'C#', 'Db', 'D', 'Eb', 'E', 'F', 'F#', 'Gb', 'G', 'Ab', 'A', 'Bb', 'B', 'Cm', 'C#m', 'Dm', 'Ebm', 'Em', 'Fm', 'F#m', 'Gm', 'Abm', 'Am', 'Bbm', 'Bm']
+  const keys = KEYS
 
   useEffect(() => {
     if (!id) return

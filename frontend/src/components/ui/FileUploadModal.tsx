@@ -4,6 +4,7 @@ import { useState, useRef } from 'react'
 import { useAuth } from '@clerk/nextjs'
 import { X, Upload, File, Trash2 } from 'lucide-react'
 import api, { setAuthToken } from '@/lib/api'
+import { KEYS } from '@/lib/keys'
 
 const FILE_TYPES = [
   { value: 'chords',     label: 'Chord chart' },
@@ -14,7 +15,6 @@ const FILE_TYPES = [
   { value: 'other',      label: 'Other' },
 ]
 
-const KEYS = ['C', 'C#', 'Db', 'D', 'Eb', 'E', 'F', 'F#', 'Gb', 'G', 'Ab', 'A', 'Bb', 'B']
 
 interface FileEntry {
   id: string

@@ -4,6 +4,7 @@ import { useState } from 'react'
 import { Download, Edit, Trash2, Pencil } from 'lucide-react'
 import { KeyBadge } from '@/components/ui/badges'
 import api from '@/lib/api'
+import { KEYS } from '@/lib/keys'
 
 const FILE_TYPES = [
   { value: 'chords',     label: 'Chord chart' },
@@ -14,7 +15,6 @@ const FILE_TYPES = [
   { value: 'other',      label: 'Other' },
 ]
 
-const KEYS = ['C', 'C#', 'Db', 'D', 'Eb', 'E', 'F', 'F#', 'Gb', 'G', 'Ab', 'A', 'Bb', 'B', 'Cm', 'C#m', 'Dm', 'Ebm', 'Em', 'Fm', 'F#m', 'Gm', 'Abm', 'Am', 'Bbm', 'Bm']
 
 const normaliseKey = (k: string | null | undefined) => k ? k.replace(/♯/g, '#').replace(/♭/g, 'b') : ''
 

@@ -8,6 +8,7 @@ import { useRouter } from 'next/navigation'
 import { useAuth } from '@clerk/nextjs'
 import axios from 'axios'
 import { planTimeLabel } from '@/lib/planTimes'
+import { KEYS } from '@/lib/keys'
 
 const API = process.env.NEXT_PUBLIC_API_URL
 
@@ -28,7 +29,6 @@ interface SongItem {
   song_default_key: string | null
 }
 
-const KEYS = ['C', 'C#', 'Db', 'D', 'Eb', 'E', 'F', 'F#', 'Gb', 'G', 'Ab', 'A', 'Bb', 'B']
 
 const FILE_TYPE_ORDER: Record<string, number> = {
   vocal: 0,

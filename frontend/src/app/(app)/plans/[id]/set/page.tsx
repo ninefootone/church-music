@@ -10,6 +10,7 @@ import { useRouter } from 'next/navigation'
 import api from '@/lib/api'
 import { useChurch } from '@/context/ChurchContext'
 import { planTimeLabel } from '@/lib/planTimes'
+import { KEYS } from '@/lib/keys'
 
 interface SongFile {
   id: string
@@ -29,7 +30,6 @@ interface SongItem {
   song_default_key: string | null
 }
 
-const KEYS = ['C', 'C#', 'Db', 'D', 'Eb', 'E', 'F', 'F#', 'Gb', 'G', 'Ab', 'A', 'Bb', 'B']
 
 const FILE_TYPE_ORDER: Record<string, number> = {
   vocal: 0,

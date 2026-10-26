@@ -3,8 +3,8 @@
 import { useState, useEffect } from 'react'
 import { X, ChevronUp, ChevronDown } from 'lucide-react'
 import { renderChordPro, semitonesBetween } from '@/lib/chordproRender'
+import { KEYS } from '@/lib/keys'
 
-const KEYS = ['C', 'C#', 'Db', 'D', 'Eb', 'E', 'F', 'F#', 'Gb', 'G', 'Ab', 'A', 'Bb', 'B']
 
 interface ChordProViewerProps {
   content: string

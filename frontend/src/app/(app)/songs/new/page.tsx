@@ -14,6 +14,7 @@ import api, { setAuthToken } from '@/lib/api'
 import { LyricsEditor } from '@/components/ui/LyricsEditor'
 import { ArrangementBuilder } from '@/components/ui/ArrangementBuilder'
 import { isOnFreePlan, countOwn, FREE_SONG_LIMIT } from '@/lib/freePlan'
+import { KEYS } from '@/lib/keys'
 
 type SongLink = { url: string; label: string; link_type: string }
 
@@ -75,7 +76,7 @@ export default function NewSongPage() {
     setLinks(l => l.map((item, idx) => idx === i ? { ...item, [field]: value } : item))
   const removeLink = (i: number) => setLinks(l => l.filter((_, idx) => idx !== i))
 
-  const keys = ['C', 'C#', 'Db', 'D', 'Eb', 'E', 'F', 'F#', 'Gb', 'G', 'Ab', 'A', 'Bb', 'B', 'Cm', 'C#m', 'Dm', 'Ebm', 'Em', 'Fm', 'F#m', 'Gm', 'Abm', 'Am', 'Bbm', 'Bm']
+  const keys = KEYS
 
   const handleTitleChange = (val: string) => {
     setForm(f => ({ ...f, title: val }))
