@@ -417,6 +417,29 @@ export default function HelpPage() {
           ),
         },
         {
+          id: 'repeated-services',
+          title: 'One plan for repeated services',
+          content: () => (
+            <div>
+              <p className="help-content-body">
+                If you run the same service more than once on a day — say 9.15am and 11am, with the same songs, order and musicians — you only need one plan. Everyone sees the same plan, and notes for the band only need adding once.
+              </p>
+              <p className="help-content-body">
+                <strong>Adding the times:</strong> on <strong>New plan</strong> or <strong>Edit plan details</strong>, set the start time of the first service, then click <strong>Same service again later</strong> and enter the next time. You can add up to three extra times, and each must be later than the start time. The plan then shows as &quot;9:15 am &amp; 11:00 am&quot; everywhere, including the share link and emails.
+              </p>
+              <p className="help-content-body">
+                <strong>CCLI reporting:</strong> each song counts once for every service time, so a plan at 9:15 and 11:00 counts each of its songs twice in your Stats and CCLI report. Don&apos;t also keep a separate 11am plan for the same service, or its songs will be counted three times.
+              </p>
+              <p className="help-content-body">
+                If you use <strong>Show timings</strong>, the running-order times are worked out from the first service.
+              </p>
+              <p className="help-content-body">
+                <strong>When the services stop being the same:</strong> open the plan and click <strong>Split into separate plans</strong> at the bottom of the page. Each extra time becomes its own plan with a copy of everything — songs, keys, notes and musicians — and the original keeps the first time. From then on, changes to one plan don&apos;t affect the other. Each plan has its own share link, so send the new link to anyone playing at the later service. Splitting needs the <strong>Add &amp; edit plans</strong> permission and isn&apos;t available on the free plan.
+              </p>
+            </div>
+          ),
+        },
+        {
           id: 'adding-songs-to-plan',
           title: 'Adding songs to a plan',
           content: () => (
@@ -559,10 +582,13 @@ export default function HelpPage() {
           content: () => (
             <div>
               <p className="help-content-body">
-                To reuse a plan as a starting point, duplicate it — the copy includes its running order, service items and assigned musicians. Use <strong>Duplicate</strong> on the plan, then set the new date and time.
+                To reuse a plan as a starting point, duplicate it — the copy includes its running order, service items and assigned musicians. On the Plans page, click the copy icon next to the plan (<strong>Duplicate plan</strong>), then set the new date and time.
               </p>
               <p className="help-content-body">
                 The duplicate dialog also has a <strong>Title</strong> field, pre-filled with the original plan&apos;s title, so you can rename the copy as you create it.
+              </p>
+              <p className="help-content-body">
+                If the plan repeats at other times (see <strong>One plan for repeated services</strong>), the dialog shows those times too, so you can keep, change or remove them for the copy.
               </p>
               <p className="help-content-body">
                 On the free plan, a duplicate counts as your one plan — including a copy of the sample plan.
@@ -577,6 +603,9 @@ export default function HelpPage() {
             <div>
               <p className="help-content-body">
                 If your services follow the same pattern each week — say a 9.15am, an 11am and a 7pm — save each one as a <strong>plan template</strong>. A template holds the time, title, pre-service notes and running order, so a new plan only needs a date and the week&apos;s songs.
+              </p>
+              <p className="help-content-body">
+                If two of those services are identical, one template can cover both: a template saved from a plan that repeats at other times keeps those times, and new plans made from it get them too. See <strong>One plan for repeated services</strong>.
               </p>
               <p className="help-content-body">
                 <strong>Saving a template:</strong> build a plan the way you want it, open it and click <strong>Save as template</strong> at the bottom of the page. Give it a name (e.g. &quot;Sunday 9.15am&quot;), or choose <strong>Replace an existing template</strong> to update one you already have. Songs in the plan are saved as empty <strong>song slots</strong>; the date and musicians aren&apos;t saved.
@@ -753,6 +782,9 @@ export default function HelpPage() {
               <p className="help-content-body">
                 Your CCLI number is included in the header of any CCLI usage report you export from the Stats page. If you don&apos;t have a CCLI licence, leave this field blank — you can add it later.
               </p>
+              <p className="help-content-body">
+                The report counts each song once per service: once per plan, multiplied by the plan&apos;s number of service times. A song that appears twice in the same plan (a reprise, say) still counts once for that service.
+              </p>
             </div>
           ),
         },
@@ -807,7 +839,7 @@ export default function HelpPage() {
           content: () => (
             <div>
               <p className="help-content-body">
-                <strong>Settings → Plan templates</strong> (also at <strong>Plans → Templates</strong>, for anyone who can add &amp; edit plans) lists your church&apos;s templates with how many service items and song slots each has. Click <strong>Edit</strong> to change a template&apos;s name, plan title, start time or pre-service notes, or the <strong>x</strong> to delete it.
+                <strong>Settings → Plan templates</strong> (also at <strong>Plans → Templates</strong>, for anyone who can add &amp; edit plans) lists your church&apos;s templates with how many service items and song slots each has. Click <strong>Edit</strong> to change a template&apos;s name, plan title, start time, extra service times or pre-service notes, or the <strong>x</strong> to delete it.
               </p>
               <p className="help-content-body">
                 Templates are created from a plan, not here: open a plan and use <strong>Save as template</strong>. To change a template&apos;s running order, build it in a plan and save it over the existing template. See <strong>Plans → Plan templates and song slots</strong>.
