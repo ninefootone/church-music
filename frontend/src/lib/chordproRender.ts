@@ -76,6 +76,60 @@ export async function renderChordPro(text: string, transposeSemitones = 0): Prom
   return { ok: true, html: DOMPurify.sanitize(titleBlock + body) }
 }
 
+/**
+ * Split rendered ChordPro (an off-screen element holding renderChordPro / HtmlDivFormatter
+ * output) into page-sized HTML chunks. Paragraphs (blocks separated by a blank line) are
+ * kept whole when they fit. A paragraph taller than a page — e.g. a chart with no blank
+ * lines between sections, which chordsheetjs renders as ONE paragraph — is split row by
+ * row, and a section label ({comment: Chorus}) is never left alone at the bottom of a page.
+ * (Before this, such a chart showed only its title on page 1 and the whole song, cut off,
+ * on page 2.)
+ */
+export function paginateChordPro(root: HTMLElement, pageHeight: number): string[] {
+  const GAP = 24 // matches the paragraph margin allowance the set viewers always used
+  const pages: string[] = []
+  let html = ''
+  let height = 0
+  const flushPage = () => {
+    if (html) pages.push(html)
+    html = ''
+    height = 0
+  }
+  const add = (h: number, piece: string) => {
+    if (height + h > pageHeight && html) flushPage()
+    html += piece
+    height += h
+  }
+
+  for (const para of Array.from(root.querySelectorAll<HTMLElement>('.paragraph'))) {
+    const h = para.offsetHeight + GAP
+    if (h <= pageHeight) { add(h, para.outerHTML); continue }
+
+    const cls = para.className
+    let rows: { html: string; h: number; label: boolean }[] = []
+    const rowsHeight = () => rows.reduce((sum, r) => sum + r.h, 0)
+    const flushRows = () => {
+      if (!rows.length) return
+      add(rowsHeight() + GAP, `<div class="${cls}">${rows.map(r => r.html).join('')}</div>`)
+      rows = []
+    }
+    for (const row of Array.from(para.children) as HTMLElement[]) {
+      const rh = row.offsetHeight
+      if (height + rowsHeight() + rh + GAP > pageHeight && (rows.length || html)) {
+        // Carry a trailing section label over to the next page with its first line.
+        const carry = rows.length > 1 && rows[rows.length - 1].label ? rows.pop()! : null
+        flushRows()
+        flushPage()
+        if (carry) rows.push(carry)
+      }
+      rows.push({ html: row.outerHTML, h: rh, label: !!row.querySelector('.comment') })
+    }
+    flushRows()
+  }
+  flushPage()
+  return pages
+}
+
 // ── Lint ────────────────────────────────────────────────────────────────────
 // ChordSheetJS is lenient: "[GAmazing [C]grace" (a deleted "]") parses as one chord
 // called "GAmazing [C", a stray "]" becomes lyrics, and a misspelt directive like

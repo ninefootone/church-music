@@ -7,7 +7,7 @@ import { Document, Page, pdfjs } from 'react-pdf'
 import 'react-pdf/dist/Page/AnnotationLayer.css'
 import 'react-pdf/dist/Page/TextLayer.css'
 import DOMPurify from 'dompurify'
-import { semitonesBetween } from '@/lib/chordproRender'
+import { semitonesBetween, paginateChordPro } from '@/lib/chordproRender'
 
 if (typeof window !== 'undefined') {
   pdfjs.GlobalWorkerOptions.workerSrc = `//unpkg.com/pdfjs-dist@${pdfjs.version}/legacy/build/pdf.worker.min.mjs`
@@ -68,23 +68,7 @@ export function SetViewerPage() {
 
     requestAnimationFrame(() => {
       const pageHeight = (containerSize?.height ?? window.innerHeight) - 80
-      const paragraphs = Array.from(div.querySelectorAll('.paragraph'))
-      const chordProPages: string[] = []
-      let currentHtml = ''
-      let currentHeight = 0
-
-      paragraphs.forEach(para => {
-        const h = (para as HTMLElement).offsetHeight + 24
-        if (currentHeight + h > pageHeight && currentHtml) {
-          chordProPages.push(currentHtml)
-          currentHtml = (para as HTMLElement).outerHTML
-          currentHeight = h
-        } else {
-          currentHtml += (para as HTMLElement).outerHTML
-          currentHeight += h
-        }
-      })
-      if (currentHtml) chordProPages.push(currentHtml)
+      const chordProPages = paginateChordPro(div, pageHeight)
 
       // Store this file's paginated pages
       measuredChordProPages.current = {
