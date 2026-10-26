@@ -10,9 +10,10 @@ interface Props {
   startTime: string            // 'HH:MM' or '' — extra times need a start time first
   value: string[]              // 'HH:MM' strings; '' while a new row is being filled in
   onChange: (times: string[]) => void
+  forTemplate?: boolean        // wording for the template editor
 }
 
-export default function ExtraTimesInput({ startTime, value, onChange }: Props) {
+export default function ExtraTimesInput({ startTime, value, onChange, forTemplate = false }: Props) {
   const update = (i: number, t: string) => onChange(value.map((v, j) => (j === i ? t : v)))
   const remove = (i: number) => onChange(value.filter((_, j) => j !== i))
   const add = () => onChange([...value, ''])
@@ -49,7 +50,7 @@ export default function ExtraTimesInput({ startTime, value, onChange }: Props) {
 
       {value.length > 0 && (
         <p className="extra-times-note">
-          This plan happens again at these times, exactly the same: same songs, order, musicians and notes.
+          {forTemplate ? 'Plans made from this template happen' : 'This plan happens'} again at these times, exactly the same: same songs, order, musicians and notes.
           Each song counts once per service in your CCLI report, so don&apos;t make a separate plan for these
           times as well. If a service needs to be different, make a separate plan for it instead.
         </p>

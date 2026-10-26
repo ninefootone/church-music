@@ -6,6 +6,8 @@ import { useChurch } from '@/context/ChurchContext'
 import api, { setAuthToken } from '@/lib/api'
 import { ConfirmModal } from '@/components/ui/ConfirmModal'
 import { X, Pencil } from 'lucide-react'
+import ExtraTimesInput from '@/components/ui/ExtraTimesInput'
+import { extraTimesError, cleanExtraTimes, formatClock } from '@/lib/planTimes'
 
 interface TemplateItem {
   type: string
@@ -18,6 +20,7 @@ interface PlanTemplate {
   title: string | null
   plan_time: string | null
   plan_start_time: string | null
+  extra_times?: string[]
   plan_sort_order: number
   pre_service_notes: string | null
   items: TemplateItem[]
@@ -30,8 +33,11 @@ function formatTime(hhmm: string): string {
 function summarise(t: PlanTemplate): string {
   const slots = t.items.filter(i => i.type === 'song_slot').length
   const others = t.items.length - slots
+  // "9:15 am & 11:00 am" when the template repeats at further times.
+  const extras = (t.extra_times ?? []).map(formatClock)
+  const time = t.plan_time && extras.length ? [t.plan_time, ...extras].join(' & ') : t.plan_time
   const parts = [
-    t.plan_time,
+    time,
     `${others} service item${others === 1 ? '' : 's'}`,
     `${slots} song slot${slots === 1 ? '' : 's'}`,
   ]
@@ -53,6 +59,7 @@ export function PlanTemplatesManager() {
   const [name, setName] = useState('')
   const [title, setTitle] = useState('')
   const [startTime, setStartTime] = useState('')
+  const [extraTimes, setExtraTimes] = useState<string[]>([])
   const [notes, setNotes] = useState('')
   const [saving, setSaving] = useState(false)
   const [deleteTarget, setDeleteTarget] = useState<PlanTemplate | null>(null)
@@ -75,6 +82,7 @@ export function PlanTemplatesManager() {
     setName(t.name)
     setTitle(t.title || '')
     setStartTime(t.plan_start_time ? t.plan_start_time.slice(0, 5) : '')
+    setExtraTimes((t.extra_times ?? []).map(x => x.slice(0, 5)))
     setNotes(t.pre_service_notes || '')
     setError('')
   }
@@ -84,6 +92,8 @@ export function PlanTemplatesManager() {
 
   async function handleSave(t: PlanTemplate) {
     if (!name.trim()) { setError('Template name is required.'); return }
+    const timesError = extraTimesError(startTime, extraTimes)
+    if (timesError) { setError(timesError); return }
     setSaving(true); setError('')
     try {
       const client = await authApi()
@@ -94,6 +104,7 @@ export function PlanTemplatesManager() {
         plan_time: startTime ? formatTime(startTime) : null,
         plan_sort_order: t.plan_sort_order ?? 0,
         pre_service_notes: notes.trim() || null,
+        extra_times: cleanExtraTimes(extraTimes),
       })
       setTemplates(prev => prev.map(x => (x.id === t.id ? data : x)))
       closeEditor()
@@ -148,6 +159,7 @@ export function PlanTemplatesManager() {
 
                   <label className="settings-label template-field-gap">Start time</label>
                   <input className="input" type="time" value={startTime} onChange={e => setStartTime(e.target.value)} />
+                  <ExtraTimesInput startTime={startTime} value={extraTimes} onChange={setExtraTimes} forTemplate />
 
                   <label className="settings-label template-field-gap">
                     Pre-service notes <span className="label-note">(optional)</span>
