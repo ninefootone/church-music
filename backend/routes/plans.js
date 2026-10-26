@@ -4,7 +4,7 @@ const router = express.Router();
 const { isIsoDate, isClockTime, DATE_MESSAGE, START_TIME_MESSAGE } = require('../utils/dates');
 const { requireIdParams, isUuid } = require('../utils/ids');
 const { planLimitReached, PLAN_LIMIT_MESSAGE } = require('../utils/limits');
-const { parseExtraTimes, planTimeLabel } = require('../utils/extraTimes');
+const { parseExtraTimes, planTimeLabel, formatClock } = require('../utils/extraTimes');
 // Malformed IDs in the URL → 404 before any handler runs (see utils/ids.js).
 requireIdParams(router, { id: 'Plan not found', itemId: 'Plan item not found', musicianId: 'Musician not found' });
 const { sendBrevoEmail, escapeHtml } = require('../utils/email');
@@ -1114,6 +1114,70 @@ router.post('/:id/duplicate', requireAuth, requirePermission('can_add_plans'), a
 
     await client.query('COMMIT');
     res.status(201).json(newPlan.rows[0]);
+  } catch (err) {
+    if (client) await client.query('ROLLBACK').catch(() => {});
+    next(err);
+  } finally {
+    if (client) client.release();
+  }
+});
+
+// POST /api/plans/:id/split — multi-service plans (project doc multi-service-plans.md). When a repeated
+// service stops being identical, turn each extra time into its own plan: same date, items (with notes,
+// keys, arrangements), musicians, pre-service notes, title and status, with that time as its start time.
+// The original keeps its first time and loses its extra times. One transaction. Shared markings are per
+// song file, not per plan, so nothing to copy there.
+router.post('/:id/split', requireAuth, requirePermission('can_add_plans'), async function(req, res, next) {
+  let client;
+  try {
+    const source = await pool.query(
+      'SELECT * FROM plans WHERE id=$1 AND church_id=$2',
+      [req.params.id, req.churchId]
+    );
+    if (source.rows.length === 0) return res.status(404).json({ error: 'Plan not found' });
+    const orig = source.rows[0];
+    const extraTimes = orig.extra_times || [];
+    if (extraTimes.length === 0) {
+      return res.status(400).json({ error: "This plan doesn't repeat at any other times, so there's nothing to split." });
+    }
+    if (await planLimitReached(pool, req.churchId)) {
+      return res.status(403).json({ error: PLAN_LIMIT_MESSAGE, code: 'plan_limit' });
+    }
+
+    client = await pool.connect();
+    await client.query('BEGIN');
+
+    const newPlans = [];
+    for (const t of extraTimes) {
+      const hhmm = String(t).slice(0, 5);
+      const created = await client.query(
+        `INSERT INTO plans (church_id, plan_date, plan_time, plan_start_time, plan_sort_order, title, public_token, created_by, status, pre_service_notes)
+         VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10) RETURNING id, plan_date, plan_time, plan_start_time, status`,
+        [req.churchId, orig.plan_date, formatClock(hhmm), hhmm, orig.plan_sort_order ?? 0, orig.title, uuidv4(),
+         req.user.clerk_id, orig.status, orig.pre_service_notes ?? null]
+      );
+      const newId = created.rows[0].id;
+      await client.query(
+        `INSERT INTO plan_items (plan_id, type, title, notes, content, song_id, key_override, position, custom_arrangement, duration_minutes, phase)
+         SELECT $1, type, title, notes, content, song_id, key_override, position, custom_arrangement, duration_minutes, COALESCE(phase, 'service')
+           FROM plan_items WHERE plan_id = $2 ORDER BY position`,
+        [newId, orig.id]
+      );
+      await client.query(
+        `INSERT INTO plan_musicians (plan_id, name, role, user_id)
+         SELECT $1, name, role, user_id FROM plan_musicians WHERE plan_id = $2`,
+        [newId, orig.id]
+      );
+      newPlans.push(created.rows[0]);
+    }
+
+    const updated = await client.query(
+      `UPDATE plans SET extra_times = '{}' WHERE id=$1 AND church_id=$2 RETURNING *`,
+      [orig.id, req.churchId]
+    );
+
+    await client.query('COMMIT');
+    res.status(201).json({ plan: updated.rows[0], new_plans: newPlans });
   } catch (err) {
     if (client) await client.query('ROLLBACK').catch(() => {});
     next(err);

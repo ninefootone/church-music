@@ -4,7 +4,7 @@ import { useState, useEffect } from 'react'
 import Link from 'next/link'
 import { useParams, useRouter } from 'next/navigation'
 import { format, parseISO } from 'date-fns'
-import { ArrowLeft, Share2, Plus, Trash2, ChevronDown, ChevronUp, FileText, ExternalLink, X, PlayCircle, Mail, LayoutTemplate } from 'lucide-react'
+import { ArrowLeft, Share2, Plus, Trash2, ChevronDown, ChevronUp, FileText, ExternalLink, X, PlayCircle, Mail, LayoutTemplate, Split } from 'lucide-react'
 import { KeyBadge, CategoryBadge } from '@/components/ui/badges'
 import { useAuth } from '@clerk/nextjs'
 import { useChurch } from '@/context/ChurchContext'
@@ -19,7 +19,7 @@ import { ArrangementBuilder } from '@/components/ui/ArrangementBuilder'
 import { LyricsDisplay } from '@/components/ui/LyricsDisplay'
 import { RichTextDisplay, LITURGY_ALLOWED_TAGS } from '@/components/ui/RichTextDisplay'
 import { isSongSlot, nonSongLabel } from '@/lib/planItems'
-import { planTimeLabel } from '@/lib/planTimes'
+import { planTimeLabel, formatClock } from '@/lib/planTimes'
 
 interface SongFile {
   id: string
@@ -344,6 +344,10 @@ export default function PlanDetailPage() {
   const [showMusicianModal, setShowMusicianModal] = useState(false)
   const [showEmailModal, setShowEmailModal] = useState(false)
   const [showTemplateModal, setShowTemplateModal] = useState(false)
+  // Multi-service plans: "Split into separate plans" (multi-service-plans.md)
+  const [showSplit, setShowSplit] = useState(false)
+  const [splitPlans, setSplitPlans] = useState<{ id: string; plan_start_time: string }[]>([])
+  const [splitError, setSplitError] = useState('')
 
   useEffect(() => {
     if (!id || churchLoading) return
@@ -587,6 +591,21 @@ export default function PlanDetailPage() {
         )}
       </div>
 
+      {splitError && <div className="error-box">{splitError}</div>}
+      {splitPlans.length > 0 && (
+        <div className="info-box">
+          <p className="info-box-text">
+            Split done. This plan is now just {formatClock(plan.plan_start_time)}.{' '}
+            {splitPlans.map((p, i) => (
+              <span key={p.id}>
+                {i > 0 && ', '}
+                <Link href={`/plans/${p.id}`} className="link">Open the {formatClock(p.plan_start_time)} plan</Link>
+              </span>
+            ))}
+            . Each plan has its own share link, so send the new link to anyone playing at {splitPlans.length === 1 ? 'that service' : 'those services'}.
+          </p>
+        </div>
+      )}
       {(isAdmin || canAddPlans || plan.created_by === userId) && (
         <div className="song-actions-footer">
           {(isAdmin || canAddPlans) && (
@@ -595,6 +614,14 @@ export default function PlanDetailPage() {
               className="btn btn-secondary"
             >
               <LayoutTemplate size={14} /> Save as template
+            </button>
+          )}
+          {(isAdmin || canAddPlans) && (plan.extra_times?.length ?? 0) > 0 && (
+            <button
+              onClick={() => { setSplitError(''); setShowSplit(true) }}
+              className="btn btn-secondary"
+            >
+              <Split size={14} /> Split into separate plans
             </button>
           )}
           {/* Same rule as DELETE /api/plans/:id — admins and the plan's creator only. */}
@@ -633,6 +660,25 @@ export default function PlanDetailPage() {
             })
           }}
           onClose={() => setShowMusicianModal(false)}
+        />
+      )}
+      {showSplit && (
+        <ConfirmModal
+          title="Split into separate plans?"
+          message={`${(plan.extra_times ?? []).map(formatClock).join(' and ')} will become ${(plan.extra_times?.length ?? 0) === 1 ? 'its own plan' : 'separate plans'}, each with a copy of everything in this one: songs, keys, notes and musicians. This plan stays at ${formatClock(plan.plan_start_time)}. After this, changes to one plan won't affect the other, and each plan has its own share link.`}
+          confirmLabel="Split plan"
+          onConfirm={async () => {
+            try {
+              const { data } = await api.post(`/api/plans/${id}/split`)
+              setPlan((p: any) => ({ ...p, ...data.plan }))
+              setSplitPlans(data.new_plans)
+              setShowSplit(false)
+            } catch (err: any) {
+              setShowSplit(false)
+              setSplitError(err?.response?.data?.error || 'Split failed. Please try again.')
+            }
+          }}
+          onCancel={() => setShowSplit(false)}
         />
       )}
       {showDeletePlan && (

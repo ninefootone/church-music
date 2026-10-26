@@ -52,7 +52,8 @@ export default function ExtraTimesInput({ startTime, value, onChange, forTemplat
         <p className="extra-times-note">
           {forTemplate ? 'Plans made from this template happen' : 'This plan happens'} again at these times, exactly the same: same songs, order, musicians and notes.
           Each song counts once per service in your CCLI report, so don&apos;t make a separate plan for these
-          times as well. If a service needs to be different, make a separate plan for it instead.
+          times as well. If a service needs to be different, use <strong>Split into separate plans</strong> at the
+          bottom of the plan page.
         </p>
       )}
     </div>
