@@ -8,6 +8,7 @@ import { Document, Page, pdfjs } from 'react-pdf'
 import 'react-pdf/dist/Page/AnnotationLayer.css'
 import 'react-pdf/dist/Page/TextLayer.css'
 import DOMPurify from 'dompurify'
+import { semitonesBetween } from '@/lib/chordproRender'
 
 if (typeof window !== 'undefined') {
   pdfjs.GlobalWorkerOptions.workerSrc = `//unpkg.com/pdfjs-dist@${pdfjs.version}/legacy/build/pdf.worker.min.mjs`
@@ -187,18 +188,11 @@ export function PublicSetViewerPage() {
           let rendered = song
           try {
             if (file.songKey) {
-              const CHROMATIC = ['C', 'C#', 'D', 'D#', 'E', 'F', 'F#', 'G', 'G#', 'A', 'A#', 'B']
-              const normalize = (k: string) => k.replace('Db','C#').replace('Eb','D#').replace('Gb','F#').replace('Ab','G#').replace('Bb','A#')
               const rawKey = song.metadata?.get('key')
               const originalKey = Array.isArray(rawKey) ? rawKey[0] : rawKey
               if (originalKey && typeof originalKey === 'string') {
-                const fromIdx = CHROMATIC.indexOf(normalize(originalKey))
-                const toIdx = CHROMATIC.indexOf(normalize(file.songKey))
-                if (fromIdx !== -1 && toIdx !== -1) {
-                  let semitones = toIdx - fromIdx
-                  if (semitones < 0) semitones += 12
-                  if (semitones !== 0) rendered = song.transpose(semitones)
-                }
+                const semitones = semitonesBetween(originalKey, file.songKey)
+                if (semitones !== 0) rendered = song.transpose(semitones)
               }
             }
           } catch (transposeErr) {

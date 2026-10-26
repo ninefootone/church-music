@@ -14,15 +14,24 @@ function loadChordSheet() {
   return chordSheetPromise
 }
 
-const CHROMATIC = ['C', 'C#', 'D', 'D#', 'E', 'F', 'F#', 'G', 'G#', 'A', 'A#', 'B']
-const normalizeKey = (k: string) =>
-  k.replace('Db', 'C#').replace('Eb', 'D#').replace('Gb', 'F#').replace('Ab', 'G#').replace('Bb', 'A#')
+// Pitch of each key ROOT. Minor/mode suffixes are ignored ("Am", "F#m", "Ebm" → their root),
+// so a minor song transposes the same as a major one. Unicode ♯/♭ (WordPress imports) accepted.
+const ROOT_PITCH: Record<string, number> = {
+  'C': 0, 'B#': 0, 'C#': 1, 'Db': 1, 'D': 2, 'D#': 3, 'Eb': 3, 'E': 4, 'Fb': 4, 'E#': 5, 'F': 5,
+  'F#': 6, 'Gb': 6, 'G': 7, 'G#': 8, 'Ab': 8, 'A': 9, 'A#': 10, 'Bb': 10, 'B': 11, 'Cb': 11,
+}
+function rootPitch(key: string): number | null {
+  const m = (key || '').replace(/♯/g, '#').replace(/♭/g, 'b').trim().match(/^([A-Ga-g])([#b]?)/)
+  if (!m) return null
+  const p = ROOT_PITCH[m[1].toUpperCase() + m[2]]
+  return p === undefined ? null : p
+}
 
-/** Semitones up from `from` to `to` (0–11), or 0 if either key isn't recognised. */
+/** Semitones up from `from` to `to` (0–11), comparing roots, or 0 if either key isn't recognised. */
 export function semitonesBetween(from: string, to: string): number {
-  const a = CHROMATIC.indexOf(normalizeKey(from))
-  const b = CHROMATIC.indexOf(normalizeKey(to))
-  if (a === -1 || b === -1) return 0
+  const a = rootPitch(from)
+  const b = rootPitch(to)
+  if (a === null || b === null) return 0
   return (b - a + 12) % 12
 }
 
