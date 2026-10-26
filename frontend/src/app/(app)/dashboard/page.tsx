@@ -227,7 +227,7 @@ export default function DashboardPage() {
         {/* Plans — upcoming only */}
         <div className="card">
           <div className="card-header-row">
-            <span className="section-label">Plans</span>
+            <span className="section-label">All upcoming plans</span>
             {canAddPlans && <Link href="/plans/new" className="btn btn-ghost">Add new +</Link>}
           </div>
           {plans.length === 0 ? (
@@ -284,7 +284,7 @@ export default function DashboardPage() {
         {/* Upcoming */}
         <div className="card">
           <div className="card-header-row">
-            <span className="section-label">Upcoming</span>
+            <span className="section-label">My upcoming plans</span>
             {isAdmin && (
               <Link href="/team" className="btn btn-ghost">Manage team →</Link>
             )}
