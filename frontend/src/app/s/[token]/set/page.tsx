@@ -8,7 +8,7 @@ import { useRouter } from 'next/navigation'
 import { useAuth } from '@clerk/nextjs'
 import axios from 'axios'
 import { planTimeLabel } from '@/lib/planTimes'
-import { KEYS } from '@/lib/keys'
+import { KEYS, sameKey } from '@/lib/keys'
 
 const API = process.env.NEXT_PUBLIC_API_URL
 
@@ -39,8 +39,8 @@ const FILE_TYPE_ORDER: Record<string, number> = {
 
 function sortFiles(files: SongFile[], songKey?: string | null): SongFile[] {
   return [...files].sort((a, b) => {
-    const aAlt = songKey && a.key_of && a.key_of !== songKey ? 1 : 0
-    const bAlt = songKey && b.key_of && b.key_of !== songKey ? 1 : 0
+    const aAlt = songKey && a.key_of && !sameKey(a.key_of, songKey) ? 1 : 0
+    const bAlt = songKey && b.key_of && !sameKey(b.key_of, songKey) ? 1 : 0
     if (aAlt !== bAlt) return aAlt - bAlt
     const aOrder = FILE_TYPE_ORDER[a.file_type] ?? 99
     const bOrder = FILE_TYPE_ORDER[b.file_type] ?? 99

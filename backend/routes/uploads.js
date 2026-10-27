@@ -9,6 +9,7 @@ const { getSignedUrl } = require('@aws-sdk/s3-request-presigner');
 const pool = require('../db/pool');
 const { requireAuth, requireAdmin, requireMembership, requirePermission } = require('../middleware/auth');
 const { v4: uuidv4 } = require('uuid');
+const { normaliseKey } = require('../utils/keys');
 
 const endpoint = process.env.R2_ENDPOINT ||
   ('https://' + process.env.R2_ACCOUNT_ID + '.r2.cloudflarestorage.com');
@@ -177,7 +178,7 @@ router.post('/songs/:songId', requireAuth, requirePermission('can_manage_songs')
     const songId = req.params.songId;
     const file_type = req.body.file_type;
     const label = req.body.label;
-    const key_of = req.body.key_of;
+    const key_of = normaliseKey(req.body.key_of);
     const churchId = req.churchId;
 
     const owningSong = await pool.query('SELECT id FROM songs WHERE id = $1 AND church_id = $2', [songId, churchId]);
@@ -281,7 +282,7 @@ router.patch('/songs/:songId/files/:fileId', requireAuth, requirePermission('can
        FROM songs s
        WHERE sf.id = $4 AND sf.song_id = $5 AND sf.song_id = s.id AND s.church_id = $6
        RETURNING sf.*`,
-      [file_type, label, key_of || null, req.params.fileId, req.params.songId, req.churchId]
+      [file_type, label, normaliseKey(key_of) || null, req.params.fileId, req.params.songId, req.churchId]
     );
     if (result.rows.length === 0) {
       return res.status(404).json({ error: 'File not found' });

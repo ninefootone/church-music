@@ -4,7 +4,7 @@ import { useState } from 'react'
 import { Download, Edit, Trash2, Pencil } from 'lucide-react'
 import { KeyBadge } from '@/components/ui/badges'
 import api from '@/lib/api'
-import { KEYS } from '@/lib/keys'
+import { KEYS, sameKey } from '@/lib/keys'
 
 const FILE_TYPES = [
   { value: 'chords',     label: 'Chord chart' },
@@ -125,7 +125,7 @@ export function FileRow({ file, songId, defaultKey, isAdmin, downloadingId, dele
       >
         {!onView && <Download size={14} />}
         {!onView && downloadingId === file.id ? 'Downloading…' : file.label}
-        {file.key_of && file.key_of !== defaultKey && <KeyBadge keyOf={file.key_of} />}
+        {file.key_of && !sameKey(file.key_of, defaultKey) && <KeyBadge keyOf={file.key_of} />}
       </button>
       {isAdmin && (
         <button

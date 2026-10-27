@@ -9,6 +9,7 @@ import { FileRow } from '@/components/ui/FileRow'
 import { ChordProViewer } from '@/components/ui/ChordProViewer'
 import { ChordProEditor } from '@/components/ui/ChordProEditor'
 import { CategoryBadge, KeyBadge } from '@/components/ui/badges'
+import { sameKey } from '@/lib/keys'
 import { LyricsDisplay } from '@/components/ui/LyricsDisplay'
 import { FileUploadModal } from '@/components/ui/FileUploadModal'
 import { AddLinkModal } from '@/components/ui/AddLinkModal'
@@ -229,8 +230,8 @@ export default function SongDetailPage() {
     return <p className="detail-text">{value}</p>
   }
 
-  const mainFiles = (song.files || []).filter(f => f.key_of === song.default_key || !f.key_of)
-  const otherFiles = (song.files || []).filter(f => f.key_of && f.key_of !== song.default_key)
+  const mainFiles = (song.files || []).filter(f => !f.key_of || sameKey(f.key_of, song.default_key))
+  const otherFiles = (song.files || []).filter(f => f.key_of && !sameKey(f.key_of, song.default_key))
 
   return (
     <div className="page-constrained">

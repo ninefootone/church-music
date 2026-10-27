@@ -8,6 +8,7 @@ const { requireAuth, requireMembership, requireAdmin, requirePermission } = requ
 const { songLimitReached, SONG_LIMIT_MESSAGE } = require('../utils/limits');
 const { cleanHttpUrl, BAD_URL_MESSAGE } = require('../utils/sanitize');
 const { toPrefixQuery } = require('../utils/search');
+const { normaliseKey } = require('../utils/keys');
 const SONG_URL_FIELDS = ['ccli_url', 'copyright_link'];
 
 // Shared CCLI autocomplete (ccli_lookup). Only CURATOR churches set the shared
@@ -518,7 +519,8 @@ router.post('/', requireAuth, requirePermission('can_manage_songs'), async (req,
       return res.status(403).json({ error: SONG_LIMIT_MESSAGE, code: 'song_limit' });
     }
 
-    const { title, author, default_key, category, first_line, lyrics, ccli_number, notes, bible_references, suggested_arrangement, ccli_url, share_all_data, copyright_info, copyright_link, in_discover, discover_description, tags, time_signature, tempo, default_duration, in_library } = req.body;
+    const { title, author, default_key: rawDefaultKey, category, first_line, lyrics, ccli_number, notes, bible_references, suggested_arrangement, ccli_url, share_all_data, copyright_info, copyright_link, in_discover, discover_description, tags, time_signature, tempo, default_duration, in_library } = req.body;
+    const default_key = normaliseKey(rawDefaultKey);
 
     const isMasterLibrary = churchId === process.env.MASTER_CHURCH_ID;
     const discoverEnabled = isMasterLibrary && (in_discover ?? false);
@@ -626,6 +628,7 @@ router.put('/:id', requireAuth, requirePermission('can_manage_songs'), async (re
     if (v === undefined) return res.status(400).json({ error: BAD_URL_MESSAGE });
     body[f] = v;
   }
+  if ('default_key' in body) body.default_key = normaliseKey(body.default_key);
 
   const sets = [];
   const params = [];

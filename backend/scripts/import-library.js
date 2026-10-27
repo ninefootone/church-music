@@ -28,6 +28,7 @@ const { parse } = require('csv-parse/sync');
 const { Pool } = require('pg');
 const { S3Client, PutObjectCommand } = require('@aws-sdk/client-s3');
 const { v4: uuidv4 } = require('uuid');
+const { normaliseKey } = require('../utils/keys');
 
 // --- Config ---
 
@@ -223,7 +224,7 @@ async function main() {
         const song = await createSong(client, {
           title,
           author,
-          default_key:           (row['Suggested Key'] && row['Suggested Key'].trim() !== '—') ? row['Suggested Key'].trim() : null,
+          default_key:           (row['Suggested Key'] && row['Suggested Key'].trim() !== '—') ? normaliseKey(row['Suggested Key']) : null,
           first_line:            row['First Line'] || null,
           lyrics,
           ccli_number:           row['CCLI#'] ? row['CCLI#'].trim() || null : null,
@@ -251,7 +252,7 @@ async function main() {
         for (let f = 0; f < fileUrls.length; f++) {
           const url      = fileUrls[f];
           const label    = fileTitles[f] || '';
-          const keyOf    = fileKeys[f] || row['Suggested Key'] || null;
+          const keyOf    = normaliseKey(fileKeys[f] || row['Suggested Key']) || null;
           const fileType = mapFileType(label);
           const filename = path.basename(url.split('?')[0]);
 
