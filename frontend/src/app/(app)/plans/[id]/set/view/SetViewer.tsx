@@ -7,7 +7,7 @@ import { Document, Page, pdfjs } from 'react-pdf'
 import 'react-pdf/dist/Page/AnnotationLayer.css'
 import 'react-pdf/dist/Page/TextLayer.css'
 import DOMPurify from 'dompurify'
-import { semitonesBetween, paginateChordPro } from '@/lib/chordproRender'
+import { semitonesBetween, paginateChordPro, prepareChordPro, finishChordProHtml } from '@/lib/chordproRender'
 
 if (typeof window !== 'undefined') {
   pdfjs.GlobalWorkerOptions.workerSrc = `//unpkg.com/pdfjs-dist@${pdfjs.version}/legacy/build/pdf.worker.min.mjs`
@@ -188,7 +188,7 @@ export function SetViewerPage() {
           const text = await response.text()
           console.log('ChordPro content length:', text.length, 'first 100 chars:', text.substring(0, 100))
           const parser = new ChordSheetJS.ChordProParser()
-          const song = parser.parse(text)
+          const song = parser.parse(prepareChordPro(text))
 
           let rendered = song
           try {
@@ -206,7 +206,7 @@ export function SetViewerPage() {
           }
 
           const formatter = new ChordSheetJS.HtmlDivFormatter()
-          const rawHtml = formatter.format(rendered)
+          const rawHtml = finishChordProHtml(formatter.format(rendered))
 
           // HtmlDivFormatter puts <h1 class="title"> and <h2 class="subtitle"> outside
           // the .paragraph divs, so the paginator skips them. Extract them and wrap

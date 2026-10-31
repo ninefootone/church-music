@@ -8,7 +8,7 @@ import { Document, Page, pdfjs } from 'react-pdf'
 import 'react-pdf/dist/Page/AnnotationLayer.css'
 import 'react-pdf/dist/Page/TextLayer.css'
 import DOMPurify from 'dompurify'
-import { semitonesBetween, paginateChordPro } from '@/lib/chordproRender'
+import { semitonesBetween, paginateChordPro, prepareChordPro, finishChordProHtml } from '@/lib/chordproRender'
 
 if (typeof window !== 'undefined') {
   pdfjs.GlobalWorkerOptions.workerSrc = `//unpkg.com/pdfjs-dist@${pdfjs.version}/legacy/build/pdf.worker.min.mjs`
@@ -167,7 +167,7 @@ export function PublicSetViewerPage() {
           const text = await response.text()
           console.log('ChordPro content length:', text.length, 'first 100 chars:', text.substring(0, 100))
           const parser = new ChordSheetJS.ChordProParser()
-          const song = parser.parse(text)
+          const song = parser.parse(prepareChordPro(text))
 
           let rendered = song
           try {
@@ -185,7 +185,7 @@ export function PublicSetViewerPage() {
           }
 
           const formatter = new ChordSheetJS.HtmlDivFormatter()
-          const html = DOMPurify.sanitize(formatter.format(rendered))
+          const html = DOMPurify.sanitize(finishChordProHtml(formatter.format(rendered)))
           contents.push({ fileIndex: i, html })
         } catch (err) {
           console.error('Failed to load ChordPro file at index', i, ':', err)

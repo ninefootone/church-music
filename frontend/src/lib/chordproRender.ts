@@ -35,6 +35,53 @@ export function semitonesBetween(from: string, to: string): number {
   return (b - a + 12) % 12
 }
 
+// ── Pre/post-processing shared by every ChordPro render (viewer, editor preview, set viewers) ──
+//
+// 1. Custom sections get a heading. {start_of_key_change_link} shows "Key change link", the
+//    same as writing {comment: Key change link} (Campfire does this). Standard sections are
+//    left alone so existing songs don't suddenly grow "VERSE"/"CHORUS" headings.
+// 2. Section labels ({start_of_verse: Verse 1}) render as <h3 class="label">, which had no
+//    styling — show them like a {comment} so the paginator also keeps them with the next line.
+// 3. ChordSheetJS drops everything after a # anywhere on a line ("CCLI Song # 23938" → "CCLI
+//    Song"). ChordPro only treats a # at the START of a line as a comment, so mid-line #s are
+//    swapped for a placeholder before parsing and restored after formatting.
+// Both text changes stay on the same line, so parse-error line numbers are unaffected.
+
+const UNLABELLED_SECTIONS = new Set(['verse', 'chorus', 'bridge', 'tab', 'grid', 'abc', 'ly', 'svg', 'textblock'])
+const HASH_PLACEHOLDER = '\uE000'
+
+function protectInlineHashes(line: string): string {
+  if (!line.includes('#') || /^\s*[#{]/.test(line)) return line
+  let depth = 0
+  let out = ''
+  for (const ch of line) {
+    if (ch === '[') depth++
+    else if (ch === ']') depth = Math.max(0, depth - 1)
+    out += ch === '#' && depth === 0 ? HASH_PLACEHOLDER : ch
+  }
+  return out
+}
+
+/** Run on ChordPro text before ChordProParser.parse(). */
+export function prepareChordPro(text: string): string {
+  return text
+    .split('\n')
+    .map(protectInlineHashes)
+    .join('\n')
+    .replace(/\{\s*start_of_([a-z0-9_]+)\s*\}/gi, (match, name: string) => {
+      if (UNLABELLED_SECTIONS.has(name.toLowerCase())) return match
+      const label = name.replace(/_/g, ' ').trim()
+      return `{start_of_${name}: ${label.charAt(0).toUpperCase()}${label.slice(1)}}`
+    })
+}
+
+/** Run on HtmlDivFormatter output (before sanitising / paginating). */
+export function finishChordProHtml(html: string): string {
+  return html
+    .replace(/<h3 class="label">([\s\S]*?)<\/h3>/g, '<div class="comment">$1</div>')
+    .replace(new RegExp(HASH_PLACEHOLDER, 'g'), '#')
+}
+
 /**
  * Parse and render ChordPro text. Never throws: a syntax error comes back as
  * { ok: false, line } so callers can show it (the parser fails on half-typed
@@ -44,7 +91,7 @@ export async function renderChordPro(text: string, transposeSemitones = 0): Prom
   const { default: ChordSheetJS } = await loadChordSheet()
   let song
   try {
-    song = new ChordSheetJS.ChordProParser().parse(text)
+    song = new ChordSheetJS.ChordProParser().parse(prepareChordPro(text))
   } catch (err) {
     const e = err as { message?: string; location?: { start?: { line?: number } } }
     return { ok: false, message: e.message || 'Could not read this ChordPro', line: e.location?.start?.line ?? null }
@@ -56,7 +103,7 @@ export async function renderChordPro(text: string, transposeSemitones = 0): Prom
     console.warn('ChordPro transpose failed, showing original key', err)
   }
 
-  const rawHtml = new ChordSheetJS.HtmlDivFormatter().format(song)
+  const rawHtml = finishChordProHtml(new ChordSheetJS.HtmlDivFormatter().format(song))
 
   // HtmlDivFormatter puts the title/subtitle in bare <h1>/<h2>; wrap them in the
   // styled title block (same treatment as the set viewer).
