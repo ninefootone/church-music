@@ -68,6 +68,10 @@ export function prepareChordPro(text: string): string {
     .split('\n')
     .map(protectInlineHashes)
     .join('\n')
+    // ChordSheetJS only accepts {transpose: 2}; "+2" / "-2" make format() throw "invalid key +2".
+    // Signed values (Campfire etc. write them) become 0–11 semitones up: -2 → 10.
+    .replace(/\{(\s*transpose\s*:\s*)([+-])(\d+)(\s*)\}/gi, (_m, pre: string, sign: string, n: string, post: string) =>
+      `{${pre}${sign === '-' ? (12 - (parseInt(n, 10) % 12)) % 12 : parseInt(n, 10)}${post}}`)
     .replace(/\{\s*start_of_([a-z0-9_]+)\s*\}/gi, (match, name: string) => {
       if (UNLABELLED_SECTIONS.has(name.toLowerCase())) return match
       const label = name.replace(/_/g, ' ').trim()
@@ -103,7 +107,12 @@ export async function renderChordPro(text: string, transposeSemitones = 0): Prom
     console.warn('ChordPro transpose failed, showing original key', err)
   }
 
-  const rawHtml = finishChordProHtml(new ChordSheetJS.HtmlDivFormatter().format(song))
+  let rawHtml: string
+  try {
+    rawHtml = finishChordProHtml(new ChordSheetJS.HtmlDivFormatter().format(song))
+  } catch (err) {
+    return { ok: false, message: (err as Error)?.message || 'Could not display this ChordPro', line: null }
+  }
 
   // HtmlDivFormatter puts the title/subtitle in bare <h1>/<h2>; wrap them in the
   // styled title block (same treatment as the set viewer).
