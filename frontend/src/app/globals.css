@@ -3698,6 +3698,8 @@ select.input {
 .chordpro-toolbar      { background: var(--color-surface); border-bottom: 1px solid var(--color-border); padding: 10px var(--space-lg); display: flex; align-items: center; gap: 12px; flex-shrink: 0; }
 .chordpro-title        { font-size: var(--text-md); font-weight: 600; color: var(--color-text-primary); flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .chordpro-key-group    { display: flex; align-items: center; gap: 6px; flex-shrink: 0; }
+/* .input is width:100%, which made the key select overflow onto the font-size buttons */
+.chordpro-key-group .transpose-select { width: auto; padding: 4px 32px 4px 10px; background-position: right 10px center; }
 .chordpro-key-label    { font-size: var(--text-sm); color: var(--color-text-muted); }
 .chordpro-font-controls { display: flex; align-items: center; gap: 4px; flex-shrink: 0; }
 .chordpro-font-btn     { background: none; border: 1px solid var(--color-border); border-radius: var(--radius-sm); cursor: pointer; padding: 2px 6px; color: var(--color-text-secondary); display: flex; }
