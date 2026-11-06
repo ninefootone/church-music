@@ -20,6 +20,7 @@ import { LyricsDisplay } from '@/components/ui/LyricsDisplay'
 import { RichTextDisplay, LITURGY_ALLOWED_TAGS } from '@/components/ui/RichTextDisplay'
 import { isSongSlot, nonSongLabel } from '@/lib/planItems'
 import { planTimeLabel, formatClock } from '@/lib/planTimes'
+import ServiceTimePills from '@/components/ui/ServiceTimePills'
 
 interface SongFile {
   id: string
@@ -407,6 +408,7 @@ export default function PlanDetailPage() {
     if (typeof window === 'undefined') return false
     return localStorage.getItem('plan_show_durations') === 'true'
   })
+  const [serviceTime, setServiceTime] = useState<string | null>(null)
 
   if (loading || churchLoading) return <p className="text-muted dash-loading">Loading…</p>
   if (notFound || !plan) return (
@@ -415,6 +417,13 @@ export default function PlanDetailPage() {
       <Link href="/plans" className="back-link"><ArrowLeft size={14} /> Back to plans</Link>
     </div>
   )
+
+  // Multi-service plans: one time pill per service; running-order timings follow the chosen one (first by default).
+  const serviceTimes: string[] = plan.plan_start_time
+    ? [plan.plan_start_time, ...(plan.extra_times ?? [])].map((t: string) => t.slice(0, 5))
+    : []
+  const activeStart = serviceTimes.find(t => t === serviceTime) ?? serviceTimes[0] ?? null
+  const timingsAvailable = !!activeStart && (plan.items ?? []).some((item: any) => item.duration_minutes)
 
   return (
     <div>
@@ -555,17 +564,16 @@ export default function PlanDetailPage() {
             {plan.pre_service_notes && plan.plan_start_time && (
               <p className="item-notes" style={{ marginBottom: 8, whiteSpace: 'pre-line' }}>{plan.pre_service_notes}</p>
             )}
-            {plan.plan_start_time && (
-              <div className="plan-divider">
-                <div className="plan-divider-line" />
-                <span className="plan-divider-label">
-                  {new Date(`1970-01-01T${plan.plan_start_time}`).toLocaleTimeString('en-GB', { hour: 'numeric', minute: '2-digit', hour12: true })}
-                </span>
-                <div className="plan-divider-line" />
-              </div>
+            {activeStart && (
+              <ServiceTimePills
+                times={serviceTimes}
+                selected={activeStart}
+                onSelect={setServiceTime}
+                interactive={showTimings && timingsAvailable}
+              />
             )}
             {(() => {
-              const startTime = plan.plan_start_time ? plan.plan_start_time.slice(0, 5) : null
+              const startTime = activeStart
               const anyDurations = plan.items.some((item: any) => item.duration_minutes)
               let h = startTime ? parseInt(startTime.split(':')[0]) : 0
               let m = startTime ? parseInt(startTime.split(':')[1]) : 0

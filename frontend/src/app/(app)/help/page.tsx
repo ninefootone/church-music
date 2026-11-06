@@ -431,7 +431,7 @@ export default function HelpPage() {
                 <strong>CCLI reporting:</strong> each song counts once for every service time, so a plan at 9:15 and 11:00 counts each of its songs twice in your Stats and CCLI report. Don&apos;t also keep a separate 11am plan for the same service, or its songs will be counted three times.
               </p>
               <p className="help-content-body">
-                If you use <strong>Show timings</strong>, the running-order times are worked out from the first service.
+                The plan page and share link show a time pill for each service above the running order. With <strong>Show timings</strong> on, tap a time to see the running-order times for that service (it starts on the first one).
               </p>
               <p className="help-content-body">
                 <strong>When the services stop being the same:</strong> open the plan and click <strong>Split into separate plans</strong> at the bottom of the page. Each extra time becomes its own plan with a copy of everything — songs, keys, notes and musicians — and the original keeps the first time. From then on, changes to one plan don&apos;t affect the other. Each plan has its own share link, so send the new link to anyone playing at the later service. Splitting needs the <strong>Add &amp; edit plans</strong> permission and isn&apos;t available on the free plan.
