@@ -1507,6 +1507,7 @@ body.set-viewer-active { overflow: hidden; }
   .empty-message   { margin-bottom: var(--space-sm); }
   .btn-load-more   { width: 100%; margin-top: var(--space-sm); justify-content: center; font-size: var(--text-sm); }
   .song-item-card    { background: var(--color-surface); border: 1px solid var(--color-border); border-radius: var(--radius-md); overflow: hidden; margin-bottom: 8px; }
+  .song-item-card--song { background: var(--color-brand-50); border-color: var(--color-brand-200); }
   .item-index        { font-size: var(--text-sm); color: var(--color-text-muted); width: 24px; text-align: center; flex-shrink: 0; } /* used by the set view song number (s/[token]/set) */
   .item-notes        { font-size: var(--text-sm); color: var(--color-text-muted); font-style: italic; margin-top: 2px; }
   .item-chevron      { color: var(--color-text-muted); display: flex; }

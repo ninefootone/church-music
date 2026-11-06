@@ -55,7 +55,7 @@ function SongItem({ item, index, token, churchId, showTimings, showDurations, ca
   const canExpand = isSong || hasContent
 
   return (
-    <div className="song-item-card">
+    <div className={`song-item-card${isSong ? ' song-item-card--song' : ''}`}>
       <div
         className="item-row"
         style={{ cursor: canExpand ? 'pointer' : 'default' }}

@@ -98,7 +98,7 @@ function SongItem({ item, index, planId, canAnnotate, showTimings, showDurations
   const canExpand = isSong || hasContent
 
   return (
-    <div className="song-item-card">
+    <div className={`song-item-card${isSong ? ' song-item-card--song' : ''}`}>
       <div
         className="plan-item-row" style={{ cursor: canExpand ? 'pointer' : 'default' }}
         onClick={canExpand ? handleExpand : undefined}
