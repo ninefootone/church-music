@@ -1273,9 +1273,11 @@ body.set-viewer-active { overflow: hidden; }
   .song-actions-footer {
     margin-top: var(--space-md);
     display: flex;
+    flex-wrap: wrap;
     justify-content: flex-end;
     gap: var(--space-sm);
   }
+  .song-actions-footer .btn { white-space: nowrap; }
   .song-detail-header {
     display: flex;
     align-items: flex-start;
