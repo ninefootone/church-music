@@ -71,7 +71,7 @@ async function copySongInto(client, t, churchId, { isSample = false } = {}) {
 
   if (t.share_all_data) {
     // Song files: copy each R2 object to a new key owned by this church.
-    const files = await client.query(`SELECT * FROM song_files WHERE song_id = $1`, [t.id]);
+    const files = await client.query(`SELECT * FROM song_files WHERE song_id = $1 AND file_type <> 'audio'`, [t.id]);
     for (const file of files.rows) {
       const ext = file.r2_key.split('.').pop();
       const newKey = `churches/${churchId}/songs/${newSongId}/${uuidv4()}.${ext}`;

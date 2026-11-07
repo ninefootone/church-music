@@ -897,7 +897,7 @@ router.post('/:id/email', requireAuth, requireMembership, async function(req, re
       const filesResult = await pool.query(
         `SELECT f.song_id, f.label, f.file_type, f.key_of, f.r2_key
          FROM song_files f
-         WHERE f.song_id = ANY($1::uuid[])
+         WHERE f.song_id = ANY($1::uuid[]) AND f.file_type <> 'audio'
          ORDER BY f.uploaded_at ASC`,
         [songIds]
       )

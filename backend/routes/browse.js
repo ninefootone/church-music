@@ -140,7 +140,7 @@ router.get('/songs/:id', async (req, res, next) => {
     song.files = [];
     if (song.free) {
       const f = await pool.query(
-        'SELECT id, file_type, label, key_of, r2_key, edited_r2_key FROM song_files WHERE song_id = $1 ORDER BY key_of, file_type',
+        "SELECT id, file_type, label, key_of, r2_key, edited_r2_key FROM song_files WHERE song_id = $1 AND file_type <> 'audio' ORDER BY key_of, file_type",
         [song.id]
       );
       song.files = await Promise.all(

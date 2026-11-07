@@ -455,10 +455,18 @@ router.get('/:id', requireAuth, requireMembership, async (req, res, next) => {
     );
     if (song.rows.length === 0) return res.status(404).json({ error: 'Song not found' });
 
-    const files = await pool.query(
-      'SELECT * FROM song_files WHERE song_id = $1 ORDER BY key_of, file_type',
+    const allFiles = await pool.query(
+      `SELECT sf.*, COALESCE(NULLIF(u.name, ''), u.email) AS uploaded_by_name
+         FROM song_files sf
+         LEFT JOIN users u ON u.id = sf.uploaded_by
+        WHERE sf.song_id = $1
+        ORDER BY sf.key_of, sf.file_type, sf.uploaded_at`,
       [req.params.id]
     );
+    // Rehearsal recordings (audio) go in their own `recordings` list, never in `files`:
+    // iPad build 4 treats every file as sheet music. See claude/rehearsal-recordings.md.
+    const files = { rows: allFiles.rows.filter(f => f.file_type !== 'audio') };
+    const recordings = allFiles.rows.filter(f => f.file_type === 'audio');
 
     const videos = await pool.query(
       'SELECT * FROM song_videos WHERE song_id = $1 ORDER BY sort_order',
@@ -491,6 +499,7 @@ router.get('/:id', requireAuth, requireMembership, async (req, res, next) => {
     res.json({
       ...song.rows[0],
       files: files.rows,
+      recordings: recordings,
       videos: videos.rows,
       usage: usage.rows[0],
       recent_plans: recentPlans.rows,

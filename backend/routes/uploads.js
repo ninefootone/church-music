@@ -248,7 +248,9 @@ router.get('/songs/:songId/files', requireAuth, requireMembership, async functio
     }
 
     const files = await pool.query(
-      'SELECT * FROM song_files WHERE song_id = $1 ORDER BY key_of, file_type',
+      // Rehearsal recordings (audio) are left out: iPad build 4 treats every file here as sheet
+      // music and downloads all of them for offline. See claude/rehearsal-recordings.md.
+      "SELECT * FROM song_files WHERE song_id = $1 AND file_type <> 'audio' ORDER BY key_of, file_type",
       [req.params.songId]
     );
 
