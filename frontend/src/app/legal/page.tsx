@@ -19,7 +19,7 @@ export default function LegalPage() {
 
       <main className="legal-content">
         <h1>Legal</h1>
-        <p className="legal-updated">Last updated: May 2026</p>
+        <p className="legal-updated">Last updated: November 2026</p>
 
         <p>SongStack is operated by <strong>ninefootone creative ltd</strong>, a company registered in England and Wales.</p>
 
@@ -37,17 +37,22 @@ export default function LegalPage() {
 
         <h2>5. Copyright &amp; CCLI</h2>
         <p>SongStack does not grant any rights to perform, reproduce, or distribute copyrighted worship songs. It is your responsibility as a church to hold a valid <a href="https://ccli.com" target="_blank" rel="noopener">CCLI licence</a> covering the songs you use. SongStack is not affiliated with CCLI.</p>
+        <p><strong>Rehearsal recordings.</strong> You may upload audio recordings for your team to rehearse with only if your church made them (for example, a member recording the guitar and vocal of a song) or you have permission from whoever owns the recording. Do not upload commercial recordings, such as album tracks or backing tracks you have bought or downloaded &mdash; add a link to a streaming service instead. Recordings can only be played by signed-in members of your church. Anyone who appears on a recording can ask the church&apos;s administrators to remove it.</p>
 
-        <h2>6. Subscription &amp; payment</h2>
+        <h2>6. Reporting content &amp; removal</h2>
+        <p>If you believe something on the Service infringes your copyright, or contains your personal data (such as a recording of your voice) without your permission, email <a href="mailto:hello@songstack.church">hello@songstack.church</a> with: your name and contact details; what the content is; the church name and song title where it appears; and a statement that you believe in good faith that its use is not authorised. For copyright, please also confirm that you own the rights or are authorised to act for the owner.</p>
+        <p>We will review reports promptly and may remove or disable access to the content while we do. We will let the church concerned know, and it can reply if it believes the content was removed by mistake. We may stop a church or user from uploading, or suspend their account, if they repeatedly upload content that infringes other people&apos;s rights.</p>
+
+        <h2>7. Subscription &amp; payment</h2>
         <p>SongStack is free to try with up to 5 songs and 1 plan. Continued use beyond these limits requires a paid subscription at the rates published on <a href="https://songstack.church" target="_blank" rel="noopener">songstack.church</a>. Prices are in GBP and inclusive of VAT where applicable. Subscriptions are billed monthly or annually. You may cancel at any time; no refunds are issued for partial periods.</p>
 
-        <h2>7. Limitation of liability</h2>
+        <h2>8. Limitation of liability</h2>
         <p>To the maximum extent permitted by law, ninefootone creative ltd shall not be liable for any indirect, incidental, or consequential damages arising from your use of the Service. Our total liability to you shall not exceed the amount you have paid us in the 12 months preceding the claim.</p>
 
-        <h2>8. Governing law</h2>
+        <h2>9. Governing law</h2>
         <p>These terms are governed by the laws of England and Wales. Any disputes shall be subject to the exclusive jurisdiction of the courts of England and Wales.</p>
 
-        <h2>9. Contact</h2>
+        <h2>10. Contact</h2>
         <p>For any legal enquiries, contact us at <a href="mailto:hello@songstack.church">hello@songstack.church</a>.</p>
       </main>
 

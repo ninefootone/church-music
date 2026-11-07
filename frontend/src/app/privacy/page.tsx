@@ -19,13 +19,14 @@ export default function PrivacyPage() {
 
       <main className="legal-content">
         <h1>Privacy &amp; Cookie Policy</h1>
-        <p className="legal-updated">Last updated: October 2026</p>
+        <p className="legal-updated">Last updated: November 2026</p>
 
         <p>This policy covers the SongStack website (<strong>songstack.church</strong>), the web app (<strong>app.songstack.church</strong>) and the SongStack iPad app (together, &ldquo;the Service&rdquo;), operated by <strong>ninefootone creative ltd</strong>, a company registered in England and Wales.</p>
 
         <h2>1. What data we collect</h2>
         <p><strong>Account details.</strong> When you create an account we collect your name and email address via Clerk, our authentication provider. If you sign in with Google or Apple, Clerk receives the name and email address those services share with it. If you add a profile photo, Clerk stores it.</p>
         <p><strong>Church content.</strong> If you belong to a church on the Service, we store the songs, lyrics, arrangements, service plans, files and other content you or your church upload, along with your membership of that church, your role, and any dates you mark yourself unavailable. Other members of your church can see your name and email address and the plans you are listed on.</p>
+        <p><strong>Rehearsal recordings.</strong> Your church can upload audio recordings for its team to rehearse with, and a recording may include someone&apos;s voice. Recordings are church content: only signed-in members of that church can play or download them, and we record who uploaded each one. If you are on a recording and want it removed, use &ldquo;Ask to remove&rdquo; next to it (this emails your church&apos;s administrators) or contact us.</p>
         <p><strong>Markings and annotations.</strong> Personal pen markings you make in the iPad app are stored on your device only. If you share markings with your church, they become church content and are visible to its members.</p>
         <p><strong>Payments.</strong> Church administrators can subscribe to a paid plan. Payments are handled by Stripe. We never see or store card details; we keep only the subscription status and Stripe&apos;s customer and subscription references.</p>
         <p><strong>Feedback.</strong> If you send us a message through the feedback form, we receive the name, email address and message you enter. The form is protected by Google reCAPTCHA, which analyses how you interact with the form to detect bots.</p>
@@ -38,6 +39,7 @@ export default function PrivacyPage() {
           <li>To send occasional product updates, only if you opted in (consent)</li>
           <li>To analyse how the website is used so we can improve it, only if you accept analytics cookies (consent)</li>
           <li>To keep the Service secure and prevent abuse (legitimate interests)</li>
+          <li>To deal with reports that content infringes someone&apos;s rights or contains their personal data without permission, which may mean looking at the specific content reported (legitimate interests and legal obligations)</li>
           <li>To comply with legal obligations</li>
         </ul>
         <p>We do not sell your data and we do not use it for advertising.</p>
@@ -53,7 +55,7 @@ export default function PrivacyPage() {
           <li>your account and sign-in details are deleted from Clerk, and your email address is removed from our email contact list;</li>
           <li>your church memberships and unavailability dates are deleted;</li>
           <li>your name on past service plans is replaced with &ldquo;Former member&rdquo;;</li>
-          <li>shared markings and other content you contributed to your church remain with the church, without your name attached;</li>
+          <li>shared markings, rehearsal recordings and other content you contributed to your church remain with the church, without your name attached (church administrators can delete recordings at any time);</li>
           <li>if you are the last member of a church, that church and all its songs, files and plans are deleted too (we warn you before this happens);</li>
           <li>the iPad app removes everything it stored on your device.</li>
         </ul>
