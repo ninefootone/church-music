@@ -1,8 +1,8 @@
 'use client'
 
-import { useState, useRef } from 'react'
+import { useState, useRef, useEffect } from 'react'
 import { useAuth } from '@clerk/nextjs'
-import { X, Upload, File, Trash2 } from 'lucide-react'
+import { X, Upload, File, Trash2, Music } from 'lucide-react'
 import api, { setAuthToken } from '@/lib/api'
 import { KEYS } from '@/lib/keys'
 
@@ -15,6 +15,17 @@ const FILE_TYPES = [
   { value: 'other',      label: 'Other' },
 ]
 
+
+// Rehearsal recordings — the church's OWN recordings only (see claude/rehearsal-recordings.md).
+// Limits mirror backend/routes/uploads.js; the server enforces them too.
+const AUDIO_RE = /\.(m4a|mp3|aac|wav)$/i
+const DOC_MAX_BYTES = 20 * 1024 * 1024
+const AUDIO_MAX_BYTES = 50 * 1024 * 1024
+
+function formatSize(bytes: number) {
+  if (bytes >= 1024 * 1024 * 1024) return `${(bytes / (1024 * 1024 * 1024)).toFixed(1).replace(/\.0$/, '')}GB`
+  return `${Math.max(0, Math.round(bytes / (1024 * 1024)))}MB`
+}
 
 interface FileEntry {
   id: string
@@ -39,20 +50,44 @@ export function FileUploadModal({ songId, defaultKey, onClose, onUploaded }: Fil
   const [uploading, setUploading] = useState(false)
   const inputRef = useRef<HTMLInputElement>(null)
   const [dragActive, setDragActive] = useState(false)
+  const [usage, setUsage] = useState<{ used: number; limit: number } | null>(null)
+  const [confirmOwn, setConfirmOwn] = useState(false)
+  const [formError, setFormError] = useState('')
 
-  const ACCEPTED = /\.(pdf|cho|chordpro|txt)$/i
+  const ACCEPTED = /\.(pdf|cho|chordpro|txt|m4a|mp3|aac|wav)$/i
+
+  // How much of the church's recordings allowance is used (shown under the drop zone).
+  useEffect(() => {
+    let cancelled = false
+    ;(async () => {
+      try {
+        const token = await getToken()
+        setAuthToken(token)
+        const { data } = await api.get('/api/uploads/recordings/usage')
+        if (!cancelled) setUsage(data)
+      } catch {
+        // Not essential — the server still enforces the limit.
+      }
+    })()
+    return () => { cancelled = true }
+  }, [getToken])
 
   const addFiles = (files: File[]) => {
     const valid = files.filter(f => ACCEPTED.test(f.name))
+    const skipped = files.filter(f => !ACCEPTED.test(f.name))
+    setFormError(skipped.length
+      ? `Skipped ${skipped.map(f => f.name).join(', ')} — only PDF, ChordPro or audio (m4a, mp3, aac, wav) files can be uploaded.`
+      : '')
     if (!valid.length) return
 
     const newEntries: FileEntry[] = valid.map(f => {
       const isChordPro = /\.(cho|chordpro)$/i.test(f.name)
+      const isAudio = AUDIO_RE.test(f.name)
       return {
         id: Math.random().toString(36).slice(2),
         file: f,
-        fileType: isChordPro ? 'chordpro' : 'chords',
-        label: isChordPro ? 'ChordPro' : 'Chord chart',
+        fileType: isAudio ? 'audio' : isChordPro ? 'chordpro' : 'chords',
+        label: isAudio ? 'Rehearsal recording' : isChordPro ? 'ChordPro' : 'Chord chart',
         keyOf: defaultKey || '',
         status: 'pending' as const,
       }
@@ -107,12 +142,32 @@ export function FileUploadModal({ songId, defaultKey, onClose, onUploaded }: Fil
       return
     }
 
+    const toUpload = entries.filter(e => e.status !== 'done')
+    const tooBig = toUpload.find(e => e.file.size > (e.fileType === 'audio' ? AUDIO_MAX_BYTES : DOC_MAX_BYTES))
+    if (tooBig) {
+      updateEntry(tooBig.id, { status: 'error', error: tooBig.fileType === 'audio'
+        ? 'Recordings can be up to 50MB — try saving it as m4a or mp3 rather than wav.'
+        : 'PDF and ChordPro files can be up to 20MB.' })
+      return
+    }
+    const audioBytes = toUpload.filter(e => e.fileType === 'audio').reduce((sum, e) => sum + e.file.size, 0)
+    if (audioBytes > 0 && !confirmOwn) {
+      setFormError('Please tick the box to confirm these are your own recordings.')
+      return
+    }
+    if (usage && audioBytes > 0 && usage.used + audioBytes > usage.limit) {
+      setFormError(`These recordings would take your church over its ${formatSize(usage.limit)} of rehearsal recordings (${formatSize(usage.used)} used). Delete some older recordings first.`)
+      return
+    }
+    setFormError('')
+
     setUploading(true)
 
     let anyUploaded = false
     let anyFailed = false
 
     for (const entry of entries) {
+      if (entry.status === 'done') continue
       updateEntry(entry.id, { status: 'uploading', error: undefined })
       try {
         const token = await getToken()
@@ -123,6 +178,7 @@ export function FileUploadModal({ songId, defaultKey, onClose, onUploaded }: Fil
         formData.append('file_type', entry.fileType)
         formData.append('label', entry.label)
         formData.append('key_of', entry.keyOf)
+        if (entry.fileType === 'audio') formData.append('confirm_own_recording', String(confirmOwn))
 
         await api.post(`/api/uploads/songs/${songId}`, formData, {
           headers: { 'Content-Type': 'multipart/form-data' },
@@ -147,6 +203,7 @@ export function FileUploadModal({ songId, defaultKey, onClose, onUploaded }: Fil
   }
 
   const pendingCount = entries.filter(e => e.status === 'pending' || e.status === 'error').length
+  const hasPendingAudio = entries.some(e => e.fileType === 'audio' && e.status !== 'done')
 
   return (
     <div
@@ -178,7 +235,7 @@ export function FileUploadModal({ songId, defaultKey, onClose, onUploaded }: Fil
             <input
               ref={inputRef}
               type="file"
-              accept=".pdf,.cho,.chordpro,.txt"
+              accept=".pdf,.cho,.chordpro,.txt,.m4a,.mp3,.aac,.wav"
               multiple
               onChange={handleFilesChange}
               className="visually-hidden-input"
@@ -187,7 +244,16 @@ export function FileUploadModal({ songId, defaultKey, onClose, onUploaded }: Fil
             <p className="drop-zone-heading">
               {dragActive ? 'Drop files to add them' : 'Drag files here or click to choose'}
             </p>
-            <p className="drop-zone-hint">PDF or ChordPro · max 20MB each · multiple files supported</p>
+            <p className="drop-zone-hint">PDF or ChordPro (max 20MB) · rehearsal recordings: m4a, mp3, aac or wav (max 50MB) · multiple files supported</p>
+          </div>
+
+          <div className="info-box">
+            <p className="info-box-text">
+              <strong>Rehearsal recordings:</strong> only upload recordings your own team has made — for example a voice memo
+              of the guitar or piano and vocal, in the key you play it. To point people to the original song, use
+              {' '}<strong>Add link</strong> on the song page for Spotify, Apple Music or YouTube instead.
+              {usage && <><br />Your church has used {formatSize(usage.used)} of {formatSize(usage.limit)} for recordings.</>}
+            </p>
           </div>
 
           {/* File rows */}
@@ -226,9 +292,14 @@ export function FileUploadModal({ songId, defaultKey, onClose, onUploaded }: Fil
 
                   {entry.status !== 'done' && (
                     <div className="file-meta-grid">
-                      {/* File type */}
+                      {/* File type — audio is always a rehearsal recording */}
                       <div>
                         <label className="label">Type</label>
+                        {entry.fileType === 'audio' ? (
+                          <p className="input input--sm" style={{ display: 'flex', alignItems: 'center', gap: 6, margin: 0 }}>
+                            <Music size={14} /> Rehearsal recording
+                          </p>
+                        ) : (
                         <select
                           className="input input--sm"
                           value={entry.fileType}
@@ -237,6 +308,7 @@ export function FileUploadModal({ songId, defaultKey, onClose, onUploaded }: Fil
                         >
                           {FILE_TYPES.map(t => <option key={t.value} value={t.value}>{t.label}</option>)}
                         </select>
+                        )}
                       </div>
 
                       {/* Label */}
@@ -275,6 +347,23 @@ export function FileUploadModal({ songId, defaultKey, onClose, onUploaded }: Fil
             </div>
           )}
 
+          {hasPendingAudio && (
+            <div className="checkbox-row">
+              <input
+                type="checkbox"
+                id="confirm_own_recording"
+                checked={confirmOwn}
+                onChange={e => { setConfirmOwn(e.target.checked); setFormError('') }}
+                disabled={uploading}
+              />
+              <label htmlFor="confirm_own_recording" className="checkbox-label">
+                These are recordings our church made (or we have permission to share them) — not copies of a commercial track.
+              </label>
+            </div>
+          )}
+
+          {formError && <p className="input-error">{formError}</p>}
+
           <p className="ccli-notice">
             Please ensure you hold a valid{' '}
             <a href="https://ccli.com" target="_blank" rel="noopener noreferrer" className="link-brand">
@@ -288,7 +377,7 @@ export function FileUploadModal({ songId, defaultKey, onClose, onUploaded }: Fil
             <button
               type="submit"
               className="btn btn-primary"
-              disabled={uploading || pendingCount === 0}
+              disabled={uploading || pendingCount === 0 || (hasPendingAudio && !confirmOwn)}
             >
               <Upload size={15} />
               {uploading

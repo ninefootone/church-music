@@ -1,6 +1,6 @@
 export type Role = 'admin' | 'member'
 export type TemplateStatus = 'pending' | 'approved' | 'rejected'
-export type FileType = 'chords' | 'lead' | 'vocal' | 'full_score' | 'chordpro' | 'other'
+export type FileType = 'chords' | 'lead' | 'vocal' | 'full_score' | 'chordpro' | 'other' | 'audio'
 
 // A song's category value. The valid categories live in the database
 // (the `categories` table — global + per-church), not hardcoded here.
