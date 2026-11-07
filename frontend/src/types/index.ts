@@ -46,6 +46,8 @@ export interface SongFile {
   url?: string
   uploaded_at: string
   has_edits?: boolean
+  file_size?: number | null
+  uploaded_by_name?: string | null
 }
 
 export interface Song {
@@ -91,6 +93,7 @@ export interface Song {
   tags?: { id: string; name: string }[]
   matched_on?: string[]
   files?: SongFile[]
+  recordings?: SongFile[] // rehearsal recordings (audio) — kept out of `files`
   usage?: {
     times_sung: number
     times_planned: number

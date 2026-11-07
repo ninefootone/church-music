@@ -12,6 +12,7 @@ import { CategoryBadge, KeyBadge } from '@/components/ui/badges'
 import { sameKey } from '@/lib/keys'
 import { LyricsDisplay } from '@/components/ui/LyricsDisplay'
 import { FileUploadModal } from '@/components/ui/FileUploadModal'
+import { RecordingsSection } from '@/components/ui/RecordingsSection'
 import { AddLinkModal } from '@/components/ui/AddLinkModal'
 import { Song } from '@/types'
 import api from '@/lib/api'
@@ -496,6 +497,18 @@ export default function SongDetailPage() {
             {canManageSongs && <> <button onClick={() => setShowUploadModal(true)} className="btn-inline-link">Upload a chord chart or sheet music.</button></>}
           </p>
         )}
+
+        {/* Rehearsal recordings */}
+        <RecordingsSection
+          songId={song.id}
+          recordings={song.recordings || []}
+          canManage={canManageSongs}
+          downloadingId={downloadingId}
+          deletingId={deletingId}
+          onUpload={() => setShowUploadModal(true)}
+          onDownload={handleDownload}
+          onDelete={handleDelete}
+        />
 
         {/* Links */}
         {(song.videos && song.videos.length > 0 || canManageSongs) && (
