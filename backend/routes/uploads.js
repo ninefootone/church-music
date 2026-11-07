@@ -10,6 +10,7 @@ const pool = require('../db/pool');
 const { requireAuth, requireAdmin, requireMembership, requirePermission } = require('../middleware/auth');
 const { v4: uuidv4 } = require('uuid');
 const { normaliseKey } = require('../utils/keys');
+const { sendBrevoEmail, escapeHtml } = require('../utils/email');
 
 const endpoint = process.env.R2_ENDPOINT ||
   ('https://' + process.env.R2_ACCOUNT_ID + '.r2.cloudflarestorage.com');
@@ -192,6 +193,69 @@ router.get('/songs/:songId/discover-image-url', requireAuth, async function(req,
       { expiresIn: 3600 }
     );
     res.json({ url });
+  } catch (err) {
+    next(err);
+  }
+});
+
+// POST /uploads/songs/:songId/files/:fileId/removal-request — any church member can ask the
+// church's admins to take down a rehearsal recording (e.g. it's their voice and they've left,
+// or it isn't the church's own recording). Emails every admin; nothing is hidden automatically —
+// admins decide and delete. See claude/rehearsal-recordings.md.
+router.post('/songs/:songId/files/:fileId/removal-request', requireAuth, requireMembership, async function(req, res, next) {
+  try {
+    const reason = typeof req.body?.reason === 'string' ? req.body.reason.trim().slice(0, 1000) : '';
+
+    const file = await pool.query(
+      `SELECT sf.id, sf.label, s.id AS song_id, s.title AS song_title, c.name AS church_name
+         FROM song_files sf
+         JOIN songs s ON s.id = sf.song_id
+         JOIN churches c ON c.id = s.church_id
+        WHERE sf.id = $1 AND sf.song_id = $2 AND s.church_id = $3 AND sf.file_type = 'audio'`,
+      [req.params.fileId, req.params.songId, req.churchId]
+    );
+    if (file.rows.length === 0) return res.status(404).json({ error: 'Recording not found' });
+    const f = file.rows[0];
+
+    const requester = await pool.query('SELECT email, name FROM users WHERE id = $1', [req.user.id]);
+    const who = requester.rows[0] || {};
+    const whoName = who.name || who.email || 'A team member';
+
+    const admins = await pool.query(
+      `SELECT u.email, u.name FROM memberships m JOIN users u ON u.id = m.user_id
+        WHERE m.church_id = $1 AND m.role = 'admin'`,
+      [req.churchId]
+    );
+    if (admins.rows.length === 0) {
+      return res.status(409).json({ error: 'Your church has no admin to send this to. Please contact SongStack support.' });
+    }
+
+    const songUrl = `https://app.songstack.church/songs/${f.song_id}`;
+    let failed = 0;
+    for (const admin of admins.rows) {
+      const adminName = admin.name || 'Admin';
+      const sent = await sendBrevoEmail({
+        to: admin.email,
+        toName: adminName,
+        replyTo: who.email ? { email: who.email, name: whoName } : undefined,
+        subject: `Request to remove a rehearsal recording — ${f.song_title}`,
+        htmlContent:
+          `<p>Hi ${escapeHtml(adminName)},</p>` +
+          `<p><strong>${escapeHtml(whoName)}</strong>${who.email ? ` (${escapeHtml(who.email)})` : ''} has asked for a rehearsal recording to be removed from <strong>${escapeHtml(f.church_name)}</strong> on SongStack.</p>` +
+          `<p>Song: <strong>${escapeHtml(f.song_title)}</strong><br>Recording: <strong>${escapeHtml(f.label || 'Rehearsal recording')}</strong></p>` +
+          (reason ? `<p>Their reason:</p><blockquote>${escapeHtml(reason).replace(/\n/g, '<br>')}</blockquote>` : '') +
+          `<p>If you agree, open the <a href="${songUrl}">song page</a> and delete the recording. You can reply to this email to contact them.</p>` +
+          `<p>— SongStack</p>`,
+      });
+      if (sent.status >= 300) {
+        failed++;
+        console.error('[uploads] removal-request email failed', sent.status, sent.body);
+      }
+    }
+    if (failed === admins.rows.length) {
+      return res.status(502).json({ error: "We couldn't send your request just now. Please try again later." });
+    }
+    res.json({ success: true });
   } catch (err) {
     next(err);
   }

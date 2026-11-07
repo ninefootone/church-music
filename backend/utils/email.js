@@ -8,10 +8,12 @@ function applyTimeout(req) {
   req.setTimeout(BREVO_TIMEOUT_MS, () => req.destroy(new Error('Brevo request timed out')))
 }
 
-async function sendBrevoEmail({ to, toName, subject, htmlContent }) {
+async function sendBrevoEmail({ to, toName, subject, htmlContent, replyTo }) {
   const data = JSON.stringify({
     sender: { name: 'SongStack', email: 'noreply@songstack.church' },
     to: [{ email: to, name: toName }],
+    // Optional { email, name } — lets the recipient reply straight to a person, not noreply.
+    ...(replyTo && replyTo.email ? { replyTo } : {}),
     subject,
     htmlContent
   })
