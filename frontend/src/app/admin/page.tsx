@@ -3,8 +3,6 @@
 import { useEffect, useState } from 'react';
 import { useAuth } from '@clerk/nextjs';
 
-const SUPER_ADMIN_CLERK_ID = process.env.NEXT_PUBLIC_SUPER_ADMIN_CLERK_ID;
-
 interface ChurchRow {
   id: string;
   name: string;
@@ -26,7 +24,32 @@ export default function SuperAdminPage() {
   const [error, setError] = useState<string | null>(null);
   const [deleting, setDeleting] = useState<string | null>(null);
 
-  const isAdmin = userId === SUPER_ADMIN_CLERK_ID;
+  // Asked of the server (GET /api/superadmin/me) — the list of admin Clerk IDs lives only in
+  // Railway's SUPER_ADMIN_CLERK_ID. null = still checking.
+  const [isAdmin, setIsAdmin] = useState<boolean | null>(null);
+
+  useEffect(() => {
+    if (!isLoaded) return;
+    if (!userId) {
+      setIsAdmin(false);
+      return;
+    }
+    let cancelled = false;
+    (async () => {
+      try {
+        const token = await getToken();
+        const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/superadmin/me`, {
+          headers: { Authorization: `Bearer ${token}` },
+        });
+        if (!cancelled) setIsAdmin(res.ok);
+      } catch {
+        if (!cancelled) setIsAdmin(false);
+      }
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, [isLoaded, userId, getToken]);
   const [togglingFreeAccess, setTogglingFreeAccess] = useState<string | null>(null);
 
   const handleToggleFreeAccess = async (church: ChurchRow) => {
@@ -99,8 +122,8 @@ export default function SuperAdminPage() {
     }
   };
 
-  // Wait for Clerk: before it loads, userId is empty and every visitor looked "Not authorised".
-  if (!isLoaded) {
+  // Wait for Clerk and the server check: before then every visitor would look "Not authorised".
+  if (!isLoaded || isAdmin === null) {
     return (
       <div className="admin-restricted">
         <p>Loading...</p>

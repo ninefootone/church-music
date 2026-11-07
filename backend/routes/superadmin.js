@@ -21,17 +21,30 @@ const r2 = new S3Client({
 
 const BUCKET = process.env.R2_BUCKET_NAME;
 
-const SUPER_ADMIN_CLERK_ID = process.env.SUPER_ADMIN_CLERK_ID;
+// SUPER_ADMIN_CLERK_ID (Railway) — one Clerk user ID, or several comma-separated.
+// Clerk IDs, not emails: an ID can't be claimed by someone signing up with the same address.
+const superAdminIds = () =>
+  (process.env.SUPER_ADMIN_CLERK_ID || '')
+    .split(',')
+    .map((id) => id.trim())
+    .filter(Boolean);
 
 const requireSuperAdmin = (req, res, next) => {
-  if (!SUPER_ADMIN_CLERK_ID) {
+  const ids = superAdminIds();
+  if (ids.length === 0) {
     return res.status(500).json({ error: 'Super admin not configured' });
   }
-  if (req.clerkUserId !== SUPER_ADMIN_CLERK_ID) {
+  if (!ids.includes(req.clerkUserId)) {
     return res.status(403).json({ error: 'Forbidden' });
   }
   next();
 };
+
+// GET /api/superadmin/me → 200 if you're a super admin, 403 if not. The /admin page asks this
+// instead of comparing against a build-time Vercel variable.
+router.get('/me', requireAuth, requireSuperAdmin, (req, res) => {
+  res.json({ ok: true });
+});
 
 // GET /api/superadmin/churches
 router.get('/churches', requireAuth, requireSuperAdmin, async (req, res, next) => {
