@@ -15,14 +15,13 @@ interface RecordingsSectionProps {
   songId: string
   recordings: SongFile[]
   canManage: boolean
-  downloadingId: string | null
   deletingId: string | null
   onUpload: () => void
-  onDownload: (fileId: string, label: string) => void
   onDelete: (fileId: string) => void
 }
 
-export function RecordingsSection({ songId, recordings, canManage, downloadingId, deletingId, onUpload, onDownload, onDelete }: RecordingsSectionProps) {
+export function RecordingsSection({ songId, recordings, canManage, deletingId, onUpload, onDelete }: RecordingsSectionProps) {
+  const [downloadingId, setDownloadingId] = useState<string | null>(null)
   const [urls, setUrls] = useState<Record<string, string>>({})
   const [loadingId, setLoadingId] = useState<string | null>(null)
   const [playError, setPlayError] = useState<string | null>(null)
@@ -46,6 +45,23 @@ export function RecordingsSection({ songId, recordings, canManage, downloadingId
       setPlayError(fileId)
     } finally {
       setLoadingId(null)
+    }
+  }
+
+  // Saves the file (the link carries an "attachment" header), so the page stays put — no new tab.
+  const download = async (fileId: string) => {
+    setDownloadingId(fileId)
+    try {
+      const { data } = await api.get(`/api/uploads/songs/${songId}/files/${fileId}/url?download=1`)
+      const a = document.createElement('a')
+      a.href = data.url
+      document.body.appendChild(a)
+      a.click()
+      a.remove()
+    } catch {
+      setPlayError(fileId)
+    } finally {
+      setDownloadingId(null)
     }
   }
 
@@ -116,7 +132,7 @@ export function RecordingsSection({ songId, recordings, canManage, downloadingId
                 {playError === r.id && <p className="input-error">Couldn&apos;t load this recording. Please try again.</p>}
 
                 <div className="recording-actions">
-                  <button onClick={() => onDownload(r.id, r.label)} disabled={downloadingId === r.id} className="btn-inline-link">
+                  <button onClick={() => download(r.id)} disabled={downloadingId === r.id} className="btn-inline-link">
                     <Download size={13} /> {downloadingId === r.id ? 'Downloading…' : 'Download'}
                   </button>
                   {canManage ? (

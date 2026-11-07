@@ -338,7 +338,7 @@ router.post('/songs/:songId', requireAuth, requirePermission('can_manage_songs')
 router.get('/songs/:songId/files/:fileId/url', requireAuth, requireMembership, async function(req, res, next) {
   try {
     const file = await pool.query(
-      `SELECT sf.* FROM song_files sf
+      `SELECT sf.*, s.title AS song_title FROM song_files sf
        JOIN songs s ON s.id = sf.song_id
        WHERE sf.id = $1 AND sf.song_id = $2 AND s.church_id = $3`,
       [req.params.fileId, req.params.songId, req.churchId]
@@ -348,11 +348,18 @@ router.get('/songs/:songId/files/:fileId/url', requireAuth, requireMembership, a
     }
 
     const activeKey = file.rows[0].edited_r2_key || file.rows[0].r2_key;
-    const url = await getSignedUrl(
-      r2,
-      new GetObjectCommand({ Bucket: BUCKET, Key: activeKey }),
-      { expiresIn: 3600 }
-    );
+    const getParams = { Bucket: BUCKET, Key: activeKey };
+    // ?download=1 → the browser saves the file instead of opening it (used for rehearsal
+    // recordings; PDFs keep opening on screen). Filename = "Song title - label.ext".
+    if (req.query.download === '1') {
+      const ext = activeKey.split('.').pop();
+      const f = file.rows[0];
+      const base = [f.song_title, f.label].filter(Boolean).join(' - ').replace(/[\\/:*?"<>|\r\n]+/g, ' ').trim().slice(0, 120) || 'recording';
+      const name = `${base}.${ext}`;
+      const ascii = name.replace(/[^\x20-\x7e]/g, '_').replace(/"/g, '');
+      getParams.ResponseContentDisposition = `attachment; filename="${ascii}"; filename*=UTF-8''${encodeURIComponent(name)}`;
+    }
+    const url = await getSignedUrl(r2, new GetObjectCommand(getParams), { expiresIn: 3600 });
 
     res.json({ url: url, has_edits: !!file.rows[0].edited_r2_key });
   } catch (err) {

@@ -506,10 +506,8 @@ export default function SongDetailPage() {
           songId={song.id}
           recordings={song.recordings || []}
           canManage={canManageSongs}
-          downloadingId={downloadingId}
           deletingId={deletingId}
           onUpload={() => openUpload('recordings')}
-          onDownload={handleDownload}
           onDelete={handleDelete}
         />
 
