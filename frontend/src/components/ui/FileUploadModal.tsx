@@ -42,9 +42,12 @@ interface FileUploadModalProps {
   defaultKey?: string
   onClose: () => void
   onUploaded: () => void
+  /** 'files' = sheet music (PDF/ChordPro); 'recordings' = rehearsal recordings (audio). */
+  mode?: 'files' | 'recordings'
 }
 
-export function FileUploadModal({ songId, defaultKey, onClose, onUploaded }: FileUploadModalProps) {
+export function FileUploadModal({ songId, defaultKey, onClose, onUploaded, mode = 'files' }: FileUploadModalProps) {
+  const isRecordings = mode === 'recordings'
   const { getToken } = useAuth()
   const [entries, setEntries] = useState<FileEntry[]>([])
   const [uploading, setUploading] = useState(false)
@@ -54,10 +57,11 @@ export function FileUploadModal({ songId, defaultKey, onClose, onUploaded }: Fil
   const [confirmOwn, setConfirmOwn] = useState(false)
   const [formError, setFormError] = useState('')
 
-  const ACCEPTED = /\.(pdf|cho|chordpro|txt|m4a|mp3|aac|wav)$/i
+  const ACCEPTED = isRecordings ? AUDIO_RE : /\.(pdf|cho|chordpro|txt)$/i
 
   // How much of the church's recordings allowance is used (shown under the drop zone).
   useEffect(() => {
+    if (!isRecordings) return
     let cancelled = false
     ;(async () => {
       try {
@@ -70,13 +74,15 @@ export function FileUploadModal({ songId, defaultKey, onClose, onUploaded }: Fil
       }
     })()
     return () => { cancelled = true }
-  }, [getToken])
+  }, [getToken, isRecordings])
 
   const addFiles = (files: File[]) => {
     const valid = files.filter(f => ACCEPTED.test(f.name))
     const skipped = files.filter(f => !ACCEPTED.test(f.name))
     setFormError(skipped.length
-      ? `Skipped ${skipped.map(f => f.name).join(', ')} — only PDF, ChordPro or audio (m4a, mp3, aac, wav) files can be uploaded.`
+      ? `Skipped ${skipped.map(f => f.name).join(', ')} — ` + (isRecordings
+          ? 'recordings must be m4a, mp3, aac or wav. Use Upload file for PDFs and ChordPro.'
+          : 'files must be PDF or ChordPro. Use Upload recording for audio.')
       : '')
     if (!valid.length) return
 
@@ -215,7 +221,7 @@ export function FileUploadModal({ songId, defaultKey, onClose, onUploaded }: Fil
 
       <div className="modal-panel">
         <div className="modal-header">
-          <h2 className="modal-title">Upload files</h2>
+          <h2 className="modal-title">{isRecordings ? 'Upload rehearsal recordings' : 'Upload files'}</h2>
           <button onClick={onClose} className="modal-close">
             <X size={20} />
           </button>
@@ -235,18 +241,25 @@ export function FileUploadModal({ songId, defaultKey, onClose, onUploaded }: Fil
             <input
               ref={inputRef}
               type="file"
-              accept=".pdf,.cho,.chordpro,.txt,.m4a,.mp3,.aac,.wav"
+              accept={isRecordings ? '.m4a,.mp3,.aac,.wav' : '.pdf,.cho,.chordpro,.txt'}
               multiple
               onChange={handleFilesChange}
               className="visually-hidden-input"
             />
             <Upload size={24} className="empty-icon" />
             <p className="drop-zone-heading">
-              {dragActive ? 'Drop files to add them' : 'Drag files here or click to choose'}
+              {isRecordings
+                ? (dragActive ? 'Drop recordings to add them' : 'Drag recordings here or click to choose')
+                : (dragActive ? 'Drop files to add them' : 'Drag files here or click to choose')}
             </p>
-            <p className="drop-zone-hint">PDF or ChordPro (max 20MB) · rehearsal recordings: m4a, mp3, aac or wav (max 50MB) · multiple files supported</p>
+            <p className="drop-zone-hint">
+              {isRecordings
+                ? 'm4a, mp3, aac or wav · max 50MB each · multiple recordings supported'
+                : 'PDF or ChordPro · max 20MB each · multiple files supported'}
+            </p>
           </div>
 
+          {isRecordings && (
           <div className="info-box">
             <p className="info-box-text">
               <strong>Rehearsal recordings:</strong> only upload recordings your own team has made — for example a voice memo
@@ -255,6 +268,7 @@ export function FileUploadModal({ songId, defaultKey, onClose, onUploaded }: Fil
               {usage && <><br />Your church has used {formatSize(usage.used)} of {formatSize(usage.limit)} for recordings.</>}
             </p>
           </div>
+          )}
 
           {/* File rows */}
           {entries.length > 0 && (
@@ -367,6 +381,11 @@ export function FileUploadModal({ songId, defaultKey, onClose, onUploaded }: Fil
 
           {formError && <p className="input-error">{formError}</p>}
 
+          {isRecordings ? (
+          <p className="ccli-notice">
+            Recordings can only be played by signed-in members of your church.
+          </p>
+          ) : (
           <p className="ccli-notice">
             Please ensure you hold a valid{' '}
             <a href="https://ccli.com" target="_blank" rel="noopener noreferrer" className="link-brand">
@@ -374,6 +393,7 @@ export function FileUploadModal({ songId, defaultKey, onClose, onUploaded }: Fil
             </a>
             {' '}that covers storing and sharing these files with your team.
           </p>
+          )}
 
           <div className="modal-footer">
             <button type="button" onClick={onClose} className="btn btn-secondary">Cancel</button>
@@ -386,8 +406,8 @@ export function FileUploadModal({ songId, defaultKey, onClose, onUploaded }: Fil
               {uploading
                 ? 'Uploading…'
                 : pendingCount === 1
-                  ? 'Upload 1 file'
-                  : `Upload ${pendingCount} files`}
+                  ? (isRecordings ? 'Upload 1 recording' : 'Upload 1 file')
+                  : `Upload ${pendingCount} ${isRecordings ? 'recordings' : 'files'}`}
             </button>
           </div>
         </form>

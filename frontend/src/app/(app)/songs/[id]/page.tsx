@@ -32,6 +32,8 @@ export default function SongDetailPage() {
   const [notFound, setNotFound] = useState(false)
   const [showFullLyrics, setShowFullLyrics] = useState(false)
   const [showUploadModal, setShowUploadModal] = useState(false)
+  const [uploadMode, setUploadMode] = useState<'files' | 'recordings'>('files')
+  const openUpload = (mode: 'files' | 'recordings') => { setUploadMode(mode); setShowUploadModal(true) }
   const [chordProFile, setChordProFile] = useState<{ content: string; label: string; key: string | null } | null>(null)
   const [downloadingId, setDownloadingId] = useState<string | null>(null)
   const [deletingId, setDeletingId] = useState<string | null>(null)
@@ -275,6 +277,7 @@ export default function SongDetailPage() {
           defaultKey={song.default_key}
           onClose={() => setShowUploadModal(false)}
           onUploaded={fetchSong}
+          mode={uploadMode}
         />
       )}
 
@@ -457,7 +460,7 @@ export default function SongDetailPage() {
         <div className="card-header-row">
           <span className="section-label section-label--flush">Files</span>
           {canManageSongs && (
-            <button onClick={() => setShowUploadModal(true)} className="btn btn-primary btn-sm">
+            <button onClick={() => openUpload('files')} className="btn btn-primary btn-sm">
               <Plus size={14} /> Upload file
             </button>
           )}
@@ -494,7 +497,7 @@ export default function SongDetailPage() {
         ) : (
           <p className="text-muted text-italic">
             No files uploaded yet.
-            {canManageSongs && <> <button onClick={() => setShowUploadModal(true)} className="btn-inline-link">Upload a chord chart or sheet music.</button></>}
+            {canManageSongs && <> <button onClick={() => openUpload('files')} className="btn-inline-link">Upload a chord chart or sheet music.</button></>}
           </p>
         )}
 
@@ -505,7 +508,7 @@ export default function SongDetailPage() {
           canManage={canManageSongs}
           downloadingId={downloadingId}
           deletingId={deletingId}
-          onUpload={() => setShowUploadModal(true)}
+          onUpload={() => openUpload('recordings')}
           onDownload={handleDownload}
           onDelete={handleDelete}
         />
