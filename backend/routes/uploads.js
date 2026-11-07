@@ -40,6 +40,11 @@ function contentMatchesExtension(buffer, ext) {
       // Plain text: no NUL bytes in the first 8 KB (images/PDFs/Word files have them).
       return !buffer.subarray(0, 8192).includes(0);
     }
+    // Rehearsal recordings. m4a/aac from iPhone Voice Memos are MP4 containers ("ftyp" at byte 4).
+    case 'm4a': return head.subarray(4, 8).toString('latin1') === 'ftyp';
+    case 'aac': return head.subarray(4, 8).toString('latin1') === 'ftyp' || (head[0] === 0xff && (head[1] & 0xf6) === 0xf0);
+    case 'mp3': return head.subarray(0, 3).toString('latin1') === 'ID3' || (head[0] === 0xff && (head[1] & 0xe0) === 0xe0);
+    case 'wav': return head.subarray(0, 4).toString('latin1') === 'RIFF' && head.subarray(8, 12).toString('latin1') === 'WAVE';
     case 'png':  return head.subarray(0, 8).equals(Buffer.from([0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a]));
     case 'jpg': case 'jpeg': return head[0] === 0xff && head[1] === 0xd8 && head[2] === 0xff;
     case 'webp': return head.subarray(0, 4).toString('latin1') === 'RIFF' && head.subarray(8, 12).toString('latin1') === 'WEBP';
@@ -49,17 +54,36 @@ function contentMatchesExtension(buffer, ext) {
 module.exports.r2 = r2;
 module.exports.BUCKET = BUCKET;
 
+// Rehearsal recordings (audio) — see claude/rehearsal-recordings.md.
+const AUDIO_EXT = ['m4a', 'mp3', 'aac', 'wav'];
+const AUDIO_CONTENT_TYPE = { m4a: 'audio/mp4', aac: 'audio/aac', mp3: 'audio/mpeg', wav: 'audio/wav' };
+const DOC_MAX_BYTES = 20 * 1024 * 1024;
+const AUDIO_MAX_BYTES = 50 * 1024 * 1024;
+const AUDIO_QUOTA_BYTES = 1024 * 1024 * 1024; // 1GB of recordings per church (PDFs/ChordPro don't count)
+
+async function audioBytesUsed(churchId) {
+  const r = await pool.query(
+    `SELECT COALESCE(SUM(sf.file_size), 0)::bigint AS used
+       FROM song_files sf JOIN songs s ON s.id = sf.song_id
+      WHERE s.church_id = $1 AND sf.file_type = 'audio'`,
+    [churchId]
+  );
+  return Number(r.rows[0].used);
+}
+
 const upload = multer({
   storage: multer.memoryStorage(),
-  limits: { fileSize: 20 * 1024 * 1024 },
+  limits: { fileSize: AUDIO_MAX_BYTES }, // documents are held to DOC_MAX_BYTES in the route
   fileFilter: function(req, file, cb) {
     const allowed = ['application/pdf', 'text/plain', 'application/octet-stream'];
     const ext = file.originalname.split('.').pop()?.toLowerCase();
     const allowedExt = ['pdf', 'cho', 'chordpro', 'txt'];
-    if (allowed.includes(file.mimetype) && allowedExt.includes(ext || '')) {
+    const isAudio = AUDIO_EXT.includes(ext || '') &&
+      (file.mimetype.startsWith('audio/') || file.mimetype === 'video/mp4' || file.mimetype === 'application/octet-stream');
+    if (isAudio || (allowed.includes(file.mimetype) && allowedExt.includes(ext || ''))) {
       cb(null, true);
     } else {
-      cb(Object.assign(new Error('Only PDF and ChordPro files are allowed'), { status: 400, expose: true }));
+      cb(Object.assign(new Error('Only PDF, ChordPro or audio (m4a, mp3, aac, wav) files are allowed'), { status: 400, expose: true }));
     }
   },
 });
@@ -173,6 +197,15 @@ router.get('/songs/:songId/discover-image-url', requireAuth, async function(req,
   }
 });
 
+// GET /uploads/recordings/usage — how much of the church's 1GB recordings allowance is used.
+router.get('/recordings/usage', requireAuth, requireMembership, async function(req, res, next) {
+  try {
+    res.json({ used: await audioBytesUsed(req.churchId), limit: AUDIO_QUOTA_BYTES });
+  } catch (err) {
+    next(err);
+  }
+});
+
 router.post('/songs/:songId', requireAuth, requirePermission('can_manage_songs'), upload.single('file'), async function(req, res, next) {
   try {
     const songId = req.params.songId;
@@ -191,8 +224,31 @@ router.post('/songs/:songId', requireAuth, requirePermission('can_manage_songs')
     }
 
     const ext = req.file.originalname.split('.').pop();
-    if (!contentMatchesExtension(req.file.buffer, (ext || '').toLowerCase())) {
-      return res.status(400).json({ error: `This file isn't a real ${ext.toUpperCase()} — it may have been renamed. Please upload the original PDF or ChordPro file.` });
+    const extLower = (ext || '').toLowerCase();
+    const isAudio = AUDIO_EXT.includes(extLower);
+
+    // An audio file is always a rehearsal recording, and only audio can be one — keeps
+    // recordings reliably out of the sheet-music lists that older iPad builds read.
+    if (isAudio !== (file_type === 'audio')) {
+      return res.status(400).json({ error: isAudio
+        ? 'Audio files can only be uploaded as a rehearsal recording.'
+        : 'Only audio files (m4a, mp3, aac, wav) can be uploaded as a rehearsal recording.' });
+    }
+    if (!isAudio && req.file.size > DOC_MAX_BYTES) {
+      return res.status(400).json({ error: 'PDF and ChordPro files can be up to 20MB.' });
+    }
+    if (isAudio) {
+      if (req.body.confirm_own_recording !== 'true') {
+        return res.status(400).json({ error: 'Please confirm this is a recording your church made.' });
+      }
+      const used = await audioBytesUsed(churchId);
+      if (used + req.file.size > AUDIO_QUOTA_BYTES) {
+        return res.status(400).json({ error: "This would take your church over its 1GB of rehearsal recordings. Delete some older recordings first." });
+      }
+    }
+
+    if (!contentMatchesExtension(req.file.buffer, extLower)) {
+      return res.status(400).json({ error: `This file isn't a real ${ext.toUpperCase()} — it may have been renamed. Please upload the original file.` });
     }
     const r2Key = 'churches/' + churchId + '/songs/' + songId + '/' + uuidv4() + '.' + ext;
 
@@ -200,12 +256,13 @@ router.post('/songs/:songId', requireAuth, requirePermission('can_manage_songs')
       Bucket: BUCKET,
       Key: r2Key,
       Body: req.file.buffer,
-      ContentType: req.file.mimetype,
+      // Browsers need a real audio type to play a recording; uploads often arrive as octet-stream.
+      ContentType: isAudio ? AUDIO_CONTENT_TYPE[extLower] : req.file.mimetype,
     }));
 
     const result = await pool.query(
-      'INSERT INTO song_files (song_id, file_type, label, key_of, r2_key) VALUES ($1,$2,$3,$4,$5) RETURNING *',
-      [songId, file_type, label, key_of || null, r2Key]
+      'INSERT INTO song_files (song_id, file_type, label, key_of, r2_key, file_size, uploaded_by) VALUES ($1,$2,$3,$4,$5,$6,$7) RETURNING *',
+      [songId, file_type, label, key_of || null, r2Key, req.file.size, req.user.id]
     );
 
     res.status(201).json(result.rows[0]);
@@ -279,8 +336,12 @@ router.get('/songs/:songId/files', requireAuth, requireMembership, async functio
 router.patch('/songs/:songId/files/:fileId', requireAuth, requirePermission('can_manage_songs'), async function(req, res, next) {
   try {
     const { file_type, label, key_of } = req.body;
+    if (file_type === 'audio') {
+      return res.status(400).json({ error: 'Upload an audio file to add a rehearsal recording.' });
+    }
     const result = await pool.query(
-      `UPDATE song_files sf SET file_type = COALESCE($1, sf.file_type), label = COALESCE($2, sf.label), key_of = $3
+      // A recording's type can't be changed (and nothing can become one) — see the upload route.
+      `UPDATE song_files sf SET file_type = CASE WHEN sf.file_type = 'audio' THEN sf.file_type ELSE COALESCE($1, sf.file_type) END, label = COALESCE($2, sf.label), key_of = $3
        FROM songs s
        WHERE sf.id = $4 AND sf.song_id = $5 AND sf.song_id = s.id AND s.church_id = $6
        RETURNING sf.*`,
