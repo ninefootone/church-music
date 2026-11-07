@@ -363,10 +363,39 @@ export default function HelpPage() {
                 <strong>ChordPro (.cho / .chordpro):</strong> a plain-text format for chord charts that renders in the browser. ChordPro files support key transposition in the set viewer.
               </p>
               <p className="help-content-body">
-                To upload, open the song and click <strong>Add file</strong>. You can upload multiple files at once and give each one a label (e.g. &quot;Guitar chart&quot;, &quot;Full score&quot;). Labels can be edited after upload.
+                To upload, open the song and click <strong>Upload file</strong>, then drag files into the box or click it to choose them. You can upload multiple files at once and give each one a label (e.g. &quot;Guitar chart&quot;, &quot;Full score&quot;). Labels can be edited after upload.
+              </p>
+              <p className="help-content-body">
+                Audio files go in <strong>Rehearsal recordings</strong> instead — see the next topic.
               </p>
               <p className="help-content-body">
                 A note on copyright: uploading files doesn&apos;t grant you the right to reproduce them. Make sure your church holds a valid CCLI licence that covers the songs you&apos;re uploading charts for.
+              </p>
+            </div>
+          ),
+        },
+        {
+          id: 'rehearsal-recordings',
+          title: 'Rehearsal recordings',
+          content: () => (
+            <div>
+              <p className="help-content-body">
+                Each song can have recordings for your team to practise with — for example a voice memo of the guitar or piano and vocal, played in the key your church uses. You&apos;ll find them on the song page under <strong>Rehearsal recordings</strong>, where anyone in your church can play or download them.
+              </p>
+              <p className="help-content-body">
+                <strong>Only upload recordings your own team has made</strong> (or that you have permission to share). Please don&apos;t upload album tracks or backing tracks you&apos;ve bought or downloaded. To point people to the original song, use <strong>Add link</strong> on the song page for Spotify, Apple Music or YouTube instead.
+              </p>
+              <p className="help-content-body">
+                <strong>Uploading:</strong> admins and members with <strong>Add &amp; edit songs</strong> can click <strong>Upload recording</strong> on the song page. You can upload m4a, mp3, aac or wav files, up to 50MB each, and confirm they&apos;re your own recordings. Each church has 1GB for recordings — the upload box shows how much you&apos;ve used. Deleting a recording frees up its space.
+              </p>
+              <p className="help-content-body">
+                <strong>Recording on an iPhone:</strong> record in the Voice Memos app, then tap the recording, tap Share and choose <strong>Save to Files</strong>. On the SongStack website, click Upload recording and pick it from Files. (On a Mac, you can drag a voice memo straight from the Voice Memos app into the upload box.)
+              </p>
+              <p className="help-content-body">
+                <strong>Asking for a recording to be removed:</strong> if you&apos;re on a recording and would rather it wasn&apos;t shared, click <strong>Ask to remove</strong> next to it. This emails your church&apos;s admins, who can reply to you and delete it.
+              </p>
+              <p className="help-content-body">
+                Recordings can only be played by signed-in members of your church. They aren&apos;t included in shared plan links or plan emails, and they&apos;re not in the iPad app yet.
               </p>
             </div>
           ),
@@ -568,7 +597,7 @@ export default function HelpPage() {
           content: () => (
             <div>
               <p className="help-content-body">
-                From the plan detail page, click <strong>Email plan</strong>. This sends a formatted email with the full running order — song titles, keys, arrangements, and musicians — along with links to any attached files.
+                From the plan detail page, click <strong>Email plan</strong>. This sends a formatted email with the full running order — song titles, keys, arrangements, and musicians — along with links to any attached files (rehearsal recordings aren&apos;t included).
               </p>
               <p className="help-content-body">
                 You can send to all church members, or enter a custom list of email addresses. This is useful for distributing the plan to musicians before a service.
@@ -735,7 +764,7 @@ export default function HelpPage() {
                 Admins can grant members the following additional permissions from the Team page:
               </p>
               <p className="help-content-body">
-                <strong>Add &amp; edit songs:</strong> can add and edit songs in the library.
+                <strong>Add &amp; edit songs:</strong> can add and edit songs in the library, and upload and delete their files and rehearsal recordings.
               </p>
               <p className="help-content-body">
                 <strong>Add &amp; edit plans:</strong> can create new plans and edit the plans they created.
