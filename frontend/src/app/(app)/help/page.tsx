@@ -389,7 +389,7 @@ export default function HelpPage() {
                 <strong>Uploading:</strong> admins and members with <strong>Add &amp; edit songs</strong> can click <strong>Upload recording</strong> on the song page. You can upload m4a, mp3, aac or wav files, up to 50MB each, and confirm they&apos;re your own recordings. Each church has 1GB for recordings — the upload box shows how much you&apos;ve used. Deleting a recording frees up its space.
               </p>
               <p className="help-content-body">
-                <strong>Recording on an iPhone:</strong> record in the Voice Memos app, then tap the recording, tap Share and choose <strong>Save to Files</strong>. On the SongStack website, click Upload recording and pick it from Files. (On a Mac, you can drag a voice memo straight from the Voice Memos app into the upload box.)
+                <strong>Recording on an iPhone:</strong> record in the Voice Memos app, then tap the recording, tap Share and choose <strong>Save to Files</strong>. On the SongStack website, click Upload recording and pick it from Files.
               </p>
               <p className="help-content-body">
                 <strong>Asking for a recording to be removed:</strong> if you&apos;re on a recording and would rather it wasn&apos;t shared, click <strong>Ask to remove</strong> next to it. This emails your church&apos;s admins, who can reply to you and delete it.
