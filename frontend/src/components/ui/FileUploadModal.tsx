@@ -87,7 +87,7 @@ export function FileUploadModal({ songId, defaultKey, onClose, onUploaded }: Fil
         id: Math.random().toString(36).slice(2),
         file: f,
         fileType: isAudio ? 'audio' : isChordPro ? 'chordpro' : 'chords',
-        label: isAudio ? 'Rehearsal recording' : isChordPro ? 'ChordPro' : 'Chord chart',
+        label: isAudio ? 'Recording' : isChordPro ? 'ChordPro' : 'Chord chart',
         keyOf: defaultKey || '',
         status: 'pending' as const,
       }
@@ -271,7 +271,9 @@ export function FileUploadModal({ songId, defaultKey, onClose, onUploaded }: Fil
                 >
                   {/* Filename + remove */}
                   <div className="file-entry-header">
-                    <File size={15} className="icon-muted" />
+                    {entry.fileType === 'audio'
+                      ? <Music size={15} className="icon-muted" />
+                      : <File size={15} className="icon-muted" />}
                     <span className="file-entry-name">{entry.file.name}</span>
                     {entry.status === 'uploading' && (
                       <span className="upload-status">Uploading…</span>
@@ -296,9 +298,10 @@ export function FileUploadModal({ songId, defaultKey, onClose, onUploaded }: Fil
                       <div>
                         <label className="label">Type</label>
                         {entry.fileType === 'audio' ? (
-                          <p className="input input--sm" style={{ display: 'flex', alignItems: 'center', gap: 6, margin: 0 }}>
-                            <Music size={14} /> Rehearsal recording
-                          </p>
+                          // A one-option disabled select so it lines up exactly with the Label/Key fields.
+                          <select className="input input--sm" value="audio" disabled aria-label="Type: recording">
+                            <option value="audio">Recording</option>
+                          </select>
                         ) : (
                         <select
                           className="input input--sm"
