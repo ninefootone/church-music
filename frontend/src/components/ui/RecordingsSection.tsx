@@ -16,11 +16,13 @@ interface RecordingsSectionProps {
   recordings: SongFile[]
   canManage: boolean
   deletingId: string | null
-  onUpload: () => void
-  onDelete: (fileId: string) => void
+  onUpload?: () => void
+  onDelete?: (fileId: string) => void
+  /** Plan page: play + download only, plan-page heading style, hidden when there are none. */
+  compact?: boolean
 }
 
-export function RecordingsSection({ songId, recordings, canManage, deletingId, onUpload, onDelete }: RecordingsSectionProps) {
+export function RecordingsSection({ songId, recordings, canManage, deletingId, onUpload, onDelete, compact = false }: RecordingsSectionProps) {
   const [downloadingId, setDownloadingId] = useState<string | null>(null)
   const [urls, setUrls] = useState<Record<string, string>>({})
   const [loadingId, setLoadingId] = useState<string | null>(null)
@@ -32,7 +34,7 @@ export function RecordingsSection({ songId, recordings, canManage, deletingId, o
   const [sentIds, setSentIds] = useState<string[]>([])
 
   // Members who can't upload only see the section when there's something to play.
-  if (!canManage && recordings.length === 0) return null
+  if ((compact || !canManage) && recordings.length === 0) return null
 
   const play = async (fileId: string) => {
     setPlayError(null)
@@ -82,15 +84,21 @@ export function RecordingsSection({ songId, recordings, canManage, deletingId, o
 
   return (
     <>
+      {compact ? (
+        <p className="sub-section-label">Rehearsal recordings</p>
+      ) : (
+      <>
       <div className="divider" />
       <div className="card-header-row">
         <p className="downloads-group-label">Rehearsal recordings</p>
-        {canManage && (
+        {canManage && onUpload && (
           <button onClick={onUpload} className="btn btn-primary btn-sm">
             <Plus size={14} /> Upload recording
           </button>
         )}
       </div>
+      </>
+      )}
 
       {recordings.length === 0 ? (
         <p className="text-muted text-italic">
@@ -135,7 +143,7 @@ export function RecordingsSection({ songId, recordings, canManage, deletingId, o
                   <button onClick={() => download(r.id)} disabled={downloadingId === r.id} className="btn-inline-link">
                     <Download size={13} /> {downloadingId === r.id ? 'Downloading…' : 'Download'}
                   </button>
-                  {canManage ? (
+                  {compact ? null : canManage && onDelete ? (
                     <button onClick={() => onDelete(r.id)} disabled={deletingId === r.id} className="btn-inline-link btn-danger-text">
                       <Trash2 size={13} /> Delete
                     </button>

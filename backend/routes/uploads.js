@@ -398,6 +398,27 @@ router.get('/songs/:songId/files', requireAuth, requireMembership, async functio
   }
 });
 
+// GET /songs/:songId/recordings — a song's rehearsal recordings (members only), for the plan page.
+// No signed URLs here: the player asks for one per file when someone presses Play / Download.
+// Kept separate from /files so older iPad builds never see audio. See claude/rehearsal-recordings.md.
+router.get('/songs/:songId/recordings', requireAuth, requireMembership, async function(req, res, next) {
+  try {
+    const result = await pool.query(
+      `SELECT sf.id, sf.song_id, sf.file_type, sf.label, sf.key_of, sf.file_size, sf.uploaded_at,
+              COALESCE(NULLIF(u.name, ''), u.email) AS uploaded_by_name
+         FROM song_files sf
+         JOIN songs s ON s.id = sf.song_id
+         LEFT JOIN users u ON u.id = sf.uploaded_by
+        WHERE sf.song_id = $1 AND s.church_id = $2 AND sf.file_type = 'audio'
+        ORDER BY sf.key_of, sf.uploaded_at`,
+      [req.params.songId, req.churchId]
+    );
+    res.json(result.rows);
+  } catch (err) {
+    next(err);
+  }
+});
+
 // (removed) GET /public/songs/:songId/files — the unauthenticated, token-only file route
 // was the public-link licensing leak. Files/chords/lyrics are now served only by the
 // authenticated GET /songs/:songId/files (requireAuth + requireMembership), so a signed-in

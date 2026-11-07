@@ -380,7 +380,7 @@ export default function HelpPage() {
           content: () => (
             <div>
               <p className="help-content-body">
-                Each song can have recordings for your team to practise with — for example a voice memo of the guitar or piano and vocal, played in the key your church uses. You&apos;ll find them on the song page under <strong>Rehearsal recordings</strong>, where anyone in your church can play or download them.
+                Each song can have recordings for your team to practise with — for example a voice memo of the guitar or piano and vocal, played in the key your church uses. You&apos;ll find them on the song page under <strong>Rehearsal recordings</strong>, and when you expand a song on a plan — anyone in your church can play or download them.
               </p>
               <p className="help-content-body">
                 <strong>Only upload recordings your own team has made</strong> (or that you have permission to share). Please don&apos;t upload album tracks or backing tracks you&apos;ve bought or downloaded. To point people to the original song, use <strong>Add link</strong> on the song page for Spotify, Apple Music or YouTube instead.
@@ -492,7 +492,7 @@ export default function HelpPage() {
                 To remove a song from a plan, open the plan and use the x button next to the song. This only removes it from the plan — the song stays in your library.
               </p>
               <p className="help-content-body">
-                Click a song in the running order to expand it. This reveals its sheet music, arrangement, CCLI details and any <strong>links</strong> saved on the song (YouTube, Spotify, Apple Music and so on) — click a link to open it in a new tab. If the song has lyrics saved in the library, a <strong>Show lyrics</strong> button appears here too — handy for checking the words while planning, without opening the song separately.
+                Click a song in the running order to expand it. This reveals its sheet music, any <strong>rehearsal recordings</strong> (play or download them right there), arrangement, CCLI details and any <strong>links</strong> saved on the song (YouTube, Spotify, Apple Music and so on) — click a link to open it in a new tab. If the song has lyrics saved in the library, a <strong>Show lyrics</strong> button appears here too — handy for checking the words while planning, without opening the song separately.
               </p>
             </div>
           ),

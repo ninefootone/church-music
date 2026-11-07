@@ -21,6 +21,8 @@ import { RichTextDisplay, LITURGY_ALLOWED_TAGS } from '@/components/ui/RichTextD
 import { isSongSlot, nonSongLabel } from '@/lib/planItems'
 import { planTimeLabel, formatClock } from '@/lib/planTimes'
 import ServiceTimePills from '@/components/ui/ServiceTimePills'
+import { RecordingsSection } from '@/components/ui/RecordingsSection'
+import type { SongFile as Recording } from '@/types'
 
 interface SongFile {
   id: string
@@ -44,6 +46,7 @@ function renderNotes(text: string) {
 function SongItem({ item, index, planId, canAnnotate, showTimings, showDurations, calculatedStart }: { item: any; index: number; planId: string; canAnnotate: boolean; showTimings?: boolean; showDurations?: boolean; calculatedStart?: string | null }) {
   const [expanded, setExpanded] = useState(false)
   const [files, setFiles] = useState<SongFile[] | null>(null)
+  const [recordings, setRecordings] = useState<Recording[]>([])
   const [loadingFiles, setLoadingFiles] = useState(false)
   const [editingNotes, setEditingNotes] = useState(false)
   const [notes, setNotes] = useState(item.notes || '')
@@ -83,8 +86,13 @@ function SongItem({ item, index, planId, canAnnotate, showTimings, showDurations
     if (!expanded && item.song_id && files === null) {
       setLoadingFiles(true)
       try {
-        const res = await api.get(`/api/uploads/songs/${item.song_id}/files`)
+        // Rehearsal recordings come from their own endpoint (audio is kept out of /files).
+        const [res, rec] = await Promise.all([
+          api.get(`/api/uploads/songs/${item.song_id}/files`),
+          api.get(`/api/uploads/songs/${item.song_id}/recordings`).catch(() => ({ data: [] })),
+        ])
         setFiles(res.data)
+        setRecordings(rec.data)
       } catch {
         setFiles([])
       } finally {
@@ -206,6 +214,17 @@ function SongItem({ item, index, planId, canAnnotate, showTimings, showDurations
             <p className="form-empty-note text-muted">
               No sheet music uploaded for this song yet.
             </p>
+          )}
+          {!loadingFiles && recordings.length > 0 && (
+            <div className="song-section" onClick={e => e.stopPropagation()}>
+              <RecordingsSection
+                songId={item.song_id}
+                recordings={recordings}
+                canManage={false}
+                deletingId={null}
+                compact
+              />
+            </div>
           )}
           {Array.isArray(item.song_links) && item.song_links.length > 0 && (
             <div className="song-section">
