@@ -329,7 +329,8 @@ router.delete('/categories/church/:id', requireAuth, requirePermission('can_mana
 // GET /songs/coming-up — dashboard "Coming up in plans": the next few songs in upcoming plans,
 // in service order (soonest plan first, then running order). Drafts follow the same rule as the
 // Plans list (admins / "Add & edit plans" only). Also returns has_sample so the dashboard's
-// sample-content notice doesn't need to load the whole library. Must sit above GET /:id.
+// sample-content notice doesn't need to load the whole library. plan_key = the key the song is set
+// in for its next plan (the item's key_override, else the song's default key). Must sit above GET /:id.
 router.get('/coming-up', requireAuth, requireMembership, async (req, res, next) => {
   try {
     const { churchId } = req;
@@ -339,7 +340,8 @@ router.get('/coming-up', requireAuth, requireMembership, async (req, res, next) 
     const songs = await pool.query(
       `WITH upcoming AS (
          SELECT DISTINCT ON (pi.song_id)
-                pi.song_id, p.plan_date AS next_planned, p.plan_sort_order, p.plan_start_time, pi.position
+                pi.song_id, p.plan_date AS next_planned, p.plan_sort_order, p.plan_start_time, pi.position,
+                NULLIF(TRIM(pi.key_override), '') AS key_override
            FROM plan_items pi
            JOIN plans p ON p.id = pi.plan_id
           WHERE p.church_id = $1
@@ -350,6 +352,7 @@ router.get('/coming-up', requireAuth, requireMembership, async (req, res, next) 
        )
        SELECT s.id, s.title, s.first_line, s.default_key, s.category, s.is_sample,
               u.next_planned,
+              COALESCE(u.key_override, s.default_key) AS plan_key,
               (SELECT MAX(p2.plan_date)
                  FROM plan_items pi2
                  JOIN plans p2 ON p2.id = pi2.plan_id

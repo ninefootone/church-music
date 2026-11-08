@@ -177,7 +177,7 @@ export default function DashboardPage() {
                 <span className="dash-row-meta dash-row-meta--italic">{song.first_line}</span>
               )}
               <div className="song-row-badges-mobile">
-                {song.default_key && <KeyBadge keyOf={song.default_key} />}
+                {song.plan_key && <KeyBadge keyOf={song.plan_key} />}
                 {song.category && <CategoryBadge category={song.category} />}
                 {song.is_sample && <SampleBadge />}
               </div>
@@ -196,7 +196,7 @@ export default function DashboardPage() {
             </div>
           </div>
           <div className="song-row-badges-desktop">
-            {song.default_key && <KeyBadge keyOf={song.default_key} />}
+            {song.plan_key && <KeyBadge keyOf={song.plan_key} />}
             {song.category && <CategoryBadge category={song.category} />}
             {song.is_sample && <SampleBadge />}
           </div>
