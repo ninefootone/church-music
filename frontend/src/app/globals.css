@@ -518,6 +518,8 @@ body.set-viewer-active { overflow: hidden; }
     transition: opacity var(--transition-fast);
   }
   .dash-row:last-of-type { border-bottom: none; }
+  /* :last-of-type only counts same-tag siblings, so a <div> row (pencilled-in draft) before the <div> footer kept its border */
+  .dash-row:has(+ .card-footer) { border-bottom: none; }
   .dash-row:hover        { opacity: 0.75; }
   .dash-row--static:hover { opacity: 1; }
   .dash-row-title {
