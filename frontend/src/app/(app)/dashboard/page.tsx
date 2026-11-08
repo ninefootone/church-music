@@ -147,6 +147,7 @@ export default function DashboardPage() {
                 {plan.title && <p className="dash-row-meta">{plan.title}</p>}
                 {plan.musician_roles && <p className="dash-row-meta">{plan.musician_roles}</p>}
               </div>
+              {plan.status === 'draft' && <span className="badge badge-draft">DRAFT</span>}
               <span className={`badge ${isToday(plan.plan_date) ? 'badge-today' : 'badge-upcoming'}`}>
                 {isToday(plan.plan_date) ? 'TODAY' : 'UPCOMING'}
               </span>
