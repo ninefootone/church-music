@@ -170,7 +170,7 @@ export default function DashboardPage() {
     <div className="card dash-card--songs">
       <div className="card-header-row">
         <span className="section-label">Coming up in plans</span>
-        {canManageSongs && <Link href="/songs/new" className="btn btn-ghost">Add new +</Link>}
+        {canManageSongs && <Link href="/songs/new" className="btn btn-ghost">Add new song +</Link>}
       </div>
       {songs.length === 0 ? (
         <p className="text-muted">No songs in upcoming plans yet.{canAddPlans && <> <Link href="/plans/new" className="link">Add a plan</Link></>}</p>
