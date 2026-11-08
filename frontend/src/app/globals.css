@@ -537,18 +537,24 @@ body.set-viewer-active { overflow: hidden; }
     gap: 8px;
     flex-wrap: wrap;
   }
-  .dashboard-grid {
+  /* Dashboard: two rows with different splits on desktop; flattened + reordered on mobile (see 768px block) */
+  .dashboard-row {
     display: grid;
-    grid-template-columns: 3fr 2fr;
     gap: var(--space-md);
     margin-bottom: var(--space-md);
   }
-  .dashboard-grid-reverse {
-    display: grid;
-    grid-template-columns: 3fr 2fr;
-    gap: var(--space-md);
+  .dashboard-row--narrow-first { grid-template-columns: 2fr 3fr; }
+  .dashboard-row--wide-first   { grid-template-columns: 3fr 2fr; }
+  .dashboard-row--single       { grid-template-columns: 1fr; }
+  .dash-my-empty {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: var(--space-sm);
+    flex-wrap: wrap;
     margin-bottom: var(--space-md);
   }
+  .dash-my-empty-text { margin: 0; }
   .dash-loading      { padding: var(--space-xl); }
   .page-loading-wrap { padding: var(--space-xl); }
   .card-header-row {
@@ -2390,7 +2396,12 @@ select.input {
   .plan-card  { padding: var(--space-md); }
   .song-row      { padding: 12px var(--space-sm); }
 
-  .dashboard-grid, .dashboard-grid-reverse { grid-template-columns: 1fr !important; }
+  .dashboard-cards { display: flex; flex-direction: column; gap: var(--space-md); margin-bottom: var(--space-md); }
+  .dashboard-row   { display: contents; }
+  .dash-card--mine      { order: 1; }
+  .dash-card--all       { order: 2; }
+  .dash-card--songs     { order: 3; }
+  .dash-card--playlists { order: 4; }
   .form-grid-2, .form-timing-grid { grid-template-columns: 1fr !important; }
 
   .song-detail-header  { flex-direction: column; gap: 12px; }

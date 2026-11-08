@@ -132,6 +132,167 @@ export default function DashboardPage() {
     }
   }
 
+  const hasMyPlans = myUpcoming.length > 0
+
+  const myUpcomingCard = (
+    <div className="card dash-card--mine">
+      <div className="card-header-row">
+        <span className="section-label">My upcoming plans</span>
+        {isAdmin && (
+          <Link href="/team" className="btn btn-ghost">Manage team →</Link>
+        )}
+      </div>
+      {myUpcoming.slice(0, 4).map((plan) => {
+          const date = parseISO(plan.plan_date)
+          return (
+            <Link key={plan.id} href={`/plans/${plan.id}`} className="dash-row">
+              <div className="dash-row-content">
+                <p className="dash-row-title">
+                  {format(date, 'd MMM yyyy')}{planTimeLabel(plan) ? ` · ${planTimeLabel(plan)}` : ''}
+                </p>
+                {plan.title && <p className="dash-row-meta">{plan.title}</p>}
+                {plan.musician_roles && <p className="dash-row-meta">{plan.musician_roles}</p>}
+              </div>
+              <span className={`badge ${isToday(plan.plan_date) ? 'badge-today' : 'badge-upcoming'}`}>
+                {isToday(plan.plan_date) ? 'TODAY' : 'UPCOMING'}
+              </span>
+            </Link>
+          )
+        })}
+      <div className="card-footer card-footer--split">
+        <Link href="/availability" className="btn btn-ghost">Manage my availability →</Link>
+        {myUpcoming.length > 4 && <Link href="/plans" className="btn btn-ghost">All plans →</Link>}
+      </div>
+    </div>
+  )
+
+  const songsCard = (
+    <div className="card dash-card--songs">
+      <div className="card-header-row">
+        <span className="section-label">Songs</span>
+        {canManageSongs && <Link href="/songs/new" className="btn btn-ghost">Add new +</Link>}
+      </div>
+      {songs.length === 0 ? (
+        <p className="text-muted">No songs yet.{canManageSongs && <> <Link href="/songs/new" className="link">Add your first</Link></>}</p>
+      ) : songs.map((song) => (
+        <Link key={song.id} href={`/songs/${song.id}`} className="dash-row">
+          <div className="dash-row-content">
+            <p className="dash-row-title">{song.title}</p>
+            <div className="dash-row-body">
+              {song.first_line && (
+                <span className="dash-row-meta dash-row-meta--italic">{song.first_line}</span>
+              )}
+              <div className="song-row-badges-mobile">
+                {song.default_key && <KeyBadge keyOf={song.default_key} />}
+                {song.category && <CategoryBadge category={song.category} />}
+                {song.is_sample && <SampleBadge />}
+              </div>
+              <div className="dash-row-dates">
+                {song.last_sung && (
+                  <span className="dash-row-meta dash-row-meta--xs">
+                    <strong>Last sung</strong>{' '}{format(parseISO(song.last_sung as string), 'd MMM yyyy')}
+                  </span>
+                )}
+                {song.next_planned && (
+                  <span className="dash-row-meta dash-row-meta--xs">
+                    <strong>Planned</strong>{' '}{format(parseISO(song.next_planned as string), 'd MMM yyyy')}
+                  </span>
+                )}
+              </div>
+            </div>
+          </div>
+          <div className="song-row-badges-desktop">
+            {song.default_key && <KeyBadge keyOf={song.default_key} />}
+            {song.category && <CategoryBadge category={song.category} />}
+            {song.is_sample && <SampleBadge />}
+          </div>
+        </Link>
+      ))}
+      <div className="card-footer card-footer--split">
+        <Link href="/songs" className="btn btn-ghost">View all songs →</Link>
+        <Link href="/stats" className="btn btn-ghost">Song stats →</Link>
+      </div>
+    </div>
+  )
+
+  const allPlansCard = (
+    <div className="card dash-card--all">
+      <div className="card-header-row">
+        <span className="section-label">All upcoming plans</span>
+        {canAddPlans && <Link href="/plans/new" className="btn btn-ghost">Add new +</Link>}
+      </div>
+      {plans.length === 0 ? (
+        <p className="text-muted">No upcoming plans. {canAddPlans && <Link href="/plans/new" className="link">Add one +</Link>}</p>
+      ) : plans.map((plan) => {
+        const date = parseISO(plan.plan_date)
+        return (
+          <Link key={plan.id} href={`/plans/${plan.id}`} className="dash-row">
+            <div className="dash-row-content">
+              <p className="dash-row-title">
+                {format(date, 'd MMM')}{planTimeLabel(plan) ? ` · ${planTimeLabel(plan)}` : ''}
+              </p>
+              {plan.title && <p className="dash-row-meta">{plan.title}</p>}
+            </div>
+            {plan.is_sample && <SampleBadge upper />}
+            <span className={`badge ${isToday(plan.plan_date) ? 'badge-today' : 'badge-upcoming'}`}>
+              {isToday(plan.plan_date) ? 'TODAY' : 'UPCOMING'}
+            </span>
+          </Link>
+        )
+      })}
+      <div className="card-footer">
+        <Link href="/plans" className="btn btn-ghost">View all →</Link>
+      </div>
+    </div>
+  )
+
+  const playlistsCard = (
+    <div className="card dash-card--playlists">
+      <div className="card-header-row">
+        <span className="section-label">Playlists</span>
+        {canManagePlaylists && (
+          <button className="btn btn-ghost" onClick={() => setShowAddPlaylist(true)}>Add new +</button>
+        )}
+      </div>
+      {playlists.length === 0 && (
+        <p className="text-muted">No playlists yet.{canManagePlaylists && ' Add one above.'}</p>
+      )}
+      {playlists.map(p => (
+        <div key={p.id} className="dash-row">
+          {editingPlaylist?.id === p.id ? (
+            <div className="dash-row-content">
+              <input className="input" value={editName} onChange={e => setEditName(e.target.value)} placeholder="Name" />
+              <input className="input" value={editUrl} onChange={e => setEditUrl(e.target.value)} placeholder="URL" style={{ marginTop: '0.4rem' }} />
+              <select className="input" value={editType} onChange={e => setEditType(e.target.value)} style={{ marginTop: '0.4rem' }}>
+                <option value="youtube">YouTube</option>
+                <option value="spotify">Spotify</option>
+                <option value="apple_music">Apple Music</option>
+                <option value="other">Other</option>
+              </select>
+              <div style={{ marginTop: '0.4rem', display: 'flex', gap: '0.5rem' }}>
+                <button className="btn btn-primary" onClick={saveEdit}>Save</button>
+                <button className="btn btn-ghost" onClick={() => setEditingPlaylist(null)}>Cancel</button>
+              </div>
+            </div>
+          ) : (
+            <div className="dash-row-content">
+            <a href={p.url} target="_blank" rel="noopener noreferrer" className="dash-row-title link" style={{ display: 'inline-flex', alignItems: 'center', gap: '0.4rem' }}>
+                <PlaylistIcon type={p.type || 'other'} size={14} />
+                {p.name}
+              </a>
+            {canManagePlaylists && (
+              <div style={{ display: 'flex', gap: '0.5rem', marginTop: '0.4rem' }}>
+                <button className="btn btn-ghost" onClick={() => { setEditingPlaylist(p); setEditName(p.name); setEditUrl(p.url); setEditType(p.type || 'other') }}>Edit</button>
+                <button className="btn btn-ghost btn-danger-text" onClick={() => setPendingDeletePlaylist(p)}>Delete</button>
+              </div>
+            )}
+          </div>
+          )}
+        </div>
+      ))}
+    </div>
+  )
+
   return (
     <div>
       {isAdmin && isOnFreePlan(church) && (
@@ -174,84 +335,24 @@ export default function DashboardPage() {
         </div>
       )}
 
-      <div className="dashboard-grid">
-
-        {/* Songs */}
-        <div className="card">
-          <div className="card-header-row">
-            <span className="section-label">Songs</span>
-            {canManageSongs && <Link href="/songs/new" className="btn btn-ghost">Add new +</Link>}
-          </div>
-          {songs.length === 0 ? (
-            <p className="text-muted">No songs yet.{canManageSongs && <> <Link href="/songs/new" className="link">Add your first</Link></>}</p>
-          ) : songs.map((song) => (
-            <Link key={song.id} href={`/songs/${song.id}`} className="dash-row">
-              <div className="dash-row-content">
-                <p className="dash-row-title">{song.title}</p>
-                <div className="dash-row-body">
-                  {song.first_line && (
-                    <span className="dash-row-meta dash-row-meta--italic">{song.first_line}</span>
-                  )}
-                  <div className="song-row-badges-mobile">
-                    {song.default_key && <KeyBadge keyOf={song.default_key} />}
-                    {song.category && <CategoryBadge category={song.category} />}
-                    {song.is_sample && <SampleBadge />}
-                  </div>
-                  <div className="dash-row-dates">
-                    {song.last_sung && (
-                      <span className="dash-row-meta dash-row-meta--xs">
-                        <strong>Last sung</strong>{' '}{format(parseISO(song.last_sung as string), 'd MMM yyyy')}
-                      </span>
-                    )}
-                    {song.next_planned && (
-                      <span className="dash-row-meta dash-row-meta--xs">
-                        <strong>Planned</strong>{' '}{format(parseISO(song.next_planned as string), 'd MMM yyyy')}
-                      </span>
-                    )}
-                  </div>
-                </div>
-              </div>
-              <div className="song-row-badges-desktop">
-                {song.default_key && <KeyBadge keyOf={song.default_key} />}
-                {song.category && <CategoryBadge category={song.category} />}
-                {song.is_sample && <SampleBadge />}
-              </div>
-            </Link>
-          ))}
-          <div className="card-footer card-footer--split">
-            <Link href="/songs" className="btn btn-ghost">View all songs →</Link>
-            <Link href="/stats" className="btn btn-ghost">Song stats →</Link>
-          </div>
+      {/* Not on any upcoming plans: slim strip instead of an empty card */}
+      {!loading && !hasMyPlans && (
+        <div className="card dash-my-empty">
+          <p className="dash-my-empty-text"><strong>My upcoming plans</strong> · You&apos;re not on any upcoming plans yet.</p>
+          <Link href="/availability" className="btn btn-ghost">Manage my availability →</Link>
         </div>
+      )}
 
-        {/* Plans — upcoming only */}
-        <div className="card">
-          <div className="card-header-row">
-            <span className="section-label">All upcoming plans</span>
-            {canAddPlans && <Link href="/plans/new" className="btn btn-ghost">Add new +</Link>}
-          </div>
-          {plans.length === 0 ? (
-            <p className="text-muted">No upcoming plans. {canAddPlans && <Link href="/plans/new" className="link">Add one +</Link>}</p>
-          ) : plans.map((plan) => {
-            const date = parseISO(plan.plan_date)
-            return (
-              <Link key={plan.id} href={`/plans/${plan.id}`} className="dash-row">
-                <div className="dash-row-content">
-                  <p className="dash-row-title">
-                    {format(date, 'd MMM')}{planTimeLabel(plan) ? ` · ${planTimeLabel(plan)}` : ''}
-                  </p>
-                  {plan.title && <p className="dash-row-meta">{plan.title}</p>}
-                </div>
-                {plan.is_sample && <SampleBadge upper />}
-                <span className={`badge ${isToday(plan.plan_date) ? 'badge-today' : 'badge-upcoming'}`}>
-                  {isToday(plan.plan_date) ? 'TODAY' : 'UPCOMING'}
-                </span>
-              </Link>
-            )
-          })}
-          <div className="card-footer">
-            <Link href="/plans" className="btn btn-ghost">View all →</Link>
-          </div>
+      {/* Desktop: My upcoming (2fr) | Songs (3fr), then All upcoming (3fr) | Playlists (2fr).
+          Mobile: rows flatten and cards reorder via CSS — My upcoming, All upcoming, Songs, Playlists. */}
+      <div className="dashboard-cards">
+        <div className="dashboard-row dashboard-row--narrow-first">
+          {hasMyPlans ? myUpcomingCard : allPlansCard}
+          {songsCard}
+        </div>
+        <div className={`dashboard-row dashboard-row--wide-first${hasMyPlans ? '' : ' dashboard-row--single'}`}>
+          {hasMyPlans && allPlansCard}
+          {playlistsCard}
         </div>
       </div>
 
@@ -278,90 +379,6 @@ export default function DashboardPage() {
           </div>
         </div>
       )}
-
-      <div className="dashboard-grid-reverse">
-
-        {/* Upcoming */}
-        <div className="card">
-          <div className="card-header-row">
-            <span className="section-label">My upcoming plans</span>
-            {isAdmin && (
-              <Link href="/team" className="btn btn-ghost">Manage team →</Link>
-            )}
-          </div>
-          {myUpcoming.length === 0 ? (
-            <p className="text-muted">You haven&apos;t been added to any upcoming plans yet.</p>
-          ) : (
-            myUpcoming.map((plan) => {
-              const date = parseISO(plan.plan_date)
-              return (
-                <Link key={plan.id} href={`/plans/${plan.id}`} className="dash-row">
-                  <div className="dash-row-content">
-                    <p className="dash-row-title">
-                      {format(date, 'd MMM yyyy')}{planTimeLabel(plan) ? ` · ${planTimeLabel(plan)}` : ''}
-                    </p>
-                    {plan.title && <p className="dash-row-meta">{plan.title}</p>}
-                    {plan.musician_roles && <p className="dash-row-meta">{plan.musician_roles}</p>}
-                  </div>
-                  <span className={`badge ${isToday(plan.plan_date) ? 'badge-today' : 'badge-upcoming'}`}>
-                    {isToday(plan.plan_date) ? 'TODAY' : 'UPCOMING'}
-                  </span>
-                </Link>
-              )
-            })
-          )}
-          <div className="card-footer">
-            <Link href="/availability" className="btn btn-ghost">Manage my availability →</Link>
-          </div>
-        </div>
-
-        {/* Playlists */}
-        <div className="card">
-          <div className="card-header-row">
-            <span className="section-label">Playlists</span>
-            {canManagePlaylists && (
-              <button className="btn btn-ghost" onClick={() => setShowAddPlaylist(true)}>Add new +</button>
-            )}
-          </div>
-          {playlists.length === 0 && (
-            <p className="text-muted">No playlists yet.{canManagePlaylists && ' Add one above.'}</p>
-          )}
-          {playlists.map(p => (
-            <div key={p.id} className="dash-row">
-              {editingPlaylist?.id === p.id ? (
-                <div className="dash-row-content">
-                  <input className="input" value={editName} onChange={e => setEditName(e.target.value)} placeholder="Name" />
-                  <input className="input" value={editUrl} onChange={e => setEditUrl(e.target.value)} placeholder="URL" style={{ marginTop: '0.4rem' }} />
-                  <select className="input" value={editType} onChange={e => setEditType(e.target.value)} style={{ marginTop: '0.4rem' }}>
-                    <option value="youtube">YouTube</option>
-                    <option value="spotify">Spotify</option>
-                    <option value="apple_music">Apple Music</option>
-                    <option value="other">Other</option>
-                  </select>
-                  <div style={{ marginTop: '0.4rem', display: 'flex', gap: '0.5rem' }}>
-                    <button className="btn btn-primary" onClick={saveEdit}>Save</button>
-                    <button className="btn btn-ghost" onClick={() => setEditingPlaylist(null)}>Cancel</button>
-                  </div>
-                </div>
-              ) : (
-                <div className="dash-row-content">
-                <a href={p.url} target="_blank" rel="noopener noreferrer" className="dash-row-title link" style={{ display: 'inline-flex', alignItems: 'center', gap: '0.4rem' }}>
-                    <PlaylistIcon type={p.type || 'other'} size={14} />
-                    {p.name}
-                  </a>
-                {canManagePlaylists && (
-                  <div style={{ display: 'flex', gap: '0.5rem', marginTop: '0.4rem' }}>
-                    <button className="btn btn-ghost" onClick={() => { setEditingPlaylist(p); setEditName(p.name); setEditUrl(p.url); setEditType(p.type || 'other') }}>Edit</button>
-                    <button className="btn btn-ghost btn-danger-text" onClick={() => setPendingDeletePlaylist(p)}>Delete</button>
-                  </div>
-                )}
-              </div>
-              )}
-            </div>
-          ))}
-        </div>
-
-      </div>
       {pendingDeletePlaylist && (
         <ConfirmModal
           title="Delete playlist"
