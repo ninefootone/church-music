@@ -52,15 +52,9 @@ export default function DashboardPage() {
     if (!church || fetchedRef.current) return
     fetchedRef.current = true
     Promise.all([
-      api.get('/api/songs').then(r => {
-        // Show a random 4 from the library each visit (Fisher–Yates shuffle on a copy)
-        const shuffled = [...r.data]
-        for (let i = shuffled.length - 1; i > 0; i--) {
-          const j = Math.floor(Math.random() * (i + 1))
-          ;[shuffled[i], shuffled[j]] = [shuffled[j], shuffled[i]]
-        }
-        setSongs(shuffled.slice(0, 4))
-        setHasSampleSongs(r.data.some((s: any) => s.is_sample))
+      api.get('/api/songs/coming-up', { params: { limit: 4 } }).then(r => {
+        setSongs(r.data.songs)
+        setHasSampleSongs(r.data.has_sample)
       }),
       api.get('/api/plans', { params: { upcoming: 'true' } }).then(r => {
         setPlans(r.data.slice(0, 4))
@@ -169,11 +163,11 @@ export default function DashboardPage() {
   const songsCard = (
     <div className="card dash-card--songs">
       <div className="card-header-row">
-        <span className="section-label">Songs</span>
+        <span className="section-label">Coming up in plans</span>
         {canManageSongs && <Link href="/songs/new" className="btn btn-ghost">Add new +</Link>}
       </div>
       {songs.length === 0 ? (
-        <p className="text-muted">No songs yet.{canManageSongs && <> <Link href="/songs/new" className="link">Add your first</Link></>}</p>
+        <p className="text-muted">No songs in upcoming plans yet.{canAddPlans && <> <Link href="/plans/new" className="link">Add a plan</Link></>}</p>
       ) : songs.map((song) => (
         <Link key={song.id} href={`/songs/${song.id}`} className="dash-row">
           <div className="dash-row-content">

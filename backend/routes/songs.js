@@ -326,6 +326,52 @@ router.delete('/categories/church/:id', requireAuth, requirePermission('can_mana
   }
 });
 
+// GET /songs/coming-up — dashboard "Coming up in plans": the next few songs in upcoming plans,
+// in service order (soonest plan first, then running order). Drafts follow the same rule as the
+// Plans list (admins / "Add & edit plans" only). Also returns has_sample so the dashboard's
+// sample-content notice doesn't need to load the whole library. Must sit above GET /:id.
+router.get('/coming-up', requireAuth, requireMembership, async (req, res, next) => {
+  try {
+    const { churchId } = req;
+    const limit = Math.min(Math.max(parseInt(req.query.limit, 10) || 4, 1), 20);
+    const canSeeDrafts = req.membership.role === 'admin' || !!req.membership.can_add_plans;
+
+    const songs = await pool.query(
+      `WITH upcoming AS (
+         SELECT DISTINCT ON (pi.song_id)
+                pi.song_id, p.plan_date AS next_planned, p.plan_sort_order, p.plan_start_time, pi.position
+           FROM plan_items pi
+           JOIN plans p ON p.id = pi.plan_id
+          WHERE p.church_id = $1
+            AND pi.song_id IS NOT NULL
+            AND p.plan_date >= CURRENT_DATE
+            ${canSeeDrafts ? '' : "AND p.status = 'published'"}
+          ORDER BY pi.song_id, p.plan_date, p.plan_sort_order, p.plan_start_time NULLS LAST, pi.position
+       )
+       SELECT s.id, s.title, s.first_line, s.default_key, s.category, s.is_sample,
+              u.next_planned,
+              (SELECT MAX(p2.plan_date)
+                 FROM plan_items pi2
+                 JOIN plans p2 ON p2.id = pi2.plan_id
+                WHERE pi2.song_id = s.id AND p2.church_id = $1 AND p2.plan_date < CURRENT_DATE) AS last_sung
+         FROM upcoming u
+         JOIN songs s ON s.id = u.song_id AND s.church_id = $1
+        ORDER BY u.next_planned, u.plan_sort_order, u.plan_start_time NULLS LAST, u.position
+        LIMIT $2`,
+      [churchId, limit]
+    );
+
+    const sample = await pool.query(
+      'SELECT EXISTS (SELECT 1 FROM songs WHERE church_id = $1 AND is_sample) AS has_sample',
+      [churchId]
+    );
+
+    res.json({ songs: songs.rows, has_sample: sample.rows[0].has_sample });
+  } catch (err) {
+    next(err);
+  }
+});
+
 // GET /songs — list church songs
 router.get('/', requireAuth, requireMembership, async (req, res, next) => {
   try {
