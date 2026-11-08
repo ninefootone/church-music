@@ -60,7 +60,7 @@ export default function DashboardPage() {
         setPlans(r.data.slice(0, 4))
         setSamplePlan(r.data.find((p: any) => p.is_sample) ?? null)
       }),
-      api.get('/api/plans/my-upcoming').then(r => setMyUpcoming(r.data)),
+      api.get('/api/plans/my-upcoming', { params: { include_drafts: 'true' } }).then(r => setMyUpcoming(r.data)),
       api.get('/api/playlists').then(r => setPlaylists(r.data)),
     ]).finally(() => setLoading(false))
   }, [church])
@@ -138,21 +138,26 @@ export default function DashboardPage() {
       </div>
       {myUpcoming.slice(0, 4).map((plan) => {
           const date = parseISO(plan.plan_date)
-          return (
-            <Link key={plan.id} href={`/plans/${plan.id}`} className="dash-row">
+          const rowInner = (
+            <>
               <div className="dash-row-content">
                 <p className="dash-row-title">
                   {format(date, 'd MMM yyyy')}{planTimeLabel(plan) ? ` · ${planTimeLabel(plan)}` : ''}
                 </p>
                 {plan.title && <p className="dash-row-meta">{plan.title}</p>}
                 {plan.musician_roles && <p className="dash-row-meta">{plan.musician_roles}</p>}
+                {!plan.can_open && <p className="dash-row-meta dash-row-meta--italic">Pencilled in · details to follow</p>}
               </div>
               {plan.status === 'draft' && <span className="badge badge-draft">DRAFT</span>}
               <span className={`badge ${isToday(plan.plan_date) ? 'badge-today' : 'badge-upcoming'}`}>
                 {isToday(plan.plan_date) ? 'TODAY' : 'UPCOMING'}
               </span>
-            </Link>
+            </>
           )
+          // Drafts a member can't open (not admin / Add & edit plans) show without a link
+          return plan.can_open
+            ? <Link key={plan.id} href={`/plans/${plan.id}`} className="dash-row">{rowInner}</Link>
+            : <div key={plan.id} className="dash-row dash-row--static">{rowInner}</div>
         })}
       <div className="card-footer card-footer--split">
         <Link href="/availability" className="btn btn-ghost">Manage my availability →</Link>

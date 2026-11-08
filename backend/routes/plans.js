@@ -84,20 +84,25 @@ router.get('/my-upcoming', requireAuth, requireMembership, async function(req, r
     // Same draft rule as GET / — only admins and can_add_plans members see drafts.
     // (Without this, a musician on a draft — e.g. a duplicated plan — saw it in
     // Upcoming and then got "Plan not found" when opening it.)
-    const canSeeDrafts = req.membership.role === 'admin' || req.membership.can_add_plans;
+    // ?include_drafts=true (web dashboard only, 2026-11-08): musicians also see drafts they're on, as
+    // "pencilled in" rows. can_open = false for those, so the dashboard shows them without a link (the
+    // plan page itself still 404s drafts for them). Opt-in so the iPad app's behaviour is unchanged.
+    const canSeeDrafts = req.membership.role === 'admin' || !!req.membership.can_add_plans;
+    const includeDrafts = canSeeDrafts || req.query.include_drafts === 'true';
     const result = await pool.query(
       `SELECT p.id, p.plan_date, p.plan_time, p.plan_start_time, p.extra_times, p.plan_sort_order, p.title, p.status,
+              (p.status = 'published' OR $3::boolean) AS can_open,
               STRING_AGG(pm.role, ', ' ORDER BY pm.role) AS musician_roles
        FROM plans p
        JOIN plan_musicians pm ON pm.plan_id = p.id
        WHERE p.church_id = $1
          AND pm.user_id = $2
          AND p.plan_date >= CURRENT_DATE
-         ${canSeeDrafts ? '' : "AND p.status = 'published'"}
+         ${includeDrafts ? '' : "AND p.status = 'published'"}
        GROUP BY p.id
        ORDER BY p.plan_date ASC, p.plan_sort_order ASC, p.plan_start_time ASC NULLS LAST
        LIMIT 10`,
-      [req.churchId, req.user.id]
+      [req.churchId, req.user.id, canSeeDrafts]
     );
     res.json(result.rows);
   } catch (err) {

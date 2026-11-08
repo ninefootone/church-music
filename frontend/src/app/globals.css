@@ -519,6 +519,7 @@ body.set-viewer-active { overflow: hidden; }
   }
   .dash-row:last-of-type { border-bottom: none; }
   .dash-row:hover        { opacity: 0.75; }
+  .dash-row--static:hover { opacity: 1; }
   .dash-row-title {
     font-size: var(--text-base);
     font-weight: 600;
