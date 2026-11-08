@@ -11,6 +11,7 @@ import { parseArrangement } from '@/lib/arrangement'
 import { isSongSlot, nonSongLabel } from '@/lib/planItems'
 import { planTimeLabel } from '@/lib/planTimes'
 import ServiceTimePills from '@/components/ui/ServiceTimePills'
+import { PlaylistIcon } from '@/components/ui/PlaylistIcon'
 
 const API = process.env.NEXT_PUBLIC_API_URL
 
@@ -49,9 +50,19 @@ function SongItem({ item, index, token, churchId, showTimings, showDurations, ca
   }
 
   const isSong = item.type === 'song'
-  const youtubeLink = Array.isArray(item.song_links)
-    ? item.song_links.find((l: { link_type: string | null }) => !l.link_type || l.link_type === 'youtube')
-    : null
+  // Every listening link gets its own button in the row (was: first YouTube link only). Capped so the
+  // title keeps room on phones; the rest are in the expanded panel, flagged by a "+N" chip.
+  type SongLink = { url: string; label: string | null; link_type: string | null }
+  const songLinks: SongLink[] = Array.isArray(item.song_links) ? item.song_links : []
+  const ROW_LINK_LIMIT = 3
+  const rowLinks = songLinks.slice(0, ROW_LINK_LIMIT)
+  const hiddenLinkCount = songLinks.length - rowLinks.length
+  const linkType = (l: SongLink): 'youtube' | 'spotify' | 'apple_music' | 'other' =>
+    l.link_type === 'spotify' || l.link_type === 'apple_music' || l.link_type === 'other' ? l.link_type : 'youtube'
+  const linkTypeLabel = (l: SongLink) => {
+    const t = linkType(l)
+    return t === 'spotify' ? 'Spotify' : t === 'apple_music' ? 'Apple Music' : t === 'other' ? 'Link' : 'YouTube'
+  }
   const hasContent = !isSong && !!item.content
   const canExpand = isSong || hasContent
 
@@ -93,16 +104,26 @@ function SongItem({ item, index, token, churchId, showTimings, showDurations, ca
           {isSong && (item.key_override || item.song_default_key) && (
             <span className="badge-key">{(item.key_override || item.song_default_key || '').replace(/♯/g, '#').replace(/♭/g, 'b')}</span>
           )}
-          {isSong && youtubeLink && (
-            <a
-              href={youtubeLink.url}
-              target="_blank"
-              rel="noopener noreferrer"
-              onClick={e => e.stopPropagation()}
-              className="yt-btn"
-            >
-              <span className="youtube-play" />
-            </a>
+          {isSong && rowLinks.map((link, i) => {
+            const t = linkType(link)
+            const name = link.label || linkTypeLabel(link)
+            return (
+              <a
+                key={i}
+                href={link.url}
+                target="_blank"
+                rel="noopener noreferrer"
+                onClick={e => e.stopPropagation()}
+                className={t === 'youtube' ? 'yt-btn' : 'row-link-btn'}
+                title={name}
+                aria-label={`${name} (opens in a new tab)`}
+              >
+                {t === 'youtube' ? <span className="youtube-play" /> : <PlaylistIcon type={t} size={14} />}
+              </a>
+            )
+          })}
+          {isSong && hiddenLinkCount > 0 && (
+            <span className="row-link-more" title="More links when you expand the song">+{hiddenLinkCount}</span>
           )}
           {isSong && (
             <span className="item-chevron">
