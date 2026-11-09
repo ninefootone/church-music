@@ -379,7 +379,7 @@ export default function DashboardPage() {
               </p>
             </div>
             <div className="dash-sample-notice-actions">
-              <a href="https://apps.apple.com/app/id6816034031" target="_blank" rel="noopener noreferrer" className="btn btn-primary">
+              <a href="https://apps.apple.com/app/apple-store/id6816034031?pt=129467903&ct=web-dashboard&mt=8" target="_blank" rel="noopener noreferrer" className="btn btn-primary">
                 Get it on the App Store
               </a>
               <button type="button" onClick={dismissIpadPromo} className="btn-text">Dismiss</button>
