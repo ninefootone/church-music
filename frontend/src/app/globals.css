@@ -558,6 +558,9 @@ body.set-viewer-active { overflow: hidden; }
     margin-bottom: var(--space-md);
   }
   .dash-my-empty-text { margin: 0; }
+  /* Dashboard plan rows: DRAFT / SAMPLE / TODAY pills side by side; stacked on phones */
+  .dash-row-pills { display: flex; gap: 4px; align-items: center; flex-shrink: 0; }
+  @media (max-width: 600px) { .dash-row-pills { flex-direction: column; align-items: flex-end; } }
   .dash-loading      { padding: var(--space-xl); }
   .page-loading-wrap { padding: var(--space-xl); }
   .card-header-row {

@@ -159,10 +159,12 @@ export default function DashboardPage() {
                 {plan.musician_roles && <p className="dash-row-meta">{plan.musician_roles}</p>}
                 {!plan.can_open && <p className="dash-row-meta dash-row-meta--italic">Pencilled in · details to follow</p>}
               </div>
-              {plan.status === 'draft' && <span className="badge badge-draft">DRAFT</span>}
-              <span className={`badge ${isToday(plan.plan_date) ? 'badge-today' : 'badge-upcoming'}`}>
-                {isToday(plan.plan_date) ? 'TODAY' : 'UPCOMING'}
-              </span>
+              {(plan.status === 'draft' || isToday(plan.plan_date)) && (
+                <div className="dash-row-pills">
+                  {plan.status === 'draft' && <span className="badge badge-draft">DRAFT</span>}
+                  {isToday(plan.plan_date) && <span className="badge badge-today">TODAY</span>}
+                </div>
+              )}
             </>
           )
           // Drafts a member can't open (not admin / Add & edit plans) show without a link
@@ -244,11 +246,13 @@ export default function DashboardPage() {
               </p>
               {plan.title && <p className="dash-row-meta">{plan.title}</p>}
             </div>
-            {plan.is_sample && <SampleBadge upper />}
-            {plan.status === 'draft' && <span className="badge badge-draft">DRAFT</span>}
-            <span className={`badge ${isToday(plan.plan_date) ? 'badge-today' : 'badge-upcoming'}`}>
-              {isToday(plan.plan_date) ? 'TODAY' : 'UPCOMING'}
-            </span>
+            {(plan.is_sample || plan.status === 'draft' || isToday(plan.plan_date)) && (
+              <div className="dash-row-pills">
+                {plan.is_sample && <SampleBadge upper />}
+                {plan.status === 'draft' && <span className="badge badge-draft">DRAFT</span>}
+                {isToday(plan.plan_date) && <span className="badge badge-today">TODAY</span>}
+              </div>
+            )}
           </Link>
         )
       })}
