@@ -241,9 +241,7 @@ body.set-viewer-active { overflow: hidden; }
     border-radius: var(--radius-pill);
     line-height: 1.4;
   }
-  .badge-upcoming    { background: var(--color-accent-light); color: var(--color-accent-dark); }
   .badge-today       { background: var(--color-brand-100);    color: var(--color-brand-700); }
-  .badge-past        { background: var(--color-neutral-100);  color: var(--color-neutral-400); }
   .badge-key--shrink { flex-shrink: 0; }
   .badge-key--xs     { font-size: var(--text-xs); }
 
@@ -2527,7 +2525,7 @@ select.input {
 }
 
 @media (max-width: 480px) {
-  .badge-upcoming, .badge-today, .badge-past { font-size: 10px; padding: 2px 7px; }
+  .badge-today { font-size: 10px; padding: 2px 7px; }
   .usage-stats-grid { grid-template-columns: 1fr !important; }
 }
 

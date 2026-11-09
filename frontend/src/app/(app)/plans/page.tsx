@@ -59,7 +59,7 @@ export default function PlansPage() {
   const todayPlans = upcoming.filter(s => isToday(s.plan_date))
   const futurePlans = upcoming.filter(s => !isToday(s.plan_date))
 
-  const PlanCard = ({ plan, badge }: { plan: Plan; badge: 'today' | 'upcoming' }) => (
+  const PlanCard = ({ plan }: { plan: Plan }) => (
     <div className="plan-card-wrap">
       <Link href={`/plans/${plan.id}`} className="plan-card">
         <div className="dash-row-content">
@@ -72,16 +72,16 @@ export default function PlansPage() {
           {plan.title && <p className="dash-row-meta">{plan.title}</p>}
         </div>
         <div className="plan-card-right">
-          {/* Pills sit beside the chevron on wider screens, under the date/title on phones (CSS) */}
-          <div className="plan-card-pills">
-            {plan.is_sample && <SampleBadge upper />}
-            {plan.status === 'draft' && (
-              <span className="badge badge-draft">DRAFT</span>
-            )}
-            <span className={badge === 'today' ? 'badge badge-today' : 'badge badge-upcoming'}>
-              {badge === 'today' ? 'TODAY' : 'UPCOMING'}
-            </span>
-          </div>
+          {/* Pills sit beside the chevron on wider screens, under the date/title on phones (CSS).
+              No TODAY / UPCOMING pill: the Today / Upcoming / Past section headings already say it. */}
+          {(plan.is_sample || plan.status === 'draft') && (
+            <div className="plan-card-pills">
+              {plan.is_sample && <SampleBadge upper />}
+              {plan.status === 'draft' && (
+                <span className="badge badge-draft">DRAFT</span>
+              )}
+            </div>
+          )}
           <ChevronRight size={18} className="text-muted plan-card-chevron" />
         </div>
       </Link>
@@ -162,7 +162,7 @@ export default function PlansPage() {
           {todayPlans.length > 0 && (
             <>
               <div className="section-label">Today</div>
-              {todayPlans.map(s => <PlanCard key={s.id} plan={s} badge="today" />)}
+              {todayPlans.map(s => <PlanCard key={s.id} plan={s} />)}
             </>
           )}
 
@@ -170,7 +170,7 @@ export default function PlansPage() {
           {futurePlans.length > 0 ? (
             <>
               <div className="section-label" style={{ marginTop: todayPlans.length > 0 ? 'var(--space-lg)' : 0 }}>Upcoming</div>
-              {futurePlans.map(s => <PlanCard key={s.id} plan={s} badge="upcoming" />)}
+              {futurePlans.map(s => <PlanCard key={s.id} plan={s} />)}
             </>
           ) : todayPlans.length === 0 && (
             <div className="card card-notice">
