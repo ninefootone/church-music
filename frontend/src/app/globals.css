@@ -602,11 +602,29 @@ body.set-viewer-active { overflow: hidden; }
   }
   .dash-sample-notice-text { flex: 1 1 320px; }
   .dash-sample-notice-actions { display: flex; gap: var(--space-sm); flex-shrink: 0; }
-  .dash-app-promo { margin-top: var(--space-md); margin-bottom: 0; }
-  /* iPad promo: button + Dismiss stacked under the text, left-aligned */
-  .dash-app-promo .dash-sample-notice-inner { flex-direction: column; align-items: flex-start; }
-  .dash-app-promo .dash-sample-notice-text { flex: none; }
-  .dash-app-promo .dash-sample-notice-actions { flex-direction: column; align-items: flex-start; gap: 6px; }
+  /* iPad app promo (matches the songstack.church "Get the iPad app!" section) */
+  .dash-app-promo {
+    margin-top: var(--space-md);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: var(--space-lg);
+  }
+  .dash-app-promo-text { display: flex; flex-direction: column; align-items: flex-start; gap: var(--space-sm); max-width: 560px; }
+  .dash-app-promo-heading {
+    margin: 0;
+    font-size: var(--text-2xl, 1.6rem);
+    font-weight: 800;
+    letter-spacing: -0.02em;
+    color: var(--color-brand-500);
+    padding-bottom: 6px;
+    border-bottom: 4px solid var(--color-brand-300);
+  }
+  .dash-app-promo-body { margin: 0; color: var(--color-text); line-height: 1.55; }
+  .dash-app-promo-badge { display: inline-block; margin-top: var(--space-xs, 4px); }
+  .dash-app-promo-badge img { display: block; height: 44px; width: auto; }
+  .dash-app-promo-image { width: 220px; max-width: 35%; height: auto; flex-shrink: 0; }
+  @media (max-width: 600px) { .dash-app-promo-image { display: none; } }
   .dash-card-heading { font-weight: 600; margin: 0; }
   .dash-card-subtext {
     font-size: var(--text-sm);

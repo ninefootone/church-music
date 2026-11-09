@@ -368,23 +368,20 @@ export default function DashboardPage() {
         </div>
       </div>
 
-      {/* iPad app promo: below the cards so it never pushes plans down */}
+      {/* iPad app promo: below the cards so it never pushes plans down. Styled to match songstack.church. */}
       {!loading && !ipadPromoDismissed && (
-        <div className="card dash-sample-notice dash-app-promo">
-          <div className="dash-sample-notice-inner">
-            <div className="dash-sample-notice-text">
-              <p className="dash-card-heading">SongStack for iPad</p>
-              <p className="dash-card-subtext">
-                Take your plans onto the stage. Download sets for rooms with no signal, change key and capo, and mark up your music with Apple Pencil.
-              </p>
-            </div>
-            <div className="dash-sample-notice-actions">
-              <a href="https://apps.apple.com/app/apple-store/id6816034031?pt=129467903&ct=web-dashboard&mt=8" target="_blank" rel="noopener noreferrer" className="btn btn-primary">
-                Get it on the App Store
-              </a>
-              <button type="button" onClick={dismissIpadPromo} className="btn-text">Dismiss</button>
-            </div>
+        <div className="card dash-app-promo">
+          <div className="dash-app-promo-text">
+            <h2 className="dash-app-promo-heading">Get the iPad app!</h2>
+            <p className="dash-app-promo-body">
+              The app enables offline viewing, annotations (with Apple Pencil support), custom plans and access to the church&apos;s full song library.
+            </p>
+            <a href="https://apps.apple.com/app/apple-store/id6816034031?pt=129467903&ct=web-dashboard&mt=8" target="_blank" rel="noopener noreferrer" className="dash-app-promo-badge">
+              <img src="/app-store-badge.svg" alt="Download on the App Store" />
+            </a>
+            <button type="button" onClick={dismissIpadPromo} className="btn-text">Dismiss</button>
           </div>
+          <img src="/songstack-ipad.png" alt="" className="dash-app-promo-image" loading="lazy" />
         </div>
       )}
 
