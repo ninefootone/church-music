@@ -27,6 +27,8 @@ export default async function AppLayout({ children }: { children: React.ReactNod
           <Link href="/legal" className="footer-link">Legal</Link>
           &nbsp;&middot;&nbsp;
           <CookieSettingsLink />
+          &nbsp;&middot;&nbsp;
+          <a href="https://apps.apple.com/app/id6816034031" target="_blank" rel="noopener noreferrer" className="footer-link">iPad app</a>
         </div>
         <div className="footer-copy">SongStack &copy; 2026 <a href="https://www.ninefootone.co.uk/" target="_blank" rel="noopener noreferrer" className="footer-brand-link">ninefootone creative ltd</a></div>
       </footer>

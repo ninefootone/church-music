@@ -602,6 +602,8 @@ body.set-viewer-active { overflow: hidden; }
   }
   .dash-sample-notice-text { flex: 1 1 320px; }
   .dash-sample-notice-actions { display: flex; gap: var(--space-sm); flex-shrink: 0; }
+  .dash-app-promo { margin-top: var(--space-md); margin-bottom: 0; }
+  @media (max-width: 600px) { .dash-app-promo { display: none; } }
   .dash-card-heading { font-weight: 600; margin: 0; }
   .dash-card-subtext {
     font-size: var(--text-sm);

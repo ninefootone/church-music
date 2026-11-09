@@ -48,6 +48,17 @@ export default function DashboardPage() {
     setSampleNoticeDismissed(true)
   }
 
+  // iPad app promo: dismissed per browser (it's about the person, not the church)
+  const [ipadPromoDismissed, setIpadPromoDismissed] = useState(true)
+  useEffect(() => {
+    try { setIpadPromoDismissed(localStorage.getItem('songstack_ipad_promo_dismissed') === 'true') }
+    catch { setIpadPromoDismissed(false) }
+  }, [])
+  const dismissIpadPromo = () => {
+    try { localStorage.setItem('songstack_ipad_promo_dismissed', 'true') } catch {}
+    setIpadPromoDismissed(true)
+  }
+
   useEffect(() => {
     if (!church || fetchedRef.current) return
     fetchedRef.current = true
@@ -356,6 +367,26 @@ export default function DashboardPage() {
           {playlistsCard}
         </div>
       </div>
+
+      {/* iPad app promo: below the cards so it never pushes plans down */}
+      {!loading && !ipadPromoDismissed && (
+        <div className="card dash-sample-notice dash-app-promo">
+          <div className="dash-sample-notice-inner">
+            <div className="dash-sample-notice-text">
+              <p className="dash-card-heading">SongStack for iPad</p>
+              <p className="dash-card-subtext">
+                Take your plans onto the stage. Download sets for rooms with no signal, change key and capo, and mark up your music with Apple Pencil.
+              </p>
+            </div>
+            <div className="dash-sample-notice-actions">
+              <button type="button" onClick={dismissIpadPromo} className="btn btn-ghost">No thanks</button>
+              <a href="https://apps.apple.com/app/id6816034031" target="_blank" rel="noopener noreferrer" className="btn btn-primary">
+                Get it on the App Store
+              </a>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Add playlist modal */}
       {showAddPlaylist && (
