@@ -72,14 +72,17 @@ export default function PlansPage() {
           {plan.title && <p className="dash-row-meta">{plan.title}</p>}
         </div>
         <div className="plan-card-right">
-          {plan.is_sample && <SampleBadge upper />}
-          {plan.status === 'draft' && (
-            <span className="badge badge-draft">DRAFT</span>
-          )}
-          <span className={badge === 'today' ? 'badge badge-today' : 'badge badge-upcoming'}>
-            {badge === 'today' ? 'TODAY' : 'UPCOMING'}
-          </span>
-          <ChevronRight size={18} className="text-muted" />
+          {/* Pills sit beside the chevron on wider screens, under the date/title on phones (CSS) */}
+          <div className="plan-card-pills">
+            {plan.is_sample && <SampleBadge upper />}
+            {plan.status === 'draft' && (
+              <span className="badge badge-draft">DRAFT</span>
+            )}
+            <span className={badge === 'today' ? 'badge badge-today' : 'badge badge-upcoming'}>
+              {badge === 'today' ? 'TODAY' : 'UPCOMING'}
+            </span>
+          </div>
+          <ChevronRight size={18} className="text-muted plan-card-chevron" />
         </div>
       </Link>
       {(isAdmin || canAddPlans) && (
@@ -108,11 +111,15 @@ export default function PlansPage() {
             )}
           </span>
         </div>
-        {plan.is_sample && <SampleBadge upper />}
-        {plan.status === 'draft' && (
-          <span className="badge badge-draft">DRAFT</span>
+        {(plan.is_sample || plan.status === 'draft') && (
+          <div className="plan-card-pills">
+            {plan.is_sample && <SampleBadge upper />}
+            {plan.status === 'draft' && (
+              <span className="badge badge-draft">DRAFT</span>
+            )}
+          </div>
         )}
-        <ChevronRight size={15} className="text-muted" />
+        <ChevronRight size={15} className="text-muted plan-card-chevron" />
       </Link>
       {(isAdmin || canAddPlans) && (
         <button
