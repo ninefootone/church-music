@@ -379,10 +379,10 @@ export default function DashboardPage() {
               </p>
             </div>
             <div className="dash-sample-notice-actions">
-              <button type="button" onClick={dismissIpadPromo} className="btn btn-ghost">No thanks</button>
               <a href="https://apps.apple.com/app/id6816034031" target="_blank" rel="noopener noreferrer" className="btn btn-primary">
                 Get it on the App Store
               </a>
+              <button type="button" onClick={dismissIpadPromo} className="btn-text">Dismiss</button>
             </div>
           </div>
         </div>
