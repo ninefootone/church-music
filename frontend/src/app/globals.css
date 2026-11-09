@@ -603,7 +603,10 @@ body.set-viewer-active { overflow: hidden; }
   .dash-sample-notice-text { flex: 1 1 320px; }
   .dash-sample-notice-actions { display: flex; gap: var(--space-sm); flex-shrink: 0; }
   .dash-app-promo { margin-top: var(--space-md); margin-bottom: 0; }
-  .dash-app-promo .dash-sample-notice-actions { flex-direction: column; align-items: center; gap: 6px; }
+  /* iPad promo: button + Dismiss stacked under the text, left-aligned */
+  .dash-app-promo .dash-sample-notice-inner { flex-direction: column; align-items: flex-start; }
+  .dash-app-promo .dash-sample-notice-text { flex: none; }
+  .dash-app-promo .dash-sample-notice-actions { flex-direction: column; align-items: flex-start; gap: 6px; }
   .dash-card-heading { font-weight: 600; margin: 0; }
   .dash-card-subtext {
     font-size: var(--text-sm);
