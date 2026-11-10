@@ -241,7 +241,12 @@ router.get('/overview', requireAuth, requireMembership, async function(req, res,
 
     res.json({
       ...base,
-      plans: plans.map((p) => ({ ...p, items: itemsByPlan[p.id] || [], musicians: musiciansByPlan[p.id] || [] })),
+      plans: plans.map((p) => {
+        const planMusicians = musiciansByPlan[p.id] || [];
+        // is_mine: the signed-in user is on this plan's rota (same rule as /my-upcoming).
+        const is_mine = planMusicians.some((m) => m.user_id && m.user_id === req.user.id);
+        return { ...p, items: itemsByPlan[p.id] || [], musicians: planMusicians, is_mine };
+      }),
       song_uses: songUses.rows,
       unavailability: unavailability.rows,
     });

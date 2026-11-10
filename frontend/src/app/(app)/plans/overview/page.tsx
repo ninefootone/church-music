@@ -70,6 +70,7 @@ interface OverviewPlan {
   plan_time: string | null
   items: OverviewItem[]
   musicians: OverviewMusician[]
+  is_mine?: boolean
 }
 
 interface SongUse {
@@ -508,7 +509,12 @@ export default function PlansOverviewPage() {
                   <span className="po-col-date">{format(parseISO(plan.plan_date), 'EEE d MMM')}</span>
                   {planTimeLabel(plan) && <span className="po-col-time">{planTimeLabel(plan)}</span>}
                   <span className="po-col-title">{plan.title || 'Untitled plan'}</span>
-                  {plan.status === 'draft' && <span className="badge badge-draft">DRAFT</span>}
+                  {(plan.is_mine || plan.status === 'draft') && (
+                    <span className="po-col-pills">
+                      {plan.is_mine && <span className="badge badge-mine" title="You're on this plan">MINE</span>}
+                      {plan.status === 'draft' && <span className="badge badge-draft">DRAFT</span>}
+                    </span>
+                  )}
                 </Link>
 
                 <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={(e) => reorder(plan, e)}>
