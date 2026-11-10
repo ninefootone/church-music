@@ -465,6 +465,8 @@ export default function PlanEditPage() {
     })
   }
   const startTimes = calcStartTimes()
+  // With no minutes on any item every row would show the same start time, which looks like working timings.
+  const anyDurations = items.some(i => i.duration_minutes)
 
   return (
     <div>
@@ -497,6 +499,9 @@ export default function PlanEditPage() {
               }} /> Show item duration
             </label>
           </div>
+          {showTimings && planStartTime && items.length > 0 && !anyDurations && (
+            <p className="timing-hint">No item has a duration yet. Tick Show item duration and add minutes to see timings.</p>
+          )}
         </div>
         <div className="btn-group">
           <Link href={`/plans/${id}`} className="btn btn-secondary">Cancel</Link>
@@ -681,7 +686,7 @@ export default function PlanEditPage() {
                     onRemove={() => removeItem(idx)}
                     onUpdate={updates => updateItem(idx, updates)}
                     onToggleExpanded={() => toggleExpanded(idx)}
-                    showTimings={showTimings && !!planStartTime}
+                    showTimings={showTimings && !!planStartTime && anyDurations}
                     showDurations={showDurations}
                     calculatedStart={startTimes[idx]}
                   />

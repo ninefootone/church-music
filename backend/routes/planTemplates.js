@@ -32,8 +32,14 @@ async function snapshotPlan(planId, churchId) {
     [planId, churchId]
   );
   if (plan.rows.length === 0) return null;
+  // A song with no minutes of its own on the plan takes the song's default length —
+  // the same fallback the plan editor shows — so the template keeps what you saw.
   const items = await pool.query(
-    'SELECT type, title, notes, content, duration_minutes, phase FROM plan_items WHERE plan_id=$1 ORDER BY position',
+    `SELECT pi.type, pi.title, pi.notes, pi.content,
+            COALESCE(pi.duration_minutes, s.default_duration) AS duration_minutes, pi.phase
+       FROM plan_items pi
+       LEFT JOIN songs s ON s.id = pi.song_id
+      WHERE pi.plan_id=$1 ORDER BY pi.position`,
     [planId]
   );
   const p = plan.rows[0];

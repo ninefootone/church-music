@@ -12,6 +12,7 @@ import { extraTimesError, cleanExtraTimes, formatClock } from '@/lib/planTimes'
 interface TemplateItem {
   type: string
   title: string | null
+  duration_minutes?: number | null
 }
 
 interface PlanTemplate {
@@ -36,10 +37,14 @@ function summarise(t: PlanTemplate): string {
   // "9:15 am & 11:00 am" when the template repeats at further times.
   const extras = (t.extra_times ?? []).map(formatClock)
   const time = t.plan_time && extras.length ? [t.plan_time, ...extras].join(' & ') : t.plan_time
+  // Durations can't be edited here, so show whether the template carries any —
+  // a template saved from a plan with no minutes would otherwise look the same.
+  const minutes = t.items.reduce((sum, i) => sum + (i.duration_minutes ?? 0), 0)
   const parts = [
     time,
     `${others} service item${others === 1 ? '' : 's'}`,
     `${slots} song slot${slots === 1 ? '' : 's'}`,
+    t.items.length > 0 ? (minutes > 0 ? `${minutes} mins` : 'no durations') : null,
   ]
   return parts.filter(Boolean).join(' · ')
 }

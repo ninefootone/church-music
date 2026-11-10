@@ -1593,6 +1593,7 @@ body.set-viewer-active { overflow: hidden; }
   .timing-toggle-label { display: flex; align-items: center; gap: 6px; font-size: var(--text-sm); color: var(--color-text-muted); cursor: pointer; user-select: none; }
   .timing-toggle-label input[type="checkbox"] { cursor: pointer; accent-color: var(--color-brand-500); }
   .timing-toggle-label input[type="checkbox"]:disabled { cursor: not-allowed; opacity: 0.5; }
+  .timing-hint         { font-size: var(--text-sm); color: var(--color-text-muted); margin-top: 6px; }
 
   /* ── Set mode ── */
   .loading-spinner-row { padding: var(--space-xl); display: flex; align-items: center; gap: 8px; color: var(--color-text-muted); }
