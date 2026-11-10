@@ -1,6 +1,7 @@
 // Account deletion (App Store guideline 5.1.1(v) — must be possible inside the app).
 //   GET    /api/account/deletion-check  → { blockers, willDeleteChurches }  (nothing changes)
-//   DELETE /api/account  { confirm: 'DELETE' }
+//   DELETE /api/account  { confirm: 'DELETE', apple_authorization_code?, apple_client_id? }
+//     The optional Apple fields come from the iPad (fresh native Apple sign-in) → Apple tokens are revoked (5.1.1(v)).
 // Order: database first (one transaction), then Clerk, then Brevo + R2 (best effort).
 // If Clerk fails the DB is already clean and the call is safe to retry: requireAuth
 // re-creates an empty users row, which the retry erases again.
@@ -12,6 +13,7 @@ const { createClerkClient } = require('@clerk/backend');
 const { S3Client, DeleteObjectCommand } = require('@aws-sdk/client-s3');
 const { deleteBrevoContact } = require('../utils/email');
 const { assess, erase } = require('../utils/accountDeletion');
+const { revokeWithAuthorizationCode } = require('../utils/appleRevoke');
 
 const clerk = createClerkClient({ secretKey: process.env.CLERK_SECRET_KEY });
 const endpoint = process.env.R2_ENDPOINT || ('https://' + process.env.R2_ACCOUNT_ID + '.r2.cloudflarestorage.com');
@@ -51,6 +53,12 @@ router.delete('/', requireAuth, async (req, res, next) => {
     }
 
     // Outside-world cleanup. The database is already clean at this point.
+    // Sign in with Apple: revoke this user's Apple tokens (best effort; never blocks deletion). Done after the erase
+    // so a blocked deletion (409 above) never revokes anything.
+    if (req.body?.apple_authorization_code) {
+      const apple = await revokeWithAuthorizationCode(String(req.body.apple_authorization_code), String(req.body.apple_client_id || ''));
+      console.log(`[account] apple revoke for user ${req.user.id}: ${apple}`);
+    }
     let clerkDeleted = true;
     try {
       await clerk.users.deleteUser(req.clerkUserId);
