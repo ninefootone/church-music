@@ -57,7 +57,7 @@ router.get('/', requireAuth, requireMembership, async function(req, res, next) {
     let query = `
       SELECT s.*,
         COUNT(si.id) FILTER (WHERE si.type = 'song') AS song_count,
-        -- is_mine: signed-in user is on this plan's rota (same rule as /my-upcoming and /overview).
+        -- is_mine: signed-in user is on this plan's rota (same rule as /my-upcoming).
         EXISTS (SELECT 1 FROM plan_musicians pm WHERE pm.plan_id = s.id AND pm.user_id = $2) AS is_mine
       FROM plans s
       LEFT JOIN plan_items si ON si.plan_id = s.id
@@ -243,12 +243,7 @@ router.get('/overview', requireAuth, requireMembership, async function(req, res,
 
     res.json({
       ...base,
-      plans: plans.map((p) => {
-        const planMusicians = musiciansByPlan[p.id] || [];
-        // is_mine: the signed-in user is on this plan's rota (same rule as /my-upcoming).
-        const is_mine = planMusicians.some((m) => m.user_id && m.user_id === req.user.id);
-        return { ...p, items: itemsByPlan[p.id] || [], musicians: planMusicians, is_mine };
-      }),
+      plans: plans.map((p) => ({ ...p, items: itemsByPlan[p.id] || [], musicians: musiciansByPlan[p.id] || [] })),
       song_uses: songUses.rows,
       unavailability: unavailability.rows,
     });

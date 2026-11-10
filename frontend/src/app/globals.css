@@ -3957,8 +3957,8 @@ body.plans-overview-active .app-main-content { max-width: 1680px; }
 .po-col-date { font-weight: 600; font-size: 0.9375rem; }
 .po-col-time { font-size: 0.75rem; color: var(--color-text-muted); }
 .po-col-title { font-size: 0.8125rem; color: var(--color-text-secondary); }
-.po-col-pills { display: flex; flex-wrap: wrap; gap: 4px; margin-top: 4px; }
-/* MINE: you're on this plan's rota. Accent colour so it doesn't read as DRAFT (brand). */
+.po-col-head .badge-draft { align-self: flex-start; margin-top: 4px; }
+/* MINE (Plans list): you're on this plan's rota. Accent colour so it doesn't read as DRAFT (brand). */
 .badge-mine { background: var(--color-accent-light); color: var(--color-accent-dark); }
 .po-items { list-style: none; padding: 0; margin: 0; display: flex; flex-direction: column; gap: 6px; }
 .po-item { font-size: 0.8125rem; line-height: 1.35; }
