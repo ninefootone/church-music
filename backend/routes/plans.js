@@ -56,12 +56,14 @@ router.get('/', requireAuth, requireMembership, async function(req, res, next) {
 
     let query = `
       SELECT s.*,
-        COUNT(si.id) FILTER (WHERE si.type = 'song') AS song_count
+        COUNT(si.id) FILTER (WHERE si.type = 'song') AS song_count,
+        -- is_mine: signed-in user is on this plan's rota (same rule as /my-upcoming and /overview).
+        EXISTS (SELECT 1 FROM plan_musicians pm WHERE pm.plan_id = s.id AND pm.user_id = $2) AS is_mine
       FROM plans s
       LEFT JOIN plan_items si ON si.plan_id = s.id
       WHERE s.church_id = $1
     `;
-    const params = [churchId];
+    const params = [churchId, req.user.id];
 
     if (upcoming === 'true') query += ' AND s.plan_date >= CURRENT_DATE';
     if (upcoming === 'false') query += ' AND s.plan_date < CURRENT_DATE';

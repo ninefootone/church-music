@@ -22,6 +22,7 @@ interface Plan {
   public_token: string
   status: 'draft' | 'published'
   is_sample?: boolean
+  is_mine?: boolean
 }
 
 export default function PlansPage() {
@@ -74,8 +75,9 @@ export default function PlansPage() {
         <div className="plan-card-right">
           {/* Pills sit beside the chevron on wider screens, under the date/title on phones (CSS).
               No TODAY / UPCOMING pill: the Today / Upcoming / Past section headings already say it. */}
-          {(plan.is_sample || plan.status === 'draft') && (
+          {(plan.is_mine || plan.is_sample || plan.status === 'draft') && (
             <div className="plan-card-pills">
+              {plan.is_mine && <span className="badge badge-mine" title="You're on this plan">MINE</span>}
               {plan.is_sample && <SampleBadge upper />}
               {plan.status === 'draft' && (
                 <span className="badge badge-draft">DRAFT</span>
@@ -111,8 +113,9 @@ export default function PlansPage() {
             )}
           </span>
         </div>
-        {(plan.is_sample || plan.status === 'draft') && (
+        {(plan.is_mine || plan.is_sample || plan.status === 'draft') && (
           <div className="plan-card-pills">
+            {plan.is_mine && <span className="badge badge-mine" title="You're on this plan">MINE</span>}
             {plan.is_sample && <SampleBadge upper />}
             {plan.status === 'draft' && (
               <span className="badge badge-draft">DRAFT</span>
