@@ -1,7 +1,7 @@
 'use client'
 
 import { useState } from 'react'
-import { useClerk } from '@clerk/nextjs'
+import { useClerk, useUser } from '@clerk/nextjs'
 import api from '@/lib/api'
 
 // Delete-account section for the web Account page. Uses the same backend endpoints as the iPad app:
@@ -13,6 +13,10 @@ type Check = { blockers: { message: string }[]; willDeleteChurches: string[] }
 
 export default function DeleteAccountSection() {
   const { signOut } = useClerk()
+  const { user } = useUser()
+  // Sign in with Apple users: the website can't revoke SongStack's Apple access itself (the iPad app does it with a
+  // fresh Apple sign-in), so Apple's documented fallback applies — tell them how to remove it (TN3194, guideline 5.1.1(v)).
+  const usesApple = !!user?.externalAccounts?.some(a => String(a.provider).replace(/^oauth_/, '') === 'apple')
   const [step, setStep] = useState<'idle' | 'checking' | 'blocked' | 'confirm' | 'deleting'>('idle')
   const [check, setCheck] = useState<Check | null>(null)
   const [typed, setTyped] = useState('')
@@ -78,6 +82,14 @@ export default function DeleteAccountSection() {
                 You&apos;re the last member of {check.willDeleteChurches.map(n => `“${n}”`).join(', ')}, so{' '}
                 {check.willDeleteChurches.length > 1 ? 'those churches' : 'that church'} and all{' '}
                 {check.willDeleteChurches.length > 1 ? 'their' : 'its'} songs, files and services will be deleted too.
+              </p>
+            )}
+            {usesApple && (
+              <p style={{ margin: '0 0 12px', color: '#4b5563', fontSize: 14, lineHeight: 1.5 }}>
+                You signed in with Apple. After deleting, also remove SongStack from your Apple Account: on an iPhone or
+                iPad go to Settings → your name → Sign in with Apple, or visit{' '}
+                <a href="https://account.apple.com" target="_blank" rel="noreferrer" style={{ textDecoration: 'underline' }}>account.apple.com</a>.
+                (Deleting from the SongStack iPad app does this for you.)
               </p>
             )}
             <p style={{ margin: '0 0 8px', fontSize: 14 }}>Type <strong>DELETE</strong> to confirm:</p>
