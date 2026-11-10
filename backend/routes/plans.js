@@ -886,14 +886,16 @@ router.post('/:id/email', requireAuth, requireMembership, async function(req, re
 
     // Fetch items
     const itemsResult = await pool.query(
-      `SELECT si.*, s.title AS song_title, s.default_key AS song_default_key, s.category AS song_category
+      `SELECT si.*, s.title AS song_title, s.default_key AS song_default_key, s.category AS song_category,
+              s.default_duration AS song_default_duration
        FROM plan_items si
        LEFT JOIN songs s ON s.id = si.song_id
        WHERE si.plan_id = $1
        ORDER BY si.position ASC`,
       [planId]
     )
-    const items = itemsResult.rows
+    // A song with no minutes saved on the plan uses the song's default length (same rule as the web pages).
+    const items = itemsResult.rows.map(i => ({ ...i, duration_minutes: i.duration_minutes ?? i.song_default_duration ?? null }))
 
     // Fetch files for each song item
     const songIds = [...new Set(items.filter(i => i.song_id).map(i => i.song_id))]

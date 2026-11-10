@@ -8,7 +8,7 @@ import axios from 'axios'
 import { useAuth } from '@clerk/nextjs'
 import { RichTextDisplay, LITURGY_ALLOWED_TAGS } from '@/components/ui/RichTextDisplay'
 import { parseArrangement } from '@/lib/arrangement'
-import { isSongSlot, nonSongLabel } from '@/lib/planItems'
+import { isSongSlot, nonSongLabel, withSongDefaultDurations } from '@/lib/planItems'
 import { planTimeLabel } from '@/lib/planTimes'
 import ServiceTimePills from '@/components/ui/ServiceTimePills'
 import { PlaylistIcon } from '@/components/ui/PlaylistIcon'
@@ -265,7 +265,7 @@ export default function PublicPlanPage() {
     if (!token) return
     axios.get(`${API}/api/plans/public/${token}`)
       .then(r => {
-        setPlan(r.data)
+        setPlan(withSongDefaultDurations(r.data))
         setMusicians(r.data.musicians || [])
       })
       .catch((err) => {

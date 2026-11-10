@@ -18,7 +18,7 @@ import type { PlanMusician } from '@/types'
 import { ArrangementBuilder } from '@/components/ui/ArrangementBuilder'
 import { LyricsDisplay } from '@/components/ui/LyricsDisplay'
 import { RichTextDisplay, LITURGY_ALLOWED_TAGS } from '@/components/ui/RichTextDisplay'
-import { isSongSlot, nonSongLabel } from '@/lib/planItems'
+import { isSongSlot, nonSongLabel, withSongDefaultDurations } from '@/lib/planItems'
 import { planTimeLabel, formatClock } from '@/lib/planTimes'
 import ServiceTimePills from '@/components/ui/ServiceTimePills'
 import { RecordingsSection } from '@/components/ui/RecordingsSection'
@@ -374,7 +374,7 @@ export default function PlanDetailPage() {
     setLoading(true)
     api.get(`/api/plans/${id}`)
       .then(r => {
-        setPlan(r.data)
+        setPlan(withSongDefaultDurations(r.data))
         const planDate = r.data.plan_date
         api.get(`/api/plans/${id}/musicians`)
           .then(async mr => {
