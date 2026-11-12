@@ -395,7 +395,7 @@ export default function HelpPage() {
                 <strong>Asking for a recording to be removed:</strong> if you&apos;re on a recording and would rather it wasn&apos;t shared, click <strong>Ask to remove</strong> next to it. This emails your church&apos;s admins, who can reply to you and delete it.
               </p>
               <p className="help-content-body">
-                Recordings can only be played by signed-in members of your church. They aren&apos;t included in shared plan links or plan emails, and they&apos;re not in the iPad app yet.
+                Recordings can only be played by signed-in members of your church. They aren&apos;t included in shared plan links or plan emails. In the iPad app, tap <strong>Listen</strong> in the song viewer to play them; they also download with your plans for offline use.
               </p>
             </div>
           ),
