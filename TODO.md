@@ -83,6 +83,12 @@ Next:
 - Gotcha (2026-10-11): live `song_files` has NO `filename` column — `db/history/migrate.js` is stale. Check columns against the live code (e.g. the INSERT in `routes/uploads.js`), not that file.
 - [ ] No in-app help needed for /browse while it stays low-key (browse users can't reach /help). Add a topic if it goes mainstream.
 
+## ChurchSuite link-up (started 2026-11-16 — see project doc `churchsuite-integration.md`)
+- [x] Trial + dry runs on Endcliffe. Stage 1 LIVE: Railway cron service runs `backend/scripts/churchsuite-shadow.js` at 9am/1pm/5pm UTC, READ-ONLY, emails beardybradley@gmail.com when what a sync would do changes.
+- [ ] Watch the reports for 1–2 weeks, then decide on Stage 2 (real sync — build order in the project doc).
+- [ ] Late March 2027 (BST): change that service's cron schedule to `0 8,12,16 * * *`.
+- [ ] `sendBrevoEmail` (utils/email.js) resolves even when Brevo refuses (401 etc.) — every caller should check `status`; today a bad key fails silently everywhere except the ChurchSuite job.
+
 ## Backlog
 
 - [ ] **Move backend + local dev to Node 24 before April 2027 (noted 2026-10-23).** Node 22 goes end-of-life April 2027. Backend is pinned via `engines` in `backend/package.json` (`>=22.23.4 <23`, set for the 21 Oct 2026 Node security release); Vercel frontend is already on 24.x (Vercel picks the patch — redeploy after Node security releases). To do: switch the Mac to Node 24, run the backend locally, then change the pin to `>=24.x.x <25` (latest patched 24) and check the startup log line `Server running on port … (Node vX)` in Railway Deploy Logs.
