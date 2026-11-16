@@ -27,3 +27,4 @@ tagging-work/
 # ChurchSuite API trial (credentials + local snapshot)
 .env.churchsuite
 churchsuite-snapshot.json
+songstack-export.json
