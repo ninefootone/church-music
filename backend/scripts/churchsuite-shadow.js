@@ -51,6 +51,13 @@ function blocks(text) {
   return out;
 }
 
+// sendBrevoEmail resolves with { status, body } even when Brevo refuses — treat anything but 2xx as a failure.
+async function send(msg) {
+  const r = await sendBrevoEmail(msg);
+  if (!r || r.status < 200 || r.status >= 300) throw new Error(`Brevo refused the email (${r && r.status}): ${r && r.body}`);
+  return r;
+}
+
 const pre = s => `<pre style="font-family:Menlo,Consolas,monospace;font-size:12px;line-height:1.45;white-space:pre-wrap">${escapeHtml(s)}</pre>`;
 
 async function run() {
@@ -105,7 +112,7 @@ async function run() {
     pre(summary) + changedHtml +
     `<h3 style="font-family:sans-serif">Full report</h3>` + pre(text);
 
-  await sendBrevoEmail({
+  await send({
     to: CS_SHADOW_EMAIL,
     toName: church.name,
     subject: first ? `ChurchSuite dry run: first report (${church.name})` : `ChurchSuite dry run: ${changed.length} date(s) changed (${church.name})`,
@@ -122,7 +129,8 @@ run()
     process.exitCode = 1;
     // Tell someone, so a broken secret doesn't fail silently for weeks.
     if (!DRY && CS_SHADOW_EMAIL && process.env.BREVO_API_KEY) {
-      await sendBrevoEmail({ to: CS_SHADOW_EMAIL, subject: 'ChurchSuite dry run FAILED', htmlContent: pre(e.stack || e.message) }).catch(() => {});
+      await send({ to: CS_SHADOW_EMAIL, subject: 'ChurchSuite dry run FAILED', htmlContent: pre(e.stack || e.message) })
+        .catch(err => console.error('✗ Could not send the failure email either:', err.message));
     }
   })
   .finally(() => pool.end());
