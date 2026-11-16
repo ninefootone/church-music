@@ -19,7 +19,7 @@ SELECT json_build_object(
              'items', COALESCE((
                SELECT json_agg(json_build_object(
                         'type', pi.type, 'phase', pi.phase, 'title', pi.title,
-                        'song', s.title, 'key', pi.key_override, 'default_key', s.default_key)
+                        'song', s.title, 'first_line', s.first_line, 'key', pi.key_override, 'default_key', s.default_key)
                       ORDER BY pi.position)
                  FROM plan_items pi LEFT JOIN songs s ON s.id = pi.song_id
                 WHERE pi.plan_id = p.id), '[]'::json),
