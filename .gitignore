@@ -23,3 +23,7 @@ backend/scripts/*.csv
 
 # Library tagging working files (contain lyrics — never commit)
 tagging-work/
+
+# ChurchSuite API trial (credentials + local snapshot)
+.env.churchsuite
+churchsuite-snapshot.json
