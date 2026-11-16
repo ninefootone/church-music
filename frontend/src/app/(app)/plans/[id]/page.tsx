@@ -9,6 +9,7 @@ import { KeyBadge, CategoryBadge } from '@/components/ui/badges'
 import { useAuth } from '@clerk/nextjs'
 import { useChurch } from '@/context/ChurchContext'
 import api from '@/lib/api'
+import { sameKey } from '@/lib/keys'
 import { parseArrangement } from '@/lib/arrangement'
 import { ConfirmModal } from '@/components/ui/ConfirmModal'
 import { PlanMusicianModal } from '@/components/ui/PlanMusicianModal'
@@ -106,6 +107,26 @@ function SongItem({ item, index, planId, canAnnotate, showTimings, showDurations
   const hasContent = !isSong && !!item.content
   const canExpand = isSong || hasContent
 
+  // Files split by the key this plan uses (override, else the song's default).
+  // Files with no key count as "this key" — same rule as the song page.
+  const planKey: string | null = item.key_override || item.song_default_key || null
+  const planKeyFiles = (files || []).filter(f => !planKey || !f.key_of || sameKey(f.key_of, planKey))
+  const otherKeyFiles = (files || []).filter(f => planKey && f.key_of && !sameKey(f.key_of, planKey))
+  const renderFileLink = (file: SongFile, showKey: boolean) => (
+    <a
+      key={file.id}
+      href={file.url}
+      target="_blank"
+      rel="noopener noreferrer"
+      className="file-download-btn"
+    >
+      <FileText size={14} />
+      <span className="file-list-label">{file.label}</span>
+      {showKey && file.key_of && <span className="badge-key">{file.key_of}</span>}
+      <ExternalLink size={12} className="icon-faded" />
+    </a>
+  )
+
   return (
     <div className={`song-item-card${isSong ? ' song-item-card--song' : ''}`}>
       <div
@@ -190,25 +211,24 @@ function SongItem({ item, index, planId, canAnnotate, showTimings, showDurations
             <p className="item-detail-text">Loading files...</p>
           ) : files && files.length > 0 ? (
             <div>
-              <p className="sub-section-label">Sheet music</p>
-              <div className="file-group">
-                {files.map(file => (
-                  <a
-                    key={file.id}
-                    href={file.url}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="file-download-btn"
-                  >
-                    <FileText size={14} />
-                    {file.label}
-                    {file.key_of && (
-                      <span className="badge-key">{file.key_of}</span>
-                    )}
-                    <ExternalLink size={12} className="icon-faded" />
-                  </a>
-                ))}
-              </div>
+              {planKeyFiles.length > 0 && (
+                <div className="file-list-group">
+                  <p className="sub-section-label">
+                    {planKey ? <>This plan&apos;s key — <KeyBadge keyOf={planKey} /></> : 'Sheet music'}
+                  </p>
+                  <div className="file-list">
+                    {planKeyFiles.map(file => renderFileLink(file, !planKey))}
+                  </div>
+                </div>
+              )}
+              {otherKeyFiles.length > 0 && (
+                <div className="file-list-group">
+                  <p className="sub-section-label">Other keys</p>
+                  <div className="file-list">
+                    {otherKeyFiles.map(file => renderFileLink(file, true))}
+                  </div>
+                </div>
+              )}
             </div>
           ) : (
             <p className="form-empty-note text-muted">

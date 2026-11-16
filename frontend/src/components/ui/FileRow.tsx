@@ -124,7 +124,7 @@ export function FileRow({ file, songId, defaultKey, isAdmin, downloadingId, dele
         className="download-btn"
       >
         {!onView && <Download size={14} />}
-        {!onView && downloadingId === file.id ? 'Downloading…' : file.label}
+        <span className="file-list-label">{!onView && downloadingId === file.id ? 'Downloading…' : file.label}</span>
         {file.key_of && !sameKey(file.key_of, defaultKey) && <KeyBadge keyOf={file.key_of} />}
       </button>
       {isAdmin && (

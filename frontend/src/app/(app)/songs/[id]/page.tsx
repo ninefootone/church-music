@@ -469,11 +469,11 @@ export default function SongDetailPage() {
         {song.files && song.files.length > 0 ? (
           <>
             {mainFiles.length > 0 && (
-              <div className="card--spaced">
+              <div className="file-list-group">
                 <p className="downloads-group-label">
                   Main key{song.default_key && <> — <KeyBadge keyOf={song.default_key} /></>}
                 </p>
-                <div className="file-group">
+                <div className="file-list">
                   {mainFiles.map(f => (
                     <FileRow key={f.id} file={f} songId={song.id} defaultKey={song.default_key} isAdmin={canManageSongs} downloadingId={downloadingId} deletingId={deletingId} onDownload={handleDownload} onDelete={handleDelete} onSaved={fetchSong} onView={f.file_type === 'chordpro' ? handleViewChordPro : undefined} onEdit={canManageSongs ? handleEditChordPro : undefined} />
                   ))}
@@ -482,10 +482,9 @@ export default function SongDetailPage() {
             )}
             {otherFiles.length > 0 && (
               <>
-                {mainFiles.length > 0 && <div className="divider" />}
-                <div>
+                <div className="file-list-group">
                   <p className="downloads-group-label">Other keys</p>
-                  <div className="file-group">
+                  <div className="file-list">
                   {otherFiles.map(f => (
                     <FileRow key={f.id} file={f} songId={song.id} defaultKey={song.default_key} isAdmin={canManageSongs} downloadingId={downloadingId} deletingId={deletingId} onDownload={handleDownload} onDelete={handleDelete} onSaved={fetchSong} onView={f.file_type === 'chordpro' ? handleViewChordPro : undefined} onEdit={canManageSongs ? handleEditChordPro : undefined} />
                   ))}
