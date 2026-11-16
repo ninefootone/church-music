@@ -5,7 +5,8 @@
 //   2. Lists plans in the next N weeks (published + drafts) with their items in order:
 //      song name, CCLI number, arrangement, key, and each plan's "last modified" time.
 //   3. Saves what it saw to churchsuite-snapshot.json. On the NEXT run it prints what changed
-//      since then (songs added/removed/reordered, key changes, new/deleted plans).
+//      since then (songs added/removed/reordered, key changes, new/deleted plans) — this is the
+//      bit that tells us whether we can keep linked plans up to date automatically.
 //
 // Setup: create backend/.env.churchsuite (git-ignored) containing:
 //   CS_CLIENT_ID=...
@@ -15,6 +16,9 @@
 //   node scripts/churchsuite-spike.js              # next 6 weeks
 //   node scripts/churchsuite-spike.js --weeks=10
 //   node scripts/churchsuite-spike.js --raw        # also dump the raw JSON of the first plan's items
+//
+// Songs can arrive two ways: ChurchSuite's Songs module (arrangement_id) or Library items of a
+// "Song" type (library_item_id; key/author in question_responses). Both are shown as ♪.
 //
 // API reference: OpenAPI spec at github.com/ChurchSuite/churchsuite-api (src/planning.yaml).
 
@@ -92,6 +96,32 @@ async function listAll(pathAndQuery) {
   return out;
 }
 
+// Item types (e.g. "Song", "Bible reading", "Sermon"). Blank-named items show their type name in ChurchSuite.
+let TYPES = new Map();
+async function loadTypes() {
+  const types = await listAll('/planning/types');
+  TYPES = new Map(types.map(t => [t.id, t]));
+  return types;
+}
+
+// Some churches keep songs as Library items of a "Song" type (no arrangement_id) instead of
+// ChurchSuite's Songs module. Fetch the library item to see what it carries (CCLI etc.).
+const libraryCache = new Map();
+async function libraryItem(id) {
+  if (!id) return null;
+  if (!libraryCache.has(id)) libraryCache.set(id, (await api(`/planning/library_items/${id}`)).data);
+  return libraryCache.get(id);
+}
+const answer = (responses, name) =>
+  (responses || []).find(r => (r.name || '').toLowerCase() === name.toLowerCase())?.value || '';
+const findCcli = (...responseLists) => {
+  for (const list of responseLists) {
+    const hit = (list || []).find(r => /ccli/i.test(r.name || ''));
+    if (hit && hit.value) return String(hit.value);
+  }
+  return null;
+};
+
 const arrangementCache = new Map();
 const songCache = new Map();
 async function songFor(arrangementId) {
@@ -112,6 +142,8 @@ const ymd = d => d.toISOString().slice(0, 10);
 (async () => {
   try {
     TOKEN = await getToken();
+    const types = await loadTypes();
+    console.log(`Item types: ${types.map(t => `${t.name}${t.ccli_tracking ? ' (CCLI)' : ''} [${t.id}]`).join(', ')}`);
 
     const from = new Date(); from.setDate(from.getDate() - 1);
     const to = new Date(); to.setDate(to.getDate() + WEEKS * 7);
@@ -128,20 +160,34 @@ const ymd = d => d.toISOString().slice(0, 10);
       const items = await listAll(`/planning/plan_items?plan_ids[]=${plan.id}&order_by=order:asc`);
       if (args.raw && plan === plans[0]) {
         console.log('RAW plan:', JSON.stringify(plan, null, 2));
-        console.log('RAW items:', JSON.stringify(items, null, 2));
+        console.log('RAW items:', JSON.stringify(items.map(({ people, ...rest }) => rest), null, 2));
       }
       console.log(`■ ${plan.date} ${plan.time || ''}  ${plan.name}  [${plan.status}]  id=${plan.id}  modified ${plan.modified_at || '?'}`);
 
       const rows = [];
       for (const it of items) {
-        if (it.type === 'song') {
+        const type = TYPES.get(it.type_id);
+        const typeName = type?.name || '';
+        const label = it.name || `[${typeName || 'untitled'}]`;
+        const isSongsModule = it.type === 'song' || !!it.arrangement_id;
+        const isLibrarySong = !isSongsModule && it.library_item_id && (type?.ccli_tracking || /song|hymn/i.test(typeName));
+
+        if (isSongsModule) {
           const s = await songFor(it.arrangement_id);
-          const key = it.settings?.key || s?.arrangement_key || '';
-          rows.push({ id: it.id, type: 'song', name: s?.song || it.name, ccli: s?.ccli ?? null, key, modified_at: it.modified_at });
-          console.log(`    ♪ ${s?.song || it.name}${s?.ccli ? `  (CCLI ${s.ccli})` : '  (no CCLI)'}${key ? `  key ${key}` : ''}${s && s.arrangement !== s.song ? `  arr: ${s.arrangement}` : ''}`);
+          const key = it.settings?.key || answer(it.question_responses, 'Key') || s?.arrangement_key || '';
+          rows.push({ id: it.id, type: 'song', source: 'songs', name: s?.song || it.name, ccli: s?.ccli ?? null, key, modified_at: it.modified_at });
+          console.log(`    ♪ ${s?.song || it.name}${s?.ccli ? `  (CCLI ${s.ccli})` : '  (no CCLI)'}${key ? `  key ${key}` : ''}  [Songs module]`);
+        } else if (isLibrarySong) {
+          const lib = await libraryItem(it.library_item_id);
+          if (args.raw && !args._libShown) { args._libShown = true; console.log('RAW library item:', JSON.stringify(lib, null, 2)); }
+          const ccli = findCcli(it.question_responses, lib?.question_responses);
+          const key = answer(it.question_responses, 'Key') || answer(lib?.question_responses, 'Key');
+          const author = answer(it.question_responses, 'Artist/Author') || answer(lib?.question_responses, 'Artist/Author');
+          rows.push({ id: it.id, type: 'song', source: 'library', name: it.name || lib?.name, library_item_id: it.library_item_id, ccli, key, modified_at: it.modified_at });
+          console.log(`    ♪ ${it.name || lib?.name}${ccli ? `  (CCLI ${ccli})` : '  (no CCLI)'}${key ? `  key ${key}` : ''}${author ? `  — ${author}` : ''}`);
         } else {
-          rows.push({ id: it.id, type: 'item', name: it.name, modified_at: it.modified_at });
-          console.log(`    · ${it.name}`);
+          rows.push({ id: it.id, type: 'item', name: label, modified_at: it.modified_at });
+          console.log(`    · ${label}`);
         }
       }
       snapshot[plan.id] = { name: plan.name, date: plan.date, time: plan.time, status: plan.status, modified_at: plan.modified_at, items: rows };
