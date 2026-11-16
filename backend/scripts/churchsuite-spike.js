@@ -218,8 +218,13 @@ const ymd = d => d.toISOString().slice(0, 10);
           if (o && o.key !== s.key) say(`~ ${label}: ${s.name} key ${o.key || '—'} → ${s.key || '—'}`);
           if (o && o.name !== s.name) say(`~ ${label}: song swapped on the same line — ${o.name} → ${s.name}`);
         }
-        const sameSet = oldIds.split(',').sort().join() === curIds.split(',').sort().join();
-        if (sameSet && oldIds !== curIds) say(`~ ${label}: running order changed`);
+        // Compare the order of items present in BOTH runs, so a reorder is still spotted when
+        // something was also added or removed.
+        const oldIdList = old.items.map(i => i.id);
+        const curIdList = cur.items.map(i => i.id);
+        const keptOld = oldIdList.filter(x => curIdList.includes(x)).join(',');
+        const keptCur = curIdList.filter(x => oldIdList.includes(x)).join(',');
+        if (keptOld !== keptCur) say(`~ ${label}: running order changed`);
         // The important test: did the plan's own modified_at move when its items changed?
         if (oldIds !== curIds || JSON.stringify(old.items) !== JSON.stringify(cur.items)) {
           console.log(`    ↳ plan modified_at ${planModChanged ? 'DID' : 'did NOT'} change (${old.modified_at} → ${cur.modified_at})`);
