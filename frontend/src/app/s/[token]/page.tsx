@@ -12,6 +12,7 @@ import { isSongSlot, nonSongLabel, withSongDefaultDurations } from '@/lib/planIt
 import { planTimeLabel } from '@/lib/planTimes'
 import ServiceTimePills from '@/components/ui/ServiceTimePills'
 import { PlaylistIcon } from '@/components/ui/PlaylistIcon'
+import { sameKey } from '@/lib/keys'
 
 const API = process.env.NEXT_PUBLIC_API_URL
 
@@ -65,6 +66,26 @@ function SongItem({ item, index, token, churchId, showTimings, showDurations, ca
   }
   const hasContent = !isSong && !!item.content
   const canExpand = isSong || hasContent
+
+  // Same grouping as the signed-in plan page: files in the plan's key first (key-less files count as this key).
+  const showKey = (k: string) => k.replace(/♯/g, '#').replace(/♭/g, 'b')
+  const planKey: string | null = item.key_override || item.song_default_key || null
+  const planKeyFiles = (files || []).filter(f => !planKey || !f.key_of || sameKey(f.key_of, planKey))
+  const otherKeyFiles = (files || []).filter(f => planKey && f.key_of && !sameKey(f.key_of, planKey))
+  const renderFileLink = (file: SongFile, withKey: boolean) => (
+    <a
+      key={file.id}
+      href={file.url}
+      target="_blank"
+      rel="noopener noreferrer"
+      className="file-download-btn"
+    >
+      <FileText size={14} />
+      <span className="file-list-label">{file.label}</span>
+      {withKey && file.key_of && <span className="badge-key">{showKey(file.key_of)}</span>}
+      <ExternalLink size={12} className="icon-faded" />
+    </a>
+  )
 
   return (
     <div className={`song-item-card${isSong ? ' song-item-card--song' : ''}`}>
@@ -160,26 +181,25 @@ function SongItem({ item, index, token, churchId, showTimings, showDurations, ca
               Couldn&rsquo;t load sheet music &mdash; please refresh and try again.
             </p>
           ) : files && files.length > 0 ? (
-            <div>
-              <p className="sub-section-label">Sheet music</p>
-              <div className="file-group">
-                {files.map(file => (
-                  <a
-                    key={file.id}
-                    href={file.url}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="file-download-btn"
-                  >
-                    <FileText size={14} />
-                    {file.label}
-                    {file.key_of && (
-                      <span className="badge-key">{file.key_of.replace(/♯/g, '#').replace(/♭/g, 'b')}</span>
-                    )}
-                    <ExternalLink size={12} className="icon-faded" />
-                  </a>
-                ))}
-              </div>
+            <div className={`file-columns${planKeyFiles.length > 0 && otherKeyFiles.length > 0 ? ' file-columns--two' : ''}`}>
+              {planKeyFiles.length > 0 && (
+                <div className="file-list-group">
+                  <p className="sub-section-label">
+                    {planKey ? <>This plan&apos;s key — <span className="badge-key">{showKey(planKey)}</span></> : 'Sheet music'}
+                  </p>
+                  <div className="file-list">
+                    {planKeyFiles.map(file => renderFileLink(file, !planKey))}
+                  </div>
+                </div>
+              )}
+              {otherKeyFiles.length > 0 && (
+                <div className="file-list-group">
+                  <p className="sub-section-label">Other keys</p>
+                  <div className="file-list">
+                    {otherKeyFiles.map(file => renderFileLink(file, true))}
+                  </div>
+                </div>
+              )}
             </div>
           ) : (
             <p className="text-sm text-muted text-italic">
@@ -190,7 +210,7 @@ function SongItem({ item, index, token, churchId, showTimings, showDurations, ca
           {Array.isArray(item.song_links) && item.song_links.length > 0 && (
             <div className="song-section">
               <p className="sub-section-label">Links</p>
-              <div className="file-group">
+              <div className="file-list">
                 {item.song_links.map((link: { url: string; label: string | null; link_type: string | null }, i: number) => {
                   const typeLabel = link.link_type === 'spotify' ? 'Spotify'
                     : link.link_type === 'apple_music' ? 'Apple Music'
@@ -205,7 +225,7 @@ function SongItem({ item, index, token, churchId, showTimings, showDurations, ca
                       className="file-download-btn"
                     >
                       <PlayCircle size={14} />
-                      {link.label || typeLabel}
+                      <span className="file-list-label">{link.label || typeLabel}</span>
                       <ExternalLink size={12} className="icon-faded" />
                     </a>
                   )
