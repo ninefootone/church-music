@@ -118,28 +118,12 @@ export function RecordingsSection({ songId, recordings, canManage, deletingId, o
                   <span className="recording-label">{r.label || 'Recording'}</span>
                   {r.key_of && <KeyBadge keyOf={r.key_of} />}
                   {meta && <span className="recording-meta">{meta}</span>}
-                </div>
-
-                {urls[r.id] ? (
-                  <audio
-                    className="recording-audio"
-                    src={urls[r.id]}
-                    controls
-                    autoPlay
-                    preload="none"
-                    // An expired link (paused over an hour) → clear it so Play fetches a fresh one.
-                    onError={() => setUrls(prev => { const next = { ...prev }; delete next[r.id]; return next })}
-                  />
-                ) : (
-                  <div className="recording-actions">
-                    <button onClick={() => play(r.id)} disabled={loadingId === r.id} className="btn btn-secondary btn-sm">
+                <div className="recording-actions">
+                  {!urls[r.id] && (
+                    <button onClick={() => play(r.id)} disabled={loadingId === r.id} className="btn-inline-link">
                       <Play size={13} /> {loadingId === r.id ? 'Loading…' : 'Play'}
                     </button>
-                  </div>
-                )}
-                {playError === r.id && <p className="input-error">Couldn&apos;t load this recording. Please try again.</p>}
-
-                <div className="recording-actions">
+                  )}
                   <button onClick={() => download(r.id)} disabled={downloadingId === r.id} className="btn-inline-link">
                     <Download size={13} /> {downloadingId === r.id ? 'Downloading…' : 'Download'}
                   </button>
@@ -155,6 +139,20 @@ export function RecordingsSection({ songId, recordings, canManage, deletingId, o
                     </button>
                   )}
                 </div>
+                </div>
+
+                {urls[r.id] && (
+                  <audio
+                    className="recording-audio"
+                    src={urls[r.id]}
+                    controls
+                    autoPlay
+                    preload="none"
+                    // An expired link (paused over an hour) → clear it so Play fetches a fresh one.
+                    onError={() => setUrls(prev => { const next = { ...prev }; delete next[r.id]; return next })}
+                  />
+                )}
+                {playError === r.id && <p className="input-error">Couldn&apos;t load this recording. Please try again.</p>}
 
                 {askingId === r.id && (
                   <div className="recording-ask">

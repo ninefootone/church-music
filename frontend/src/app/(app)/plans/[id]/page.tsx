@@ -210,7 +210,7 @@ function SongItem({ item, index, planId, canAnnotate, showTimings, showDurations
           {loadingFiles ? (
             <p className="item-detail-text">Loading files...</p>
           ) : files && files.length > 0 ? (
-            <div>
+            <div className={`file-columns${planKeyFiles.length > 0 && otherKeyFiles.length > 0 ? ' file-columns--two' : ''}`}>
               {planKeyFiles.length > 0 && (
                 <div className="file-list-group">
                   <p className="sub-section-label">
@@ -249,7 +249,7 @@ function SongItem({ item, index, planId, canAnnotate, showTimings, showDurations
           {Array.isArray(item.song_links) && item.song_links.length > 0 && (
             <div className="song-section">
               <p className="sub-section-label">Links</p>
-              <div className="file-group">
+              <div className="file-list">
                 {item.song_links.map((link: { url: string; label: string | null; link_type: string | null }, i: number) => {
                   const typeLabel = link.link_type === 'spotify' ? 'Spotify'
                     : link.link_type === 'apple_music' ? 'Apple Music'
@@ -264,7 +264,7 @@ function SongItem({ item, index, planId, canAnnotate, showTimings, showDurations
                       className="file-download-btn"
                     >
                       <PlayCircle size={14} />
-                      {link.label || typeLabel}
+                      <span className="file-list-label">{link.label || typeLabel}</span>
                       <ExternalLink size={12} className="icon-faded" />
                     </a>
                   )

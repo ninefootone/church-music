@@ -1276,6 +1276,15 @@ body.set-viewer-active { overflow: hidden; }
   .file-list .file-edit-form { border: 0; border-radius: 0; min-width: 0; }
   .file-list-label { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
   .file-list-group + .file-list-group { margin-top: var(--space-md); }
+  .file-columns { display: grid; grid-template-columns: minmax(0, 1fr); gap: var(--space-md); }
+  .file-columns .file-list-group + .file-list-group { margin-top: 0; }
+  @media (min-width: 640px) { .file-columns--two { grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); } }
+  .link-list.file-list { gap: 0; }
+  .file-list .link-row { padding-right: 8px; }
+  .file-list .youtube-link { border: 0; border-radius: 0; padding: 10px 14px; background: transparent; font-size: var(--text-sm); }
+  .file-list .youtube-link:hover { background: var(--color-brand-50); color: var(--color-brand-600); }
+  .file-list .link-edit-btn { border: 0; background: transparent; }
+  .file-list .link-edit-form { border: 0; border-radius: 0; }
   .link-list { display: flex; flex-direction: column; gap: 8px; }
   .link-edit-form {
     display: flex;
@@ -4109,10 +4118,12 @@ body.plans-overview-active .app-main-content { max-width: 1680px; }
 .extra-times-note { font-size: var(--text-sm); color: var(--color-text-muted); margin: 2px 0 0; line-height: 1.5; }
 
 /* ── Rehearsal recordings (song page) ── */
-.recording-list   { display: flex; flex-direction: column; gap: 10px; }
-.recording-row    { border: 1px solid var(--color-border); border-radius: var(--radius-md); padding: var(--space-sm) var(--space-md); display: flex; flex-direction: column; gap: 8px; }
+.recording-list   { display: flex; flex-direction: column; border: 1px solid var(--color-border); border-radius: var(--radius-sm); overflow: hidden; background: var(--color-surface); }
+.recording-row    { padding: 10px 14px; display: flex; flex-direction: column; gap: 8px; }
+.recording-row + .recording-row { border-top: 1px solid var(--color-border); }
 .recording-head   { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
-.recording-label  { font-size: var(--text-sm); font-weight: 600; color: var(--color-text-secondary); }
+.recording-head .recording-actions { margin-left: auto; }
+.recording-label  { font-size: var(--text-sm); font-weight: 500; color: var(--color-text-secondary); }
 .recording-meta   { font-size: var(--text-xs); color: var(--color-text-muted); }
 .recording-audio  { width: 100%; max-width: 480px; height: 40px; }
 .recording-actions { display: flex; align-items: center; gap: 16px; flex-wrap: wrap; }

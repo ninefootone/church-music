@@ -467,7 +467,7 @@ export default function SongDetailPage() {
         </div>
 
         {song.files && song.files.length > 0 ? (
-          <>
+          <div className={`file-columns${mainFiles.length > 0 && otherFiles.length > 0 ? ' file-columns--two' : ''}`}>
             {mainFiles.length > 0 && (
               <div className="file-list-group">
                 <p className="downloads-group-label">
@@ -492,7 +492,7 @@ export default function SongDetailPage() {
                 </div>
               </>
             )}
-          </>
+          </div>
         ) : (
           <p className="text-muted text-italic">
             No files uploaded yet.
@@ -522,7 +522,7 @@ export default function SongDetailPage() {
                 </button>
               )}
             </div>
-            <div className="link-list">
+            <div className="link-list file-list">
               {(song.videos || []).map(v => {
                 const typeLabel = v.link_type === 'spotify' ? 'Spotify'
                   : v.link_type === 'apple_music' ? 'Apple Music'
