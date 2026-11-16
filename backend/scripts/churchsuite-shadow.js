@@ -54,7 +54,12 @@ function blocks(text) {
 // sendBrevoEmail resolves with { status, body } even when Brevo refuses — treat anything but 2xx as a failure.
 async function send(msg) {
   const r = await sendBrevoEmail(msg);
-  if (!r || r.status < 200 || r.status >= 300) throw new Error(`Brevo refused the email (${r && r.status}): ${r && r.body}`);
+  if (!r || r.status < 200 || r.status >= 300) {
+    // Describe the key without revealing it, so a wrong/blank variable is easy to spot in the logs.
+    const k = process.env.BREVO_API_KEY || '';
+    console.error(`  BREVO_API_KEY: ${k.length} chars, starts with ${k.startsWith('xkeysib-') ? '"xkeysib-" (API key — right type)' : k.startsWith('xsmtpsib-') ? '"xsmtpsib-" (SMTP key — WRONG type)' : k.startsWith('${{') ? '"${{" (reference not resolved)' : 'something else'}${/\s|["']/.test(k) ? ', contains spaces or quotes' : ''}`);
+    throw new Error(`Brevo refused the email (${r && r.status}): ${r && r.body}`);
+  }
   return r;
 }
 
