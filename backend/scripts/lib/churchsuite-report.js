@@ -200,4 +200,5 @@ async function buildReport(cs, ss, from, to) {
   return { text: lines.join('\n'), summary: lines.slice(at + 1).join('\n') };
 }
 
-module.exports = { buildReport };
+// Shared with churchsuite-sync.js so the sync matches exactly the way the report does.
+module.exports = { buildReport, csServiceTime, matchSong, likelySamePerson, multisetDiff, ssSongTitle, ssSongVariants, STRUCTURAL };
