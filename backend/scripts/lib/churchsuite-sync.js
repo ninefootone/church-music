@@ -97,45 +97,61 @@ async function applySync({ pool, cs, churchId, from, to, apply, runId }) {
       }
       ssSongs.forEach((s, i) => { if (!used.has(i)) note(`"${s.song || s.title}" is in the SongStack plan but not in ChurchSuite — left alone.`); });
 
-      // 2. Add missing songs, each straight after the song before it in ChurchSuite's order.
-      for (let k = 0; k < seq.length; k++) {
-        const e = seq[k];
-        if (!e.add) continue;
-        items = await planItems(client, planId);
-        await client.query(
-          `UPDATE plan_items pi SET position = o.rn - 1
-             FROM (SELECT id, ROW_NUMBER() OVER (ORDER BY position, id) AS rn FROM plan_items WHERE plan_id = $1) o
-            WHERE pi.id = o.id AND pi.position IS DISTINCT FROM o.rn - 1`, [planId]);
-        items = await planItems(client, planId);
-        const prev = seq.slice(0, k).reverse().find(x => x.itemId);
-        let pos;
-        if (prev) pos = items.find(i => i.id === prev.itemId).position + 1;
-        else {
-          const firstSong = items.find(i => i.type === 'song' && i.phase !== 'pre-service');
-          const lastService = [...items].reverse().find(i => i.phase !== 'pre-service');
-          pos = firstSong ? firstSong.position : (lastService ? lastService.position + 1 : items.length);
-        }
-        await client.query('UPDATE plan_items SET position = position + 1 WHERE plan_id = $1 AND position >= $2', [planId, pos]);
+      // 2. Add missing songs (at the end for now — step 3 puts them in the right place).
+      for (const e of seq.filter(x => x.add)) {
+        const max = await client.query('SELECT COALESCE(MAX(position), -1) + 1 AS p FROM plan_items WHERE plan_id = $1', [planId]);
         const ins = await client.query(
           `INSERT INTO plan_items (plan_id, type, song_id, title, notes, content, position, duration_minutes, phase)
            VALUES ($1, 'song', $2, NULL, NULL, NULL, $3, $4, 'service') RETURNING id`,
-          [planId, e.add.id, pos, e.add.default_duration || null]);
+          [planId, e.add.id, max.rows[0].p, e.add.default_duration || null]);
         e.itemId = ins.rows[0].id;
         await log('add_song', { item_id: e.itemId, song_id: e.add.id, title: e.add.song });
-        act(`Added "${e.add.song}"${e.add.song !== e.cs.label ? ` (ChurchSuite: "${e.cs.label}")` : ''}`);
+        act(`Added "${e.add.song}"${norm(e.add.song) !== norm(e.cs.label) ? ` (ChurchSuite: "${e.cs.label}")` : ''}`);
       }
 
-      // 3. Songs into ChurchSuite's order, within the positions songs already hold.
+      // 3. Place songs as ChurchSuite has them, relative to the non-song items both plans share
+      //    ("after Children's slot, before Children leave"). A song only moves when it's on the wrong side of
+      //    one of those markers, or out of order with the songs around it. Non-song items never move.
       items = await planItems(client, planId);
-      const want = seq.filter(x => x.itemId).map(x => x.itemId);
-      const slots = want.map(id => items.find(i => i.id === id).position).sort((a, b) => a - b);
-      const before = Object.fromEntries(items.filter(i => want.includes(i.id)).map(i => [i.id, i.position]));
-      if (want.some((id, k) => before[id] !== slots[k])) {
+      const songIds = new Set(seq.filter(x => x.itemId).map(x => x.itemId));
+      const pre = items.filter(i => i.phase === 'pre-service' && !songIds.has(i.id));
+      const svc = items.filter(i => i.phase !== 'pre-service' || songIds.has(i.id));
+      const skeleton = svc.filter(i => !songIds.has(i.id));            // everything that stays put
+      const label = i => norm(i.title || i.song || '');
+      // Which skeleton item each song currently sits after (-1 = before all of them).
+      const curGap = new Map(); let g = -1;
+      for (const i of svc) { if (songIds.has(i.id)) curGap.set(i.id, g); else g = skeleton.indexOf(i); }
+      // Walk ChurchSuite's order, pairing its non-song items with the skeleton (in order, by name).
+      const seqByCs = new Map(seq.filter(x => x.itemId).map(x => [x.cs.id, x]));
+      const plan = [];                                              // { id, A } in ChurchSuite order
+      let anchor = -1;
+      for (const c of ref.items) {
+        const e = seqByCs.get(c.id);
+        if (e) { plan.push({ id: e.itemId, A: anchor }); continue; }
+        const k = skeleton.findIndex((x, idx) => idx > anchor && label(x) && label(x) === norm(c.label));
+        if (k >= 0) { anchor = k; plan.forEach(pp => { if (pp.B === undefined) pp.B = k; }); }
+      }
+      plan.forEach(pp => { if (pp.B === undefined) pp.B = skeleton.length; });
+      // Keep each song where it is if that's allowed; otherwise put it straight after its marker.
+      let prevGap = -1;
+      for (const pp of plan) {
+        const cur = curGap.has(pp.id) && !seq.find(x => x.itemId === pp.id).add ? curGap.get(pp.id) : null;
+        let gap = cur !== null && cur >= pp.A && cur <= pp.B - 1 ? cur : pp.A;
+        if (gap < prevGap) gap = prevGap;
+        pp.gap = gap; prevGap = gap;
+      }
+      const order = [...pre];
+      for (const pp of plan.filter(x => x.gap === -1)) order.push(svc.find(i => i.id === pp.id));
+      skeleton.forEach((sk, k) => { order.push(sk); for (const pp of plan.filter(x => x.gap === k)) order.push(svc.find(i => i.id === pp.id)); });
+      const before = Object.fromEntries(items.map(i => [i.id, i.position]));
+      const oldSeq = items.filter(i => !seq.find(x => x.add && x.itemId === i.id)).map(i => i.id).join();
+      const newSeq = order.filter(i => !seq.find(x => x.add && x.itemId === i.id)).map(i => i.id).join();
+      if (order.some((i, k) => before[i.id] !== k)) {
         await client.query(
           `UPDATE plan_items pi SET position = o.pos FROM unnest($2::uuid[], $3::int[]) AS o(id, pos)
-            WHERE pi.id = o.id AND pi.plan_id = $1`, [planId, want, slots]);
+            WHERE pi.id = o.id AND pi.plan_id = $1`, [planId, order.map(i => i.id), order.map((_, k) => k)]);
         await log('reorder', { before });
-        act(`Songs put in ChurchSuite's order: ${seq.filter(x => x.itemId).map(x => x.add ? x.add.song : (items.find(i => i.id === x.itemId).song)).join(' → ')}`);
+        if (oldSeq !== newSeq) act(`Songs moved to match ChurchSuite: ${order.filter(i => songIds.has(i.id)).map(i => i.song).join(' → ')}`);
       }
 
       // 4. Keys — SongStack wins; ChurchSuite only fills a gap.

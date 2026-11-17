@@ -58,6 +58,8 @@ async function buildReport(cs, ss, from, to) {
   for (const p of csPlans) { p.items = await cs.planItems(p.id); p.serviceTime = csServiceTime(p, p.items); }
 
   const members = new Map((ss.members || []).map(n => [norm(n), n]));
+  const memberCount = new Map();
+  for (const n of ss.members || []) memberCount.set(norm(n), (memberCount.get(norm(n)) || 0) + 1);
   const dates = [...new Set([...csPlans.map(p => p.date), ...ss.plans.map(p => p.date)])].sort();
   const tally = { dates: 0, identical: 0, songChanges: 0, keyChanges: 0, serviceDiffs: 0, timeDiffs: 0, itemOnlyDiffs: 0, peopleToAdd: new Set(), peopleNotMembers: new Set(), nicknames: new Set() };
 
@@ -176,7 +178,8 @@ async function buildReport(cs, ss, from, to) {
           || [...members.values()].map(n => ({ name: n, member: true })).find(m => likelySamePerson(m.name, t.name));
         if (nick) { tally.nicknames.add(`${t.name} = ${nick.name}?`); say(`      ? ${t.name} — probably "${nick.name}"${nick.member ? ' (SongStack member)' : ' (on the SongStack plan)'} → would ask to confirm once, then remember${only}`); continue; }
         tally.peopleToAdd.add(t.name);
-        if (members.has(k)) say(`      + ${t.name} — not on the SongStack plan; IS a SongStack member → would link to their account${only}`);
+        if ((memberCount.get(k) || 0) > 1) say(`      ? ${t.name} — ${memberCount.get(k)} SongStack members have this exact name → not added until only one does${only}`);
+        else if (members.has(k)) say(`      + ${t.name} — not on the SongStack plan; IS a SongStack member → would link to their account${only}`);
         else { tally.peopleNotMembers.add(t.name); say(`      + ${t.name} — not on the SongStack plan; NOT a SongStack member → would be added by name only${only}`); }
       }
     }
