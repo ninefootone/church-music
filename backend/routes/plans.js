@@ -495,6 +495,13 @@ router.put('/:id', requireAuth, requireMembership, async function(req, res, next
   }
 });
 
+// PUT /:id/items — the plan builder's save. Body: { items: [...] } in the new running order.
+// An item carrying the `id` of one of this plan's items is UPDATED in place, so its id never
+// changes; an item without an id is inserted; this plan's items left out of the list are
+// deleted. An id that isn't (any longer) one of this plan's items — e.g. deleted on the
+// overview while the builder was open — is inserted as a new item, as the old save did.
+// A caller that sends no ids gets the old behaviour: the whole list replaced.
+// `phase` is only changed when sent ('service' / 'pre-service'); new items default to 'service'.
 router.put('/:id/items', requireAuth, requireMembership, async function(req, res, next) {
   const planId = req.params.id;
   const items = req.body.items;
@@ -506,7 +513,10 @@ router.put('/:id/items', requireAuth, requireMembership, async function(req, res
     if (!it || typeof it !== 'object' || typeof it.type !== 'string' || !it.type.trim() || it.type.length > 50) {
       return res.status(400).json({ error: 'Each item needs a type' });
     }
+    if (it.id != null && !isUuid(it.id)) return res.status(400).json({ error: 'Invalid item id' });
   }
+  const sentIds = items.filter(it => it.id != null).map(it => it.id.toLowerCase());
+  if (new Set(sentIds).size !== sentIds.length) return res.status(400).json({ error: 'The same item is in the list twice' });
 
   let client;
   try {
@@ -540,16 +550,37 @@ router.put('/:id/items', requireAuth, requireMembership, async function(req, res
       }
     }
 
-    // Delete + re-insert in one transaction so a failure can't leave the plan half-empty.
+    // One transaction with the plan row locked (same lock as the overview's single-item
+    // routes and the ChurchSuite sync), so a failure can't leave the plan half-saved.
     client = await pool.connect();
     await client.query('BEGIN');
-    await client.query('DELETE FROM plan_items WHERE plan_id = $1', [planId]);
+    await client.query('SELECT id FROM plans WHERE id = $1 FOR UPDATE', [planId]);
+    const cur = await client.query('SELECT id FROM plan_items WHERE plan_id = $1', [planId]);
+    const currentIds = new Set(cur.rows.map(r => r.id));
+    const keepIds = sentIds.filter(id => currentIds.has(id));
+    await client.query(
+      'DELETE FROM plan_items WHERE plan_id = $1 AND NOT (id = ANY($2::uuid[]))',
+      [planId, keepIds]
+    );
     for (let i = 0; i < items.length; i++) {
       const item = items[i];
-      await client.query(
-        'INSERT INTO plan_items (plan_id, type, song_id, title, notes, content, key_override, position, custom_arrangement, duration_minutes, phase) VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11)',
-        [planId, item.type.trim(), item.song_id || null, item.title || null, item.notes || null, sanitizeRichText(item.content), item.key_override || null, i, item.custom_arrangement || null, parseInt(item.duration_minutes, 10) > 0 ? parseInt(item.duration_minutes, 10) : null, item.phase === 'pre-service' ? 'pre-service' : 'service']
-      );
+      const duration = parseInt(item.duration_minutes, 10) > 0 ? parseInt(item.duration_minutes, 10) : null;
+      const phase = item.phase === 'pre-service' || item.phase === 'service' ? item.phase : null;
+      const values = [item.type.trim(), item.song_id || null, item.title || null, item.notes || null, sanitizeRichText(item.content), item.key_override || null, i, item.custom_arrangement || null, duration];
+      const itemId = item.id != null ? item.id.toLowerCase() : null;
+      if (itemId && currentIds.has(itemId)) {
+        await client.query(
+          `UPDATE plan_items SET type=$1, song_id=$2, title=$3, notes=$4, content=$5, key_override=$6, position=$7,
+                  custom_arrangement=$8, duration_minutes=$9, phase=COALESCE($10, phase)
+            WHERE id=$11 AND plan_id=$12`,
+          [...values, phase, itemId, planId]
+        );
+      } else {
+        await client.query(
+          'INSERT INTO plan_items (plan_id, type, song_id, title, notes, content, key_override, position, custom_arrangement, duration_minutes, phase) VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11)',
+          [planId, ...values, phase || 'service']
+        );
+      }
     }
     await client.query('COMMIT');
     res.json({ success: true });

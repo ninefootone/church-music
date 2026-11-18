@@ -47,6 +47,9 @@ function normaliseKey(key: string | null | undefined): string {
 
 interface PlanItem {
   id: string
+  // The item's id in the database (items loaded from the plan). New items have none.
+  // Sent back on save so the server updates these items in place and their ids never change.
+  dbId?: string | null
   type: string
   song_id: string | null
   song_title?: string
@@ -324,6 +327,7 @@ export default function PlanEditPage() {
       setPreServiceNotes(s.pre_service_notes || '')
       setItems((s.items || []).map((item: any) => ({
         id: newId(),
+        dbId: item.id,
         type: item.type,
         song_id: item.song_id,
         song_title: item.song_title,
@@ -378,7 +382,7 @@ export default function PlanEditPage() {
       const slotIdx = prev.findIndex(i => i.type === 'song_slot')
       if (slotIdx === -1) return [...prev, songItem]
       const slot = prev[slotIdx]
-      const filled = { ...songItem, duration_minutes: songItem.duration_minutes ?? slot.duration_minutes }
+      const filled = { ...songItem, dbId: slot.dbId, duration_minutes: songItem.duration_minutes ?? slot.duration_minutes }
       return prev.map((item, i) => (i === slotIdx ? filled : item))
     })
     setSongSearch('')
@@ -423,6 +427,7 @@ export default function PlanEditPage() {
       await Promise.all([
         api.put(`/api/plans/${id}/items`, {
           items: items.map(item => ({
+            id: item.dbId || undefined,
             type: item.type, song_id: item.song_id || null,
             title: item.title || null, content: item.content || null, notes: item.notes || null,
             key_override: item.key_override || null,

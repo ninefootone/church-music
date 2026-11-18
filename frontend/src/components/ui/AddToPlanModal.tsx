@@ -41,6 +41,7 @@ export function AddToPlanModal({ song, onClose }: AddToPlanModalProps) {
       // order, so anything left out here (content, arrangements, durations)
       // would be wiped from the plan.
       const currentItems = (data.items || []).map((item: any) => ({
+        id: item.id,
         type: item.type,
         song_id: item.song_id || null,
         title: item.title || null,
@@ -70,7 +71,7 @@ export function AddToPlanModal({ song, onClose }: AddToPlanModalProps) {
       const newItems = slotIdx === -1
         ? [...currentItems, newSong]
         : currentItems.map((item: any, i: number) => i === slotIdx
-            ? { ...newSong, duration_minutes: newSong.duration_minutes ?? item.duration_minutes, phase: item.phase }
+            ? { ...newSong, id: item.id, duration_minutes: newSong.duration_minutes ?? item.duration_minutes, phase: item.phase }
             : item)
 
       await api.put(`/api/plans/${plan.id}/items`, { items: newItems })
