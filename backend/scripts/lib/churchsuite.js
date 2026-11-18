@@ -55,9 +55,10 @@ function createClient(clientId, clientSecret) {
   // Plans between two YYYY-MM-DD dates, published AND drafts (the API defaults to published only).
   async function plans(from, to) {
     const q = `starts_after=${from}&starts_before=${to}&order_by=date:asc`;
+    // Tagged with the list they came from, so `status` is always set ('published' / 'draft').
     const all = [
-      ...(await listAll(`/planning/plans?${q}&status=published`)),
-      ...(await listAll(`/planning/plans?${q}&status=draft`)),
+      ...(await listAll(`/planning/plans?${q}&status=published`)).map(p => ({ ...p, status: 'published' })),
+      ...(await listAll(`/planning/plans?${q}&status=draft`)).map(p => ({ ...p, status: 'draft' })),
     ];
     return all.sort((a, b) => `${a.date} ${a.time}`.localeCompare(`${b.date} ${b.time}`));
   }
@@ -94,7 +95,8 @@ function createClient(clientId, clientSecret) {
         author = answer(it.question_responses, 'Artist/Author');
       }
       if (!ref && it.library_item_id) ref = `lib:${it.library_item_id}`;
-      out.push({ id: it.id, kind, label, key, author, people, peopleRefs, ref, time_start: it.time_start || '', type_name: typeName });
+      out.push({ id: it.id, kind, label, key, author, people, peopleRefs, ref, words: answer(it.question_responses, 'Words'),
+        time_start: it.time_start || '', type_name: typeName });
     }
     return out;
   }
