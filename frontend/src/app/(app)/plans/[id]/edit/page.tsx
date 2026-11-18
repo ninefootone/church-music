@@ -741,17 +741,12 @@ export default function PlanEditPage() {
               <button onClick={() => setConflictStatus(null)} className="modal-close"><X size={20} /></button>
             </div>
             <p className="modal-body">
-              Someone else (or the ChurchSuite sync) changed this plan&apos;s running order after you opened it, so your changes haven&apos;t been saved yet. They&apos;re still here.
-              You can open the latest version in a new tab to see what changed, then choose: save yours (this replaces their changes), or throw yours away and load the latest.
+              Someone else changed this plan after you opened it, so your changes haven&apos;t been saved. They&apos;re still here.
+              {' '}<a href={`/plans/${id}`} target="_blank" rel="noopener noreferrer" className="link">See the latest version</a> (opens in a new tab).
             </p>
-            <div className="modal-footer modal-footer--wrap">
-              <a href={`/plans/${id}`} target="_blank" rel="noopener noreferrer" className="btn btn-secondary">Open latest in new tab</a>
-              <button
-                className="btn btn-secondary"
-                disabled={saving}
-                onClick={() => window.location.reload()}
-              >
-                Discard mine, load latest
+            <div className="modal-footer modal-footer--stack-narrow">
+              <button className="btn btn-secondary" disabled={saving} onClick={() => window.location.reload()}>
+                Discard mine and reload
               </button>
               <button
                 className="btn btn-primary"
