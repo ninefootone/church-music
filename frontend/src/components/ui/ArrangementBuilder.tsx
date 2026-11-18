@@ -1,7 +1,25 @@
 'use client'
 
-import { useState, useRef } from 'react'
+import { useState } from 'react'
 import { GripVertical, X, Plus } from 'lucide-react'
+import {
+  DndContext,
+  closestCenter,
+  KeyboardSensor,
+  PointerSensor,
+  TouchSensor,
+  useSensor,
+  useSensors,
+  type DragEndEvent,
+} from '@dnd-kit/core'
+import {
+  arrayMove,
+  SortableContext,
+  sortableKeyboardCoordinates,
+  useSortable,
+  rectSortingStrategy,
+} from '@dnd-kit/sortable'
+import { CSS } from '@dnd-kit/utilities'
 import { parseArrangement } from '@/lib/arrangement'
 
 const PRESET_ELEMENTS = ['Intro', 'Verse', 'Pre-Chorus', 'Chorus', 'Bridge', 'Tag', 'Link', 'Turnaround', 'Instrumental', 'Ending']
@@ -31,6 +49,50 @@ function nextLabel(base: string, existing: Item[]): string {
 let idCounter = 0
 function uid() { return `item-${++idCounter}` }
 
+// One draggable pill. The whole pill drags (pills are small), but only after the pointer moves 5px
+// (or a 150ms press on touch), so a plain click still renames and the × still removes.
+// Translate, not Transform: pills are different widths and Transform would stretch them.
+function SortablePill({
+  item, editing, onStartEdit, onStopEdit, onRename, onRemove,
+}: {
+  item: Item
+  editing: boolean
+  onStartEdit: () => void
+  onStopEdit: () => void
+  onRename: (label: string) => void
+  onRemove: () => void
+}) {
+  const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({ id: item.id, disabled: editing })
+  return (
+    <div
+      ref={setNodeRef}
+      style={{ transform: CSS.Translate.toString(transform), transition }}
+      className={`arrangement-item${isDragging ? ' arrangement-item--dragging' : ''}`}
+      {...attributes}
+      {...listeners}
+    >
+      <span className="arrangement-grip"><GripVertical size={14} /></span>
+      {editing ? (
+        <input
+          className="arrangement-item-input"
+          value={item.label}
+          autoFocus
+          onChange={e => onRename(e.target.value)}
+          onBlur={onStopEdit}
+          onKeyDown={e => { e.stopPropagation(); if (e.key === 'Enter') onStopEdit() }}
+        />
+      ) : (
+        <span className="arrangement-item-label" onClick={onStartEdit} title="Click to rename">
+          {item.label}
+        </span>
+      )}
+      <button type="button" className="arrangement-remove" onClick={onRemove} title="Remove">
+        <X size={12} />
+      </button>
+    </div>
+  )
+}
+
 interface Props {
   value: string
   onChange: (value: string) => void
@@ -42,13 +104,11 @@ export function ArrangementBuilder({ value, onChange }: Props) {
   const [showLegacyPrompt, setShowLegacyPrompt] = useState(isLegacy)
   const [editingId, setEditingId] = useState<string | null>(null)
 
-  // Drag (mouse) refs
-  const dragItem = useRef<number | null>(null)
-  const dragOver = useRef<number | null>(null)
-
-  // Touch refs
-  const touchItem = useRef<number | null>(null)
-  const touchListRef = useRef<HTMLDivElement | null>(null)
+  const sensors = useSensors(
+    useSensor(PointerSensor, { activationConstraint: { distance: 5 } }),
+    useSensor(TouchSensor, { activationConstraint: { delay: 150, tolerance: 5 } }),
+    useSensor(KeyboardSensor, { coordinateGetter: sortableKeyboardCoordinates })
+  )
 
   const emit = (next: Item[]) => {
     onChange(JSON.stringify(next.map(i => i.label)))
@@ -77,57 +137,14 @@ export function ArrangementBuilder({ value, onChange }: Props) {
     emit(next)
   }
 
-  // ── Mouse drag handlers ───────────────────────────────────────
-  const handleDragStart = (index: number) => {
-    dragItem.current = index
-  }
-
-  const handleDragEnter = (index: number) => {
-    if (dragItem.current === null || dragItem.current === index) return
-    const next = [...items]
-    const [moved] = next.splice(dragItem.current, 1)
-    next.splice(index, 0, moved)
-    dragItem.current = index
+  const handleDragEnd = ({ active, over }: DragEndEvent) => {
+    if (!over || active.id === over.id) return
+    const from = items.findIndex(i => i.id === active.id)
+    const to = items.findIndex(i => i.id === over.id)
+    if (from < 0 || to < 0) return
+    const next = arrayMove(items, from, to)
     setItems(next)
     emit(next)
-  }
-
-  const handleDragEnd = () => {
-    dragItem.current = null
-    dragOver.current = null
-  }
-
-  // ── Touch drag handlers ───────────────────────────────────────
-  const handleTouchStart = (index: number) => {
-    touchItem.current = index
-  }
-
-  const handleTouchMove = (e: React.TouchEvent) => {
-    if (touchItem.current === null) return
-    e.preventDefault()
-    const touch = e.touches[0]
-    const list = touchListRef.current
-    if (!list) return
-    const children = Array.from(list.children) as HTMLElement[]
-    for (let i = 0; i < children.length; i++) {
-      const rect = children[i].getBoundingClientRect()
-      if (touch.clientX >= rect.left && touch.clientX <= rect.right &&
-          touch.clientY >= rect.top && touch.clientY <= rect.bottom) {
-        if (i !== touchItem.current) {
-          const next = [...items]
-          const [moved] = next.splice(touchItem.current, 1)
-          next.splice(i, 0, moved)
-          touchItem.current = i
-          setItems(next)
-          emit(next)
-        }
-        break
-      }
-    }
-  }
-
-  const handleTouchEnd = () => {
-    touchItem.current = null
   }
 
   // ── Legacy prompt ─────────────────────────────────────────────
@@ -180,53 +197,23 @@ export function ArrangementBuilder({ value, onChange }: Props) {
       </div>
 
       {items.length > 0 && (
-        <div
-          className="arrangement-list"
-          ref={touchListRef}
-          onTouchMove={handleTouchMove}
-          onTouchEnd={handleTouchEnd}
-        >
-          {items.map((item, index) => (
-            <div
-              key={item.id}
-              className="arrangement-item"
-              draggable
-              onDragStart={() => handleDragStart(index)}
-              onDragEnter={() => handleDragEnter(index)}
-              onDragEnd={handleDragEnd}
-              onDragOver={e => e.preventDefault()}
-              onTouchStart={() => handleTouchStart(index)}
-            >
-              <span className="arrangement-grip"><GripVertical size={14} /></span>
-              {editingId === item.id ? (
-                <input
-                  className="arrangement-item-input"
-                  value={item.label}
-                  autoFocus
-                  onChange={e => updateLabel(item.id, e.target.value)}
-                  onBlur={() => setEditingId(null)}
-                  onKeyDown={e => { if (e.key === 'Enter') setEditingId(null) }}
+        <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={handleDragEnd}>
+          <SortableContext items={items.map(i => i.id)} strategy={rectSortingStrategy}>
+            <div className="arrangement-list">
+              {items.map(item => (
+                <SortablePill
+                  key={item.id}
+                  item={item}
+                  editing={editingId === item.id}
+                  onStartEdit={() => setEditingId(item.id)}
+                  onStopEdit={() => setEditingId(null)}
+                  onRename={label => updateLabel(item.id, label)}
+                  onRemove={() => removeItem(item.id)}
                 />
-              ) : (
-                <span
-                  className="arrangement-item-label"
-                  onClick={() => setEditingId(item.id)}
-                  title="Click to rename"
-                >
-                  {item.label}
-                </span>
-              )}
-              <button
-                type="button"
-                className="arrangement-remove"
-                onClick={() => removeItem(item.id)}
-                title="Remove"
-              >
-                <X size={12} />
-              </button>
+              ))}
             </div>
-          ))}
-        </div>
+          </SortableContext>
+        </DndContext>
       )}
 
       {items.length === 0 && (
@@ -234,7 +221,7 @@ export function ArrangementBuilder({ value, onChange }: Props) {
       )}
 
       {items.length > 0 && (
-        <p className="arrangement-hint">Click an item to rename it. Drag to reorder — best done on desktop.</p>
+        <p className="arrangement-hint">Click an item to rename it. Drag to reorder (on a phone, press and hold first).</p>
       )}
     </div>
   )

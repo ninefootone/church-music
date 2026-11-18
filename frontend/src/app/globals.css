@@ -2601,6 +2601,14 @@ select.input {
   cursor: grabbing;
 }
 
+.arrangement-item--dragging {
+  position: relative;
+  z-index: 2;
+  opacity: 0.85;
+  box-shadow: var(--shadow-md);
+  cursor: grabbing;
+}
+
 .arrangement-grip {
   color: var(--color-brand-400);
   display: flex;
