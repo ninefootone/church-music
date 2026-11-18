@@ -457,13 +457,16 @@ export default function HelpPage() {
                 <strong>Adding the times:</strong> on <strong>New plan</strong> or <strong>Edit plan details</strong>, set the start time of the first service, then click <strong>Same service again later</strong> and enter the next time. You can add up to three extra times, and each must be later than the start time. The plan then shows as &quot;9:15 am &amp; 11:00 am&quot; everywhere, including the share link and emails.
               </p>
               <p className="help-content-body">
-                <strong>CCLI reporting:</strong> each song counts once for every service time, so a plan at 9:15 and 11:00 counts each of its songs twice in your Stats and CCLI report. Don&apos;t also keep a separate 11am plan for the same service, or its songs will be counted three times.
+                <strong>CCLI reporting:</strong> each song counts once for every service time it&apos;s at, so a plan at 9:15 and 11:00 counts each of its songs twice in your Stats and CCLI report (a song marked for one service only counts once — see below). Don&apos;t also keep a separate 11am plan for the same service, or its songs will be counted three times.
               </p>
               <p className="help-content-body">
                 The plan page and share link show a time pill for each service above the running order. With <strong>Show timings</strong> on, tap a time to see the running-order times for that service (it starts on the first one).
               </p>
               <p className="help-content-body">
-                <strong>When the services stop being the same:</strong> open the plan and click <strong>Split into separate plans</strong> at the bottom of the page. Each extra time becomes its own plan with a copy of everything — songs, keys, notes and musicians — and the original keeps the first time. From then on, changes to one plan don&apos;t affect the other. Each plan has its own share link, so send the new link to anyone playing at the later service. Splitting needs the <strong>Add &amp; edit plans</strong> permission and isn&apos;t available on the free plan.
+                <strong>Something only at one service:</strong> if an item only happens at one of the times — a baptism at 9:15, say — open the plan builder, tap the arrow on that item and untick the other time under <strong>Services</strong>. It&apos;s then labelled &quot;9:15 am only&quot; on the plan, the share link, the Plans overview, emails and the iPad app. With <strong>Show timings</strong> on, picking the other time greys it out and leaves it out of that service&apos;s times. This works for songs too. If you change the plan&apos;s start time later, items marked for the old time go back to being at every service, so check them.
+              </p>
+              <p className="help-content-body">
+                <strong>When the services stop being the same:</strong> open the plan and click <strong>Split into separate plans</strong> at the bottom of the page. Each extra time becomes its own plan with a copy of everything at that time — songs, keys, notes and musicians — and the original keeps the first time. Anything marked for one service only goes into that service&apos;s plan alone. From then on, changes to one plan don&apos;t affect the other. Each plan has its own share link, so send the new link to anyone playing at the later service. Splitting needs the <strong>Add &amp; edit plans</strong> permission and isn&apos;t available on the free plan.
               </p>
             </div>
           ),
@@ -812,7 +815,7 @@ export default function HelpPage() {
                 Your CCLI number is included in the header of any CCLI usage report you export from the Stats page. If you don&apos;t have a CCLI licence, leave this field blank — you can add it later.
               </p>
               <p className="help-content-body">
-                The report counts each song once per service: once per plan, multiplied by the plan&apos;s number of service times. A song that appears twice in the same plan (a reprise, say) still counts once for that service.
+                The report counts each song once per service it&apos;s at: once per plan, multiplied by the plan&apos;s number of service times — or fewer if the song is marked for only some of them. A song that appears twice in the same plan (a reprise, say) still counts once for that service.
               </p>
             </div>
           ),
