@@ -224,7 +224,8 @@ async function applySync({ pool, cs, churchId, from, to, apply, runId, recordQue
           // The member has left the church since — fall through and ask again.
         }
         if (onPlan) continue;
-        if (answer && answer.decision === 'name_only') {
+        // "Not a member yet": once exactly one member has this exact name (they've joined), link them as usual.
+        if (answer && answer.decision === 'name_only' && members.filter(m => norm(m.name) === k).length !== 1) {
           const ins = await client.query(
             'INSERT INTO plan_musicians (plan_id, user_id, name, role) VALUES ($1,NULL,$2,$3) RETURNING id', [planId, name, DEFAULT_ROLE]);
           accounted.add(ins.rows[0].id);

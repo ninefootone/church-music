@@ -158,7 +158,7 @@ export function ChurchSuitePanel({ onCountChange }: { onCountChange?: (open: num
             {people.map(p => (
               <li key={p.cs_key}>
                 <span>
-                  {p.cs_name} → {p.decision === 'member' ? p.member_name || 'a member who has left' : p.decision === 'name_only' ? 'added by name only' : 'never added'}
+                  {p.cs_name} → {p.decision === 'member' ? p.member_name || 'a member who has left' : p.decision === 'name_only' ? 'added by name (linked automatically if they join under this name)' : 'never added'}
                 </span>
                 <button className="btn btn-secondary btn-sm" disabled={busy === p.cs_key} onClick={() => forget('person', p.cs_key)}>Forget</button>
               </li>
@@ -200,7 +200,7 @@ function PersonQuestion({ q, members, busy, onAnswer }: { q: Question; members: 
           That&apos;s them
         </button>
         <button className="btn btn-secondary btn-sm" disabled={busy} onClick={() => onAnswer({ action: 'name_only' })}>
-          Not a member — add by name
+          Not a member yet — add by name
         </button>
         <button className="btn btn-secondary btn-sm" disabled={busy} onClick={() => onAnswer({ action: 'ignore' })}>
           Never add
