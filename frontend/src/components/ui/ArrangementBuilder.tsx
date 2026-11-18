@@ -106,7 +106,8 @@ export function ArrangementBuilder({ value, onChange }: Props) {
 
   const sensors = useSensors(
     useSensor(PointerSensor, { activationConstraint: { distance: 5 } }),
-    useSensor(TouchSensor, { activationConstraint: { delay: 150, tolerance: 5 } }),
+    // tolerance 12 (Overview uses 5): pills are small and a slightly wobbly finger during the hold kept cancelling the drag
+    useSensor(TouchSensor, { activationConstraint: { delay: 150, tolerance: 12 } }),
     useSensor(KeyboardSensor, { coordinateGetter: sortableKeyboardCoordinates })
   )
 
