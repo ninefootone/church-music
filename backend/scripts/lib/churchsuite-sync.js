@@ -30,8 +30,9 @@
 const crypto = require('crypto');
 const { norm, titleVariants } = require('./churchsuite');
 const { csServiceTime, matchSong, likelySamePerson, ssSongVariants, STRUCTURAL } = require('./churchsuite-report');
+// NB the Railway cron service installs only the ROOT package.json (pg, dotenv…) — don't require backend modules that
+// need other npm packages (utils/sanitize needs sanitize-html → crashed the job on 2026-11-18).
 const { formatClock } = require('../../utils/extraTimes');
-const { sanitizeRichText } = require('../../utils/sanitize');
 
 const londonToday = () => new Intl.DateTimeFormat('en-CA', { timeZone: 'Europe/London' }).format(new Date());
 const DEFAULT_ROLE = 'Musician';
@@ -72,13 +73,13 @@ function mergeServices(cps) {
   return merged;
 }
 
-// Liturgy words (plain text from ChurchSuite) → the simple HTML service-item content uses.
+// Liturgy words (plain text from ChurchSuite) → the simple HTML service-item content uses. Every character of the
+// text is escaped, so the only tags are the <p>/<br> added here (no sanitizer needed).
 function wordsToHtml(text) {
   if (!text || !String(text).trim()) return null;
-  const esc = t => t.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
-  const html = String(text).replace(/\r/g, '').trim().split(/\n\s*\n/)
-    .map(par => `<p>${esc(par).split('\n').join('<br>')}</p>`).join('');
-  return sanitizeRichText(html);
+  const esc = t => t.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+  return String(text).replace(/\r/g, '').trim().split(/\n\s*\n/)
+    .map(par => `<p>${esc(par.trim()).split('\n').join('<br>')}</p>`).join('');
 }
 
 const sameKeyName = (a, b) => (a || '').trim().replace(/♯/g, '#').replace(/♭/g, 'b').toLowerCase() === (b || '').trim().replace(/♯/g, '#').replace(/♭/g, 'b').toLowerCase();
