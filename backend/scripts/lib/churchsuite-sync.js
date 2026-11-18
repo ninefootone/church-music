@@ -206,11 +206,14 @@ async function applySync({ pool, cs, churchId, from, to, apply, runId, recordQue
         const answer = pkey ? peopleAnswers.get(pkey) : null;
         const onPlan = mus.find(m => norm(m.name) === k);
         if (onPlan) { accounted.add(onPlan.id); }
+        // Someone with a likely-same name already on the plan ("Sam" for ChurchSuite's "Samuel"): an answer only
+        // decides who they are, never adds a second copy of them.
+        const nickOnPlan = onPlan ? null : mus.find(m => likelySamePerson(m.name, name));
         if (answer && answer.decision === 'ignore') continue;             // "never add this person"
         if (answer && answer.decision === 'member') {
           const mem = members.find(m => m.user_id === answer.user_id);
           if (mem) {
-            const already = mus.find(m => m.user_id === mem.user_id || norm(m.name) === norm(mem.name));
+            const already = mus.find(m => m.user_id === mem.user_id || norm(m.name) === norm(mem.name)) || nickOnPlan;
             if (already) { accounted.add(already.id); continue; }
             const role = (mem.default_roles && mem.default_roles[0]) || DEFAULT_ROLE;
             const ins = await client.query(
@@ -224,6 +227,7 @@ async function applySync({ pool, cs, churchId, from, to, apply, runId, recordQue
           // The member has left the church since — fall through and ask again.
         }
         if (onPlan) continue;
+        if (answer && answer.decision === 'name_only' && nickOnPlan) { accounted.add(nickOnPlan.id); continue; }
         // "Not a member yet": once exactly one member has this exact name (they've joined), link them as usual.
         if (answer && answer.decision === 'name_only' && members.filter(m => norm(m.name) === k).length !== 1) {
           const ins = await client.query(
@@ -238,6 +242,7 @@ async function applySync({ pool, cs, churchId, from, to, apply, runId, recordQue
           if (nick.id && mus.includes(nick)) accounted.add(nick.id);
           note(`${name} — probably "${nick.name}", not added (needs confirming).`);
           if (pkey) ask('person', pkey, date, null, { name, suggestion: members.includes(nick) ? { user_id: nick.user_id, name: nick.name } : null,
+            on_plan: mus.includes(nick) ? nick.name : null,
             candidates: members.filter(m => likelySamePerson(m.name, name)).map(m => ({ user_id: m.user_id, name: m.name })) });
           continue;
         }

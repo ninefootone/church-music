@@ -20,6 +20,7 @@ interface Question {
     title?: string
     dates?: string[]
     suggestion?: { user_id: string; name: string } | null
+    on_plan?: string | null
     candidates?: { user_id?: string; id?: string; name?: string; title?: string }[]
   }
 }
@@ -189,7 +190,9 @@ function PersonQuestion({ q, members, busy, onAnswer }: { q: Question; members: 
           ? `${candidates.length} members have that name — which one is it?`
           : q.payload.suggestion
             ? `Is this ${q.payload.suggestion.name}?`
-            : 'Which member is this?'}
+            : q.payload.on_plan
+              ? `Probably “${q.payload.on_plan}”, who's already on the plan by name. If they're a member, choose them; if not, choose “Not a member yet” and the plan stays as it is.`
+              : 'Which member is this?'}
       </p>
       <div className="cs-actions">
         <select className="input input--sm cs-select" value={userId} onChange={e => setUserId(e.target.value)} aria-label="Member">
