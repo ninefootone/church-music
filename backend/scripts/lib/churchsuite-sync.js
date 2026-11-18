@@ -256,8 +256,12 @@ async function applySync({ pool, cs, churchId, from, to, apply, runId, recordQue
       }
       // Musicians on the SongStack plan who aren't on any ChurchSuite song item. Only asked once ChurchSuite has a
       // music team for the date (an empty team usually just means the rota isn't done yet).
+      // Every plan row counts, not just the first: someone on the plan twice (Vocals AND Keys) is two rows.
+      const teamUsers = new Set([...team.values()].map(t => t.key && peopleAnswers.get(t.key))
+        .filter(x => x && x.decision === 'member').map(x => x.user_id));
       if (team.size) for (const m of mus) {
         if (accounted.has(m.id) || kept.has(`removed_musician|musician:${m.id}`)) continue;
+        if (team.has(norm(m.name)) || (m.user_id && teamUsers.has(m.user_id))) continue;
         if ([...team.values()].some(t => likelySamePerson(t.name, m.name))) continue;
         ask('removed_musician', `musician:${m.id}`, date, planId, { name: m.name, musician_id: m.id });
       }
