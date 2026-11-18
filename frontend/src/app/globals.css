@@ -3984,6 +3984,16 @@ body.plans-overview-active .app-main-content { max-width: 1680px; }
 .po-col-head .badge-draft { align-self: flex-start; margin-top: 4px; }
 /* MINE (Plans list): you're on this plan's rota. Accent colour so it doesn't read as DRAFT (brand). */
 .badge-mine { background: var(--color-accent-light); color: var(--color-accent-dark); }
+/* Per-service items ("9:15 am only") on plans with extra service times. Neutral so it doesn't read as DRAFT/MINE. */
+.badge-service-only { background: var(--color-neutral-100); color: var(--color-text-secondary); margin-left: 6px; vertical-align: middle; font-weight: 600; }
+/* Plan / share page with timings on: an item that isn't at the selected service. */
+.song-item-card--other-service { opacity: 0.45; }
+/* Builder: which services an item is at. */
+.service-times-field { margin-bottom: var(--space-sm); }
+.service-times-chips { display: flex; flex-wrap: wrap; gap: 6px; }
+.service-times-hint { font-size: var(--text-xs); color: var(--color-text-muted); margin: 4px 0 0; }
+/* Overview columns: a per-service item's label line. */
+.po-note-service { color: var(--color-text-muted); }
 .po-items { list-style: none; padding: 0; margin: 0; display: flex; flex-direction: column; gap: 6px; }
 .po-item { font-size: 0.8125rem; line-height: 1.35; }
 .po-item-row { display: flex; justify-content: space-between; gap: 6px; align-items: flex-start; }

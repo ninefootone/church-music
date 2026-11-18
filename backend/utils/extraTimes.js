@@ -35,4 +35,75 @@ function planTimeLabel(plan) {
   return [first, ...(plan.extra_times || []).map(formatClock)].join(' & ');
 }
 
-module.exports = { parseExtraTimes, MAX_EXTRA_TIMES, formatClock, planTimeLabel };
+// ── Per-service items (2026-11-18, project doc per-service-items.md) ─────────────────────────
+// plan_items.service_times TIME[] = the services (start times) an item happens at, on a plan with
+// extra_times. '{}' = every service (the default, and what every item had before). Kept tidy by
+// tidyItemServiceTimes: only times the plan actually has, and '{}' when that's all of them or none.
+
+// The plan's services as 'HH:MM' strings: [start, ...extra]. [] when there's no start time.
+function planServiceTimes(plan) {
+  if (!plan || !plan.plan_start_time) return [];
+  return [plan.plan_start_time, ...(plan.extra_times || [])].map((t) => String(t).slice(0, 5));
+}
+
+// Body value → { value: ['09:15', …] } | { error }. Absent → { value: undefined } (leave unchanged).
+const MAX_SERVICE_TIMES = MAX_EXTRA_TIMES + 1;
+function parseItemServiceTimes(value) {
+  if (value === undefined) return { value: undefined };
+  if (value === null) return { value: [] };
+  if (!Array.isArray(value)) return { error: 'Service times must be a list of times' };
+  const times = [];
+  for (const t of value) {
+    if (typeof t !== 'string' || !isClockTime(t)) return { error: START_TIME_MESSAGE };
+    const hhmm = t.slice(0, 5);
+    if (!times.includes(hhmm)) times.push(hhmm);
+  }
+  if (times.length > MAX_SERVICE_TIMES) return { error: `An item can be at most ${MAX_SERVICE_TIMES} service times` };
+  times.sort();
+  return { value: times };
+}
+
+// The plan times this item is at, or [] when it's at every service (also when its stored times
+// don't match any of the plan's — treated as "every service", never as "no service").
+function itemServiceTimes(item, plan) {
+  const all = planServiceTimes(plan);
+  const mine = (item.service_times || []).map((t) => String(t).slice(0, 5)).filter((t) => all.includes(t));
+  return mine.length === 0 || mine.length >= all.length ? [] : mine;
+}
+
+// "9:15 am only" / "9:15 am & 11:00 am only", or null for an every-service item.
+function serviceOnlyLabel(item, plan) {
+  const times = itemServiceTimes(item, plan);
+  return times.length ? `${times.map(formatClock).join(' & ')} only` : null;
+}
+
+// Re-tidies every item of one plan against the plan's current times (after a save, a change of the
+// plan's start/extra times, a duplicate, or a template copy). Times the plan no longer has are
+// dropped; an item left with none, or with all of them, goes back to '{}' (every service).
+async function tidyItemServiceTimes(db, planId) {
+  await db.query(
+    `WITH p AS (
+       SELECT id, CASE WHEN plan_start_time IS NULL THEN '{}'::time[]
+                       ELSE ARRAY[plan_start_time] || extra_times END AS times
+         FROM plans WHERE id = $1
+     ), k AS (
+       SELECT i.id,
+              ARRAY(SELECT DISTINCT t FROM unnest(i.service_times) t WHERE t = ANY(p.times) ORDER BY t) AS kept,
+              cardinality(p.times) AS n
+         FROM plan_items i JOIN p ON p.id = i.plan_id
+        WHERE cardinality(i.service_times) > 0
+     )
+     UPDATE plan_items pi
+        SET service_times = CASE WHEN cardinality(k.kept) = 0 OR cardinality(k.kept) >= k.n THEN '{}'::time[] ELSE k.kept END
+       FROM k
+      WHERE pi.id = k.id
+        AND pi.service_times IS DISTINCT FROM
+            (CASE WHEN cardinality(k.kept) = 0 OR cardinality(k.kept) >= k.n THEN '{}'::time[] ELSE k.kept END)`,
+    [planId]
+  );
+}
+
+module.exports = {
+  parseExtraTimes, MAX_EXTRA_TIMES, formatClock, planTimeLabel,
+  planServiceTimes, parseItemServiceTimes, itemServiceTimes, serviceOnlyLabel, tidyItemServiceTimes,
+};

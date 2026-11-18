@@ -4,7 +4,7 @@ const router = express.Router();
 const { isIsoDate, isClockTime, DATE_MESSAGE, START_TIME_MESSAGE } = require('../utils/dates');
 const { requireIdParams, isUuid } = require('../utils/ids');
 const { planLimitReached, PLAN_LIMIT_MESSAGE } = require('../utils/limits');
-const { parseExtraTimes, planTimeLabel, formatClock } = require('../utils/extraTimes');
+const { parseExtraTimes, planTimeLabel, formatClock, parseItemServiceTimes, itemServiceTimes, serviceOnlyLabel, tidyItemServiceTimes } = require('../utils/extraTimes');
 // Malformed IDs in the URL → 404 before any handler runs (see utils/ids.js).
 requireIdParams(router, { id: 'Plan not found', itemId: 'Plan item not found', musicianId: 'Musician not found' });
 const { sendBrevoEmail, escapeHtml } = require('../utils/email');
@@ -195,7 +195,7 @@ router.get('/overview', requireAuth, requireMembership, async function(req, res,
     const [items, musicians, unavailability] = await Promise.all([
       pool.query(
         `SELECT pi.plan_id, pi.id, pi.type, pi.phase, pi.title, pi.position, pi.key_override, pi.duration_minutes,
-                s.id AS song_id, s.title AS song_title, s.default_key AS song_default_key,
+                pi.service_times, s.id AS song_id, s.title AS song_title, s.default_key AS song_default_key,
                 s.default_duration AS song_default_duration
            FROM plan_items pi LEFT JOIN songs s ON s.id = pi.song_id
           WHERE pi.plan_id = ANY($1::uuid[])
@@ -302,11 +302,17 @@ router.get('/:id/musicians', requireAuth, requireMembership, async function(req,
 // GET /:id returns it as `items_version`; PUT /:id/items refuses the save (409) when the caller
 // sends a version that no longer matches, i.e. the items changed after the caller loaded them
 // (another editor, the overview, an annotator's note, the ChurchSuite sync).
+// SQL: is the plan_items row (unqualified columns) at service `timeExpr`, given the plan's
+// times `allExpr`? Every-service items ('{}'), and items whose stored times match none of the
+// plan's (treated as every service, as in itemServiceTimes), are at every service.
+const AT_SERVICE_SQL = (timeExpr, allExpr) =>
+  `(cardinality(service_times) = 0 OR ${timeExpr} = ANY(service_times) OR NOT (service_times && ${allExpr}))`;
+
 async function itemsVersion(db, planId) {
   const r = await db.query(
     `SELECT md5(COALESCE(string_agg(
               ROW(id, type, song_id, title, notes, content, key_override, position,
-                  custom_arrangement, duration_minutes, phase)::text, '|' ORDER BY position, id), '')) AS v
+                  custom_arrangement, duration_minutes, phase, service_times)::text, '|' ORDER BY position, id), '')) AS v
        FROM plan_items WHERE plan_id = $1`,
     [planId]
   );
@@ -328,7 +334,7 @@ router.get('/:id', requireAuth, requireMembership, async function(req, res, next
     }
 
     const items = await pool.query(
-      `SELECT si.id, si.type, si.phase, si.title, si.notes, si.content, si.key_override, si.position,
+      `SELECT si.id, si.type, si.phase, si.title, si.notes, si.content, si.key_override, si.position, si.service_times,
         si.custom_arrangement, si.duration_minutes,
         s.id AS song_id, s.title AS song_title, s.author AS song_author,
         s.default_key AS song_default_key, s.category AS song_category,
@@ -370,7 +376,7 @@ router.get('/public/:token', async function(req, res, next) {
 
     const items = await pool.query(
       `SELECT si.type, si.phase, si.title, si.notes, si.content, si.key_override, si.position,
-        si.custom_arrangement, si.duration_minutes,
+        si.custom_arrangement, si.duration_minutes, si.service_times,
         s.id AS song_id, s.title AS song_title, s.author AS song_author,
         s.default_key AS song_default_key,
         s.ccli_number AS song_ccli_number,
@@ -505,6 +511,8 @@ router.put('/:id', requireAuth, requireMembership, async function(req, res, next
       params
     );
     if (plan.rows.length === 0) return res.status(404).json({ error: 'Not found' });
+    // Service times changed → per-service items drop times the plan no longer has.
+    if ('plan_start_time' in body || extraTimes !== undefined) await tidyItemServiceTimes(pool, req.params.id);
     res.json(plan.rows[0]);
   } catch (err) {
     next(err);
@@ -520,6 +528,8 @@ router.put('/:id', requireAuth, requireMembership, async function(req, res, next
 // `phase` is only changed when sent ('service' / 'pre-service'); new items default to 'service'.
 // `items_version` (optional, from GET /:id): if the plan's items have changed since then → 409
 // with code 'plan_changed' and nothing saved. Leave it out to save regardless ("Save mine anyway").
+// `service_times` (per item, optional): the services the item is at (['09:15']); [] = every service.
+// Left out → unchanged on existing items, every service on new ones. Tidied against the plan's times.
 router.put('/:id/items', requireAuth, requireMembership, async function(req, res, next) {
   const planId = req.params.id;
   const items = req.body.items;
@@ -532,6 +542,8 @@ router.put('/:id/items', requireAuth, requireMembership, async function(req, res
       return res.status(400).json({ error: 'Each item needs a type' });
     }
     if (it.id != null && !isUuid(it.id)) return res.status(400).json({ error: 'Invalid item id' });
+    const st = parseItemServiceTimes(it.service_times);
+    if (st.error) return res.status(400).json({ error: st.error });
   }
   const sentIds = items.filter(it => it.id != null).map(it => it.id.toLowerCase());
   if (new Set(sentIds).size !== sentIds.length) return res.status(400).json({ error: 'The same item is in the list twice' });
@@ -591,21 +603,24 @@ router.put('/:id/items', requireAuth, requireMembership, async function(req, res
       const duration = parseInt(item.duration_minutes, 10) > 0 ? parseInt(item.duration_minutes, 10) : null;
       const phase = item.phase === 'pre-service' || item.phase === 'service' ? item.phase : null;
       const values = [item.type.trim(), item.song_id || null, item.title || null, item.notes || null, sanitizeRichText(item.content), item.key_override || null, i, item.custom_arrangement || null, duration];
+      const serviceTimes = parseItemServiceTimes(item.service_times).value; // validated above; undefined = not sent
       const itemId = item.id != null ? item.id.toLowerCase() : null;
       if (itemId && currentIds.has(itemId)) {
         await client.query(
           `UPDATE plan_items SET type=$1, song_id=$2, title=$3, notes=$4, content=$5, key_override=$6, position=$7,
-                  custom_arrangement=$8, duration_minutes=$9, phase=COALESCE($10, phase)
+                  custom_arrangement=$8, duration_minutes=$9, phase=COALESCE($10, phase),
+                  service_times=COALESCE($13::time[], service_times)
             WHERE id=$11 AND plan_id=$12`,
-          [...values, phase, itemId, planId]
+          [...values, phase, itemId, planId, serviceTimes ?? null]
         );
       } else {
         await client.query(
-          'INSERT INTO plan_items (plan_id, type, song_id, title, notes, content, key_override, position, custom_arrangement, duration_minutes, phase) VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11)',
-          [planId, ...values, phase || 'service']
+          'INSERT INTO plan_items (plan_id, type, song_id, title, notes, content, key_override, position, custom_arrangement, duration_minutes, phase, service_times) VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12)',
+          [planId, ...values, phase || 'service', serviceTimes || []]
         );
       }
     }
+    await tidyItemServiceTimes(client, planId);
     await client.query('COMMIT');
     res.json({ success: true });
   } catch (err) {
@@ -679,7 +694,7 @@ router.patch('/:id/items/:itemId/notes', requireAuth, requireMembership, async f
 // locks the plan row, and leave every other item — notes, arrangements, rich content — alone.
 // Each returns the plan's items in the same shape as GET /overview so the column can redraw.
 
-const OVERVIEW_ITEM_COLUMNS = `pi.id, pi.type, pi.phase, pi.title, pi.position, pi.key_override, pi.duration_minutes,
+const OVERVIEW_ITEM_COLUMNS = `pi.id, pi.type, pi.phase, pi.title, pi.position, pi.key_override, pi.duration_minutes, pi.service_times,
   s.id AS song_id, s.title AS song_title, s.default_key AS song_default_key,
   s.default_duration AS song_default_duration`;
 
@@ -952,7 +967,17 @@ router.post('/:id/email', requireAuth, requireMembership, async function(req, re
       [planId]
     )
     // A song with no minutes saved on the plan uses the song's default length (same rule as the web pages).
-    const items = itemsResult.rows.map(i => ({ ...i, duration_minutes: i.duration_minutes ?? i.song_default_duration ?? null }))
+    // Per-service items carry an "11:00 am only" label; the email's running times are for the FIRST
+    // service, so items that aren't at it don't add to them.
+    const items = itemsResult.rows.map(i => {
+      const times = itemServiceTimes(i, plan)
+      return {
+        ...i,
+        duration_minutes: i.duration_minutes ?? i.song_default_duration ?? null,
+        only_label: serviceOnlyLabel(i, plan),
+        at_first_service: times.length === 0 || times.includes(String(plan.plan_start_time).slice(0, 5)),
+      }
+    })
 
     // Fetch files for each song item
     const songIds = [...new Set(items.filter(i => i.song_id).map(i => i.song_id))]
@@ -997,6 +1022,10 @@ router.post('/:id/email', requireAuth, requireMembership, async function(req, re
       runningMinutes = h * 60 + m
     }
 
+    const onlyBadge = (item) => item.only_label
+      ? `<span style="display:inline-block;padding:2px 8px;background:#fef3c7;color:#92400e;border-radius:4px;font-size:11px;font-weight:600;font-style:normal;margin-left:6px;">${escapeHtml(item.only_label)}</span>`
+      : ''
+
     // Build song rows HTML
     const itemsHtml = items.map((item, i) => {
       if (item.type !== 'song') {
@@ -1011,12 +1040,12 @@ router.post('/:id/email', requireAuth, requireMembership, async function(req, re
         if (hasTimings || hasDurations) {
           const hh = String(Math.floor(runningMinutes / 60)).padStart(2, '0')
           const mm = String(runningMinutes % 60).padStart(2, '0')
-          const timeStr = hasTimings ? `<span style="font-size:12px;font-weight:600;color:#4b7fa5;">${hh}:${mm}</span>` : ''
+          const timeStr = hasTimings && item.at_first_service ? `<span style="font-size:12px;font-weight:600;color:#4b7fa5;">${hh}:${mm}</span>` : ''
           const durStr = item.duration_minutes ? `<span style="font-size:12px;color:#9ca3af;margin-left:4px;">${item.duration_minutes} mins</span>` : ''
           timingCell = `<td style="padding:10px 16px;white-space:nowrap;width:80px;">${timeStr}${durStr}</td>`
         }
-        if (item.duration_minutes) runningMinutes += item.duration_minutes
-        return `<tr style="border-bottom:1px solid #e5e7eb;">${hasTimings || hasDurations ? timingCell : `<td style="width:80px;"></td>`}<td colspan="2" style="padding:10px 16px;background:#f8f9fa;font-size:13px;color:#666;"><span style="font-style:italic;">${label}</span>${contentHtml}${noteHtml}</td></tr>`
+        if (item.duration_minutes && item.at_first_service) runningMinutes += item.duration_minutes
+        return `<tr style="border-bottom:1px solid #e5e7eb;">${hasTimings || hasDurations ? timingCell : `<td style="width:80px;"></td>`}<td colspan="2" style="padding:10px 16px;background:#f8f9fa;font-size:13px;color:#666;"><span style="font-style:italic;">${label}</span>${onlyBadge(item)}${contentHtml}${noteHtml}</td></tr>`
       }
       const title = item.song_title || 'Untitled'
       const key = item.key_override || item.song_default_key || ''
@@ -1030,16 +1059,16 @@ router.post('/:id/email', requireAuth, requireMembership, async function(req, re
       }).join('')
       const hh = String(Math.floor(runningMinutes / 60)).padStart(2, '0')
       const mm = String(runningMinutes % 60).padStart(2, '0')
-      const timeStr = hasTimings ? `<span style="font-size:12px;font-weight:600;color:#4b7fa5;">${hh}:${mm}</span>` : ''
+      const timeStr = hasTimings && item.at_first_service ? `<span style="font-size:12px;font-weight:600;color:#4b7fa5;">${hh}:${mm}</span>` : ''
       const durStr = item.duration_minutes ? `<span style="font-size:12px;color:#9ca3af;margin-left:4px;">${item.duration_minutes} mins</span>` : ''
       const timingCell = (hasTimings || hasDurations)
         ? `<td style="padding:10px 16px;white-space:nowrap;width:80px;vertical-align:top;">${timeStr}${durStr}</td>`
         : `<td style="width:80px;"></td>`
-      if (item.duration_minutes) runningMinutes += item.duration_minutes
+      if (item.duration_minutes && item.at_first_service) runningMinutes += item.duration_minutes
       return `<tr style="border-bottom:1px solid #e5e7eb;">
         ${timingCell}
         <td style="padding:10px 16px;">
-          <div style="font-size:15px;font-weight:600;color:#111827;">${escapeHtml(title)}${keyBadge}</div>
+          <div style="font-size:15px;font-weight:600;color:#111827;">${escapeHtml(title)}${keyBadge}${onlyBadge(item)}</div>
           ${arrangementHtml}
           ${fileLinks ? `<div style="margin-top:4px;">${fileLinks}</div>` : ''}
         </td>
@@ -1164,11 +1193,13 @@ router.post('/:id/duplicate', requireAuth, requirePermission('can_add_plans'), a
     const newId = newPlan.rows[0].id;
 
     await client.query(
-      `INSERT INTO plan_items (plan_id, type, title, notes, content, song_id, key_override, position, custom_arrangement, duration_minutes, phase)
-       SELECT $1, type, title, notes, content, song_id, key_override, position, custom_arrangement, duration_minutes, COALESCE(phase, 'service')
+      `INSERT INTO plan_items (plan_id, type, title, notes, content, song_id, key_override, position, custom_arrangement, duration_minutes, phase, service_times)
+       SELECT $1, type, title, notes, content, song_id, key_override, position, custom_arrangement, duration_minutes, COALESCE(phase, 'service'), service_times
          FROM plan_items WHERE plan_id = $2 ORDER BY position`,
       [newId, orig.id]
     );
+    // The copy may have different service times (start time / extra times sent by the caller).
+    await tidyItemServiceTimes(client, newId);
 
     await client.query(
       `INSERT INTO plan_musicians (plan_id, name, role, user_id)
@@ -1211,6 +1242,7 @@ router.post('/:id/split', requireAuth, requirePermission('can_add_plans'), async
     client = await pool.connect();
     await client.query('BEGIN');
 
+    const allTimes = [String(orig.plan_start_time).slice(0, 5), ...extraTimes.map((t) => String(t).slice(0, 5))];
     const newPlans = [];
     for (const t of extraTimes) {
       const hhmm = String(t).slice(0, 5);
@@ -1221,12 +1253,15 @@ router.post('/:id/split', requireAuth, requirePermission('can_add_plans'), async
          req.user.clerk_id, orig.status, orig.pre_service_notes ?? null]
       );
       const newId = created.rows[0].id;
+      // Only the items at this service (per-service items, e.g. a 9:15-only baptism, stay with their
+      // own service). The copies are plain every-service items of a single-service plan.
       await client.query(
         `INSERT INTO plan_items (plan_id, type, title, notes, content, song_id, key_override, position, custom_arrangement, duration_minutes, phase)
          SELECT $1, type, title, notes, content, song_id, key_override, position, custom_arrangement, duration_minutes, COALESCE(phase, 'service')
-           FROM plan_items WHERE plan_id = $2 ORDER BY position`,
-        [newId, orig.id]
+           FROM plan_items WHERE plan_id = $2 AND ${AT_SERVICE_SQL('$3::time', '$4::time[]')} ORDER BY position`,
+        [newId, orig.id, hhmm, allTimes]
       );
+      await renumberItems(client, newId);
       await client.query(
         `INSERT INTO plan_musicians (plan_id, name, role, user_id)
          SELECT $1, name, role, user_id FROM plan_musicians WHERE plan_id = $2`,
@@ -1235,6 +1270,14 @@ router.post('/:id/split', requireAuth, requirePermission('can_add_plans'), async
       newPlans.push(created.rows[0]);
     }
 
+    // The original becomes the first service only: items for other services only (already copied to
+    // their plans above) leave it, and what's left is every-service again.
+    await client.query(
+      `DELETE FROM plan_items WHERE plan_id = $1 AND NOT ${AT_SERVICE_SQL('$2::time', '$3::time[]')}`,
+      [orig.id, allTimes[0], allTimes]
+    );
+    await client.query(`UPDATE plan_items SET service_times = '{}' WHERE plan_id = $1 AND cardinality(service_times) > 0`, [orig.id]);
+    await renumberItems(client, orig.id);
     const updated = await client.query(
       `UPDATE plans SET extra_times = '{}' WHERE id=$1 AND church_id=$2 RETURNING *`,
       [orig.id, req.churchId]

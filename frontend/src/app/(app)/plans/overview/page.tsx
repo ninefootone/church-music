@@ -39,12 +39,13 @@ import { PlanMusicianModal, type ExistingMusician } from '@/components/ui/PlanMu
 import { OverviewSongPicker, type SongPickerMode } from '@/components/ui/OverviewSongPicker'
 import { ConfirmModal } from '@/components/ui/ConfirmModal'
 import { OverviewItemAdder } from '@/components/ui/OverviewItemAdder'
-import { planTimeLabel } from '@/lib/planTimes'
+import { planTimeLabel, planServiceTimes, serviceOnlyLabel } from '@/lib/planTimes'
 
 interface OverviewItem {
   id: string
   type: string
   phase: string | null
+  service_times?: string[] | null
   title: string | null
   position: number
   key_override: string | null
@@ -68,6 +69,8 @@ interface OverviewPlan {
   status: 'draft' | 'published'
   plan_date: string
   plan_time: string | null
+  plan_start_time?: string | null
+  extra_times?: string[] | null
   items: OverviewItem[]
   musicians: OverviewMusician[]
 }
@@ -543,6 +546,9 @@ export default function PlansOverviewPage() {
                               <X size={12} />
                             </button>
                           </div>
+                          {serviceOnlyLabel(item, planServiceTimes(plan)) && (
+                            <div className="po-note po-note-service">{serviceOnlyLabel(item, planServiceTimes(plan))}</div>
+                          )}
                           {notes.map((n) => (
                             <div key={n.kind} className={n.kind === 'before' ? 'po-note po-note-before' : 'po-note po-note-after'}>
                               {n.kind === 'before' && <AlertTriangle size={11} />} {n.text}
@@ -590,6 +596,9 @@ export default function PlansOverviewPage() {
                             <X size={12} />
                           </button>
                         </div>
+                        {serviceOnlyLabel(item, planServiceTimes(plan)) && (
+                          <div className="po-note po-note-service">{serviceOnlyLabel(item, planServiceTimes(plan))}</div>
+                        )}
                       </SortableRow>
                     )
                   })}

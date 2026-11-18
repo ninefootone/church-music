@@ -35,3 +35,34 @@ export function planTimeLabel(plan: { plan_time?: string | null; plan_start_time
   const extras = (plan.extra_times ?? []).map(formatClock)
   return [first, ...extras].join(' & ')
 }
+
+// ── Per-service items (2026-11-18, project doc per-service-items.md) ─────────────────────────
+// On a plan with extra_times, an item's service_times say which services it's at (e.g. a baptism
+// at 9:15 only). [] = every service. Same rules as backend utils/extraTimes.js.
+
+type TimedPlan = { plan_start_time?: string | null; extra_times?: string[] | null }
+type TimedItem = { service_times?: string[] | null }
+
+// The plan's services as 'HH:MM': [start, ...extra]. [] without a start time.
+export function planServiceTimes(plan: TimedPlan | null | undefined): string[] {
+  if (!plan?.plan_start_time) return []
+  return [plan.plan_start_time, ...(plan.extra_times ?? [])].map(t => t.slice(0, 5))
+}
+
+// The plan times this item is at, or [] when it's at every service (also when its stored times
+// match none of the plan's — treated as every service, never as none).
+export function itemServiceTimes(item: TimedItem, planTimes: string[]): string[] {
+  const mine = (item.service_times ?? []).map(t => t.slice(0, 5)).filter(t => planTimes.includes(t))
+  return mine.length === 0 || mine.length >= planTimes.length ? [] : mine
+}
+
+export function isAtService(item: TimedItem, planTimes: string[], time: string | null | undefined): boolean {
+  const mine = itemServiceTimes(item, planTimes)
+  return mine.length === 0 || !time || mine.includes(time.slice(0, 5))
+}
+
+// "9:15 am only" / "9:15 am & 11:00 am only", or null for an every-service item.
+export function serviceOnlyLabel(item: TimedItem, planTimes: string[]): string | null {
+  const mine = itemServiceTimes(item, planTimes)
+  return mine.length ? `${mine.map(formatClock).join(' & ')} only` : null
+}

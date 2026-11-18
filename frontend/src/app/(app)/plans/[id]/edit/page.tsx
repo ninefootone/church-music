@@ -30,7 +30,7 @@ import { ArrangementBuilder } from '@/components/ui/ArrangementBuilder'
 import { RichTextEditor } from '@/components/ui/RichTextEditor'
 import { ConfirmModal } from '@/components/ui/ConfirmModal'
 import { DEFAULT_SERVICE_ITEMS } from '@/lib/planItems'
-import { planTimeLabel } from '@/lib/planTimes'
+import { planTimeLabel, planServiceTimes, itemServiceTimes, isAtService, serviceOnlyLabel, formatClock } from '@/lib/planTimes'
 import { KEYS } from '@/lib/keys'
 
 
@@ -65,6 +65,8 @@ interface PlanItem {
   custom_arrangement: string
   expanded: boolean
   duration_minutes: number | null
+  // Per-service items: the services ('HH:MM') this item is at on a plan with extra times. [] / absent = every service.
+  service_times?: string[]
 }
 
 interface Song {
@@ -82,7 +84,7 @@ const newId = () => `item-${++idCounter}`
 function SortableItem({
   item, idx, total,
   onRemove, onUpdate, onToggleExpanded,
-  showTimings, showDurations, calculatedStart,
+  showTimings, showDurations, calculatedStart, planTimes,
 }: {
   item: PlanItem
   idx: number
@@ -93,7 +95,17 @@ function SortableItem({
   showTimings: boolean
   showDurations: boolean
   calculatedStart: string | null
+  planTimes: string[]
 }) {
+  // Per-service: which of the plan's services this item is at (all of them when not restricted).
+  const onlyLabel = serviceOnlyLabel(item, planTimes)
+  const atTimes = itemServiceTimes(item, planTimes)
+  const selectedTimes = atTimes.length ? atTimes : planTimes
+  const toggleServiceTime = (t: string) => {
+    const next = selectedTimes.includes(t) ? selectedTimes.filter(x => x !== t) : [...selectedTimes, t].sort()
+    if (next.length === 0) return // must be at one service at least
+    onUpdate({ service_times: next.length >= planTimes.length ? [] : next })
+  }
   const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({ id: item.id })
 
   const style = {
@@ -155,15 +167,19 @@ function SortableItem({
               <>
                 <p className="dash-row-title">
                   {item.song_title}
+                  {onlyLabel && <span className="badge badge-service-only">{onlyLabel}</span>}
                 </p>
               </>
             ) : (
-              <input
-                className="input input--sm"
-                value={item.title}
-                onChange={e => onUpdate({ title: e.target.value })}
-                placeholder={item.title || 'Item title'}
-              />
+              <>
+                <input
+                  className="input input--sm"
+                  value={item.title}
+                  onChange={e => onUpdate({ title: e.target.value })}
+                  placeholder={item.title || 'Item title'}
+                />
+                {onlyLabel && <span className="badge badge-service-only">{onlyLabel}</span>}
+              </>
             )}
           </div>
 
@@ -212,6 +228,27 @@ function SortableItem({
         {/* Notes + arrangement */}
         {item.expanded && item.type !== 'song_slot' && (
           <div className="item-notes-panel">
+            {planTimes.length > 1 && (
+              <div className="service-times-field">
+                <p className="sub-section-label">Services</p>
+                <div className="service-times-chips" role="group" aria-label="Which services this item is at">
+                  {planTimes.map(t => (
+                    <button
+                      key={t}
+                      type="button"
+                      className={`filter-chip${selectedTimes.includes(t) ? ' is-active' : ''}`}
+                      aria-pressed={selectedTimes.includes(t)}
+                      onClick={() => toggleServiceTime(t)}
+                    >
+                      {formatClock(t)}
+                    </button>
+                  ))}
+                </div>
+                <p className="service-times-hint">
+                  {onlyLabel ? `Only at the ${atTimes.map(formatClock).join(' & ')} service.` : 'At every service. Untick a time if this only happens at one of them.'}
+                </p>
+              </div>
+            )}
             {item.type !== 'song' && (
               <div className="liturgy-content-field">
                 <p className="sub-section-label">Content</p>
@@ -350,6 +387,7 @@ export default function PlanEditPage() {
         song_suggested_arrangement: item.song_suggested_arrangement || '',
         expanded: false,
         duration_minutes: item.duration_minutes ?? item.song_default_duration ?? null,
+        service_times: (item.service_times ?? []).map((t: string) => t.slice(0, 5)),
       })))
       setSongs(songsRes.data)
     }).catch(() => setError('Failed to load plan'))
@@ -389,7 +427,7 @@ export default function PlanEditPage() {
       const slotIdx = prev.findIndex(i => i.type === 'song_slot')
       if (slotIdx === -1) return [...prev, songItem]
       const slot = prev[slotIdx]
-      const filled = { ...songItem, dbId: slot.dbId, duration_minutes: songItem.duration_minutes ?? slot.duration_minutes }
+      const filled = { ...songItem, dbId: slot.dbId, service_times: slot.service_times, duration_minutes: songItem.duration_minutes ?? slot.duration_minutes }
       return prev.map((item, i) => (i === slotIdx ? filled : item))
     })
     setSongSearch('')
@@ -444,6 +482,7 @@ export default function PlanEditPage() {
             key_override: item.key_override || null,
             custom_arrangement: item.custom_arrangement || null,
             duration_minutes: item.duration_minutes || null,
+            service_times: item.service_times ?? [],
           }))
         })
       } catch (err: any) {
@@ -475,10 +514,14 @@ export default function PlanEditPage() {
 
   const planStartTime = plan.plan_start_time ? plan.plan_start_time.slice(0, 5) : null
 
+  // Per-service items: the builder's times are for the FIRST service; an item that isn't at it
+  // gets no time and doesn't push later items on.
+  const planTimes = planServiceTimes(plan)
   function calcStartTimes(): (string | null)[] {
     if (!planStartTime) return items.map(() => null)
     let [h, m] = planStartTime.split(':').map(Number)
     return items.map(item => {
+      if (!isAtService(item, planTimes, planStartTime)) return null
       const label = `${h}:${String(m).padStart(2, '0')}`
       const dur = item.duration_minutes ?? 0
       m += dur
@@ -712,6 +755,7 @@ export default function PlanEditPage() {
                     showTimings={showTimings && !!planStartTime && anyDurations}
                     showDurations={showDurations}
                     calculatedStart={startTimes[idx]}
+                    planTimes={planTimes}
                   />
                 ))}
               </SortableContext>

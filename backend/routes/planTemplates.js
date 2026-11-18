@@ -36,7 +36,7 @@ async function snapshotPlan(planId, churchId) {
   // the same fallback the plan editor shows — so the template keeps what you saw.
   const items = await pool.query(
     `SELECT pi.type, pi.title, pi.notes, pi.content,
-            COALESCE(pi.duration_minutes, s.default_duration) AS duration_minutes, pi.phase
+            COALESCE(pi.duration_minutes, s.default_duration) AS duration_minutes, pi.phase, pi.service_times
        FROM plan_items pi
        LEFT JOIN songs s ON s.id = pi.song_id
       WHERE pi.plan_id=$1 ORDER BY pi.position`,

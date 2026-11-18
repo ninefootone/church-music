@@ -9,7 +9,7 @@ import { PDFDocument } from 'pdf-lib'
 import { useRouter } from 'next/navigation'
 import api from '@/lib/api'
 import { useChurch } from '@/context/ChurchContext'
-import { planTimeLabel } from '@/lib/planTimes'
+import { planTimeLabel, planServiceTimes, serviceOnlyLabel } from '@/lib/planTimes'
 import { KEYS, sameKey } from '@/lib/keys'
 
 interface SongFile {
@@ -26,6 +26,7 @@ interface SongItem {
   type: string
   song_id: string | null
   song_title: string | null
+  service_times?: string[] | null
   key_override: string | null
   song_default_key: string | null
 }
@@ -280,6 +281,7 @@ export default function SetModePage() {
                   </span>
                   <span className="set-song-title">
                     {item.song_title}
+                    {serviceOnlyLabel(item, planServiceTimes(plan)) && <span className="badge badge-service-only">{serviceOnlyLabel(item, planServiceTimes(plan))}</span>}
                   </span>
                   {(item.key_override || item.song_default_key) && (
                     <span className="badge-key badge-key--shrink">

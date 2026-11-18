@@ -9,7 +9,7 @@ import { useAuth } from '@clerk/nextjs'
 import { RichTextDisplay, LITURGY_ALLOWED_TAGS } from '@/components/ui/RichTextDisplay'
 import { parseArrangement } from '@/lib/arrangement'
 import { isSongSlot, nonSongLabel, withSongDefaultDurations } from '@/lib/planItems'
-import { planTimeLabel } from '@/lib/planTimes'
+import { planTimeLabel, isAtService, serviceOnlyLabel } from '@/lib/planTimes'
 import ServiceTimePills from '@/components/ui/ServiceTimePills'
 import { PlaylistIcon } from '@/components/ui/PlaylistIcon'
 import { sameKey } from '@/lib/keys'
@@ -24,7 +24,7 @@ interface SongFile {
   url: string
 }
 
-function SongItem({ item, index, token, churchId, showTimings, showDurations, calculatedStart }: { item: any; index: number; token: string | string[] | undefined; churchId?: string; showTimings?: boolean; showDurations?: boolean; calculatedStart?: string | null }) {
+function SongItem({ item, index, token, churchId, showTimings, showDurations, calculatedStart, onlyLabel, otherService }: { item: any; index: number; token: string | string[] | undefined; churchId?: string; showTimings?: boolean; showDurations?: boolean; calculatedStart?: string | null; onlyLabel?: string | null; otherService?: boolean }) {
   const { isSignedIn, getToken } = useAuth()
   const [expanded, setExpanded] = useState(false)
   const [files, setFiles] = useState<SongFile[] | null>(null)
@@ -88,7 +88,7 @@ function SongItem({ item, index, token, churchId, showTimings, showDurations, ca
   )
 
   return (
-    <div className={`song-item-card${isSong ? ' song-item-card--song' : ''}`}>
+    <div className={`song-item-card${isSong ? ' song-item-card--song' : ''}${otherService ? ' song-item-card--other-service' : ''}`}>
       <div
         className="item-row"
         style={{ cursor: canExpand ? 'pointer' : 'default' }}
@@ -108,6 +108,7 @@ function SongItem({ item, index, token, churchId, showTimings, showDurations, ca
         <div className="dash-row-content">
           <p className={`item-title${isSongSlot(item) ? ' song-slot-label' : ''}`} style={{ fontWeight: isSong ? 600 : 400, color: isSong ? 'var(--color-text-primary)' : 'var(--color-text-secondary)' }}>
             {isSong && item.song_title ? item.song_title : nonSongLabel(item)}
+            {onlyLabel && <span className="badge badge-service-only">{onlyLabel}</span>}
           </p>
           {item.notes && (
             <p className="item-notes">{item.notes.split('\n').map((line: string, i: number) => {
@@ -393,9 +394,13 @@ export default function PublicPlanPage() {
               const anyDurations = plan.items.some((item: any) => item.duration_minutes)
               let h = startTime ? parseInt(startTime.split(':')[0]) : 0
               let m = startTime ? parseInt(startTime.split(':')[1]) : 0
+              // Per-service items: with timings on, items not at the chosen service are dimmed and
+              // don't count towards its running-order times.
+              const dimOthers = showTimings && timingsAvailable && serviceTimes.length > 1
               return plan.items.map((item: any, i: number) => {
-                const calcStart = (startTime && anyDurations) ? `${h}:${String(m).padStart(2, '0')}` : null
-                const dur = item.duration_minutes ?? 0
+                const here = isAtService(item, serviceTimes, startTime)
+                const calcStart = (startTime && anyDurations && here) ? `${h}:${String(m).padStart(2, '0')}` : null
+                const dur = here ? (item.duration_minutes ?? 0) : 0
                 m += dur; h += Math.floor(m / 60); m = m % 60
                 return (
                   <SongItem
@@ -407,6 +412,8 @@ export default function PublicPlanPage() {
                     showTimings={showTimings && !!startTime && anyDurations}
                     showDurations={showDurations}
                     calculatedStart={calcStart}
+                    onlyLabel={serviceOnlyLabel(item, serviceTimes)}
+                    otherService={dimOthers && !here}
                   />
                 )
               })

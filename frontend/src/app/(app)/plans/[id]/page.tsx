@@ -20,7 +20,7 @@ import { ArrangementBuilder } from '@/components/ui/ArrangementBuilder'
 import { LyricsDisplay } from '@/components/ui/LyricsDisplay'
 import { RichTextDisplay, LITURGY_ALLOWED_TAGS } from '@/components/ui/RichTextDisplay'
 import { isSongSlot, nonSongLabel, withSongDefaultDurations } from '@/lib/planItems'
-import { planTimeLabel, formatClock } from '@/lib/planTimes'
+import { planTimeLabel, formatClock, isAtService, serviceOnlyLabel } from '@/lib/planTimes'
 import ServiceTimePills from '@/components/ui/ServiceTimePills'
 import { RecordingsSection } from '@/components/ui/RecordingsSection'
 import type { SongFile as Recording } from '@/types'
@@ -44,7 +44,7 @@ function renderNotes(text: string) {
   })
 }
 
-function SongItem({ item, index, planId, canAnnotate, showTimings, showDurations, calculatedStart }: { item: any; index: number; planId: string; canAnnotate: boolean; showTimings?: boolean; showDurations?: boolean; calculatedStart?: string | null }) {
+function SongItem({ item, index, planId, canAnnotate, showTimings, showDurations, calculatedStart, onlyLabel, otherService }: { item: any; index: number; planId: string; canAnnotate: boolean; showTimings?: boolean; showDurations?: boolean; calculatedStart?: string | null; onlyLabel?: string | null; otherService?: boolean }) {
   const [expanded, setExpanded] = useState(false)
   const [files, setFiles] = useState<SongFile[] | null>(null)
   const [recordings, setRecordings] = useState<Recording[]>([])
@@ -128,7 +128,7 @@ function SongItem({ item, index, planId, canAnnotate, showTimings, showDurations
   )
 
   return (
-    <div className={`song-item-card${isSong ? ' song-item-card--song' : ''}`}>
+    <div className={`song-item-card${isSong ? ' song-item-card--song' : ''}${otherService ? ' song-item-card--other-service' : ''}`}>
       <div
         className="plan-item-row" style={{ cursor: canExpand ? 'pointer' : 'default' }}
         onClick={canExpand ? handleExpand : undefined}
@@ -146,6 +146,7 @@ function SongItem({ item, index, planId, canAnnotate, showTimings, showDurations
         <div className="dash-row-content">
           <p className={isSongSlot(item) ? 'song-slot-label' : undefined} style={{ fontSize: 'var(--text-md)', fontWeight: isSong ? 600 : 400, color: isSong ? 'var(--color-text-primary)' : 'var(--color-text-secondary)', marginBottom: 0 }}>
             {isSong && item.song_title ? item.song_title : nonSongLabel(item)}
+            {onlyLabel && <span className="badge badge-service-only">{onlyLabel}</span>}
           </p>
           {editingNotes ? (
             <div style={{ marginTop: 4 }} onClick={e => e.stopPropagation()}>
@@ -616,9 +617,13 @@ export default function PlanDetailPage() {
               const anyDurations = plan.items.some((item: any) => item.duration_minutes)
               let h = startTime ? parseInt(startTime.split(':')[0]) : 0
               let m = startTime ? parseInt(startTime.split(':')[1]) : 0
+              // Per-service items: with timings on, items not at the chosen service are dimmed and
+              // don't count towards its running-order times.
+              const dimOthers = showTimings && timingsAvailable && serviceTimes.length > 1
               return plan.items.map((item: any, i: number) => {
-                const calcStart = (startTime && anyDurations) ? `${h}:${String(m).padStart(2, '0')}` : null
-                const dur = item.duration_minutes ?? 0
+                const here = isAtService(item, serviceTimes, startTime)
+                const calcStart = (startTime && anyDurations && here) ? `${h}:${String(m).padStart(2, '0')}` : null
+                const dur = here ? (item.duration_minutes ?? 0) : 0
                 m += dur; h += Math.floor(m / 60); m = m % 60
                 return (
                   <SongItem
@@ -630,6 +635,8 @@ export default function PlanDetailPage() {
                     showTimings={showTimings && !!startTime && anyDurations}
                     showDurations={showDurations}
                     calculatedStart={calcStart}
+                    onlyLabel={serviceOnlyLabel(item, serviceTimes)}
+                    otherService={dimOthers && !here}
                   />
                 )
               })

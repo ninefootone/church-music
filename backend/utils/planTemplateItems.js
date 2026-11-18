@@ -6,6 +6,7 @@
 // empty 'song_slot', which the plan builder fills as songs are added.
 
 const { sanitizeRichText } = require('./sanitize');
+const { parseItemServiceTimes, tidyItemServiceTimes } = require('./extraTimes');
 
 const MAX_ITEMS = 200;
 
@@ -29,6 +30,9 @@ function normaliseTemplateItems(items) {
     const rawType = typeof item?.type === 'string' ? item.type.trim().slice(0, 40) : '';
     const phase = item?.phase === 'pre-service' ? 'pre-service' : 'service';
     const duration_minutes = cleanDuration(item?.duration_minutes);
+    // Per-service items: which of the template's services this item is at ([] = all).
+    const st = parseItemServiceTimes(item?.service_times);
+    const service_times = st.error || !st.value ? [] : st.value;
 
     if (rawType === 'song' || rawType === 'song_slot') {
       // A slot may carry a label ("Response song") but never song-specific notes.
@@ -39,6 +43,7 @@ function normaliseTemplateItems(items) {
         content: null,
         duration_minutes,
         phase,
+        service_times,
       };
     }
 
@@ -49,6 +54,7 @@ function normaliseTemplateItems(items) {
       content: sanitizeRichText(item?.content),
       duration_minutes,
       phase,
+      service_times,
     };
   });
 }
@@ -60,10 +66,12 @@ async function insertTemplateItems(client, planId, items) {
   for (let i = 0; i < clean.length; i++) {
     const it = clean[i];
     await client.query(
-      'INSERT INTO plan_items (plan_id, type, song_id, title, notes, content, key_override, position, custom_arrangement, duration_minutes, phase) VALUES ($1,$2,NULL,$3,$4,$5,NULL,$6,NULL,$7,$8)',
-      [planId, it.type, it.title, it.notes, it.content, i, it.duration_minutes, it.phase]
+      'INSERT INTO plan_items (plan_id, type, song_id, title, notes, content, key_override, position, custom_arrangement, duration_minutes, phase, service_times) VALUES ($1,$2,NULL,$3,$4,$5,NULL,$6,NULL,$7,$8,$9)',
+      [planId, it.type, it.title, it.notes, it.content, i, it.duration_minutes, it.phase, it.service_times]
     );
   }
+  // The new plan's times may differ from the template's.
+  await tidyItemServiceTimes(client, planId);
 }
 
 module.exports = { normaliseTemplateItems, insertTemplateItems, cleanText };

@@ -9,22 +9,27 @@ router.get('/', requireAuth, requireMembership, async (req, res, next) => {
     const { churchId } = req;
     const period = parseInt(req.query.period) || 365;
 
-    // Top songs in period. A song counts once per SERVICE: once per plan (a reprise in the same
-    // plan isn't a second use) times the plan's number of services (1 + extra_times). See
-    // multi-service-plans.md. The CCLI export below uses the same rule.
+    // Top songs in period. A song counts once per SERVICE it's at: a plan's services are its start
+    // time + extra_times; a reprise in the same plan isn't a second use; a per-service item (e.g.
+    // "9:15 only", plan_items.service_times) counts only for its own services. See
+    // multi-service-plans.md + per-service-items.md. The CCLI export below uses the same rule.
     const topSongs = await pool.query(
       `SELECT s.id, s.title, s.author, s.category, s.default_key,
         SUM(u.services)::int AS times_sung,
         MAX(u.plan_date) AS last_sung
        FROM (
-         SELECT DISTINCT si.song_id, srv.id AS plan_id, srv.plan_date,
-                1 + cardinality(srv.extra_times) AS services
+         SELECT si.song_id, srv.id AS plan_id, srv.plan_date,
+                COUNT(DISTINCT svc.t) AS services
            FROM plan_items si
            JOIN plans srv ON srv.id = si.plan_id
+           CROSS JOIN LATERAL unnest(ARRAY[COALESCE(srv.plan_start_time, '00:00'::time)] || srv.extra_times) AS svc(t)
           WHERE srv.church_id = $1
             AND si.type = 'song'
             AND srv.plan_date >= NOW() - INTERVAL '1 day' * $2
             AND srv.plan_date <= NOW()
+            AND (cardinality(si.service_times) = 0 OR svc.t = ANY(si.service_times)
+                 OR NOT (si.service_times && (ARRAY[srv.plan_start_time] || srv.extra_times)))
+          GROUP BY si.song_id, srv.id, srv.plan_date
        ) u
        JOIN songs s ON s.id = u.song_id
        GROUP BY s.id
@@ -71,14 +76,18 @@ router.get('/ccli-export', requireAuth, requireMembership, async (req, res, next
         SUM(u.services)::int AS times_used,
         MAX(u.plan_date) AS last_used
        FROM (
-         SELECT DISTINCT si.song_id, srv.id AS plan_id, srv.plan_date,
-                1 + cardinality(srv.extra_times) AS services
+         SELECT si.song_id, srv.id AS plan_id, srv.plan_date,
+                COUNT(DISTINCT svc.t) AS services
            FROM plan_items si
            JOIN plans srv ON srv.id = si.plan_id
+           CROSS JOIN LATERAL unnest(ARRAY[COALESCE(srv.plan_start_time, '00:00'::time)] || srv.extra_times) AS svc(t)
           WHERE srv.church_id = $1
             AND si.type = 'song'
             AND srv.plan_date >= NOW() - INTERVAL '1 day' * $2
             AND srv.plan_date <= NOW()
+            AND (cardinality(si.service_times) = 0 OR svc.t = ANY(si.service_times)
+                 OR NOT (si.service_times && (ARRAY[srv.plan_start_time] || srv.extra_times)))
+          GROUP BY si.song_id, srv.id, srv.plan_date
        ) u
        JOIN songs s ON s.id = u.song_id
        WHERE s.ccli_number IS NOT NULL

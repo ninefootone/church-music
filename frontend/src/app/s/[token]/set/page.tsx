@@ -7,7 +7,7 @@ import { ArrowLeft, FileText, Loader2, Code, Play } from 'lucide-react'
 import { useRouter } from 'next/navigation'
 import { useAuth } from '@clerk/nextjs'
 import axios from 'axios'
-import { planTimeLabel } from '@/lib/planTimes'
+import { planTimeLabel, planServiceTimes, serviceOnlyLabel } from '@/lib/planTimes'
 import { KEYS, sameKey } from '@/lib/keys'
 
 const API = process.env.NEXT_PUBLIC_API_URL
@@ -25,6 +25,7 @@ interface SongItem {
   type: string
   song_id: string | null
   song_title: string | null
+  service_times?: string[] | null
   key_override: string | null
   song_default_key: string | null
 }
@@ -252,6 +253,7 @@ export default function PublicSetModePage() {
                     </span>
                     <span className="set-song-title">
                       {item.song_title}
+                      {serviceOnlyLabel(item, planServiceTimes(plan)) && <span className="badge badge-service-only">{serviceOnlyLabel(item, planServiceTimes(plan))}</span>}
                     </span>
                     {(item.key_override || item.song_default_key) && (
                       <span className="badge-key badge-key--shrink">

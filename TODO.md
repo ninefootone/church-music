@@ -86,7 +86,9 @@ Next:
 ## ChurchSuite link-up (started 2026-11-16 — see project doc `churchsuite-integration.md`)
 - [x] Trial + dry runs on Endcliffe. Stage 1 LIVE: Railway cron service runs `backend/scripts/churchsuite-shadow.js` at 9am/1pm/5pm UTC, READ-ONLY, emails beardybradley@gmail.com when what a sync would do changes.
 - [x] Stage 2a minimal sync for Endcliffe built 2026-11-17 (`CS_SYNC_MODE=apply` on the cron service). Undo: `backend/migrations/2026-11-17-churchsuite-undo-last-run.sql`.
-- [ ] **Per-service items ("9:15 only")** — a plan with extra times has no way to mark an item (e.g. a baptism) as happening at one service only; it shows at both. Needed for ChurchSuite sync of non-song items, and useful on its own. Workaround today: a note on the item.
+- [x] **Per-service items ("9:15 only")** — BUILT 2026-11-18 (web + backend; `plan_items.service_times`, migration `2026-11-18-plan-item-service-times.sql`). See project doc `per-service-items.md`.
+  - [ ] iPad: show the "9:15 am only" label (needs `~/songstack-spike` connected to a Claude session; OTA via staging).
+  - [ ] Help copy: Plans → "One plan for repeated services" (see `help-updates-pending.md`).
 - [ ] Full Stage 2 (confirm screen, remembered matches, create plans, multi-church) — build order in the project doc. First: make the builder's save keep plan item ids (it deletes + re-inserts every item today).
 - [ ] Late March 2027 (BST): change that service's cron schedule to `0 8,12,16 * * *`.
 - [ ] `sendBrevoEmail` (utils/email.js) resolves even when Brevo refuses (401 etc.) — every caller should check `status`; today a bad key fails silently everywhere except the ChurchSuite job.
