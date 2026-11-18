@@ -221,7 +221,7 @@ export function ArrangementBuilder({ value, onChange }: Props) {
       )}
 
       {items.length > 0 && (
-        <p className="arrangement-hint">Click an item to rename it. Drag to reorder (on a phone, press and hold first).</p>
+        <p className="arrangement-hint">Click an item to rename it. Drag to reorder — easiest on a computer (on a phone or tablet, press and hold first).</p>
       )}
     </div>
   )
