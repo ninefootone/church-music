@@ -3997,6 +3997,8 @@ body.plans-overview-active .app-main-content { max-width: 1680px; }
 .po-note-service { color: var(--color-text-muted); }
 .po-items { list-style: none; padding: 0; margin: 0; display: flex; flex-direction: column; gap: 6px; }
 .po-item { font-size: 0.8125rem; line-height: 1.35; }
+/* Faint line between items so it's clear which × removes which item (Jon, 2026-11-18). */
+.po-items > li + li { border-top: 1px solid var(--color-border); padding-top: 6px; }
 .po-item-row { display: flex; justify-content: space-between; gap: 6px; align-items: flex-start; }
 .po-item-row .badge-key { flex-shrink: 0; }
 .po-item-title { font-weight: 500; overflow-wrap: anywhere; }

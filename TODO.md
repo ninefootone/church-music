@@ -88,7 +88,7 @@ Next:
 - [x] Stage 2a minimal sync for Endcliffe built 2026-11-17 (`CS_SYNC_MODE=apply` on the cron service). Undo: `backend/migrations/2026-11-17-churchsuite-undo-last-run.sql`.
 - [x] **Per-service items ("9:15 only")** — BUILT 2026-11-18 (web + backend; `plan_items.service_times`, migration `2026-11-18-plan-item-service-times.sql`). See project doc `per-service-items.md`.
   - [x] iPad: "9:15 am only" label — live (production OTA 2026-11-18; tested on the Dev app, not staging).
-- [ ] **Plans → Overview: faint divider between items** so it's obvious which × removes which item (Jon, 2026-11-18).
+- [x] **Plans → Overview: faint divider between items** (done 2026-11-18) so it's obvious which × removes which item (Jon, 2026-11-18).
   - [ ] Help copy: Plans → "One plan for repeated services" (see `help-updates-pending.md`).
 - [ ] Full Stage 2 (confirm screen, remembered matches, create plans, multi-church) — build order in the project doc. First: make the builder's save keep plan item ids (it deletes + re-inserts every item today).
 - [ ] Late March 2027 (BST): change that service's cron schedule to `0 8,12,16 * * *`.
