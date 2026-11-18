@@ -105,6 +105,14 @@ async function createPlan(client, { churchId, date, cps, library, songAnswers, a
   let pos = 0, songs = 0, slots = 0;
   for (const { item: c, times: at } of mergeServices(cps)) {
     const serviceTimes = start && at.length < times.length ? at.filter(Boolean) : [];
+    const minutes = c.duration ? Math.max(1, Math.round(c.duration / 60)) : null;   // ChurchSuite length, seconds
+    if (c.kind === 'slot') {                       // "song to be chosen" (no song picked in ChurchSuite yet)
+      await client.query(
+        `INSERT INTO plan_items (plan_id, type, title, position, duration_minutes, phase, service_times) VALUES ($1, 'song_slot', $2, $3, $4, 'service', $5)`,
+        [plan.id, c.slot_title, pos++, minutes, serviceTimes]);
+      slots++;
+      continue;
+    }
     const answer = c.ref ? songAnswers.get(c.ref) : null;
     if (answer && answer.decision === 'ignore') continue;
     let song = answer && answer.decision === 'song' ? library.find(sg => sg.id === answer.song_id) : null;
@@ -117,17 +125,17 @@ async function createPlan(client, { churchId, date, cps, library, songAnswers, a
       const key = c.key && !sameKeyName(c.key, song.default_key) ? c.key : null;
       await client.query(
         `INSERT INTO plan_items (plan_id, type, song_id, position, key_override, duration_minutes, phase, service_times)
-         VALUES ($1, 'song', $2, $3, $4, $5, 'service', $6)`, [plan.id, song.id, pos++, key, song.default_duration || null, serviceTimes]);
+         VALUES ($1, 'song', $2, $3, $4, $5, 'service', $6)`, [plan.id, song.id, pos++, key, minutes || song.default_duration || null, serviceTimes]);
       songs++;
     } else if (c.kind === 'song') {
       await client.query(
-        `INSERT INTO plan_items (plan_id, type, title, position, phase, service_times) VALUES ($1, 'song_slot', $2, $3, 'service', $4)`,
-        [plan.id, c.label, pos++, serviceTimes]);
+        `INSERT INTO plan_items (plan_id, type, title, position, duration_minutes, phase, service_times) VALUES ($1, 'song_slot', $2, $3, $4, 'service', $5)`,
+        [plan.id, c.label, pos++, minutes, serviceTimes]);
       slots++;
     } else {
       await client.query(
-        `INSERT INTO plan_items (plan_id, type, title, content, position, phase, service_times) VALUES ($1, 'custom', $2, $3, $4, 'service', $5)`,
-        [plan.id, c.label, wordsToHtml(c.words), pos++, serviceTimes]);
+        `INSERT INTO plan_items (plan_id, type, title, content, position, duration_minutes, phase, service_times) VALUES ($1, 'custom', $2, $3, $4, $5, 'service', $6)`,
+        [plan.id, c.label, wordsToHtml(c.words), pos++, minutes, serviceTimes]);
     }
   }
   return { planId: plan.id, title, status, times, items: pos, songs, slots };
@@ -315,7 +323,7 @@ async function applySync({ pool, cs, churchId, from, to, apply, runId, recordQue
       // 5. Music team — exact names only; nicknames and anyone ambiguous go in the notes.
       const mus = (await client.query('SELECT id, name, user_id FROM plan_musicians WHERE plan_id = $1', [planId])).rows;
       const team = new Map();   // normalised name → { name, key }
-      for (const p of cps) for (const i of p.items) if (i.kind === 'song') for (const pr of (i.peopleRefs || i.people.map(n => ({ name: n, key: null })))) {
+      for (const p of cps) for (const i of p.items) if (i.kind === 'song' || i.kind === 'slot') for (const pr of (i.peopleRefs || i.people.map(n => ({ name: n, key: null })))) {
         if (!team.has(norm(pr.name))) team.set(norm(pr.name), pr);
       }
       const accounted = new Set();   // plan_musicians ids that correspond to someone in ChurchSuite

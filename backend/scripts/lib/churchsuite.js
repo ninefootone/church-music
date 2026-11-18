@@ -66,9 +66,11 @@ function createClient(clientId, clientSecret) {
   const answer = (responses, name) =>
     (responses || []).find(r => (r.name || '').toLowerCase() === name.toLowerCase())?.value || '';
 
-  // A plan's items, simplified: { id, kind: 'song'|'item', label, key, author, people[], peopleRefs[], ref, time_start, type_name }
+  // A plan's items, simplified: { id, kind: 'song'|'slot'|'item', label, key, author, people[], peopleRefs[], ref, time_start, type_name }
   //   peopleRefs: [{ name, key }] — key = '<type>:<ChurchSuite id>' (stable when names change).
   //   ref: which ChurchSuite song it is — 'song:<Songs-module id>' / 'lib:<library item id>' (null otherwise).
+  //   kind 'slot' = a song placeholder with no song chosen yet (e.g. from a ChurchSuite plan template); slot_title is
+  //   its own name if it has one ("Response song"), else null. duration = ChurchSuite's length in SECONDS (or null).
   async function planItems(planId) {
     const t = await types();
     const raw = await listAll(`/planning/plan_items?plan_ids[]=${planId}&order_by=order:asc`);
@@ -81,7 +83,12 @@ function createClient(clientId, clientSecret) {
         .filter(p => p.name);
       const people = peopleRefs.map(p => p.name);
       let kind = 'item', label = it.name || typeName || 'Untitled', key = '', author = '', ref = null;
-      if (it.type === 'song' || it.arrangement_id) {
+      const songType = !!(type?.ccli_tracking || /song|hymn/i.test(typeName));
+      let slotTitle = null;
+      if ((it.type === 'song' && !it.arrangement_id) || (!it.arrangement_id && !it.library_item_id && it.type !== 'song' && songType)) {
+        kind = 'slot';                                     // no song chosen yet
+        slotTitle = it.name && norm(it.name) !== norm(typeName) ? it.name : null;
+      } else if (it.type === 'song' || it.arrangement_id) {
         kind = 'song';
         if (!cache.arrangements.has(it.arrangement_id)) cache.arrangements.set(it.arrangement_id, (await get(`/planning/song_arrangements/${it.arrangement_id}`)).data);
         const arr = cache.arrangements.get(it.arrangement_id);
@@ -96,6 +103,7 @@ function createClient(clientId, clientSecret) {
       }
       if (!ref && it.library_item_id) ref = `lib:${it.library_item_id}`;
       out.push({ id: it.id, kind, label, key, author, people, peopleRefs, ref, words: answer(it.question_responses, 'Words'),
+        slot_title: slotTitle, duration: Number.isFinite(it.duration) && it.duration > 0 ? it.duration : null,
         time_start: it.time_start || '', type_name: typeName });
     }
     return out;

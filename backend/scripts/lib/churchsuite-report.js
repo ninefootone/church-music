@@ -162,7 +162,7 @@ async function buildReport(cs, ss, from, to) {
 
     // --- people: music team = people assigned to song items in ChurchSuite (any service)
     const team = new Map();
-    for (const p of cps) for (const i of p.items) if (i.kind === 'song') for (const n of i.people) {
+    for (const p of cps) for (const i of p.items) if (i.kind === 'song' || i.kind === 'slot') for (const n of i.people) {
       if (!team.has(norm(n))) team.set(norm(n), { name: n, services: new Set() });
       team.get(norm(n)).services.add(p.serviceTime);
     }
@@ -186,7 +186,7 @@ async function buildReport(cs, ss, from, to) {
     for (const [k, m] of ssMus) if (!team.has(k) && ![...team.values()].some(t => likelySamePerson(t.name, m.name))) say(`      − ${m.name}${m.role ? ` (${m.role})` : ''} — on the SongStack plan, not on any ChurchSuite song item (would be kept)`);
 
     const others = new Set();
-    for (const p of cps) for (const i of p.items) if (i.kind !== 'song') for (const n of i.people) if (!team.has(norm(n))) others.add(n);
+    for (const p of cps) for (const i of p.items) if (i.kind !== 'song' && i.kind !== 'slot') for (const n of i.people) if (!team.has(norm(n))) others.add(n);
     if (others.size) say(`  Other people in ChurchSuite (not music — would NOT be copied): ${others.size}`);
 
     if (!changes) tally.identical++;
