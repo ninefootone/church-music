@@ -6,7 +6,7 @@ import { useParams, useRouter } from 'next/navigation'
 import { useAuth } from '@clerk/nextjs'
 import { setAuthToken } from '@/lib/api'
 import { format, parseISO } from 'date-fns'
-import { ArrowLeft, X, Plus, Music, Search, ChevronDown, ChevronUp, GripVertical } from 'lucide-react'
+import { ArrowLeft, X, Plus, Music, Search, ChevronDown, ChevronUp, GripVertical, Check } from 'lucide-react'
 import {
   DndContext,
   closestCenter,
@@ -236,10 +236,11 @@ function SortableItem({
                     <button
                       key={t}
                       type="button"
-                      className={`filter-chip${selectedTimes.includes(t) ? ' is-active' : ''}`}
+                      className={`filter-chip service-time-chip${selectedTimes.includes(t) ? ' is-active' : ''}`}
                       aria-pressed={selectedTimes.includes(t)}
                       onClick={() => toggleServiceTime(t)}
                     >
+                      {selectedTimes.includes(t) && <Check size={14} aria-hidden="true" />}
                       {formatClock(t)}
                     </button>
                   ))}

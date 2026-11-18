@@ -3989,7 +3989,8 @@ body.plans-overview-active .app-main-content { max-width: 1680px; }
 /* Plan / share page with timings on: an item that isn't at the selected service. */
 .song-item-card--other-service { opacity: 0.45; }
 /* Builder: which services an item is at. */
-.service-times-field { margin-bottom: var(--space-sm); }
+.service-times-field { padding-top: 12px; margin-bottom: var(--space-sm); }
+.service-time-chip   { display: inline-flex; align-items: center; gap: 4px; }
 .service-times-chips { display: flex; flex-wrap: wrap; gap: 6px; }
 .service-times-hint { font-size: var(--text-xs); color: var(--color-text-muted); margin: 4px 0 0; }
 /* Overview columns: a per-service item's label line. */
