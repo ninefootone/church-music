@@ -108,11 +108,17 @@ function SortableItem({
   }
   const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({ id: item.id })
 
+  // Every card gets a translate so the others slide out of the way during a drag (like Plans → Overview).
+  // Translate, not Transform: Transform also scales, which squashes cards of different heights (the old Safari "clipping").
   const style = {
-    transform: isDragging ? CSS.Transform.toString(transform) : undefined,
+    transform: CSS.Translate.toString(transform),
     transition,
-    opacity: isDragging ? 0.5 : 1,
+    opacity: isDragging ? 0.85 : 1,
     marginBottom: 6,
+    position: 'relative' as const,
+    zIndex: isDragging ? 2 : undefined,
+    boxShadow: isDragging ? 'var(--shadow-md)' : undefined,
+    borderRadius: isDragging ? 'var(--radius-sm)' : undefined,
   }
 
   return (
