@@ -74,7 +74,9 @@ export function AddToPlanModal({ song, onClose }: AddToPlanModalProps) {
             ? { ...newSong, id: item.id, duration_minutes: newSong.duration_minutes ?? item.duration_minutes, phase: item.phase }
             : item)
 
-      await api.put(`/api/plans/${plan.id}/items`, { items: newItems })
+      // items_version: if the plan changes between the fetch above and this save, the server
+      // refuses (409) rather than overwriting it; the error shows and the user can just try again.
+      await api.put(`/api/plans/${plan.id}/items`, { items: newItems, items_version: data.items_version })
       setAdded(plan.id)
     } catch (err: any) {
       setError(err.response?.data?.error || 'Failed to add song')

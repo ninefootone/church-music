@@ -298,6 +298,21 @@ router.get('/:id/musicians', requireAuth, requireMembership, async function(req,
   }
 });
 
+// A fingerprint of a plan's running order: every saved field of every item, in order.
+// GET /:id returns it as `items_version`; PUT /:id/items refuses the save (409) when the caller
+// sends a version that no longer matches, i.e. the items changed after the caller loaded them
+// (another editor, the overview, an annotator's note, the ChurchSuite sync).
+async function itemsVersion(db, planId) {
+  const r = await db.query(
+    `SELECT md5(COALESCE(string_agg(
+              ROW(id, type, song_id, title, notes, content, key_override, position,
+                  custom_arrangement, duration_minutes, phase)::text, '|' ORDER BY position, id), '')) AS v
+       FROM plan_items WHERE plan_id = $1`,
+    [planId]
+  );
+  return r.rows[0].v;
+}
+
 router.get('/:id', requireAuth, requireMembership, async function(req, res, next) {
   try {
     const churchId = req.churchId;
@@ -330,7 +345,8 @@ router.get('/:id', requireAuth, requireMembership, async function(req, res, next
       [req.params.id]
     );
 
-    res.json(Object.assign({}, plan.rows[0], { items: items.rows }));
+    const items_version = await itemsVersion(pool, req.params.id);
+    res.json(Object.assign({}, plan.rows[0], { items: items.rows, items_version }));
   } catch (err) {
     next(err);
   }
@@ -502,6 +518,8 @@ router.put('/:id', requireAuth, requireMembership, async function(req, res, next
 // overview while the builder was open — is inserted as a new item, as the old save did.
 // A caller that sends no ids gets the old behaviour: the whole list replaced.
 // `phase` is only changed when sent ('service' / 'pre-service'); new items default to 'service'.
+// `items_version` (optional, from GET /:id): if the plan's items have changed since then → 409
+// with code 'plan_changed' and nothing saved. Leave it out to save regardless ("Save mine anyway").
 router.put('/:id/items', requireAuth, requireMembership, async function(req, res, next) {
   const planId = req.params.id;
   const items = req.body.items;
@@ -517,6 +535,8 @@ router.put('/:id/items', requireAuth, requireMembership, async function(req, res
   }
   const sentIds = items.filter(it => it.id != null).map(it => it.id.toLowerCase());
   if (new Set(sentIds).size !== sentIds.length) return res.status(400).json({ error: 'The same item is in the list twice' });
+  const loadedVersion = req.body.items_version;
+  if (loadedVersion != null && typeof loadedVersion !== 'string') return res.status(400).json({ error: 'Invalid items_version' });
 
   let client;
   try {
@@ -555,6 +575,10 @@ router.put('/:id/items', requireAuth, requireMembership, async function(req, res
     client = await pool.connect();
     await client.query('BEGIN');
     await client.query('SELECT id FROM plans WHERE id = $1 FOR UPDATE', [planId]);
+    if (loadedVersion != null && loadedVersion !== await itemsVersion(client, planId)) {
+      await client.query('ROLLBACK');
+      return res.status(409).json({ error: 'This plan was changed somewhere else after you opened it, so nothing was saved.', code: 'plan_changed' });
+    }
     const cur = await client.query('SELECT id FROM plan_items WHERE plan_id = $1', [planId]);
     const currentIds = new Set(cur.rows.map(r => r.id));
     const keepIds = sentIds.filter(id => currentIds.has(id));

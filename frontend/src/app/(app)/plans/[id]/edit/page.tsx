@@ -294,6 +294,12 @@ export default function PlanEditPage() {
     return localStorage.getItem('plan_show_durations') === 'true'
   })
   const [preServiceNotes, setPreServiceNotes] = useState('')
+  // Fingerprint of the plan's items when the builder loaded them (from GET /plans/:id). Sent
+  // with the save so the server refuses it if someone else changed the items meanwhile.
+  const [itemsVersion, setItemsVersion] = useState<string | null>(null)
+  // Set when a save was refused because the plan changed elsewhere: the status that save was
+  // for, so "Save mine anyway" can repeat it. The user's edits stay on screen.
+  const [conflictStatus, setConflictStatus] = useState<'draft' | 'published' | null>(null)
 
   useEffect(() => {
     const check = () => setIsMobile(window.innerWidth <= 940)
@@ -325,6 +331,7 @@ export default function PlanEditPage() {
       setPlan(s)
       setPlanStatus(s.status ?? 'published')
       setPreServiceNotes(s.pre_service_notes || '')
+      setItemsVersion(s.items_version ?? null)
       setItems((s.items || []).map((item: any) => ({
         id: newId(),
         dbId: item.id,
@@ -419,13 +426,17 @@ export default function PlanEditPage() {
     handleSave(status)
   }
 
-  const handleSave = async (status: 'draft' | 'published') => {
+  // force: skip the "changed elsewhere" check (the user chose "Save mine anyway").
+  const handleSave = async (status: 'draft' | 'published', force = false) => {
     setSaving(true); setError('')
     try {
       const token = await getToken()
       setAuthToken(token)
-      await Promise.all([
-        api.put(`/api/plans/${id}/items`, {
+      // Items first, then the plan details — so if the items are refused because the plan
+      // changed elsewhere, nothing (not even the draft/published status) is saved.
+      try {
+        await api.put(`/api/plans/${id}/items`, {
+          items_version: force ? undefined : itemsVersion,
           items: items.map(item => ({
             id: item.dbId || undefined,
             type: item.type, song_id: item.song_id || null,
@@ -434,8 +445,16 @@ export default function PlanEditPage() {
             custom_arrangement: item.custom_arrangement || null,
             duration_minutes: item.duration_minutes || null,
           }))
-        }),
-        api.put(`/api/plans/${id}`, {
+        })
+      } catch (err: any) {
+        if (err.response?.status === 409 && err.response?.data?.code === 'plan_changed') {
+          setConflictStatus(status)
+          setSaving(false)
+          return
+        }
+        throw err
+      }
+      await api.put(`/api/plans/${id}`, {
           plan_date: plan.plan_date,
           plan_time: plan.plan_time,
           plan_start_time: plan.plan_start_time,
@@ -443,8 +462,7 @@ export default function PlanEditPage() {
           title: plan.title,
           pre_service_notes: preServiceNotes || null,
           status,
-        }),
-      ])
+      })
       router.push(`/plans/${id}`)
     } catch (err: any) {
       setError(err.response?.data?.error || 'Failed to save')
@@ -713,6 +731,39 @@ export default function PlanEditPage() {
         </button>
       </div>
       <div className="save-bar-spacer" />
+
+      {conflictStatus && (
+        <div className="modal-overlay">
+          <div onClick={() => setConflictStatus(null)} className="modal-backdrop" />
+          <div className="modal-panel">
+            <div className="modal-header">
+              <h2 className="modal-title">This plan was changed while you were editing</h2>
+              <button onClick={() => setConflictStatus(null)} className="modal-close"><X size={20} /></button>
+            </div>
+            <p className="modal-body">
+              Someone else (or the ChurchSuite sync) changed this plan&apos;s running order after you opened it, so your changes haven&apos;t been saved yet. They&apos;re still here.
+              You can open the latest version in a new tab to see what changed, then choose: save yours (this replaces their changes), or throw yours away and load the latest.
+            </p>
+            <div className="modal-footer modal-footer--wrap">
+              <a href={`/plans/${id}`} target="_blank" rel="noopener noreferrer" className="btn btn-secondary">Open latest in new tab</a>
+              <button
+                className="btn btn-secondary"
+                disabled={saving}
+                onClick={() => window.location.reload()}
+              >
+                Discard mine, load latest
+              </button>
+              <button
+                className="btn btn-primary"
+                disabled={saving}
+                onClick={async () => { const s = conflictStatus; setConflictStatus(null); await handleSave(s, true) }}
+              >
+                Save mine anyway
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
 
       {confirmPublish && (
         <ConfirmModal

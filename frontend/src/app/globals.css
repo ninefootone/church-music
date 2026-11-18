@@ -2981,6 +2981,7 @@ select.input {
 .modal-footer              { display: flex; gap: 10px; justify-content: flex-end; }
 .modal-footer--bordered    { padding-top: var(--space-sm); border-top: 1px solid var(--color-border); }
 .modal-footer--end         { margin-top: var(--space-lg); }
+.modal-footer--wrap        { flex-wrap: wrap; }
 .modal-panel--sm           { max-width: 480px; }
 .modal-header--tight       { margin-bottom: var(--space-sm); }
 .modal-subtitle            { font-size: var(--text-sm); color: var(--color-text-muted); margin-bottom: var(--space-lg); }
