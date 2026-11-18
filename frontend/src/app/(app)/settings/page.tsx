@@ -7,6 +7,7 @@ import api, { setAuthToken } from '@/lib/api'
 import { ConfirmModal } from '@/components/ui/ConfirmModal'
 import { LiturgySnippetsManager } from '@/components/ui/LiturgySnippetsManager'
 import { PlanTemplatesManager } from '@/components/ui/PlanTemplatesManager'
+import { ChurchSuitePanel } from '@/components/ui/ChurchSuitePanel'
 import { Copy, Check, RefreshCw, Plus, X } from 'lucide-react'
 import { isOnFreePlan } from '@/lib/freePlan'
 
@@ -370,6 +371,22 @@ export default function SettingsPage() {
   }
 
   const [activeTab, setActiveTab] = useState('church')
+  // ChurchSuite tab: only for churches the ChurchSuite sync runs for (it has run at least once). ?tab=churchsuite
+  // (the link in the sync email) opens it directly.
+  const [csStatus, setCsStatus] = useState<{ enabled: boolean; open: number } | null>(null)
+  useEffect(() => {
+    if (!church || !isAdmin) return
+    ;(async () => {
+      try {
+        setAuthToken(await getToken())
+        const r = await api.get('/api/churchsuite/status')
+        setCsStatus(r.data)
+        if (r.data.enabled && new URLSearchParams(window.location.search).get('tab') === 'churchsuite') setActiveTab('churchsuite')
+      } catch { /* no tab */ }
+    })()
+    // Once per church — getToken isn't a dependency on purpose (a new function each render would re-fetch).
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [church?.id, isAdmin])
   const TABS: { id: string; label: string; masterOnly?: boolean }[] = [
     { id: 'church', label: 'Church' },
     { id: 'billing', label: 'Billing' },
@@ -380,6 +397,7 @@ export default function SettingsPage() {
     { id: 'plantemplates', label: 'Plan templates' },
     { id: 'categories', label: 'Categories' },
     { id: 'tags', label: 'Tags' },
+    ...(csStatus?.enabled ? [{ id: 'churchsuite', label: csStatus.open ? `ChurchSuite (${csStatus.open})` : 'ChurchSuite' }] : []),
   ]
 
   if (!isAdmin) {
@@ -610,6 +628,10 @@ export default function SettingsPage() {
 
       {activeTab === 'plantemplates' && (
         <PlanTemplatesManager />
+      )}
+
+      {activeTab === 'churchsuite' && (
+        <ChurchSuitePanel onCountChange={n => setCsStatus(s => (s ? { ...s, open: n } : s))} />
       )}
 
       {/* Categories */}

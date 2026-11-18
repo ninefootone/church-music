@@ -4147,3 +4147,16 @@ body.plans-overview-active .app-main-content { max-width: 1680px; }
 .recording-actions { display: flex; align-items: center; gap: 16px; flex-wrap: wrap; }
 .recording-actions .btn-inline-link { display: inline-flex; align-items: center; gap: 4px; font-size: var(--text-xs); }
 .recording-ask    { display: flex; flex-direction: column; gap: 8px; }
+
+/* ── Settings → ChurchSuite (ChurchSuitePanel.tsx): questions from the ChurchSuite sync ── */
+.cs-empty { color: var(--color-text-muted); font-size: var(--text-sm); margin-top: var(--space-md); }
+.cs-group { margin-top: var(--space-lg); }
+.cs-question { padding: 12px 0; border-top: 1px solid var(--color-border); }
+.cs-question-text { font-size: var(--text-sm); color: var(--color-text-secondary); margin: 0 0 8px; line-height: 1.5; }
+.cs-question-text strong { color: var(--color-text-primary); }
+.cs-actions { display: flex; flex-wrap: wrap; gap: 6px; align-items: center; }
+.cs-hits { margin-top: 6px; }
+.cs-select { width: auto; min-width: 200px; max-width: 100%; }
+.cs-remembered-hint { margin: 0 0 8px; }
+.cs-remembered { list-style: none; padding: 0; margin: 0; }
+.cs-remembered li { display: flex; justify-content: space-between; align-items: center; gap: 8px; padding: 8px 0; border-top: 1px solid var(--color-border); font-size: var(--text-sm); }

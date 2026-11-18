@@ -80,7 +80,7 @@ async function run() {
   const to = new Date(); to.setDate(to.getDate() + 49);
 
   // Sync first (or a rolled-back preview of it), so the report below shows what's left afterwards.
-  const sync = await applySync({ pool, cs, churchId: church.id, from: ymd(from), to: ymd(to), apply: APPLY, runId: crypto.randomUUID() });
+  const sync = await applySync({ pool, cs, churchId: church.id, from: ymd(from), to: ymd(to), apply: APPLY, runId: crypto.randomUUID(), recordQuestions: !DRY });
   const syncText = formatSync(sync, APPLY);
   console.log(`Sync (${APPLY ? 'APPLIED' : 'preview only'}): ${sync.actions.length} change(s), ${sync.notes.length} note(s).`);
 
@@ -127,7 +127,15 @@ async function run() {
       return pre(`${k}\n${before[k] ? '' : '  (new date)\n'}${fresh.map(l => `NOW   ${l.trim()}`).join('\n')}${gone.length ? '\n' + gone.map(l => `WAS   ${l.trim()}`).join('\n') : ''}`);
     }).join('');
 
-  const html =
+  // Questions waiting on Settings → ChurchSuite (item 3) — answered once there, then the sync remembers.
+  const { rows: [{ n: openQuestions }] } = await pool.query(
+    "SELECT COUNT(*)::int AS n FROM churchsuite_questions WHERE church_id = $1 AND status = 'open'", [church.id]);
+  const questionsHtml = openQuestions
+    ? `<p style="font-family:sans-serif"><strong>${openQuestions} question(s)</strong> waiting for you — answer them once and the sync remembers: ` +
+      `<a href="${process.env.FRONTEND_URL || 'https://songstack.church'}/settings?tab=churchsuite">Settings → ChurchSuite</a></p>`
+    : '';
+
+  const html = questionsHtml +
     (APPLY
       ? `<p style="font-family:sans-serif">ChurchSuite → SongStack <strong>sync</strong> for ${escapeHtml(church.name)}.</p>` +
         `<h3 style="font-family:sans-serif">${applied ? 'Changed in SongStack just now' : 'Nothing changed in SongStack this time'}</h3>` + pre(syncText) +

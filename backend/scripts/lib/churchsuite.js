@@ -65,7 +65,9 @@ function createClient(clientId, clientSecret) {
   const answer = (responses, name) =>
     (responses || []).find(r => (r.name || '').toLowerCase() === name.toLowerCase())?.value || '';
 
-  // A plan's items, simplified: { id, kind: 'song'|'item', label, key, author, people[], time_start, type_name }
+  // A plan's items, simplified: { id, kind: 'song'|'item', label, key, author, people[], peopleRefs[], ref, time_start, type_name }
+  //   peopleRefs: [{ name, key }] — key = '<type>:<ChurchSuite id>' (stable when names change).
+  //   ref: which ChurchSuite song it is — 'song:<Songs-module id>' / 'lib:<library item id>' (null otherwise).
   async function planItems(planId) {
     const t = await types();
     const raw = await listAll(`/planning/plan_items?plan_ids[]=${planId}&order_by=order:asc`);
@@ -73,8 +75,11 @@ function createClient(clientId, clientSecret) {
     for (const it of raw) {
       const type = t.get(it.type_id);
       const typeName = type?.name || '';
-      const people = (it.people || []).map(p => `${p.first_name || ''} ${p.last_name || ''}`.trim()).filter(Boolean);
-      let kind = 'item', label = it.name || typeName || 'Untitled', key = '', author = '';
+      const peopleRefs = (it.people || [])
+        .map(p => ({ name: `${p.first_name || ''} ${p.last_name || ''}`.trim(), key: p.id ? `${p.type || p.resource_type || 'person'}:${p.id}` : null }))
+        .filter(p => p.name);
+      const people = peopleRefs.map(p => p.name);
+      let kind = 'item', label = it.name || typeName || 'Untitled', key = '', author = '', ref = null;
       if (it.type === 'song' || it.arrangement_id) {
         kind = 'song';
         if (!cache.arrangements.has(it.arrangement_id)) cache.arrangements.set(it.arrangement_id, (await get(`/planning/song_arrangements/${it.arrangement_id}`)).data);
@@ -82,12 +87,14 @@ function createClient(clientId, clientSecret) {
         if (!cache.songs.has(arr.song_id)) cache.songs.set(arr.song_id, (await get(`/planning/songs/${arr.song_id}`)).data);
         const song = cache.songs.get(arr.song_id);
         label = song.name; key = it.settings?.key || answer(it.question_responses, 'Key') || arr.key || ''; author = arr.artist || '';
+        ref = `song:${arr.song_id}`;
       } else if (it.library_item_id && (type?.ccli_tracking || /song|hymn/i.test(typeName))) {
         kind = 'song';
         key = answer(it.question_responses, 'Key');
         author = answer(it.question_responses, 'Artist/Author');
       }
-      out.push({ id: it.id, kind, label, key, author, people, time_start: it.time_start || '', type_name: typeName });
+      if (!ref && it.library_item_id) ref = `lib:${it.library_item_id}`;
+      out.push({ id: it.id, kind, label, key, author, people, peopleRefs, ref, time_start: it.time_start || '', type_name: typeName });
     }
     return out;
   }

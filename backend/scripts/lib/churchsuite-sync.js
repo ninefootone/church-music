@@ -13,6 +13,12 @@
 // churchsuite_sync_log (with what it was before) so a run can be undone.
 //
 // apply = false runs everything inside a transaction and rolls it back: an exact preview.
+//
+// Item 3 (2026-11-18): answers given once on Settings → ChurchSuite are used here — churchsuite_people (ChurchSuite
+// person → member / name only / ignore) and churchsuite_songs (ChurchSuite song → library song / ignore). Anything
+// still uncertain becomes a QUESTION (churchsuite_questions, recordQuestions = true) as well as an email note:
+// person, song, removed_song (in the SongStack plan, not in ChurchSuite), removed_musician. A removed_* question
+// answered "keep" stops being raised for that item.
 
 const { norm, titleVariants } = require('./churchsuite');
 const { csServiceTime, matchSong, likelySamePerson, ssSongVariants, STRUCTURAL } = require('./churchsuite-report');
@@ -37,9 +43,16 @@ function libraryMatches(title, library) {
   return library.filter(s => ssSongVariants(s).some(v => cv.includes(v)));
 }
 
-async function applySync({ pool, cs, churchId, from, to, apply, runId }) {
+async function applySync({ pool, cs, churchId, from, to, apply, runId, recordQuestions = false }) {
   const actions = [];   // { date, text }
   const notes = [];     // { date, text }
+  const questions = new Map();   // `${kind}|${key}` → { kind, key, planId, date, payload }
+  const ask = (kind, key, date, planId, payload) => {
+    const k = `${kind}|${key}`;
+    const q = questions.get(k);
+    if (q) { if (!q.payload.dates.includes(date)) q.payload.dates.push(date); return; }
+    questions.set(k, { kind, key, planId, date, payload: { ...payload, dates: [date] } });
+  };
   const today = londonToday();
   const start = from > today ? from : today;
 
@@ -50,6 +63,14 @@ async function applySync({ pool, cs, churchId, from, to, apply, runId }) {
     `SELECT u.id AS user_id, u.name, m.default_roles
        FROM memberships m JOIN users u ON u.id = m.user_id
       WHERE m.church_id = $1 AND m.role <> 'revoked' AND u.name IS NOT NULL`, [churchId])).rows;
+  // Answers given once on Settings → ChurchSuite.
+  const peopleAnswers = new Map((await pool.query(
+    'SELECT cs_key, decision, user_id FROM churchsuite_people WHERE church_id = $1', [churchId])).rows.map(x => [x.cs_key, x]));
+  const songAnswers = new Map((await pool.query(
+    'SELECT cs_key, decision, song_id FROM churchsuite_songs WHERE church_id = $1', [churchId])).rows.map(x => [x.cs_key, x]));
+  const kept = new Set((await pool.query(
+    `SELECT kind || '|' || q_key AS k FROM churchsuite_questions
+      WHERE church_id = $1 AND status = 'answered' AND answer = 'keep'`, [churchId])).rows.map(x => x.k));
   const ssPlans = (await pool.query(
     `SELECT id, to_char(plan_date, 'YYYY-MM-DD') AS date FROM plans
       WHERE church_id = $1 AND plan_date BETWEEN $2::date AND $3::date`, [churchId, start, to])).rows;
@@ -87,15 +108,25 @@ async function applySync({ pool, cs, churchId, from, to, apply, runId }) {
       const seq = [];   // { cs, itemId|null, add: libSong|null }
       for (const c of ref.items) {
         if (c.kind !== 'song' && STRUCTURAL.test(norm(c.label))) continue;
-        const idx = matchSong(c.label, ssSongs, used);
+        const answer = c.ref ? songAnswers.get(c.ref) : null;
+        if (answer && answer.decision === 'ignore') continue;  // "ignore this ChurchSuite item"
+        const answered = answer && answer.decision === 'song' ? library.find(sg => sg.id === answer.song_id) : null;
+        let idx = answered ? ssSongs.findIndex((sg, i) => !used.has(i) && sg.song_id === answered.id) : -1;
+        if (idx < 0) idx = matchSong(c.label, ssSongs, used);
         if (idx >= 0) { used.add(idx); seq.push({ cs: c, itemId: ssSongs[idx].id }); continue; }
         if (c.kind !== 'song') continue;                       // an ordinary service item
+        if (answered) { seq.push({ cs: c, itemId: null, add: answered }); continue; }
         const cand = libraryMatches(c.label, library);
-        if (cand.length === 1) seq.push({ cs: c, itemId: null, add: cand[0] });
-        else note(cand.length ? `"${c.label}" matches ${cand.length} library songs (${cand.map(s => s.song).join(', ')}) — not added.`
-                              : `"${c.label}" isn't in the SongStack library (or only matches loosely) — not added.`);
+        if (cand.length === 1) { seq.push({ cs: c, itemId: null, add: cand[0] }); continue; }
+        note(cand.length ? `"${c.label}" matches ${cand.length} library songs (${cand.map(sg => sg.song).join(', ')}) — not added.`
+                         : `"${c.label}" isn't in the SongStack library (or only matches loosely) — not added.`);
+        if (c.ref) ask('song', c.ref, date, null, { title: c.label, candidates: cand.map(sg => ({ id: sg.id, title: sg.song })) });
       }
-      ssSongs.forEach((s, i) => { if (!used.has(i)) note(`"${s.song || s.title}" is in the SongStack plan but not in ChurchSuite — left alone.`); });
+      ssSongs.forEach((sg, i) => {
+        if (used.has(i) || kept.has(`removed_song|item:${sg.id}`)) return;
+        note(`"${sg.song || sg.title}" is in the SongStack plan but not in ChurchSuite — left alone.`);
+        ask('removed_song', `item:${sg.id}`, date, planId, { title: sg.song || sg.title || 'Song', item_id: sg.id });
+      });
 
       // 2. Add missing songs (at the end for now — step 3 puts them in the right place).
       for (const e of seq.filter(x => x.add)) {
@@ -166,20 +197,69 @@ async function applySync({ pool, cs, churchId, from, to, apply, runId }) {
 
       // 5. Music team — exact names only; nicknames and anyone ambiguous go in the notes.
       const mus = (await client.query('SELECT id, name, user_id FROM plan_musicians WHERE plan_id = $1', [planId])).rows;
-      const team = new Map();
-      for (const p of cps) for (const i of p.items) if (i.kind === 'song') for (const n of i.people) if (!team.has(norm(n))) team.set(norm(n), n);
-      for (const [k, name] of team) {
-        if (mus.some(m => norm(m.name) === k)) continue;
+      const team = new Map();   // normalised name → { name, key }
+      for (const p of cps) for (const i of p.items) if (i.kind === 'song') for (const pr of (i.peopleRefs || i.people.map(n => ({ name: n, key: null })))) {
+        if (!team.has(norm(pr.name))) team.set(norm(pr.name), pr);
+      }
+      const accounted = new Set();   // plan_musicians ids that correspond to someone in ChurchSuite
+      for (const [k, { name, key: pkey }] of team) {
+        const answer = pkey ? peopleAnswers.get(pkey) : null;
+        const onPlan = mus.find(m => norm(m.name) === k);
+        if (onPlan) { accounted.add(onPlan.id); }
+        if (answer && answer.decision === 'ignore') continue;             // "never add this person"
+        if (answer && answer.decision === 'member') {
+          const mem = members.find(m => m.user_id === answer.user_id);
+          if (mem) {
+            const already = mus.find(m => m.user_id === mem.user_id || norm(m.name) === norm(mem.name));
+            if (already) { accounted.add(already.id); continue; }
+            const role = (mem.default_roles && mem.default_roles[0]) || DEFAULT_ROLE;
+            const ins = await client.query(
+              'INSERT INTO plan_musicians (plan_id, user_id, name, role) VALUES ($1,$2,$3,$4) RETURNING id',
+              [planId, mem.user_id, mem.name, role]);
+            accounted.add(ins.rows[0].id);
+            await log('add_musician', { musician_id: ins.rows[0].id, name, linked: true });
+            act(`Added ${mem.name} to the music team as ${role} (ChurchSuite: ${name}; linked to their account)`);
+            continue;
+          }
+          // The member has left the church since — fall through and ask again.
+        }
+        if (onPlan) continue;
+        if (answer && answer.decision === 'name_only') {
+          const ins = await client.query(
+            'INSERT INTO plan_musicians (plan_id, user_id, name, role) VALUES ($1,NULL,$2,$3) RETURNING id', [planId, name, DEFAULT_ROLE]);
+          accounted.add(ins.rows[0].id);
+          await log('add_musician', { musician_id: ins.rows[0].id, name, linked: false });
+          act(`Added ${name} to the music team as ${DEFAULT_ROLE} (name only — as you chose)`);
+          continue;
+        }
         const nick = mus.find(m => likelySamePerson(m.name, name)) || members.find(m => likelySamePerson(m.name, name));
-        if (nick) { note(`${name} — probably "${nick.name}", not added (needs confirming).`); continue; }
+        if (nick) {
+          if (nick.id && mus.includes(nick)) accounted.add(nick.id);
+          note(`${name} — probably "${nick.name}", not added (needs confirming).`);
+          if (pkey) ask('person', pkey, date, null, { name, suggestion: members.includes(nick) ? { user_id: nick.user_id, name: nick.name } : null,
+            candidates: members.filter(m => likelySamePerson(m.name, name)).map(m => ({ user_id: m.user_id, name: m.name })) });
+          continue;
+        }
         const mem = members.filter(m => norm(m.name) === k);
-        if (mem.length > 1) { note(`${name} — ${mem.length} members have that name, not added.`); continue; }
+        if (mem.length > 1) {
+          note(`${name} — ${mem.length} members have that name, not added.`);
+          if (pkey) ask('person', pkey, date, null, { name, suggestion: null, candidates: mem.map(m => ({ user_id: m.user_id, name: m.name })) });
+          continue;
+        }
         const role = (mem[0] && mem[0].default_roles && mem[0].default_roles[0]) || DEFAULT_ROLE;
         const ins = await client.query(
           'INSERT INTO plan_musicians (plan_id, user_id, name, role) VALUES ($1,$2,$3,$4) RETURNING id',
           [planId, mem[0] ? mem[0].user_id : null, mem[0] ? mem[0].name : name, role]);
+        accounted.add(ins.rows[0].id);
         await log('add_musician', { musician_id: ins.rows[0].id, name, linked: !!mem[0] });
         act(`Added ${name} to the music team as ${role}${mem[0] ? ' (linked to their account)' : ' (name only — not a SongStack member)'}`);
+      }
+      // Musicians on the SongStack plan who aren't on any ChurchSuite song item. Only asked once ChurchSuite has a
+      // music team for the date (an empty team usually just means the rota isn't done yet).
+      if (team.size) for (const m of mus) {
+        if (accounted.has(m.id) || kept.has(`removed_musician|musician:${m.id}`)) continue;
+        if ([...team.values()].some(t => likelySamePerson(t.name, m.name))) continue;
+        ask('removed_musician', `musician:${m.id}`, date, planId, { name: m.name, musician_id: m.id });
       }
 
       await client.query(apply ? 'COMMIT' : 'ROLLBACK');
@@ -190,7 +270,40 @@ async function applySync({ pool, cs, churchId, from, to, apply, runId }) {
       client.release();
     }
   }
-  return { actions, notes };
+  if (recordQuestions) await saveQuestions(pool, churchId, [...questions.values()]);
+  return { actions, notes, questions: [...questions.values()] };
+}
+
+// Upserts this run's questions and closes open ones the run no longer raised (the cause went away — e.g. the song
+// was fixed in ChurchSuite, or the plan is now in the past). A question the sync raises is always unresolved (an
+// answer stops it being raised), so a raised question is (re)opened even if it was answered before — e.g. the member
+// it was matched to has left, or the answer was forgotten on Settings → ChurchSuite.
+async function saveQuestions(pool, churchId, qs) {
+  const client = await pool.connect();
+  try {
+    await client.query('BEGIN');
+    const seen = [];
+    for (const q of qs) {
+      const r = await client.query(
+        `INSERT INTO churchsuite_questions (church_id, kind, q_key, plan_id, plan_date, payload)
+         VALUES ($1, $2, $3, $4, $5, $6)
+         ON CONFLICT (church_id, kind, q_key) DO UPDATE
+           SET payload = EXCLUDED.payload, plan_id = EXCLUDED.plan_id, plan_date = EXCLUDED.plan_date, last_seen = now(),
+               status = 'open', answer = NULL
+         RETURNING id`,
+        [churchId, q.kind, q.key, q.planId, q.date, q.payload]);
+      seen.push(r.rows[0].id);
+    }
+    await client.query(
+      `UPDATE churchsuite_questions SET status = 'gone'
+        WHERE church_id = $1 AND status = 'open' AND NOT (id = ANY($2::uuid[]))`, [churchId, seen]);
+    await client.query('COMMIT');
+  } catch (e) {
+    await client.query('ROLLBACK').catch(() => {});
+    throw e;
+  } finally {
+    client.release();
+  }
 }
 
 // Plain-text summary for the email.
