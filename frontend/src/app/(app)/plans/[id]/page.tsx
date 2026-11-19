@@ -13,6 +13,7 @@ import { sameKey } from '@/lib/keys'
 import { parseArrangement } from '@/lib/arrangement'
 import { ConfirmModal } from '@/components/ui/ConfirmModal'
 import { PlanMusicianModal } from '@/components/ui/PlanMusicianModal'
+import { GuestLinkDialog } from '@/components/ui/GuestLinkDialog'
 import { PlanEmailModal } from '@/components/ui/PlanEmailModal'
 import { SaveAsTemplateModal } from '@/components/ui/SaveAsTemplateModal'
 import type { PlanMusician } from '@/types'
@@ -384,6 +385,9 @@ export default function PlanDetailPage() {
     setUnavailableUserIds(new Set(results.filter(Boolean) as string[]))
   }
   const [showMusicianModal, setShowMusicianModal] = useState(false)
+  // Guest musicians: a re-issued invite link, shown once (see claude/guest-mode.md).
+  const [guestLink, setGuestLink] = useState<{ name: string; link: string } | null>(null)
+  const [guestLinkError, setGuestLinkError] = useState('')
   const [showEmailModal, setShowEmailModal] = useState(false)
   const [showTemplateModal, setShowTemplateModal] = useState(false)
   // Multi-service plans: "Split into separate plans" (multi-service-plans.md)
@@ -561,15 +565,40 @@ export default function PlanDetailPage() {
             {Object.values(
               musicians.reduce((acc, m) => {
                 const key = m.user_id || m.name
-                if (!acc[key]) acc[key] = { name: m.name, user_id: m.user_id, roles: [], ids: [] }
+                if (!acc[key]) acc[key] = { name: m.name, user_id: m.user_id, roles: [], ids: [], isGuest: false, joined: false, linkRowId: null }
                 acc[key].roles.push(m.role)
                 acc[key].ids.push(m.id)
+                if (m.is_guest) acc[key].isGuest = true
+                if (m.guest_claimed_at) acc[key].joined = true
+                if (m.guest_has_link && !m.guest_claimed_at) acc[key].linkRowId = m.id
                 return acc
-              }, {} as Record<string, { name: string; user_id: string | null; roles: string[]; ids: string[] }>)
+              }, {} as Record<string, { name: string; user_id: string | null; roles: string[]; ids: string[]; isGuest: boolean; joined: boolean; linkRowId: string | null }>)
             ).map(group => (
               <div key={group.ids[0]} className={`musician-chip${group.user_id && unavailableUserIds.has(group.user_id) ? ' musician-chip--unavailable' : ''}`}>
                 <span className="musician-name">{group.name}</span>
                 <span className="musician-roles">{group.roles.join(', ')}</span>
+                {group.isGuest && (
+                  <span className="musician-roles" title={group.joined || group.user_id ? 'Guest musician — sees the plans they’re on' : 'Guest invite not used yet'}>
+                    · Guest{!(group.joined || group.user_id) && ' (not joined yet)'}
+                  </span>
+                )}
+                {group.linkRowId && (isAdmin || canAddPlans || plan.created_by === userId) && (
+                  <button
+                    onClick={async () => {
+                      setGuestLinkError('')
+                      try {
+                        const { data } = await api.post(`/api/plans/${id}/musicians/${group.linkRowId}/guest-link`)
+                        setGuestLink({ name: group.name, link: data.link })
+                      } catch {
+                        setGuestLinkError(`Couldn’t make a new link for ${group.name}. Please try again.`)
+                      }
+                    }}
+                    className="btn-inline-link"
+                    title="Make a new invite link (the old one stops working)"
+                  >
+                    New link
+                  </button>
+                )}
                 {(isAdmin || canAddPlans || plan.created_by === userId) && (
                   <button
                     onClick={async () => {
@@ -585,6 +614,7 @@ export default function PlanDetailPage() {
             ))}
           </div>
         )}
+        {guestLinkError && <p className="error-text">{guestLinkError}</p>}
       </div>
 
       {/* Running order */}
@@ -701,6 +731,10 @@ export default function PlanDetailPage() {
           planId={id as string}
           onClose={() => setShowEmailModal(false)}
         />
+      )}
+      {guestLink && (
+        <GuestLinkDialog title="New guest link" name={guestLink.name} link={guestLink.link}
+          churchName={church?.name} planDate={plan?.plan_date} onClose={() => setGuestLink(null)} />
       )}
       {showMusicianModal && (
         <PlanMusicianModal

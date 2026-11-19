@@ -295,6 +295,7 @@ router.get('/:id/musicians', requireAuth, requireMemberOrGuest, async function(r
     const result = await pool.query(
       `SELECT sm.id, sm.name, sm.role, sm.user_id, sm.created_at,
               (sm.guest_token_hash IS NOT NULL OR gm.user_id IS NOT NULL) AS is_guest,
+              (sm.guest_token_hash IS NOT NULL AND sm.guest_token_hash NOT LIKE 'sibling:%') AS guest_has_link,
               sm.guest_claimed_at, sm.guest_token_expires_at
        FROM plan_musicians sm
        JOIN plans p ON p.id = sm.plan_id
@@ -901,32 +902,53 @@ router.post('/:id/musicians', requireAuth, requireMembership, async function(req
   }
 });
 
-// POST /:id/guests { name, role } — invite a guest musician (see claude/guest-mode.md). Creates the musician row
-// and its one-time link together (so the ChurchSuite sync never sees a plain name-only row it would remove).
-// The link is returned ONCE; only its SHA-256 hash is stored. It works until 7 days after the plan date — the
-// same day a guest would lose access to this plan anyway.
+// POST /:id/guests { name, roles: [..] } — invite a guest musician (see claude/guest-mode.md). Creates the
+// musician rows (one per role, like every musician) and the one-time link together, so the ChurchSuite sync never
+// sees a plain name-only row it would remove. The link belongs to the FIRST row; the other roles' rows carry
+// guest_token_hash = 'sibling:<first row id>:<n>' (never a valid link) and are linked to the account on claim too.
+// The link is returned ONCE; only its SHA-256 hash is stored. It works until 7 days after the plan date — the same
+// day a guest would lose access to this plan anyway.
 router.post('/:id/guests', requireAuth, requireMembership, async function(req, res, next) {
+  let client;
   try {
     const name = String(req.body?.name || '').trim();
-    const role = String(req.body?.role || '').trim();
-    if (!name || !role) return res.status(400).json({ error: 'Name and role are required' });
-    if (name.length > 120 || role.length > 120) return res.status(400).json({ error: 'Name or role is too long' });
+    const rawRoles = Array.isArray(req.body?.roles) ? req.body.roles : [req.body?.role];
+    const roles = [...new Set(rawRoles.map((r) => String(r || '').trim()).filter(Boolean))];
+    if (!name || roles.length === 0) return res.status(400).json({ error: 'Name and role are required' });
+    if (name.length > 120 || roles.some((r) => r.length > 120) || roles.length > 10) {
+      return res.status(400).json({ error: 'Name or role is too long' });
+    }
 
     const plan = await loadChurchPlan(req.params.id, req.churchId);
     if (!plan) return res.status(404).json({ error: 'Not found' });
     if (!canEditPlan(req, plan)) return res.status(403).json({ error: 'Not authorised' });
 
     const { token, hash } = newGuestToken();
-    const result = await pool.query(
+    const RETURN = `RETURNING id, name, role, user_id, created_at, TRUE AS is_guest,
+      (guest_token_hash NOT LIKE 'sibling:%') AS guest_has_link, guest_claimed_at, guest_token_expires_at`;
+    const EXPIRES = `(SELECT (p.plan_date + 8)::timestamp AT TIME ZONE 'Europe/London' FROM plans p WHERE p.id = $1)`;
+    client = await pool.connect();
+    await client.query('BEGIN');
+    const first = (await client.query(
       `INSERT INTO plan_musicians (plan_id, user_id, name, role, guest_token_hash, guest_token_expires_at)
-       SELECT $1, NULL, $2, $3, $4, (p.plan_date + 8)::timestamp AT TIME ZONE 'Europe/London'
-         FROM plans p WHERE p.id = $1
-       RETURNING id, name, role, user_id, created_at, TRUE AS is_guest, guest_claimed_at, guest_token_expires_at`,
-      [req.params.id, name, role, hash]
-    );
-    res.status(201).json(Object.assign({}, result.rows[0], { link: guestLink(token) }));
+       VALUES ($1, NULL, $2, $3, $4, ${EXPIRES}) ${RETURN}`,
+      [req.params.id, name, roles[0], hash]
+    )).rows[0];
+    const rows = [first];
+    for (let i = 1; i < roles.length; i++) {
+      rows.push((await client.query(
+        `INSERT INTO plan_musicians (plan_id, user_id, name, role, guest_token_hash, guest_token_expires_at)
+         VALUES ($1, NULL, $2, $3, $4, ${EXPIRES}) ${RETURN}`,
+        [req.params.id, name, roles[i], `sibling:${first.id}:${i}`]
+      )).rows[0]);
+    }
+    await client.query('COMMIT');
+    res.status(201).json({ musicians: rows, link: guestLink(token) });
   } catch (err) {
+    if (client) await client.query('ROLLBACK').catch(() => {});
     next(err);
+  } finally {
+    if (client) client.release();
   }
 });
 
@@ -945,7 +967,8 @@ router.post('/:id/musicians/:musicianId/guest-link', requireAuth, requireMembers
               guest_token_expires_at = (p.plan_date + 8)::timestamp AT TIME ZONE 'Europe/London'
          FROM plans p
         WHERE pm.id = $1 AND pm.plan_id = $2 AND p.id = pm.plan_id
-          AND pm.guest_token_hash IS NOT NULL AND pm.guest_claimed_at IS NULL
+          AND pm.guest_token_hash IS NOT NULL AND pm.guest_token_hash NOT LIKE 'sibling:%'
+          AND pm.guest_claimed_at IS NULL
         RETURNING pm.id, pm.guest_token_expires_at`,
       [req.params.musicianId, req.params.id, hash]
     );

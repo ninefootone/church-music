@@ -127,6 +127,12 @@ export interface PlanMusician {
   name: string
   role: string
   created_at?: string
+  /** Guest musician (invite link, see claude/guest-mode.md). */
+  is_guest?: boolean
+  /** This row holds the invite link (the guest's first role) — the one to re-issue. */
+  guest_has_link?: boolean
+  guest_claimed_at?: string | null
+  guest_token_expires_at?: string | null
 }
 
 export interface Plan {

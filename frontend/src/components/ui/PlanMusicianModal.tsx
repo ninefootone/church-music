@@ -3,6 +3,8 @@
 import { useState, useEffect } from 'react'
 import { X, UserPlus, AlertTriangle } from 'lucide-react'
 import api from '@/lib/api'
+import { useChurch } from '@/context/ChurchContext'
+import { GuestLinkDialog } from '@/components/ui/GuestLinkDialog'
 
 interface Member {
   id: string
@@ -27,7 +29,7 @@ interface Props {
   planDate: string
   churchId: string
   existing?: ExistingMusician
-  onAdd: (musicians: { id: string; name: string; role: string; user_id: string | null }[]) => void
+  onAdd: (musicians: { id: string; name: string; role: string; user_id: string | null; is_guest?: boolean; guest_has_link?: boolean; guest_claimed_at?: string | null }[]) => void
   onRemove?: (removedIds: string[]) => void
   onClose: () => void
 }
@@ -47,6 +49,10 @@ export function PlanMusicianModal({ planId, planDate, churchId, existing, onAdd,
   const [showCustom, setShowCustom] = useState(false)
   const [saving, setSaving] = useState(false)
   const [error, setError] = useState('')
+  // Guest access (invite link): only for someone who isn't a member, and only when adding (not changing).
+  const [guestAccess, setGuestAccess] = useState(false)
+  const [invite, setInvite] = useState<{ name: string; link: string } | null>(null)
+  const { church } = useChurch()
 
   useEffect(() => {
     api.get('/api/members').then(r => setMembers(r.data)).catch(() => {})
@@ -98,10 +104,23 @@ export function PlanMusicianModal({ planId, planDate, churchId, existing, onAdd,
     setSelectedRoles(prev => prev.includes(r) ? prev.filter(x => x !== r) : [...prev, r])
   }
 
+  const canInviteGuest = !existing && !selectedMember
+
   const handleSubmit = async () => {
     if (!canSubmit) return
     setSaving(true)
     setError('')
+    if (canInviteGuest && guestAccess) {
+      try {
+        const { data } = await api.post(`/api/plans/${planId}/guests`, { name: finalName, roles: allRoles })
+        onAdd(data.musicians)
+        setInvite({ name: finalName, link: data.link })
+      } catch {
+        setError('Failed to invite. Please try again.')
+      }
+      setSaving(false)
+      return
+    }
     try {
       // Changing someone: same person → only add/remove the roles that changed; a different
       // person → add all the new rows and remove all the old ones. New rows are added BEFORE old
@@ -132,6 +151,13 @@ export function PlanMusicianModal({ planId, planDate, churchId, existing, onAdd,
       setError('Failed to save. Please try again.')
       setSaving(false)
     }
+  }
+
+  if (invite) {
+    return (
+      <GuestLinkDialog title="Guest invited" name={invite.name} link={invite.link}
+        churchName={church?.name} planDate={planDate} onClose={onClose} />
+    )
   }
 
   return (
@@ -200,7 +226,7 @@ export function PlanMusicianModal({ planId, planDate, churchId, existing, onAdd,
               )}
               {query.length > 1 && filtered.length === 0 && (
                 <p className="form-empty-note">
-                  No members found — <strong>{query}</strong> will be added as a guest
+                  No members found — <strong>{query}</strong> will be added by name
                 </p>
               )}
             </div>
@@ -251,6 +277,19 @@ export function PlanMusicianModal({ planId, planDate, churchId, existing, onAdd,
           )}
         </div>
 
+        {canInviteGuest && finalName.length > 0 && (
+          <label className="form-field" style={{ display: 'flex', gap: 8, alignItems: 'flex-start', cursor: 'pointer' }}>
+            <input type="checkbox" checked={guestAccess} onChange={e => setGuestAccess(e.target.checked)} style={{ marginTop: 3 }} />
+            <span>
+              <strong>Give them guest access</strong>
+              <span className="text-muted" style={{ display: 'block', fontSize: 'var(--text-sm)' }}>
+                You&apos;ll get a link to send them. They&apos;ll see this plan and its music (and any other plan you add
+                them to) until a week after it — nothing else in your church.
+              </span>
+            </span>
+          </label>
+        )}
+
         {error && <p className="error-text">{error}</p>}
 
         <button
@@ -262,7 +301,7 @@ export function PlanMusicianModal({ planId, planDate, churchId, existing, onAdd,
           <UserPlus size={16} />
           {existing
             ? (saving ? 'Saving…' : 'Save changes')
-            : (saving ? 'Adding…' : `Add${allRoles.length > 1 ? ` (${allRoles.length} roles)` : ''}`)}
+            : (saving ? 'Adding…' : `${canInviteGuest && guestAccess ? 'Invite guest' : 'Add'}${allRoles.length > 1 ? ` (${allRoles.length} roles)` : ''}`)}
         </button>
       </div>
     </div>

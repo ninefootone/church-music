@@ -3,7 +3,8 @@
 //                                   page can say "You've been invited to play at … on …" before sign-in.
 //   POST /api/guest/:token/claim  — signed in: join the church as a guest (or, if already a member, just get linked
 //                                   to the plan) and attach this account to the musician row. One use only.
-// The token in the link is never stored — only its SHA-256 hash (plan_musicians.guest_token_hash).
+// The token in the link is never stored — only its SHA-256 hash (plan_musicians.guest_token_hash). Hashes are hex,
+// so a 'sibling:…' marker (extra roles on the same invite) can never match a link.
 const express = require('express');
 const router = express.Router();
 const pool = require('../db/pool');
@@ -106,9 +107,11 @@ router.post('/:token/claim', requireAuth, async (req, res, next) => {
     }
     // admin / member / guest already: keep their role, just link them to the plan.
 
+    // This row plus the guest's other roles on the same invite ('sibling:<row id>:<n>').
     await client.query(
-      'UPDATE plan_musicians SET user_id = $1, guest_claimed_at = NOW() WHERE id = $2',
-      [req.user.id, inv.id]
+      `UPDATE plan_musicians SET user_id = $1, guest_claimed_at = NOW()
+        WHERE id = $2 OR (plan_id = $3 AND guest_token_hash LIKE 'sibling:' || $2::text || ':%')`,
+      [req.user.id, inv.id, inv.plan_id]
     );
     await client.query('COMMIT');
     res.json(done);
