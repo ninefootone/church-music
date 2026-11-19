@@ -63,7 +63,7 @@ router.post('/questions/:id/answer', requireAuth, requireAdmin, async function(r
       if (action === 'member') {
         if (!isUuid(user_id)) return fail('Choose a member.');
         const m = await client.query(
-          "SELECT 1 FROM memberships WHERE church_id = $1 AND user_id = $2 AND role <> 'revoked'", [req.churchId, user_id]);
+          "SELECT 1 FROM memberships WHERE church_id = $1 AND user_id = $2 AND role IN ('admin', 'member')", [req.churchId, user_id]);
         if (!m.rows.length) return fail('That person isn\'t a member of this church.');
         uid = user_id;
       }

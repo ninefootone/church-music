@@ -315,7 +315,9 @@ async function applySync({ pool, cs, churchId, from, to, apply, runId, recordQue
   const members = (await pool.query(
     `SELECT u.id AS user_id, u.name, m.default_roles
        FROM memberships m JOIN users u ON u.id = m.user_id
-      WHERE m.church_id = $1 AND m.role <> 'revoked' AND u.name IS NOT NULL`, [churchId])).rows;
+      WHERE m.church_id = $1 AND m.role IN ('admin', 'member') AND u.name IS NOT NULL`, [churchId])).rows;
+  // (Guests are left out on purpose: a ChurchSuite name must never link to a guest's account — guests only get
+  // plans an admin gave them. See claude/guest-mode.md.)
   // Answers given once on Settings → ChurchSuite.
   const peopleAnswers = new Map((await pool.query(
     'SELECT cs_key, decision, user_id FROM churchsuite_people WHERE church_id = $1', [churchId])).rows.map(x => [x.cs_key, x]));
@@ -450,11 +452,13 @@ async function applySync({ pool, cs, churchId, from, to, apply, runId, recordQue
       }
       // Musicians not in ChurchSuite are removed — only once ChurchSuite has a music team for the date (an empty team
       // usually just means the rota isn't done yet). Every row counts (someone on Vocals AND Keys is two rows);
-      // likely-same names and old "Keep" answers stay.
+      // likely-same names and old "Keep" answers stay. Guest musicians (added in SongStack with a guest link —
+      // guest_token_hash set) are never removed: guests aren't on the ChurchSuite rota. See claude/guest-mode.md.
       const teamUsers = new Set([...team.values()].map(t => t.key && peopleAnswers.get(t.key))
         .filter(x => x && x.decision === 'member').map(x => x.user_id));
       if (team.size) for (const m of mus) {
         if (accounted.has(m.id) || kept.has(`removed_musician|musician:${m.id}`)) continue;
+        if (m.guest_token_hash) continue;
         if (team.has(norm(m.name)) || (m.user_id && teamUsers.has(m.user_id))) continue;
         if ([...team.values()].some(t => likelySamePerson(t.name, m.name))) continue;
         await client.query('DELETE FROM plan_musicians WHERE id = $1', [m.id]);
