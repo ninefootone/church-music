@@ -137,6 +137,30 @@ const requireAdmin = async (req, res, next) => {
   }
 };
 
+// Like requireMembership, but also lets guests (guest musicians) through. Only for the few read routes guests may
+// use; every one of those handlers must then limit a guest to their own plans (utils/guestAccess.js).
+// See claude/guest-mode.md.
+const requireMemberOrGuest = async (req, res, next) => {
+  try {
+    const pool = require('../db/pool');
+    const churchId = req.headers['x-church-id'] || req.params.churchId || req.body?.churchId;
+    if (!churchId) return res.status(400).json({ error: 'x-church-id header required' });
+    if (!isUuid(churchId)) return res.status(400).json({ error: 'Invalid church id' });
+
+    const membership = await pool.query(
+      "SELECT * FROM memberships WHERE church_id = $1 AND user_id = $2 AND role IN ('admin', 'member', 'guest')",
+      [churchId, req.user.id]
+    );
+    if (membership.rows.length === 0) return res.status(403).json({ error: 'Church membership required' });
+
+    req.churchId = churchId;
+    req.membership = membership.rows[0];
+    next();
+  } catch (err) {
+    next(err);
+  }
+};
+
 const requireChurchMember = requireMembership;
 const requireChurchAdmin = requireAdmin;
 
@@ -172,4 +196,4 @@ const requirePermission = (flag) => async (req, res, next) => {
   }
 };
 
-module.exports = { requireAuth, requireMembership, requireAdmin, requireChurchMember, requireChurchAdmin, requirePermission };
+module.exports = { requireAuth, requireMembership, requireMemberOrGuest, requireAdmin, requireChurchMember, requireChurchAdmin, requirePermission };

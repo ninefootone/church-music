@@ -7,7 +7,8 @@ const multer = require('multer');
 const { S3Client, PutObjectCommand, GetObjectCommand, DeleteObjectCommand } = require('@aws-sdk/client-s3');
 const { getSignedUrl } = require('@aws-sdk/s3-request-presigner');
 const pool = require('../db/pool');
-const { requireAuth, requireAdmin, requireMembership, requirePermission } = require('../middleware/auth');
+const { requireAuth, requireAdmin, requireMembership, requireMemberOrGuest, requirePermission } = require('../middleware/auth');
+const { isGuest, guestCanSeeSong } = require('../utils/guestAccess');
 const { v4: uuidv4 } = require('uuid');
 const { normaliseKey } = require('../utils/keys');
 const { sendBrevoEmail, escapeHtml } = require('../utils/email');
@@ -335,8 +336,12 @@ router.post('/songs/:songId', requireAuth, requirePermission('can_manage_songs')
   }
 });
 
-router.get('/songs/:songId/files/:fileId/url', requireAuth, requireMembership, async function(req, res, next) {
+router.get('/songs/:songId/files/:fileId/url', requireAuth, requireMemberOrGuest, async function(req, res, next) {
   try {
+    // Guests: only songs in their own plans (utils/guestAccess.js).
+    if (isGuest(req) && !(await guestCanSeeSong(req, req.params.songId))) {
+      return res.status(404).json({ error: 'File not found' });
+    }
     const file = await pool.query(
       `SELECT sf.*, s.title AS song_title FROM song_files sf
        JOIN songs s ON s.id = sf.song_id
@@ -368,8 +373,12 @@ router.get('/songs/:songId/files/:fileId/url', requireAuth, requireMembership, a
 });
 
 // GET /songs/:songId/files — authenticated: all files for a song, scoped to the caller's church
-router.get('/songs/:songId/files', requireAuth, requireMembership, async function(req, res, next) {
+router.get('/songs/:songId/files', requireAuth, requireMemberOrGuest, async function(req, res, next) {
   try {
+    // Guests: only songs in their own plans (utils/guestAccess.js).
+    if (isGuest(req) && !(await guestCanSeeSong(req, req.params.songId))) {
+      return res.status(404).json({ error: 'Song not found' });
+    }
     const owningSong = await pool.query('SELECT id FROM songs WHERE id = $1 AND church_id = $2', [req.params.songId, req.churchId]);
     if (owningSong.rows.length === 0) {
       return res.status(404).json({ error: 'Song not found' });
@@ -401,8 +410,12 @@ router.get('/songs/:songId/files', requireAuth, requireMembership, async functio
 // GET /songs/:songId/recordings — a song's rehearsal recordings (members only), for the plan page.
 // No signed URLs here: the player asks for one per file when someone presses Play / Download.
 // Kept separate from /files so older iPad builds never see audio. See claude/rehearsal-recordings.md.
-router.get('/songs/:songId/recordings', requireAuth, requireMembership, async function(req, res, next) {
+router.get('/songs/:songId/recordings', requireAuth, requireMemberOrGuest, async function(req, res, next) {
   try {
+    // Guests: only songs in their own plans (utils/guestAccess.js).
+    if (isGuest(req) && !(await guestCanSeeSong(req, req.params.songId))) {
+      return res.status(404).json({ error: 'Song not found' });
+    }
     const result = await pool.query(
       `SELECT sf.id, sf.song_id, sf.file_type, sf.label, sf.key_of, sf.file_size, sf.uploaded_at,
               COALESCE(NULLIF(u.name, ''), u.email) AS uploaded_by_name

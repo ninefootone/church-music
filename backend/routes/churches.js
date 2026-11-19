@@ -4,7 +4,7 @@ const { requireIdParams } = require('../utils/ids');
 // Malformed IDs in the URL → 404 before any handler runs (see utils/ids.js).
 requireIdParams(router, { churchId: 'Church not found', id: 'Not found' });
 const pool = require('../db/pool');
-const { requireAuth, requireAdmin, requireMembership } = require('../middleware/auth');
+const { requireAuth, requireAdmin, requireMembership, requireMemberOrGuest } = require('../middleware/auth');
 const { sanitizeRichText } = require('../utils/sanitize');
 const { seedSampleContent } = require('../utils/sampleContent');
 const { notifyAdmin } = require('../utils/email');
@@ -222,7 +222,7 @@ router.get('/mine', requireAuth, async (req, res, next) => {
 // skipped the last-admin check. Members are removed via DELETE /api/members/:membershipId.
 
 // Get church details
-router.get('/:churchId', requireAuth, requireMembership, async (req, res, next) => {
+router.get('/:churchId', requireAuth, requireMemberOrGuest, async (req, res, next) => {
   try {
     const church = await pool.query('SELECT * FROM churches WHERE id = $1', [req.churchId]);
     if (church.rows.length === 0) return res.status(404).json({ error: 'Not found' });

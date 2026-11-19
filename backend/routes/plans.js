@@ -23,7 +23,8 @@ const R2_BUCKET = process.env.R2_BUCKET_NAME;
 const pool = require('../db/pool');
 const { sanitizeRichText } = require('../utils/sanitize');
 const { insertTemplateItems } = require('../utils/planTemplateItems');
-const { requireAuth, requireMembership, requireAdmin, requirePermission } = require('../middleware/auth');
+const { requireAuth, requireMembership, requireMemberOrGuest, requireAdmin, requirePermission } = require('../middleware/auth');
+const { isGuest, guestPlanSql, guestCanSeePlan } = require('../utils/guestAccess');
 const { v4: uuidv4 } = require('uuid');
 
 // Loads a plan scoped to the caller's church. Returns null if it doesn't exist
@@ -49,7 +50,8 @@ function canSeeDraftPlans(req) {
 }
 
 
-router.get('/', requireAuth, requireMembership, async function(req, res, next) {
+// Guests: only their own plans (utils/guestAccess.js).
+router.get('/', requireAuth, requireMemberOrGuest, async function(req, res, next) {
   try {
     const churchId = req.churchId;
     const upcoming = req.query.upcoming;
@@ -70,6 +72,7 @@ router.get('/', requireAuth, requireMembership, async function(req, res, next) {
 
     const canSeeDrafts = req.membership.role === 'admin' || req.membership.can_add_plans;
     if (!canSeeDrafts) query += ` AND s.status = 'published'`;
+    if (isGuest(req)) query += ' AND ' + guestPlanSql('s', '$2');
 
     query += ' GROUP BY s.id ORDER BY s.plan_date ' + (upcoming === 'false' ? 'DESC' : 'ASC') + ', s.plan_sort_order ASC, s.plan_start_time ASC';
 
@@ -81,7 +84,7 @@ router.get('/', requireAuth, requireMembership, async function(req, res, next) {
 });
 
 // GET /api/plans/my-upcoming — plans where the logged-in user is listed as a musician
-router.get('/my-upcoming', requireAuth, requireMembership, async function(req, res, next) {
+router.get('/my-upcoming', requireAuth, requireMemberOrGuest, async function(req, res, next) {
   try {
     // Same draft rule as GET / — only admins and can_add_plans members see drafts.
     // (Without this, a musician on a draft — e.g. a duplicated plan — saw it in
@@ -90,7 +93,8 @@ router.get('/my-upcoming', requireAuth, requireMembership, async function(req, r
     // "pencilled in" rows. can_open = false for those, so the dashboard shows them without a link (the
     // plan page itself still 404s drafts for them). Opt-in so the iPad app's behaviour is unchanged.
     const canSeeDrafts = req.membership.role === 'admin' || !!req.membership.can_add_plans;
-    const includeDrafts = canSeeDrafts || req.query.include_drafts === 'true';
+    // Guests never see drafts, not even as "pencilled in" rows. (They're already limited to plans they're on.)
+    const includeDrafts = canSeeDrafts || (req.query.include_drafts === 'true' && !isGuest(req));
     const result = await pool.query(
       `SELECT p.id, p.plan_date, p.plan_time, p.plan_start_time, p.extra_times, p.plan_sort_order, p.title, p.status,
               (p.status = 'published' OR $3::boolean) AS can_open,
@@ -280,10 +284,11 @@ router.get('/:id/song-history', requireAuth, requireMembership, async function(r
   }
 });
 
-router.get('/:id/musicians', requireAuth, requireMembership, async function(req, res, next) {
+router.get('/:id/musicians', requireAuth, requireMemberOrGuest, async function(req, res, next) {
   try {
     const plan = await loadChurchPlan(req.params.id, req.churchId);
-    if (!plan || (plan.status === 'draft' && !canSeeDraftPlans(req))) {
+    if (!plan || (plan.status === 'draft' && !canSeeDraftPlans(req))
+        || (isGuest(req) && !(await guestCanSeePlan(req, req.params.id)))) {
       return res.status(404).json({ error: 'Plan not found' });
     }
     const result = await pool.query(
@@ -320,9 +325,12 @@ async function itemsVersion(db, planId) {
   return r.rows[0].v;
 }
 
-router.get('/:id', requireAuth, requireMembership, async function(req, res, next) {
+router.get('/:id', requireAuth, requireMemberOrGuest, async function(req, res, next) {
   try {
     const churchId = req.churchId;
+    if (isGuest(req) && !(await guestCanSeePlan(req, req.params.id))) {
+      return res.status(404).json({ error: 'Plan not found' });
+    }
     const plan = await pool.query(
       'SELECT * FROM plans WHERE id = $1 AND church_id = $2',
       [req.params.id, churchId]

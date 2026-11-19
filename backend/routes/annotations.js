@@ -6,7 +6,8 @@ const { requireIdParams } = require('../utils/ids');
 // Malformed IDs in the URL → 404 before any handler runs (see utils/ids.js).
 requireIdParams(router, { fileId: 'File not found' });
 const pool = require('../db/pool');
-const { requireAuth, requireMembership } = require('../middleware/auth');
+const { requireAuth, requireMembership, requireMemberOrGuest } = require('../middleware/auth');
+const { isGuest, guestVisibleFileIds } = require('../utils/guestAccess');
 
 const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 const MAX_FILES = 200;          // per GET
@@ -59,11 +60,15 @@ async function strokesFor(fileIds, churchId) {
 }
 
 // GET /api/annotations/files?ids=<uuid>,<uuid>… → { files: { [fileId]: [stroke…] }, canShare }
-router.get('/files', requireAuth, requireMembership, async (req, res, next) => {
+// Guests may read markings, but only on files of songs in their own plans; they can never add any (canShare is
+// false for them and POST below uses requireMembership). See claude/guest-mode.md.
+router.get('/files', requireAuth, requireMemberOrGuest, async (req, res, next) => {
   try {
     const ids = String(req.query.ids || '').split(',').map((s) => s.trim()).filter((s) => UUID_RE.test(s));
     if (ids.length > MAX_FILES) return res.status(400).json({ error: `Too many files (max ${MAX_FILES})` });
-    res.json({ files: await strokesFor([...new Set(ids)], req.churchId), canShare: canShare(req.membership) });
+    let wanted = [...new Set(ids)];
+    if (isGuest(req)) wanted = await guestVisibleFileIds(req, wanted);
+    res.json({ files: await strokesFor(wanted, req.churchId), canShare: canShare(req.membership) });
   } catch (err) { next(err); }
 });
 
