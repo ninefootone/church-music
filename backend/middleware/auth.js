@@ -93,6 +93,8 @@ function serviceUnavailable(res, err) {
   return res.status(503).json({ error: 'SongStack is having trouble right now. Please try again in a moment.' });
 }
 
+// Allow-list of roles, not "anything but revoked": any future role (e.g. 'guest') is denied
+// here and in requirePermission unless a route opts in explicitly. See claude/guest-mode.md.
 const requireMembership = async (req, res, next) => {
   try {
     const pool = require('../db/pool');
@@ -101,7 +103,7 @@ const requireMembership = async (req, res, next) => {
     if (!isUuid(churchId)) return res.status(400).json({ error: 'Invalid church id' });
 
     const membership = await pool.query(
-      "SELECT * FROM memberships WHERE church_id = $1 AND user_id = $2 AND role != 'revoked'",
+      "SELECT * FROM memberships WHERE church_id = $1 AND user_id = $2 AND role IN ('admin', 'member')",
       [churchId, req.user.id]
     );
     if (membership.rows.length === 0) return res.status(403).json({ error: 'Church membership required' });
@@ -146,7 +148,7 @@ const requirePermission = (flag) => async (req, res, next) => {
     if (!isUuid(churchId)) return res.status(400).json({ error: 'Invalid church id' });
 
     const membership = await pool.query(
-      "SELECT * FROM memberships WHERE church_id = $1 AND user_id = $2 AND role != 'revoked'",
+      "SELECT * FROM memberships WHERE church_id = $1 AND user_id = $2 AND role IN ('admin', 'member')",
       [churchId, req.user.id]
     );
     if (membership.rows.length === 0) return res.status(403).json({ error: 'Church membership required' });
