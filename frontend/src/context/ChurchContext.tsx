@@ -58,6 +58,16 @@ function pickChurch(churches: Church[]): Church {
   return churches.find(c => c.role !== 'guest') ?? churches[0]
 }
 
+// Pages a guest musician may open (see claude/guest-mode.md). Allow-list, so any page added later is
+// members-only until it's listed here. Everything else sends a guest to their plans.
+const GUEST_PLAN_RESERVED = ['new', 'overview', 'templates']
+function guestMayOpen(path: string): boolean {
+  if (/^\/(dashboard|help|account)(\/|$)/.test(path)) return true
+  if (/^\/plans\/?$/.test(path)) return true
+  const m = path.match(/^\/plans\/([^/]+)(\/set(\/view)?)?\/?$/)   // a plan, its Set mode picker and viewer
+  return !!m && !GUEST_PLAN_RESERVED.includes(m[1])
+}
+
 export function ChurchProvider({ children }: { children: ReactNode }) {
   const { getToken, isSignedIn, isLoaded } = useAuth()
   const router = useRouter()
@@ -105,6 +115,11 @@ export function ChurchProvider({ children }: { children: ReactNode }) {
   useEffect(() => {
     if (isLoaded) fetchChurch()
   }, [isLoaded, isSignedIn])
+
+  // Guests who land on a members-only page (typed URL, old link) go to their plans instead of an error.
+  useEffect(() => {
+    if (church?.role === 'guest' && pathname && !guestMayOpen(pathname)) router.replace('/plans')
+  }, [church?.role, pathname])
 
   // Switching church is a full page load to the dashboard, not a state change: every page
   // holds data it fetched for the old church (and the URL may be an old-church plan or song),
