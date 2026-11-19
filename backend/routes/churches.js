@@ -184,6 +184,24 @@ router.post('/join', requireAuth, async (req, res, next) => {
   }
 });
 
+// Guests (guest musicians, see claude/guest-mode.md) only get what the app shell needs to show the church.
+// Never the invite code: a guest could pass it on and others would join as full members. Billing status is kept
+// so the free-plan checks in the frontend don't misfire. Permission flags are forced off.
+function churchForGuest(row) {
+  return {
+    id: row.id,
+    name: row.name,
+    logo_url: row.logo_url,
+    subscription_status: row.subscription_status,
+    free_access: row.free_access,
+    role: 'guest',
+    can_manage_songs: false,
+    can_add_plans: false,
+    can_manage_playlists: false,
+    can_annotate_plans: false,
+  };
+}
+
 // Get my churches
 router.get('/mine', requireAuth, async (req, res, next) => {
   try {
@@ -194,7 +212,7 @@ router.get('/mine', requireAuth, async (req, res, next) => {
        ORDER BY c.name`,
       [req.user.id]
     );
-    res.json(churches.rows);
+    res.json(churches.rows.map((row) => (row.role === 'guest' ? churchForGuest(row) : row)));
   } catch (err) {
     next(err);
   }
@@ -208,6 +226,7 @@ router.get('/:churchId', requireAuth, requireMembership, async (req, res, next) 
   try {
     const church = await pool.query('SELECT * FROM churches WHERE id = $1', [req.churchId]);
     if (church.rows.length === 0) return res.status(404).json({ error: 'Not found' });
+    if (req.membership.role === 'guest') return res.json(churchForGuest(church.rows[0]));
     res.json(church.rows[0]);
   } catch (err) {
     next(err);
