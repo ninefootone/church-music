@@ -1,4 +1,5 @@
 -- UNDO the most recent ChurchSuite sync run that changed anything. Paste into Railway → Postgres → Data tab.
+-- Also (2026-11-19) puts back which services songs are at, and removes non-song items the run added.
 -- Deletes plans the run CREATED (only if nobody has edited them since — same fingerprint as when created),
 -- puts song positions back, removes songs and musicians the run added, clears keys it set
 -- (only if nobody has changed that key since). Then removes that run from the log, so running
@@ -32,6 +33,16 @@ DELETE FROM plan_items pi USING undo_run u
 UPDATE plan_items pi SET key_override = NULL
   FROM undo_run u
  WHERE u.action = 'set_key' AND pi.id = (u.detail->>'item_id')::uuid AND pi.key_override = u.detail->>'key';
+
+-- 3b. Services the run set on songs (put back, only if nobody has changed them since).
+UPDATE plan_items pi SET service_times = ARRAY(SELECT jsonb_array_elements_text(u.detail->'before'))::time[]
+  FROM undo_run u
+ WHERE u.action = 'set_services' AND pi.id = (u.detail->>'item_id')::uuid AND pi.plan_id = u.plan_id
+   AND pi.service_times = ARRAY(SELECT jsonb_array_elements_text(u.detail->'after'))::time[];
+
+-- 3c. Non-song items the run added.
+DELETE FROM plan_items pi USING undo_run u
+ WHERE u.action = 'add_item' AND pi.id = (u.detail->>'item_id')::uuid AND pi.plan_id = u.plan_id;
 
 -- 4. Musicians the run added.
 DELETE FROM plan_musicians pm USING undo_run u
