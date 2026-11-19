@@ -6,6 +6,7 @@
 // Songs and files follow from that: a guest sees a song only if it's in a plan they can see.
 // Routes that let guests in use requireMemberOrGuest and MUST check these; every other route uses
 // requireMembership, which turns guests away.
+const crypto = require('crypto');
 const pool = require('../db/pool');
 
 const GUEST_DAYS = 7;
@@ -50,4 +51,15 @@ async function guestVisibleFileIds(req, fileIds) {
   return r.rows.map((row) => row.id);
 }
 
-module.exports = { GUEST_DAYS, isGuest, guestPlanSql, guestCanSeePlan, guestCanSeeSong, guestVisibleFileIds };
+// Guest invite links: a random token goes in the link; only its SHA-256 hash is stored (plan_musicians.guest_token_hash).
+const hashGuestToken = (token) => crypto.createHash('sha256').update(String(token)).digest('hex');
+function newGuestToken() {
+  const token = crypto.randomBytes(24).toString('base64url');
+  return { token, hash: hashGuestToken(token) };
+}
+const guestLink = (token) => `${process.env.FRONTEND_URL || 'https://app.songstack.church'}/guest/${token}`;
+
+module.exports = {
+  GUEST_DAYS, isGuest, guestPlanSql, guestCanSeePlan, guestCanSeeSong, guestVisibleFileIds,
+  hashGuestToken, newGuestToken, guestLink,
+};

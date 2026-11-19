@@ -128,7 +128,9 @@ router.post('/join', requireAuth, async (req, res, next) => {
       [church.rows[0].id, req.user.id]
     );
     if (existing.rows.length > 0) {
-      if (existing.rows[0].role === 'revoked') {
+      // Revoked → re-joins as a member. Guest → becomes a full member (they could only have the code if someone
+      // in the church gave it to them; guests never see it in the app — see claude/guest-mode.md).
+      if (existing.rows[0].role === 'revoked' || existing.rows[0].role === 'guest') {
         await pool.query(
           'UPDATE memberships SET role = $1 WHERE church_id = $2 AND user_id = $3',
           ['member', church.rows[0].id, req.user.id]

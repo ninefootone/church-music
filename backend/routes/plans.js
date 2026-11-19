@@ -26,6 +26,7 @@ const { insertTemplateItems } = require('../utils/planTemplateItems');
 const { requireAuth, requireMembership, requireMemberOrGuest, requireAdmin, requirePermission } = require('../middleware/auth');
 const { isGuest, guestPlanSql, guestCanSeePlan } = require('../utils/guestAccess');
 const { v4: uuidv4 } = require('uuid');
+const { newGuestToken, guestLink } = require('../utils/guestAccess');
 
 // Loads a plan scoped to the caller's church. Returns null if it doesn't exist
 // there (callers send 404, so other churches' plan ids look the same as missing).
@@ -292,8 +293,12 @@ router.get('/:id/musicians', requireAuth, requireMemberOrGuest, async function(r
       return res.status(404).json({ error: 'Plan not found' });
     }
     const result = await pool.query(
-      `SELECT sm.id, sm.name, sm.role, sm.user_id, sm.created_at
+      `SELECT sm.id, sm.name, sm.role, sm.user_id, sm.created_at,
+              (sm.guest_token_hash IS NOT NULL OR gm.user_id IS NOT NULL) AS is_guest,
+              sm.guest_claimed_at, sm.guest_token_expires_at
        FROM plan_musicians sm
+       JOIN plans p ON p.id = sm.plan_id
+       LEFT JOIN memberships gm ON gm.church_id = p.church_id AND gm.user_id = sm.user_id AND gm.role = 'guest'
        WHERE sm.plan_id = $1
        ORDER BY sm.created_at ASC`,
       [req.params.id]
@@ -891,6 +896,61 @@ router.post('/:id/musicians', requireAuth, requireMembership, async function(req
       [req.params.id, user_id || null, name, role]
     );
     res.status(201).json(result.rows[0]);
+  } catch (err) {
+    next(err);
+  }
+});
+
+// POST /:id/guests { name, role } — invite a guest musician (see claude/guest-mode.md). Creates the musician row
+// and its one-time link together (so the ChurchSuite sync never sees a plain name-only row it would remove).
+// The link is returned ONCE; only its SHA-256 hash is stored. It works until 7 days after the plan date — the
+// same day a guest would lose access to this plan anyway.
+router.post('/:id/guests', requireAuth, requireMembership, async function(req, res, next) {
+  try {
+    const name = String(req.body?.name || '').trim();
+    const role = String(req.body?.role || '').trim();
+    if (!name || !role) return res.status(400).json({ error: 'Name and role are required' });
+    if (name.length > 120 || role.length > 120) return res.status(400).json({ error: 'Name or role is too long' });
+
+    const plan = await loadChurchPlan(req.params.id, req.churchId);
+    if (!plan) return res.status(404).json({ error: 'Not found' });
+    if (!canEditPlan(req, plan)) return res.status(403).json({ error: 'Not authorised' });
+
+    const { token, hash } = newGuestToken();
+    const result = await pool.query(
+      `INSERT INTO plan_musicians (plan_id, user_id, name, role, guest_token_hash, guest_token_expires_at)
+       SELECT $1, NULL, $2, $3, $4, (p.plan_date + 8)::timestamp AT TIME ZONE 'Europe/London'
+         FROM plans p WHERE p.id = $1
+       RETURNING id, name, role, user_id, created_at, TRUE AS is_guest, guest_claimed_at, guest_token_expires_at`,
+      [req.params.id, name, role, hash]
+    );
+    res.status(201).json(Object.assign({}, result.rows[0], { link: guestLink(token) }));
+  } catch (err) {
+    next(err);
+  }
+});
+
+// POST /:id/musicians/:musicianId/guest-link — a new link for a guest who hasn't joined yet (the old link stops
+// working). Not for claimed rows: that person already has access.
+router.post('/:id/musicians/:musicianId/guest-link', requireAuth, requireMembership, async function(req, res, next) {
+  try {
+    const plan = await loadChurchPlan(req.params.id, req.churchId);
+    if (!plan) return res.status(404).json({ error: 'Not found' });
+    if (!canEditPlan(req, plan)) return res.status(403).json({ error: 'Not authorised' });
+
+    const { token, hash } = newGuestToken();
+    const result = await pool.query(
+      `UPDATE plan_musicians pm
+          SET guest_token_hash = $3,
+              guest_token_expires_at = (p.plan_date + 8)::timestamp AT TIME ZONE 'Europe/London'
+         FROM plans p
+        WHERE pm.id = $1 AND pm.plan_id = $2 AND p.id = pm.plan_id
+          AND pm.guest_token_hash IS NOT NULL AND pm.guest_claimed_at IS NULL
+        RETURNING pm.id, pm.guest_token_expires_at`,
+      [req.params.musicianId, req.params.id, hash]
+    );
+    if (result.rows.length === 0) return res.status(404).json({ error: 'No unclaimed guest invite found for that musician' });
+    res.json(Object.assign({}, result.rows[0], { link: guestLink(token) }));
   } catch (err) {
     next(err);
   }
