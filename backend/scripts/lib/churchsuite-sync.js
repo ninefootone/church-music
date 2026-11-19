@@ -144,11 +144,24 @@ async function reconcile(client, ctx) {
   const used = new Set();
   const free = pred => svc.find(r => !used.has(r.id) && pred(r));
   const target = [];   // { row } (existing) or { insert } in ChurchSuite's order, each with .times + .c
+  const slotNames = new Set(entries.filter(e => e.item.kind === 'slot' && e.item.slot_title).map(e => norm(e.item.slot_title)));
 
   for (const { item: c, times: at } of entries) {
     if (c.kind === 'slot') {
       const t = c.slot_title ? norm(c.slot_title) : '';
-      const ex = free(r => r.type === 'song_slot' && norm(r.title || '') === t) || free(r => r.type === 'song_slot');
+      // A slot whose title names a song (a carol entered as an empty song slot) is that song: an existing
+      // SongStack song of that name is kept; otherwise the library song is used when exactly one matches.
+      if (t) {
+        const named = { ...c, label: c.slot_title };
+        const songs = svc.filter(r => r.type === 'song' && !used.has(r.id));
+        const idx = matchSong(c.slot_title, songs, new Set());
+        if (idx >= 0) { used.add(songs[idx].id); target.push({ row: songs[idx], c: named, at }); continue; }
+        const cand = libraryMatches(c.slot_title, library);
+        if (cand.length === 1) { target.push({ insert: { type: 'song', song: cand[0] }, c: named, at }); continue; }
+      }
+      // Same-named slot first; otherwise any slot that no ChurchSuite slot claims by name.
+      const ex = free(r => r.type === 'song_slot' && norm(r.title || '') === t)
+        || free(r => r.type === 'song_slot' && !slotNames.has(norm(r.title || '')));
       if (ex) { used.add(ex.id); target.push({ row: ex, c, at }); }
       else target.push({ insert: { type: 'song_slot', title: c.slot_title }, c, at });
       continue;
