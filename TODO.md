@@ -83,6 +83,13 @@ Next:
 - Gotcha (2026-10-11): live `song_files` has NO `filename` column — `db/history/migrate.js` is stale. Check columns against the live code (e.g. the INSERT in `routes/uploads.js`), not that file.
 - [ ] No in-app help needed for /browse while it stays low-key (browse users can't reach /help). Add a topic if it goes mainstream.
 
+## Guest musicians (DONE 2026-11-19 — see project doc `guest-mode.md`)
+- [x] Guest role, deny-by-default auth, guest-aware plan/file/markings routes, invite + claim links, web guest view,
+      Team page Guests section, iPad guest tabs (OTA), ChurchSuite sync keeps guests, help (web + iPad).
+- [ ] Optional: email the admins when a guest joins (like the member-join email in `routes/churches.js /join`).
+- [ ] Optional: restrict `/api/templates/:id/detail` lyrics to church members (guests + /browse users get them today —
+      same open item as in the Song rights section).
+
 ## ChurchSuite link-up (started 2026-11-16 — see project doc `churchsuite-integration.md`)
 - [x] Trial + dry runs on Endcliffe. Stage 1 LIVE: Railway cron service runs `backend/scripts/churchsuite-shadow.js` at 9am/1pm/5pm UTC, READ-ONLY, emails beardybradley@gmail.com when what a sync would do changes.
 - [x] Stage 2a minimal sync for Endcliffe built 2026-11-17 (`CS_SYNC_MODE=apply` on the cron service). Undo: `backend/migrations/2026-11-17-churchsuite-undo-last-run.sql`.

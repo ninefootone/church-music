@@ -189,6 +189,9 @@ export default function HelpPage() {
                 You can belong to more than one church — for example if you play at two churches. Open the menu (your picture, top right) and choose <strong>Join or create another church</strong>, or just open another church&apos;s invite link. When you&apos;re in more than one, the same menu lists <strong>Your churches</strong>: pick one to switch. SongStack remembers your choice on each browser. In the iPad app, switch churches in <strong>Settings → Your churches</strong>.
               </p>
               <p className="help-content-body">
+                <strong>Invited as a guest musician?</strong> Open the link you were sent, sign in or create a free account, and tap <strong>Open the plan</strong>. You&apos;ll see the plans you&apos;re playing in — on the website or in the iPad app — and nothing else in that church. See <strong>Plans → Guest musicians</strong>.
+              </p>
+              <p className="help-content-body">
                 <strong>Using Apple&apos;s Hide My Email?</strong> Apple then gives SongStack a private relay address instead of your real one, which creates a separate account that isn&apos;t connected to your church yet. Enter your church&apos;s invite code to join it (on the website, or on the <strong>Join your church</strong> screen in the iPad app), or sign in with the email address you were invited with.
               </p>
             </div>
@@ -523,13 +526,45 @@ export default function HelpPage() {
           content: () => (
             <div>
               <p className="help-content-body">
-                From the plan detail page, click <strong>Add musician</strong>. You can search for existing church members by name, or add a guest by typing their name directly.
+                On the plan page, click <strong>Add</strong> next to <strong>Musicians</strong>. Search for a church member by name, or type the name of someone who isn&apos;t a member to add them by name only.
               </p>
               <p className="help-content-body">
-                Each musician can be given a role for that plan (e.g. &quot;Guitar&quot;, &quot;Vocals&quot;). Roles are drawn from the list you&apos;ve set up in Settings, but you can type any role when adding.
+                Each musician can be given one or more roles for that plan (e.g. &quot;Guitar&quot;, &quot;Vocals&quot;). Roles are drawn from the list you&apos;ve set up in Settings, but you can type any role with <strong>Other…</strong>.
               </p>
               <p className="help-content-body">
-                Musicians assigned to a plan will see it highlighted on their dashboard under <strong>Your next plan</strong>.
+                Members on a plan see it at the top of their dashboard under <strong>My upcoming plans</strong>, with a <strong>MINE</strong> label on the Plans page. If the plan is still a draft, it shows as pencilled in until it&apos;s published.
+              </p>
+              <p className="help-content-body">
+                Someone playing who isn&apos;t in your church — a visiting bassist, say — can be given their own access to the plan: see <strong>Plans → Guest musicians</strong>.
+              </p>
+            </div>
+          ),
+        },
+        {
+          id: 'guest-musicians',
+          title: 'Guest musicians',
+          content: () => (
+            <div>
+              <p className="help-content-body">
+                A guest musician gets their own SongStack sign-in for the plans they&apos;re playing in — the running order, the music files and any rehearsal recordings — without joining your church as a member.
+              </p>
+              <p className="help-content-body">
+                <strong>Inviting a guest:</strong> on the plan page, click <strong>Add</strong> next to <strong>Musicians</strong>, type their name, pick their roles and tick <strong>Give them guest access</strong>, then click <strong>Invite guest</strong>. Copy the message (or just the link) and send it to them. Admins, members with <strong>Add &amp; edit plans</strong>, and whoever made the plan can invite guests.
+              </p>
+              <p className="help-content-body">
+                The link works once, only for that person, and until a week after the plan. It&apos;s only shown when you create it — if it gets lost, click <strong>New link</strong> next to their name on the plan (the old link then stops working). On the plan they show as <strong>Guest (not joined yet)</strong> until they&apos;ve used it.
+              </p>
+              <p className="help-content-body">
+                <strong>What the guest does:</strong> they open the link, sign in or create a free account, and tap <strong>Open the plan</strong>. They can use the website or the SongStack iPad app with the same account.
+              </p>
+              <p className="help-content-body">
+                <strong>What guests can see:</strong> only the published plans they&apos;re on, from now until a week after each plan — not your song library, other plans, Discover, stats or your team. They can view shared markings on the iPad but not add them. Once a week has passed since their last plan, they see nothing.
+              </p>
+              <p className="help-content-body">
+                <strong>Another plan:</strong> to add someone who has already joined as a guest to another plan, pick them in the musician search like a member (they&apos;re labelled <strong>Guest</strong>).
+              </p>
+              <p className="help-content-body">
+                Admins can see every guest — and make one a full member or remove them — on the <strong>Team</strong> page. See <strong>Team &amp; permissions → Managing guests</strong>.
               </p>
             </div>
           ),
@@ -764,6 +799,9 @@ export default function HelpPage() {
                 <strong>Member:</strong> read-only access by default, with specific capabilities granted individually.
               </p>
               <p className="help-content-body">
+                <strong>Guest:</strong> a guest musician invited from a plan. They only see the plans they&apos;re on, until a week after each one. See <strong>Plans → Guest musicians</strong>.
+              </p>
+              <p className="help-content-body">
                 Admins can grant members the following additional permissions from the Team page:
               </p>
               <p className="help-content-body">
@@ -794,6 +832,26 @@ export default function HelpPage() {
               </p>
               <p className="help-content-body">
                 Removing a member revokes their access to your church&apos;s SongStack. It doesn&apos;t delete their account — they could join a different church in future if invited.
+              </p>
+            </div>
+          ),
+        },
+        {
+          id: 'managing-guests',
+          title: 'Managing guests',
+          content: () => (
+            <div>
+              <p className="help-content-body">
+                Guest musicians who have joined are listed under <strong>Guests</strong> on the <strong>Team</strong> page, below your members, with the plans they can see at the moment.
+              </p>
+              <p className="help-content-body">
+                <strong>Make full member:</strong> for someone who becomes a regular. They then see your whole song library and every published plan, like any member, and you can give them permissions as usual.
+              </p>
+              <p className="help-content-body">
+                <strong>Remove:</strong> takes away their access to all your plans straight away. They stay listed on plans as a musician (by name) unless you remove them there too.
+              </p>
+              <p className="help-content-body">
+                You don&apos;t have to remove guests: a week after their last plan they can&apos;t see anything anyway. Inviting is done from a plan — see <strong>Plans → Guest musicians</strong>.
               </p>
             </div>
           ),
