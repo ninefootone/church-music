@@ -589,6 +589,18 @@ export default function PlanEditPage() {
 
       {error && <div className="error-box">{error}</div>}
 
+      {/* Plans kept in step with ChurchSuite (truth model, churchsuite-integration.md): edits to the running order
+          here are replaced at the next sync. plans.churchsuite_synced_at is set by the sync. */}
+      {plan?.churchsuite_synced_at && (
+        <div className="info-box">
+          <p className="info-box-text">
+            This plan&apos;s running order comes from ChurchSuite. Changes to songs and items made here are replaced at
+            the next sync (three times a day) — make them in ChurchSuite instead. Notes, keys and arrangements you add
+            here stay.
+          </p>
+        </div>
+      )}
+
       <div className="plan-edit-grid">
 
         {isMobile && (

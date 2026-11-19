@@ -1,39 +1,30 @@
-// ChurchSuite → SongStack sync, MINIMAL FIRST VERSION (Endcliffe only). See project doc churchsuite-integration.md.
+// ChurchSuite → SongStack sync (Endcliffe for now). See project doc churchsuite-integration.md.
 //
-// For each upcoming date that has ONE SongStack plan and one or more ChurchSuite plans:
-//   • adds a ChurchSuite song missing from the SongStack plan — ONLY if it matches exactly one song in the
-//     church's library by title, bracketed title or first line (never guessed)
-//   • puts the plan's songs into ChurchSuite's order, using the slots songs already occupy
-//     (non-song items stay exactly where they are)
-//   • fills a key ONLY when the SongStack item has no key and the song has no default key
-//   • adds music-team people (people on ChurchSuite song items) who aren't on the plan — exact names only;
-//     linked to their account when they're a member
-// It NEVER deletes or renames anything, never touches notes/content/arrangements/roles/status, never
-// creates plans. Anything uncertain is returned as a note for the email. Every change is written to
-// churchsuite_sync_log (with what it was before) so a run can be undone.
+// TRUTH MODEL (Jon, 2026-11-19): for a church using ChurchSuite, ChurchSuite is where the plan's truth is; SongStack
+// manages what ChurchSuite doesn't (files, charts, recordings, markings, arrangements, notes).
 //
-// apply = false runs everything inside a transaction and rolls it back: an exact preview.
+// Which SongStack plan a ChurchSuite date controls: the plan whose START TIME is one of ChurchSuite's service times
+// that day (a plan with no start time counts only if it's the only plan that day; if ChurchSuite's plan names have no
+// times, the only plan that day). Other SongStack plans on that date — e.g. an evening service made in SongStack only —
+// are never touched. No controlled plan → one is CREATED. Two → skipped with a note. Dates ChurchSuite has nothing
+// for are never looked at.
 //
-// 4a part 2 (2026-11-19): EXISTING plans whose ChurchSuite services differ are synced too, when ChurchSuite's service
-// times are exactly the plan's times (start + extra times). The services are merged (mergeServices) and followed
-// instead of the first service alone. ChurchSuite then DECIDES which services each song is at (service_times —
-// 'set_services', logged with the old value; Jon 2026-11-19), a non-song item at only some services is ADDED, marked
-// (once — 'add_item'; not re-added if someone deletes it), and when a song's key differs between services the first
-// service's key is used (gap-fill only, as always) with a note. Times that don't line up → services are only synced
-// if they have the same songs and keys, as before.
-//
-// Item 4a (2026-11-18): a date with ChurchSuite plans but NO SongStack plan gets one created automatically
-// (createPlan below): one plan for all that day's services (start time + extra times), the whole running order
-// (songs, service items with liturgy words — set-up/rehearsal items left out), anything at only some services marked
-// with service_times ("9:15 only"), keys from ChurchSuite, then the music team as for any plan. Title from the plan
-// template with the same start time, else ChurchSuite's plan name. Published only if every ChurchSuite service that
-// day is published. Logged as 'create_plan' with a fingerprint, so undo-last-run deletes it if nobody has edited it.
-//
-// Item 3 (2026-11-18): answers given once on Settings → ChurchSuite are used here — churchsuite_people (ChurchSuite
-// person → member / name only / ignore) and churchsuite_songs (ChurchSuite song → library song / ignore). Anything
-// still uncertain becomes a QUESTION (churchsuite_questions, recordQuestions = true) as well as an email note:
-// person, song, removed_song (in the SongStack plan, not in ChurchSuite), removed_musician. A removed_* question
-// answered "keep" stops being raised for that item.
+// For a controlled (or just-created) plan, reconcile() makes it match ChurchSuite (all services merged):
+//   • service times = ChurchSuite's (start + extra times) — 'set_plan_times'
+//   • the running order (songs, song slots, service items; ChurchSuite set-up/rehearsal items ignored) is added to,
+//     REMOVED from and put in ChurchSuite's order — 'add_song' / 'add_item' / 'remove_item' / 'reorder'
+//   • which services each item is at = ChurchSuite's — 'set_services'
+//   • keys: SongStack's plan key wins; ChurchSuite's key only fills a plan key that isn't set (a song's library
+//     default isn't a plan decision) — 'set_key'
+//   • lengths and liturgy words only fill gaps — 'set_item'
+//   • NEVER touched: pre-service items, notes, arrangements, titles of existing items, plan title/status/notes.
+//   • the music team: added (people on ChurchSuite song items + empty song slots; answers on Settings → ChurchSuite)
+//     and REMOVED when not in ChurchSuite (only when ChurchSuite has a team that date; likely-same names count as
+//     present) — 'add_musician' / 'remove_musician'
+//   • items/musicians an admin chose to KEEP (old "Keep" answers) are never removed.
+// Every change is logged in churchsuite_sync_log with what it was before (removed rows in full), so
+// backend/migrations/2026-11-17-churchsuite-undo-last-run.sql can put a run back. apply = false = exact preview
+// (transaction rolled back). Uncertain matches → questions on Settings → ChurchSuite (person / song).
 
 const crypto = require('crypto');
 const { norm, titleVariants } = require('./churchsuite');
@@ -45,15 +36,19 @@ const { formatClock } = require('../../utils/extraTimes');
 const londonToday = () => new Intl.DateTimeFormat('en-CA', { timeZone: 'Europe/London' }).format(new Date());
 const DEFAULT_ROLE = 'Musician';
 
-async function planItems(client, planId) {
+// Full plan item rows (for matching, updating and — when removed — logging in full so undo can restore them).
+async function planRows(client, planId) {
   const r = await client.query(
-    `SELECT pi.id, pi.type, pi.phase, pi.title, pi.position, pi.key_override,
-            ARRAY(SELECT to_char(t, 'HH24:MI') FROM unnest(pi.service_times) t ORDER BY t) AS service_times,
-            s.id AS song_id, s.title AS song, s.first_line, s.default_key
+    `SELECT pi.*, ARRAY(SELECT to_char(t, 'HH24:MI') FROM unnest(pi.service_times) t ORDER BY t) AS st,
+            s.title AS song, s.first_line, s.default_key, s.default_duration
        FROM plan_items pi LEFT JOIN songs s ON s.id = pi.song_id
       WHERE pi.plan_id = $1 ORDER BY pi.position, pi.id`, [planId]);
   return r.rows;
 }
+// The row as stored (for the log, so undo can put it back exactly): every plan_items column — pi.* minus the
+// joined helper fields. (Whitelisting columns would leave any other NOT NULL column empty on restore.)
+const JOINED = new Set(['st', 'song', 'first_line', 'default_key', 'default_duration']);
+const storedRow = r => Object.fromEntries(Object.entries(r).filter(([c]) => !JOINED.has(c)));
 
 // Library songs that confidently match a ChurchSuite title (exact / bracket variant / first line).
 function libraryMatches(title, library) {
@@ -92,10 +87,12 @@ function wordsToHtml(text) {
 }
 
 const sameKeyName = (a, b) => (a || '').trim().replace(/♯/g, '#').replace(/♭/g, 'b').toLowerCase() === (b || '').trim().replace(/♯/g, '#').replace(/♭/g, 'b').toLowerCase();
+const minutesOf = c => (c.duration ? Math.max(1, Math.round(c.duration / 60)) : null);   // ChurchSuite length is seconds
 
-// Creates the SongStack plan for a date that only exists in ChurchSuite (inside the date's transaction).
-async function createPlan(client, { churchId, date, cps, library, songAnswers, ask }) {
-  const times = [...new Set(cps.map(p => p.serviceTime).filter(Boolean))].sort();
+// The plan row for a date that only exists in ChurchSuite. Its running order is then filled by reconcile().
+// Title from the plan template with the same start time (else ChurchSuite's plan name); published only if every
+// ChurchSuite service that day is published.
+async function createPlanRow(client, { churchId, date, cps, times }) {
   const start = times[0] || null;
   const extra = times.slice(1);
   const tpl = start ? (await client.query(
@@ -110,44 +107,7 @@ async function createPlan(client, { churchId, date, cps, library, songAnswers, a
     `INSERT INTO plans (church_id, plan_date, plan_time, plan_start_time, plan_sort_order, title, public_token, created_by, status, extra_times)
      VALUES ($1, $2, $3, $4, 0, $5, $6, $7, $8, $9) RETURNING id`,
     [churchId, date, start ? formatClock(start) : null, start, title, crypto.randomUUID(), creator ? creator.clerk_id : null, status, extra])).rows[0];
-
-  let pos = 0, songs = 0, slots = 0;
-  for (const { item: c, times: at } of mergeServices(cps)) {
-    const serviceTimes = start && at.length < times.length ? at.filter(Boolean) : [];
-    const minutes = c.duration ? Math.max(1, Math.round(c.duration / 60)) : null;   // ChurchSuite length, seconds
-    if (c.kind === 'slot') {                       // "song to be chosen" (no song picked in ChurchSuite yet)
-      await client.query(
-        `INSERT INTO plan_items (plan_id, type, title, position, duration_minutes, phase, service_times) VALUES ($1, 'song_slot', $2, $3, $4, 'service', $5)`,
-        [plan.id, c.slot_title, pos++, minutes, serviceTimes]);
-      slots++;
-      continue;
-    }
-    const answer = c.ref ? songAnswers.get(c.ref) : null;
-    if (answer && answer.decision === 'ignore') continue;
-    let song = answer && answer.decision === 'song' ? library.find(sg => sg.id === answer.song_id) : null;
-    if (!song && c.ref) {
-      const cand = libraryMatches(c.label, library);
-      if (cand.length === 1) song = cand[0];
-      else if (c.kind === 'song') ask('song', c.ref, date, null, { title: c.label, candidates: cand.map(sg => ({ id: sg.id, title: sg.song })) });
-    }
-    if (song) {
-      const key = c.key && !sameKeyName(c.key, song.default_key) ? c.key : null;
-      await client.query(
-        `INSERT INTO plan_items (plan_id, type, song_id, position, key_override, duration_minutes, phase, service_times)
-         VALUES ($1, 'song', $2, $3, $4, $5, 'service', $6)`, [plan.id, song.id, pos++, key, minutes || song.default_duration || null, serviceTimes]);
-      songs++;
-    } else if (c.kind === 'song') {
-      await client.query(
-        `INSERT INTO plan_items (plan_id, type, title, position, duration_minutes, phase, service_times) VALUES ($1, 'song_slot', $2, $3, $4, 'service', $5)`,
-        [plan.id, c.label, pos++, minutes, serviceTimes]);
-      slots++;
-    } else {
-      await client.query(
-        `INSERT INTO plan_items (plan_id, type, title, content, position, duration_minutes, phase, service_times) VALUES ($1, 'custom', $2, $3, $4, $5, 'service', $6)`,
-        [plan.id, c.label, wordsToHtml(c.words), pos++, minutes, serviceTimes]);
-    }
-  }
-  return { planId: plan.id, title, status, times, items: pos, songs, slots };
+  return { planId: plan.id, title, status };
 }
 
 // Fingerprint of a plan's items + musicians (same SQL in the undo script): undo only deletes a plan the sync
@@ -158,6 +118,170 @@ const PLAN_FINGERPRINT_SQL = `SELECT md5(
               FROM plan_items WHERE plan_id = $1), '') || '#' ||
   COALESCE((SELECT string_agg(ROW(id, name, role, user_id)::text, '|' ORDER BY id::text)
               FROM plan_musicians WHERE plan_id = $1), '')) AS fp`;
+
+// Makes one SongStack plan's running order match ChurchSuite (see the header). quiet = a plan created this run:
+// its individual additions aren't listed in the email (the "Created the plan" line covers them).
+async function reconcile(client, ctx) {
+  const { planId, cps, times, library, songAnswers, kept, ask, act, note, date, quiet } = ctx;
+  let changes = 0;
+  const log = (action, detail) => { changes++; return ctx.log(action, detail); };
+  const say = text => { if (!quiet) act(text); };
+  const want = at => (times.length && at.length < times.length ? [...at].filter(Boolean).sort() : []);
+  const entries = mergeServices(cps);
+
+  // Same song, different keys in different services → the first service's key is used.
+  const keysBy = new Map();
+  for (const p of cps) for (const i of p.items) if (i.kind === 'song' && i.key) {
+    const k = norm(i.label); if (!keysBy.has(k)) keysBy.set(k, { label: i.label, keys: [] });
+    keysBy.get(k).keys.push(`${i.key} at ${formatClock(p.serviceTime)}`);
+  }
+  for (const { label, keys } of keysBy.values()) if (new Set(keys.map(x => x.split(' ')[0])).size > 1)
+    note(`"${label}" is in different keys (${keys.join(', ')}) — the first one is used.`);
+
+  const cur = await planRows(client, planId);
+  const pre = cur.filter(r => r.phase === 'pre-service');          // never touched
+  const svc = cur.filter(r => r.phase !== 'pre-service');
+  const used = new Set();
+  const free = pred => svc.find(r => !used.has(r.id) && pred(r));
+  const target = [];   // { row } (existing) or { insert } in ChurchSuite's order, each with .times + .c
+
+  for (const { item: c, times: at } of entries) {
+    if (c.kind === 'slot') {
+      const t = c.slot_title ? norm(c.slot_title) : '';
+      const ex = free(r => r.type === 'song_slot' && norm(r.title || '') === t) || free(r => r.type === 'song_slot');
+      if (ex) { used.add(ex.id); target.push({ row: ex, c, at }); }
+      else target.push({ insert: { type: 'song_slot', title: c.slot_title }, c, at });
+      continue;
+    }
+    const answer = c.ref ? songAnswers.get(c.ref) : null;
+    if (answer && answer.decision === 'ignore') continue;              // "not a song — ignore"
+    const answered = answer && answer.decision === 'song' ? library.find(sg => sg.id === answer.song_id) : null;
+    // An existing SongStack song: the answered song, else a title / first-line match (also for ChurchSuite
+    // non-song items that are really songs, e.g. a carol entered as "Misc").
+    let ex = answered ? free(r => r.type === 'song' && r.song_id === answered.id) : null;
+    if (!ex) {
+      const songs = svc.filter(r => r.type === 'song' && !used.has(r.id));
+      const idx = matchSong(c.label, songs, new Set());
+      if (idx >= 0) ex = songs[idx];
+    }
+    if (ex) { used.add(ex.id); target.push({ row: ex, c, at }); continue; }
+    if (c.kind === 'song') {
+      let song = answered;
+      let cand = [];
+      if (!song) { cand = libraryMatches(c.label, library); if (cand.length === 1) song = cand[0]; }
+      if (song) { target.push({ insert: { type: 'song', song }, c, at }); continue; }
+      // Not clearly in the library → a "song to be chosen" slot (an existing one of the same name is kept) + a question.
+      note(cand.length ? `"${c.label}" matches ${cand.length} library songs (${cand.map(sg => sg.song).join(', ')}) — shown as a song to be chosen.`
+                       : `"${c.label}" isn't in the SongStack library (or only matches loosely) — shown as a song to be chosen.`);
+      if (c.ref) ask('song', c.ref, date, null, { title: c.label, candidates: cand.map(sg => ({ id: sg.id, title: sg.song })) });
+      const slot = free(r => r.type === 'song_slot' && norm(r.title || '') === norm(c.label));
+      if (slot) { used.add(slot.id); target.push({ row: slot, c, at }); }
+      else target.push({ insert: { type: 'song_slot', title: c.label }, c, at });
+      continue;
+    }
+    const item = free(r => r.type !== 'song' && r.type !== 'song_slot' && norm(r.title || '') && norm(r.title) === norm(c.label));
+    if (item) { used.add(item.id); target.push({ row: item, c, at }); }
+    else target.push({ insert: { type: 'custom', title: c.label }, c, at });
+  }
+
+  // Removed: anything in the plan that ChurchSuite doesn't have (except items an admin chose to keep).
+  const keptRows = [];
+  for (const r of svc) {
+    if (used.has(r.id)) continue;
+    if (kept.has(`removed_song|item:${r.id}`)) { keptRows.push(r); continue; }
+    await client.query('DELETE FROM plan_items WHERE id = $1', [r.id]);
+    await log('remove_item', { item_id: r.id, row: storedRow(r) });
+    say(`Removed "${r.song || r.title || (r.type === 'song_slot' ? 'Song to be chosen' : r.type)}" (not in ChurchSuite)`);
+  }
+
+  // Added.
+  let added = 0;
+  for (const t of target.filter(x => x.insert)) {
+    const { c, at, insert } = t;
+    const st = want(at);
+    let row;
+    if (insert.type === 'song') {
+      const key = c.key && !sameKeyName(c.key, insert.song.default_key) ? c.key : null;
+      row = (await client.query(
+        `INSERT INTO plan_items (plan_id, type, song_id, position, key_override, duration_minutes, phase, service_times)
+         VALUES ($1, 'song', $2, 100000, $3, $4, 'service', $5) RETURNING id`,
+        [planId, insert.song.id, key, minutesOf(c) || insert.song.default_duration || null, st])).rows[0];
+      await log('add_song', { item_id: row.id, song_id: insert.song.id, title: insert.song.song });
+      say(`Added "${insert.song.song}"${norm(insert.song.song) !== norm(c.label) ? ` (ChurchSuite: "${c.label}")` : ''}${st.length ? ` (${st.map(formatClock).join(' & ')} only)` : ''}`);
+    } else if (insert.type === 'song_slot') {
+      row = (await client.query(
+        `INSERT INTO plan_items (plan_id, type, title, position, duration_minutes, phase, service_times)
+         VALUES ($1, 'song_slot', $2, 100000, $3, 'service', $4) RETURNING id`, [planId, insert.title, minutesOf(c), st])).rows[0];
+      await log('add_item', { item_id: row.id, title: insert.title || 'Song to be chosen' });
+      say(`Added a song to be chosen${insert.title ? ` ("${insert.title}")` : ''}${st.length ? ` (${st.map(formatClock).join(' & ')} only)` : ''}`);
+    } else {
+      row = (await client.query(
+        `INSERT INTO plan_items (plan_id, type, title, content, position, duration_minutes, phase, service_times)
+         VALUES ($1, 'custom', $2, $3, 100000, $4, 'service', $5) RETURNING id`,
+        [planId, insert.title, wordsToHtml(c.words), minutesOf(c), st])).rows[0];
+      await log('add_item', { item_id: row.id, title: insert.title });
+      say(`Added "${insert.title}"${st.length ? ` (${st.map(formatClock).join(' & ')} only)` : ''}`);
+    }
+    t.id = row.id; added++;
+  }
+
+  // Updates to items that stay: services (ChurchSuite decides), key / length / words (only filling gaps).
+  let filled = 0;
+  for (const t of target.filter(x => x.row)) {
+    const { row: r, c, at } = t;
+    t.id = r.id;
+    const st = want(at);
+    if ((r.st || []).join() !== st.join()) {
+      await client.query('UPDATE plan_items SET service_times = $1::time[] WHERE id = $2', [st, r.id]);
+      await log('set_services', { item_id: r.id, before: r.st || [], after: st });
+      say(`"${r.song || r.title || 'Song to be chosen'}" is now ${st.length ? `only at ${st.map(formatClock).join(' & ')}` : 'at every service'} (as in ChurchSuite)`);
+    }
+    if (r.type === 'song' && c.key && !r.key_override && !sameKeyName(c.key, r.default_key)) {
+      await client.query('UPDATE plan_items SET key_override = $1 WHERE id = $2 AND key_override IS NULL', [c.key, r.id]);
+      await log('set_key', { item_id: r.id, key: c.key });
+      say(`Key ${c.key} set for "${r.song}" (the plan had none)`);
+    }
+    const mins = minutesOf(c);
+    if (mins && r.duration_minutes == null) {
+      await client.query('UPDATE plan_items SET duration_minutes = $1 WHERE id = $2 AND duration_minutes IS NULL', [mins, r.id]);
+      await log('set_item', { item_id: r.id, field: 'duration_minutes', after: mins });
+      filled++;
+    }
+    const words = r.type === 'custom' || (r.type !== 'song' && r.type !== 'song_slot') ? wordsToHtml(c.words) : null;
+    if (words && !r.content) {
+      await client.query('UPDATE plan_items SET content = $1 WHERE id = $2 AND content IS NULL', [words, r.id]);
+      await log('set_item', { item_id: r.id, field: 'content', after: words });
+      filled++;
+    }
+  }
+  if (filled) say(`Filled in ${filled} length(s) / liturgy text(s) from ChurchSuite (only where SongStack had none)`);
+
+  // Order: pre-service items first (as they are), then ChurchSuite's order. Kept items stay after the item they
+  // followed before.
+  const order = [...pre.map(r => r.id), ...target.map(t => t.id)];
+  for (const r of keptRows) {
+    // After the nearest item before it that's still in the plan (pre-service items count); else first in the service.
+    let k = -1;
+    for (let i = cur.indexOf(r) - 1; i >= 0; i--) { const at = order.indexOf(cur[i].id); if (at >= 0) { k = at; break; } }
+    if (k < 0) k = pre.length - 1;
+    order.splice(k + 1, 0, r.id);
+  }
+  const before = Object.fromEntries(cur.map(r => [r.id, r.position]));
+  const existingBefore = cur.filter(r => order.includes(r.id)).map(r => r.id).join();
+  const existingAfter = order.filter(id => id in before).join();
+  if (order.some((id, k) => before[id] !== k)) {
+    await client.query(
+      `UPDATE plan_items pi SET position = o.pos FROM unnest($2::uuid[], $3::int[]) AS o(id, pos)
+        WHERE pi.id = o.id AND pi.plan_id = $1`, [planId, order, order.map((_, k) => k)]);
+    // Logged (so undo restores the exact order) when existing items moved, or alongside any other change to this
+    // plan. Not on its own when it only closes gaps (someone deleted an item) — that would make "undo last run" undo
+    // the gap-closing instead of the run you meant.
+    if (existingBefore !== existingAfter || changes > 0) await log('reorder', { before });
+    if (existingBefore !== existingAfter) say('Running order changed to match ChurchSuite');
+  }
+  return { items: target.length, songs: target.filter(t => (t.row ? t.row.type : t.insert.type) === 'song').length,
+           slots: target.filter(t => (t.row ? t.row.type : t.insert.type) === 'song_slot').length, added };
+}
 
 async function applySync({ pool, cs, churchId, from, to, apply, runId, recordQuestions = false }) {
   const actions = [];   // { date, text }
@@ -184,11 +308,12 @@ async function applySync({ pool, cs, churchId, from, to, apply, runId, recordQue
     'SELECT cs_key, decision, user_id FROM churchsuite_people WHERE church_id = $1', [churchId])).rows.map(x => [x.cs_key, x]));
   const songAnswers = new Map((await pool.query(
     'SELECT cs_key, decision, song_id FROM churchsuite_songs WHERE church_id = $1', [churchId])).rows.map(x => [x.cs_key, x]));
+  // Old "Keep" answers (before the truth model): those items / musicians are never removed.
   const kept = new Set((await pool.query(
     `SELECT kind || '|' || q_key AS k FROM churchsuite_questions
       WHERE church_id = $1 AND status = 'answered' AND answer = 'keep'`, [churchId])).rows.map(x => x.k));
   const ssPlans = (await pool.query(
-    `SELECT id, to_char(plan_date, 'YYYY-MM-DD') AS date,
+    `SELECT id, to_char(plan_date, 'YYYY-MM-DD') AS date, to_char(plan_start_time, 'HH24:MI') AS start,
             CASE WHEN plan_start_time IS NULL THEN '{}'::text[]
                  ELSE ARRAY(SELECT to_char(t, 'HH24:MI') FROM unnest(ARRAY[plan_start_time] || extra_times) t ORDER BY t) END AS times
        FROM plans
@@ -203,205 +328,50 @@ async function applySync({ pool, cs, churchId, from, to, apply, runId, recordQue
     const sps = ssPlans.filter(p => p.date === date);
     const note = text => notes.push({ date, text });
     const act = text => actions.push({ date, text });
-    const creating = !sps.length;   // item 4a: only in ChurchSuite → create the SongStack plan
-    if (sps.length > 1) { note(`${sps.length} SongStack plans on this date — skipped (not sure which to update).`); continue; }
+    const times = [...new Set(cps.map(p => p.serviceTime).filter(Boolean))].sort();
 
-    // Services must have the same songs and keys, or one plan can't represent them — leave it to a person.
-    // (A plan being CREATED handles different services itself, with per-service items.)
-    const songSig = p => p.items.filter(i => i.kind === 'song').map(i => `${norm(i.label)}|${i.key}`).join(';');
-    const differ = cps.some(p => songSig(p) !== songSig(cps[0]));
-    // Per-service syncing (4a part 2) needs ChurchSuite's service times to be exactly the plan's times.
-    const csTimes = [...new Set(cps.map(p => p.serviceTime).filter(Boolean))].sort();
-    const ssTimes = creating ? csTimes : sps[0].times;
-    const perService = !creating && csTimes.length > 0 && csTimes.length === ssTimes.length && csTimes.every(t => ssTimes.includes(t));
-    if (!creating && differ && !perService) {
-      note(`Services have different songs or keys in ChurchSuite, and its service times (${csTimes.map(formatClock).join(' & ') || 'none'}) `
-        + `don't match this plan's (${ssTimes.map(formatClock).join(' & ') || 'none'}) — skipped. Give the plan the same times to sync it.`);
-      continue;
-    }
+    // Which SongStack plan does ChurchSuite control here? (header)
+    const controlled = times.length
+      ? sps.filter(p => (p.start ? times.includes(p.start) : sps.length === 1))
+      : (sps.length === 1 ? sps : []);
+    if (controlled.length > 1) { note(`${controlled.length} SongStack plans at ChurchSuite's service times on this date — skipped (not sure which to update).`); continue; }
+    if (!times.length && sps.length > 1) { note(`${sps.length} SongStack plans on this date and no service time in ChurchSuite's plan names — skipped.`); continue; }
+    const creating = controlled.length === 0;
 
-    const ref = cps[0];
-    // ChurchSuite's running order to follow: all services merged (each item knows its services) when they line up
-    // with the plan's times, else the first service.
-    const refItems = perService ? mergeServices(cps).map(e => ({ ...e.item, times: e.times })) : ref.items;
-    const wantTimes = c => (perService && c.times && c.times.length < ssTimes.length ? [...c.times].sort() : []);
-    if (perService) {   // same song, different keys → first service's key is used (below); say so
-      const keysBy = new Map();
-      for (const p of cps) for (const i of p.items) if (i.kind === 'song' && i.key) {
-        const k = norm(i.label); if (!keysBy.has(k)) keysBy.set(k, { label: i.label, keys: [] });
-        keysBy.get(k).keys.push(`${i.key} at ${formatClock(p.serviceTime)}`);
-      }
-      for (const { label, keys } of keysBy.values()) if (new Set(keys.map(x => x.split(' ')[0])).size > 1)
-        note(`"${label}" is in different keys (${keys.join(', ')}) — the first one is used.`);
-    }
-    let planId = creating ? null : sps[0].id;
+    let planId = creating ? null : controlled[0].id;
     const client = await pool.connect();
     try {
       await client.query('BEGIN');
-      let created = null;
-      if (creating) {
-        created = await createPlan(client, { churchId, date, cps, library, songAnswers, ask });
-        planId = created.planId;
-      } else {
-        await client.query('SELECT id FROM plans WHERE id = $1 FOR UPDATE', [planId]);
-      }
       const log = (action, detail) => client.query(
         'INSERT INTO churchsuite_sync_log (run_id, church_id, plan_id, action, detail) VALUES ($1,$2,$3,$4,$5)',
         [runId, churchId, planId, action, detail]);
-      if (created) {
+      let created = null;
+      if (creating) {
+        created = await createPlanRow(client, { churchId, date, cps, times });
+        planId = created.planId;
         await log('create_plan', { title: created.title, status: created.status });
-        act(`Created the plan "${created.title || 'Untitled'}" (${created.status}${created.times.length ? `, ${created.times.map(formatClock).join(' & ')}` : ''}): `
-          + `${created.items} item(s), ${created.songs} song(s)${created.slots ? `, ${created.slots} song(s) to be chosen` : ''}`);
-      }
-
-      // Steps 1–4 bring an EXISTING plan's songs into line. A plan created just now already matches ChurchSuite
-      // (and may have per-service songs the first service doesn't have), so it goes straight to the music team.
-      if (!created) {
-
-      // 1. Match ChurchSuite songs (and general items that are really songs) to the plan's songs, in order.
-      let items = await planItems(client, planId);
-      let ssSongs = items.filter(i => i.type === 'song');
-      const used = new Set();
-      const seq = [];   // { cs, itemId|null, add: libSong|null }
-      for (const c of refItems) {
-        if (c.kind !== 'song' && STRUCTURAL.test(norm(c.label))) continue;
-        const answer = c.ref ? songAnswers.get(c.ref) : null;
-        if (answer && answer.decision === 'ignore') continue;  // "ignore this ChurchSuite item"
-        const answered = answer && answer.decision === 'song' ? library.find(sg => sg.id === answer.song_id) : null;
-        let idx = answered ? ssSongs.findIndex((sg, i) => !used.has(i) && sg.song_id === answered.id) : -1;
-        if (idx < 0) idx = matchSong(c.label, ssSongs, used);
-        if (idx >= 0) { used.add(idx); seq.push({ cs: c, itemId: ssSongs[idx].id }); continue; }
-        if (c.kind !== 'song') continue;                       // an ordinary service item
-        if (answered) { seq.push({ cs: c, itemId: null, add: answered }); continue; }
-        const cand = libraryMatches(c.label, library);
-        if (cand.length === 1) { seq.push({ cs: c, itemId: null, add: cand[0] }); continue; }
-        note(cand.length ? `"${c.label}" matches ${cand.length} library songs (${cand.map(sg => sg.song).join(', ')}) — not added.`
-                         : `"${c.label}" isn't in the SongStack library (or only matches loosely) — not added.`);
-        if (c.ref) ask('song', c.ref, date, null, { title: c.label, candidates: cand.map(sg => ({ id: sg.id, title: sg.song })) });
-      }
-      ssSongs.forEach((sg, i) => {
-        if (used.has(i) || kept.has(`removed_song|item:${sg.id}`)) return;
-        note(`"${sg.song || sg.title}" is in the SongStack plan but not in ChurchSuite — left alone.`);
-        ask('removed_song', `item:${sg.id}`, date, planId, { title: sg.song || sg.title || 'Song', item_id: sg.id });
-      });
-
-      // 2. Add missing songs (at the end for now — step 3 puts them in the right place).
-      for (const e of seq.filter(x => x.add)) {
-        const max = await client.query('SELECT COALESCE(MAX(position), -1) + 1 AS p FROM plan_items WHERE plan_id = $1', [planId]);
-        const ins = await client.query(
-          `INSERT INTO plan_items (plan_id, type, song_id, title, notes, content, position, duration_minutes, phase, service_times)
-           VALUES ($1, 'song', $2, NULL, NULL, NULL, $3, $4, 'service', $5) RETURNING id`,
-          [planId, e.add.id, max.rows[0].p, e.add.default_duration || null, wantTimes(e.cs)]);
-        e.itemId = ins.rows[0].id;
-        await log('add_song', { item_id: e.itemId, song_id: e.add.id, title: e.add.song });
-        const only = wantTimes(e.cs);
-        act(`Added "${e.add.song}"${norm(e.add.song) !== norm(e.cs.label) ? ` (ChurchSuite: "${e.cs.label}")` : ''}`
-          + (only.length ? ` (${only.map(formatClock).join(' & ')} only)` : ''));
-      }
-
-      // 3. Place songs as ChurchSuite has them, relative to the non-song items both plans share
-      //    ("after Children's slot, before Children leave"). A song only moves when it's on the wrong side of
-      //    one of those markers, or out of order with the songs around it. Non-song items never move.
-      items = await planItems(client, planId);
-      const songIds = new Set(seq.filter(x => x.itemId).map(x => x.itemId));
-      const pre = items.filter(i => i.phase === 'pre-service' && !songIds.has(i.id));
-      const svc = items.filter(i => i.phase !== 'pre-service' || songIds.has(i.id));
-      const skeleton = svc.filter(i => !songIds.has(i.id));            // everything that stays put
-      const label = i => norm(i.title || i.song || '');
-      // Which skeleton item each song currently sits after (-1 = before all of them).
-      const curGap = new Map(); let g = -1;
-      for (const i of svc) { if (songIds.has(i.id)) curGap.set(i.id, g); else g = skeleton.indexOf(i); }
-      // Walk ChurchSuite's order, pairing its non-song items with the skeleton (in order, by name).
-      const seqByCs = new Map(seq.filter(x => x.itemId).map(x => [x.cs.id, x]));
-      const plan = [];                                              // { id, A } in ChurchSuite order
-      let anchor = -1;
-      for (const c of refItems) {
-        const e = seqByCs.get(c.id);
-        if (e) { plan.push({ id: e.itemId, A: anchor }); continue; }
-        const k = skeleton.findIndex((x, idx) => idx > anchor && label(x) && label(x) === norm(c.label));
-        if (k >= 0) { anchor = k; plan.forEach(pp => { if (pp.B === undefined) pp.B = k; }); }
-      }
-      plan.forEach(pp => { if (pp.B === undefined) pp.B = skeleton.length; });
-      // Keep each song where it is if that's allowed; otherwise put it straight after its marker.
-      let prevGap = -1;
-      for (const pp of plan) {
-        const cur = curGap.has(pp.id) && !seq.find(x => x.itemId === pp.id).add ? curGap.get(pp.id) : null;
-        let gap = cur !== null && cur >= pp.A && cur <= pp.B - 1 ? cur : pp.A;
-        if (gap < prevGap) gap = prevGap;
-        pp.gap = gap; prevGap = gap;
-      }
-      const order = [...pre];
-      for (const pp of plan.filter(x => x.gap === -1)) order.push(svc.find(i => i.id === pp.id));
-      skeleton.forEach((sk, k) => { order.push(sk); for (const pp of plan.filter(x => x.gap === k)) order.push(svc.find(i => i.id === pp.id)); });
-      const before = Object.fromEntries(items.map(i => [i.id, i.position]));
-      const oldSeq = items.filter(i => !seq.find(x => x.add && x.itemId === i.id)).map(i => i.id).join();
-      const newSeq = order.filter(i => !seq.find(x => x.add && x.itemId === i.id)).map(i => i.id).join();
-      if (order.some((i, k) => before[i.id] !== k)) {
-        await client.query(
-          `UPDATE plan_items pi SET position = o.pos FROM unnest($2::uuid[], $3::int[]) AS o(id, pos)
-            WHERE pi.id = o.id AND pi.plan_id = $1`, [planId, order.map(i => i.id), order.map((_, k) => k)]);
-        // Only a real move is logged: closing gaps (after someone deletes an item) isn't a change worth undoing, and
-        // logging it would make "undo last run" undo that instead of the run you meant.
-        if (oldSeq !== newSeq) {
-          await log('reorder', { before });
-          act(`Songs moved to match ChurchSuite: ${order.filter(i => songIds.has(i.id)).map(i => i.song).join(' → ')}`);
+      } else {
+        const p = (await client.query(
+          `SELECT plan_start_time, extra_times, plan_time FROM plans WHERE id = $1 FOR UPDATE`, [planId])).rows[0];
+        // Service times = ChurchSuite's.
+        if (times.length && controlled[0].times.join() !== times.join()) {
+          await client.query(
+            `UPDATE plans SET plan_start_time = $2::time, extra_times = $3::time[], plan_time = $4 WHERE id = $1`,
+            [planId, times[0], times.slice(1), formatClock(times[0])]);
+          await log('set_plan_times', { before: { plan_start_time: p.plan_start_time, extra_times: p.extra_times, plan_time: p.plan_time } });
+          act(`Service times changed to ${times.map(formatClock).join(' & ')} (as in ChurchSuite)`);
         }
       }
+      await client.query('UPDATE plans SET churchsuite_synced_at = now() WHERE id = $1', [planId]);
 
-      // 4. Keys — SongStack wins; ChurchSuite only fills a gap.
-      items = await planItems(client, planId);
-      for (const e of seq.filter(x => x.itemId && x.cs.key)) {
-        const it = items.find(i => i.id === e.itemId);
-        if (it.key_override || it.default_key) continue;
-        await client.query('UPDATE plan_items SET key_override = $1 WHERE id = $2 AND key_override IS NULL', [e.cs.key, it.id]);
-        await log('set_key', { item_id: it.id, key: e.cs.key });
-        act(`Key ${e.cs.key} set for "${it.song}" (it had none)`);
+      const result = await reconcile(client, { planId, cps, times, library, songAnswers, kept, ask, log, act, note, date, quiet: !!created });
+      if (created) {
+        act(`Created the plan "${created.title || 'Untitled'}" (${created.status}${times.length ? `, ${times.map(formatClock).join(' & ')}` : ''}): `
+          + `${result.items} item(s), ${result.songs} song(s)${result.slots ? `, ${result.slots} song(s) to be chosen` : ''}`);
       }
 
-      if (perService) {
-        // 4b. Which services each song is at — ChurchSuite decides (Jon 2026-11-19), so a "9:15 only" set by hand in
-        //     SongStack is changed back to match ChurchSuite.
-        for (const e of seq.filter(x => x.itemId && !x.add)) {
-          const it = items.find(i => i.id === e.itemId);
-          const want = wantTimes(e.cs);
-          if ((it.service_times || []).join() === want.join()) continue;
-          await client.query('UPDATE plan_items SET service_times = $1::time[] WHERE id = $2', [want, it.id]);
-          await log('set_services', { item_id: it.id, before: it.service_times || [], after: want });
-          act(`"${it.song}" is now ${want.length ? `only at ${want.map(formatClock).join(' & ')}` : 'at every service'} (as in ChurchSuite)`);
-        }
-
-        // 4c. Non-song items at only SOME services (a baptism at 9:15) are added, marked — once: if someone deletes it,
-        //     it isn't added again (the log remembers). Items at every service are left to SongStack, as before.
-        const done = new Set((await client.query(
-          `SELECT detail->>'key' AS k FROM churchsuite_sync_log WHERE plan_id = $1 AND action = 'add_item'`, [planId])).rows.map(x => x.k));
-        const seqByCs2 = new Map(seq.filter(x => x.itemId).map(x => [x.cs.id, x.itemId]));
-        let cur = await planItems(client, planId);
-        let prevId = null;   // plan item of the nearest preceding ChurchSuite item that the plan has
-        for (const c of refItems) {
-          const titled = cur.find(i => i.type !== 'song' && norm(i.title || '') && norm(i.title) === norm(c.label));
-          if (seqByCs2.has(c.id)) { prevId = seqByCs2.get(c.id); continue; }
-          if (titled) { prevId = titled.id; continue; }
-          if (c.kind !== 'item' || STRUCTURAL.test(norm(c.label)) || !c.times || c.times.length >= ssTimes.length) continue;
-          const key = `${norm(c.label)}|${[...c.times].sort().join(',')}`;
-          if (done.has(key)) continue;
-          const after = prevId ? cur.find(i => i.id === prevId) : null;
-          const posNew = after ? after.position + 1 : (cur.find(i => i.phase !== 'pre-service') || { position: cur.length }).position;
-          await client.query('UPDATE plan_items SET position = position + 1 WHERE plan_id = $1 AND position >= $2', [planId, posNew]);
-          const ins = await client.query(
-            `INSERT INTO plan_items (plan_id, type, title, content, position, duration_minutes, phase, service_times)
-             VALUES ($1, 'custom', $2, $3, $4, $5, 'service', $6) RETURNING id`,
-            [planId, c.label, wordsToHtml(c.words), posNew, c.duration ? Math.max(1, Math.round(c.duration / 60)) : null, wantTimes(c)]);
-          await log('add_item', { item_id: ins.rows[0].id, key, title: c.label });
-          act(`Added "${c.label}" (${wantTimes(c).map(formatClock).join(' & ')} only)`);
-          prevId = ins.rows[0].id;
-          cur = await planItems(client, planId);
-        }
-      }
-
-      }   // end of steps 1–4 (existing plans only)
-
-      // 5. Music team — exact names only; nicknames and anyone ambiguous go in the notes.
-      const mus = (await client.query('SELECT id, name, user_id FROM plan_musicians WHERE plan_id = $1', [planId])).rows;
+      // Music team — people on ChurchSuite song items and empty song slots.
+      const mus = (await client.query('SELECT * FROM plan_musicians WHERE plan_id = $1', [planId])).rows;
       const team = new Map();   // normalised name → { name, key }
       for (const p of cps) for (const i of p.items) if (i.kind === 'song' || i.kind === 'slot') for (const pr of (i.peopleRefs || i.people.map(n => ({ name: n, key: null })))) {
         if (!team.has(norm(pr.name))) team.set(norm(pr.name), pr);
@@ -465,16 +435,18 @@ async function applySync({ pool, cs, churchId, from, to, apply, runId, recordQue
         await log('add_musician', { musician_id: ins.rows[0].id, name, linked: !!mem[0] });
         act(`Added ${name} to the music team as ${role}${mem[0] ? ' (linked to their account)' : ' (name only — not a SongStack member)'}`);
       }
-      // Musicians on the SongStack plan who aren't on any ChurchSuite song item. Only asked once ChurchSuite has a
-      // music team for the date (an empty team usually just means the rota isn't done yet).
-      // Every plan row counts, not just the first: someone on the plan twice (Vocals AND Keys) is two rows.
+      // Musicians not in ChurchSuite are removed — only once ChurchSuite has a music team for the date (an empty team
+      // usually just means the rota isn't done yet). Every row counts (someone on Vocals AND Keys is two rows);
+      // likely-same names and old "Keep" answers stay.
       const teamUsers = new Set([...team.values()].map(t => t.key && peopleAnswers.get(t.key))
         .filter(x => x && x.decision === 'member').map(x => x.user_id));
       if (team.size) for (const m of mus) {
         if (accounted.has(m.id) || kept.has(`removed_musician|musician:${m.id}`)) continue;
         if (team.has(norm(m.name)) || (m.user_id && teamUsers.has(m.user_id))) continue;
         if ([...team.values()].some(t => likelySamePerson(t.name, m.name))) continue;
-        ask('removed_musician', `musician:${m.id}`, date, planId, { name: m.name, musician_id: m.id });
+        await client.query('DELETE FROM plan_musicians WHERE id = $1', [m.id]);
+        await log('remove_musician', { musician_id: m.id, row: m });
+        act(`Removed ${m.name} (${m.role}) from the music team (not in ChurchSuite)`);
       }
 
       if (created) {   // fingerprint for undo (see PLAN_FINGERPRINT_SQL)

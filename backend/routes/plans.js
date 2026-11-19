@@ -145,6 +145,7 @@ router.get('/overview', requireAuth, requireMembership, async function(req, res,
     const window = await pool.query(
       `WITH ordered AS (
          SELECT p.id, p.title, p.status, p.plan_date, p.plan_time, p.plan_start_time, p.extra_times, p.plan_sort_order,
+                p.churchsuite_synced_at,
                 ROW_NUMBER() OVER (ORDER BY p.plan_date, p.plan_sort_order, p.plan_start_time NULLS LAST, p.created_at, p.id) AS rn
            FROM plans p WHERE p.church_id = $1
        ),
@@ -154,7 +155,7 @@ router.get('/overview', requireAuth, requireMembership, async function(req, res,
            FROM ordered
        )
        SELECT o.id, o.title, o.status, to_char(o.plan_date, 'YYYY-MM-DD') AS plan_date, o.plan_time,
-              o.plan_start_time, o.extra_times, o.plan_sort_order, s.total, s.anchor, o.rn::int AS rn
+              o.plan_start_time, o.extra_times, o.plan_sort_order, o.churchsuite_synced_at, s.total, s.anchor, o.rn::int AS rn
          FROM ordered o CROSS JOIN stats s
         WHERE o.rn >= s.anchor + $3 AND o.rn < s.anchor + $3 + $4
         ORDER BY o.rn`,

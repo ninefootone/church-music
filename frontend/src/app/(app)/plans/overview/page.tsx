@@ -71,6 +71,8 @@ interface OverviewPlan {
   plan_time: string | null
   plan_start_time?: string | null
   extra_times?: string[] | null
+  // Set by the ChurchSuite sync: this plan's running order comes from ChurchSuite (truth model).
+  churchsuite_synced_at?: string | null
   items: OverviewItem[]
   musicians: OverviewMusician[]
 }
@@ -489,6 +491,16 @@ export default function PlansOverviewPage() {
 
       {actionError && <div className="error-box po-action-error">{actionError}</div>}
 
+      {plans.some((p) => p.churchsuite_synced_at) && (
+        <div className="info-box">
+          <p className="info-box-text">
+            Plans marked <strong>From ChurchSuite</strong> get their running order from ChurchSuite. Changes to their songs
+            and items made here are replaced at the next sync (three times a day) — make them in ChurchSuite instead.
+            Keys you set here stay.
+          </p>
+        </div>
+      )}
+
       {error ? (
         <div className="po-message">
           <div className="error-box">{error}</div>
@@ -512,6 +524,7 @@ export default function PlansOverviewPage() {
                   {planTimeLabel(plan) && <span className="po-col-time">{planTimeLabel(plan)}</span>}
                   <span className="po-col-title">{plan.title || 'Untitled plan'}</span>
                   {plan.status === 'draft' && <span className="badge badge-draft">DRAFT</span>}
+                  {plan.churchsuite_synced_at && <span className="badge badge-service-only">From ChurchSuite</span>}
                 </Link>
 
                 <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={(e) => reorder(plan, e)}>
