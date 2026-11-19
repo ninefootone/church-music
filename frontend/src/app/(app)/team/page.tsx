@@ -6,6 +6,7 @@ import { useChurch } from '@/context/ChurchContext'
 import api from '@/lib/api'
 import { InviteMemberModal } from '@/components/ui/InviteMemberModal'
 import { ConfirmModal } from '@/components/ui/ConfirmModal'
+import Link from 'next/link'
 
 interface UnavailabilityEntry {
   id: string
@@ -25,6 +26,9 @@ export default function TeamPage() {
   const [showInviteModal, setShowInviteModal] = useState(false)
   const [manageMember, setManageMember] = useState<any>(null)
   const [showRemoveConfirm, setShowRemoveConfirm] = useState(false)
+  // Guest musicians (claude/guest-mode.md): listed separately, with Make full member / Remove.
+  const [guestAction, setGuestAction] = useState<{ guest: any; action: 'promote' | 'remove' } | null>(null)
+  const [guestError, setGuestError] = useState('')
   const [activeTab, setActiveTab] = useState<'unavailability' | 'roles' | 'permissions'>('unavailability')
   const fetchedRef = useRef(false)
   // True if any of the three loads failed. Shown as a banner: without it a failed
@@ -71,6 +75,9 @@ export default function TeamPage() {
     )
   }
 
+  const people = members.filter(m => m.role !== 'guest')
+  const guests = members.filter(m => m.role === 'guest')
+
   const formatDateRange = (entry: UnavailabilityEntry) => {
     const start = parseISO(entry.start_date)
     const end = parseISO(entry.end_date)
@@ -106,7 +113,7 @@ export default function TeamPage() {
           <p className="text-muted">Loading…</p>
         ) : (
           <div className="member-grid">
-            {members.map((member) => (
+            {people.map((member) => (
               <div
                 key={member.id}
                 className="member-card"
@@ -149,6 +156,78 @@ export default function TeamPage() {
           </div>
         )}
       </div>
+
+      {/* Guests — guest musicians invited from a plan's musician list */}
+      {!loading && guests.length > 0 && (
+        <div className="settings-card settings-card--spaced">
+          <h2 className="settings-section-heading settings-section-heading--tight">Guests</h2>
+          <p className="settings-section-desc">
+            Guest musicians only see the plans they&apos;re on, until a week after each one. Invite them from a
+            plan&apos;s Musicians list. To add a guest to another plan, pick them there like a member.
+          </p>
+          {guestError && <p className="error-text">{guestError}</p>}
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-sm)' }}>
+            {guests.map(g => (
+              <div key={g.id} className="dash-row" style={{ alignItems: 'flex-start', gap: 'var(--space-sm)' }}>
+                <div className="dash-row-content">
+                  <p className="dash-row-title">{g.name || g.email}</p>
+                  {g.email && <p className="dash-row-meta">{g.email}</p>}
+                  <p className="dash-row-meta">
+                    {(g.guest_plans || []).length === 0
+                      ? 'No current plans — they can’t see anything at the moment.'
+                      : <>Plans: {(g.guest_plans as any[]).map((p, i) => (
+                          <span key={p.id}>
+                            {i > 0 && ', '}
+                            <Link href={`/plans/${p.id}`} className="link">
+                              {format(parseISO(p.plan_date), 'd MMM')}{p.title ? ` · ${p.title}` : ''}
+                            </Link>
+                          </span>
+                        ))}</>}
+                  </p>
+                </div>
+                <div style={{ display: 'flex', gap: 6, flexShrink: 0, flexWrap: 'wrap', justifyContent: 'flex-end' }}>
+                  <button className="btn btn-ghost" style={{ fontSize: 'var(--text-xs)' }}
+                    onClick={() => { setGuestError(''); setGuestAction({ guest: g, action: 'promote' }) }}>
+                    Make full member
+                  </button>
+                  <button className="btn btn-secondary btn-danger-text" style={{ fontSize: 'var(--text-xs)' }}
+                    onClick={() => { setGuestError(''); setGuestAction({ guest: g, action: 'remove' }) }}>
+                    Remove
+                  </button>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+
+      {guestAction && (
+        <ConfirmModal
+          title={guestAction.action === 'promote' ? 'Make full member' : 'Remove guest'}
+          message={guestAction.action === 'promote'
+            ? `Make ${guestAction.guest.name || guestAction.guest.email} a full member of ${church?.name}? They'll see your whole song library and every published plan, like any member.`
+            : `Remove ${guestAction.guest.name || guestAction.guest.email}? They lose access to all your plans straight away. They stay listed on plans as a musician (by name) unless you remove them there too.`}
+          confirmLabel={guestAction.action === 'promote' ? 'Make full member' : 'Remove'}
+          danger={guestAction.action === 'remove'}
+          onConfirm={async () => {
+            const g = guestAction.guest
+            try {
+              if (guestAction.action === 'promote') {
+                await api.put(`/api/members/${g.id}/role`, { role: 'member' })
+                setMembers(prev => prev.map(m => (m.id === g.id ? { ...m, role: 'member', guest_plans: null } : m)))
+              } else {
+                await api.delete(`/api/members/${g.id}`)
+                setMembers(prev => prev.filter(m => m.id !== g.id))
+              }
+            } catch (err: any) {
+              setGuestError(err?.response?.data?.error || 'That didn’t work. Please try again.')
+            } finally {
+              setGuestAction(null)
+            }
+          }}
+          onCancel={() => setGuestAction(null)}
+        />
+      )}
 
       {/* Modals */}
       {showInviteModal && church && (

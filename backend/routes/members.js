@@ -10,7 +10,15 @@ router.get('/', requireAuth, requireMembership, async function(req, res, next) {
   try {
     const result = await pool.query(
       `SELECT m.id, m.role, m.default_roles, m.can_manage_songs, m.can_add_plans, m.can_manage_playlists, m.can_annotate_plans,
-              m.joined_at, u.id AS user_id, u.name, u.email, u.image_url
+              m.joined_at, u.id AS user_id, u.name, u.email, u.image_url,
+              -- Guests (claude/guest-mode.md): the plans they can currently see (same rule as utils/guestAccess.js).
+              CASE WHEN m.role = 'guest' THEN COALESCE((
+                SELECT JSON_AGG(json_build_object('id', p.id, 'title', p.title, 'plan_date', to_char(p.plan_date, 'YYYY-MM-DD'))
+                                ORDER BY p.plan_date)
+                  FROM plans p
+                 WHERE p.church_id = m.church_id AND p.status = 'published' AND p.plan_date >= CURRENT_DATE - 7
+                   AND EXISTS (SELECT 1 FROM plan_musicians pm WHERE pm.plan_id = p.id AND pm.user_id = m.user_id)
+              ), '[]') END AS guest_plans
        FROM memberships m
        JOIN users u ON u.id = m.user_id
        WHERE m.church_id = $1 AND m.role != 'revoked'

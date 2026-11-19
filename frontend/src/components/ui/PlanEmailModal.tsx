@@ -9,6 +9,7 @@ interface Member {
   user_id: string
   name: string
   email: string
+  role?: string
 }
 
 interface Recipient {
@@ -36,13 +37,14 @@ export function PlanEmailModal({ planId, onClose }: Props) {
       api.get('/api/members'),
       api.get(`/api/plans/${planId}/musicians`),
     ]).then(([membersRes, musiciansRes]) => {
-      const withEmail = membersRes.data.filter((m: Member) => m.email)
-      setMembers(withEmail)
       const planUserIds = new Set(
         musiciansRes.data
           .filter((pm: { user_id: string | null }) => pm.user_id !== null)
           .map((pm: { user_id: string }) => pm.user_id)
       )
+      // Guest musicians only appear if they're on THIS plan (claude/guest-mode.md).
+      const withEmail = membersRes.data.filter((m: Member) => m.email && (m.role !== 'guest' || planUserIds.has(m.user_id)))
+      setMembers(withEmail)
       const preSelected = new Set<string>(
         withEmail
           .filter((m: Member) => planUserIds.has(m.user_id))
@@ -149,7 +151,7 @@ export function PlanEmailModal({ planId, onClose }: Props) {
                       />
                       <div className="dash-row-content">
                         <p className="member-name-sm">{m.name}</p>
-                        <p className="member-email-sm">{m.email}</p>
+                        <p className="member-email-sm">{m.role === 'guest' ? `Guest · ${m.email}` : m.email}</p>
                       </div>
                     </label>
                   ))}

@@ -12,6 +12,7 @@ interface Member {
   email: string
   user_id: string
   default_roles?: string[]
+  role?: string
 }
 
 const DEFAULT_ROLES = ['Vocals', 'Keys', 'Guitar', 'Bass', 'Drums']
@@ -219,7 +220,7 @@ export function PlanMusicianModal({ planId, planDate, churchId, existing, onAdd,
                       className="member-search-option"
                     >
                       <span className="member-option-name">{m.name}</span>
-                      <span className="member-option-email">{m.email}</span>
+                      <span className="member-option-email">{m.role === 'guest' ? `Guest${m.email ? ' · ' + m.email : ''}` : m.email}</span>
                     </button>
                   ))}
                 </div>
