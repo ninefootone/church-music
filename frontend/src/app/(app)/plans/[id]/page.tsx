@@ -45,6 +45,7 @@ function renderNotes(text: string) {
 }
 
 function SongItem({ item, index, planId, canAnnotate, showTimings, showDurations, calculatedStart, onlyLabel, otherService }: { item: any; index: number; planId: string; canAnnotate: boolean; showTimings?: boolean; showDurations?: boolean; calculatedStart?: string | null; onlyLabel?: string | null; otherService?: boolean }) {
+  const { isGuest } = useChurch()   // guests can't open song pages (only their plans)
   const [expanded, setExpanded] = useState(false)
   const [files, setFiles] = useState<SongFile[] | null>(null)
   const [recordings, setRecordings] = useState<Recording[]>([])
@@ -338,7 +339,7 @@ function SongItem({ item, index, planId, canAnnotate, showTimings, showDurations
               )}
             </div>
           )}
-          {item.song_id && (
+          {item.song_id && !isGuest && (
             <div className="song-section">
               <Link href={`/songs/${item.song_id}`} className="btn-inline-link">
                 Open full song page →

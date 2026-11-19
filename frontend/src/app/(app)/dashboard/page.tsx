@@ -12,7 +12,7 @@ import { isOnFreePlan } from '@/lib/freePlan'
 import { planTimeLabel } from '@/lib/planTimes'
 
 export default function DashboardPage() {
-  const { church, loading: churchLoading, isAdmin, canManageSongs, canAddPlans, canManagePlaylists } = useChurch()
+  const { church, loading: churchLoading, isAdmin, isGuest, canManageSongs, canAddPlans, canManagePlaylists } = useChurch()
   const [songs, setSongs] = useState<any[]>([])
   const [plans, setPlans] = useState<any[]>([])
   const [playlists, setPlaylists] = useState<any[]>([])
@@ -62,8 +62,9 @@ export default function DashboardPage() {
   useEffect(() => {
     if (!church || fetchedRef.current) return
     fetchedRef.current = true
+    // Guests (guest musicians) only get their plans: songs and playlists are members-only.
     Promise.all([
-      api.get('/api/songs/coming-up', { params: { limit: 4 } }).then(r => {
+      !isGuest && api.get('/api/songs/coming-up', { params: { limit: 4 } }).then(r => {
         setSongs(r.data.songs)
         setHasSampleSongs(r.data.has_sample)
       }),
@@ -72,7 +73,7 @@ export default function DashboardPage() {
         setSamplePlan(r.data.find((p: any) => p.is_sample) ?? null)
       }),
       api.get('/api/plans/my-upcoming', { params: { include_drafts: 'true' } }).then(r => setMyUpcoming(r.data)),
-      api.get('/api/playlists').then(r => setPlaylists(r.data)),
+      !isGuest && api.get('/api/playlists').then(r => setPlaylists(r.data)),
     ]).finally(() => setLoading(false))
   }, [church])
 
@@ -355,12 +356,20 @@ export default function DashboardPage() {
       {!loading && !hasMyPlans && (
         <div className="card dash-my-empty">
           <p className="dash-my-empty-text"><strong>My upcoming plans</strong> · You&apos;re not on any upcoming plans yet.</p>
-          <Link href="/availability" className="btn btn-ghost">Manage my availability →</Link>
+          {!isGuest && <Link href="/availability" className="btn btn-ghost">Manage my availability →</Link>}
         </div>
       )}
 
       {/* Desktop: My upcoming (2fr) | Songs (3fr), then All upcoming (3fr) | Playlists (2fr).
           Mobile: rows flatten and cards reorder via CSS — My upcoming, All upcoming, Songs, Playlists. */}
+      {isGuest ? (
+        // Guests: just their plans (All upcoming is the same list for them, so one card).
+        <div className="dashboard-cards">
+          <div className="dashboard-row dashboard-row--single">
+            {hasMyPlans ? myUpcomingCard : allPlansCard}
+          </div>
+        </div>
+      ) : (
       <div className="dashboard-cards">
         <div className="dashboard-row dashboard-row--narrow-first">
           {hasMyPlans ? myUpcomingCard : allPlansCard}
@@ -371,6 +380,7 @@ export default function DashboardPage() {
           {playlistsCard}
         </div>
       </div>
+      )}
 
       {/* iPad app promo: below the cards so it never pushes plans down. Styled to match songstack.church. */}
       {!loading && !ipadPromoDismissed && (

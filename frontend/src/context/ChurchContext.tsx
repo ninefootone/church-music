@@ -13,7 +13,7 @@ interface Church {
   invite_code: string
   ccli_number: string | null
   logo_url: string | null
-  role: 'admin' | 'member'
+  role: 'admin' | 'member' | 'guest'
   subscription_status: 'free' | 'active' | 'trialing' | 'past_due' | 'canceled' | null
   free_access: boolean | null
   can_manage_songs: boolean
@@ -27,6 +27,8 @@ interface ChurchContextType {
   churches: Church[]
   loading: boolean
   isAdmin: boolean
+  /** Guest musician: sees only the plans they're on (see claude/guest-mode.md). */
+  isGuest: boolean
   canManageSongs: boolean
   canAddPlans: boolean
   canManagePlaylists: boolean
@@ -36,13 +38,13 @@ interface ChurchContextType {
 }
 
 const ChurchContext = createContext<ChurchContextType>({
-  church: null, churches: [], loading: true, isAdmin: false, canManageSongs: false, canAddPlans: false, canManagePlaylists: false, canAnnotatePlans: false, refetch: () => {}, switchChurch: () => {},
+  church: null, churches: [], loading: true, isAdmin: false, isGuest: false, canManageSongs: false, canAddPlans: false, canManagePlaylists: false, canAnnotatePlans: false, refetch: () => {}, switchChurch: () => {},
 })
 
 // Pick the church to work in from the user's memberships (sorted by name by the API):
 // 1. ?church=<id> in the URL, if they belong to it (lets a link open the right church),
 // 2. the church they last chose on this browser,
-// 3. otherwise the first one.
+// 3. otherwise the first one where they're a full member (not a guest), else the first.
 function pickChurch(churches: Church[]): Church {
   let fromUrl: string | null = null
   try {
@@ -53,7 +55,7 @@ function pickChurch(churches: Church[]): Church {
     const match = id && churches.find(c => c.id === id)
     if (match) return match
   }
-  return churches[0]
+  return churches.find(c => c.role !== 'guest') ?? churches[0]
 }
 
 export function ChurchProvider({ children }: { children: ReactNode }) {
@@ -117,6 +119,7 @@ export function ChurchProvider({ children }: { children: ReactNode }) {
     <ChurchContext.Provider value={{
       church, churches, loading,
       isAdmin: church?.role === 'admin',
+      isGuest: church?.role === 'guest',
       canManageSongs: church?.role === 'admin' || !!church?.can_manage_songs,
       canAddPlans: church?.role === 'admin' || !!church?.can_add_plans,
       canManagePlaylists: church?.role === 'admin' || !!church?.can_manage_playlists,

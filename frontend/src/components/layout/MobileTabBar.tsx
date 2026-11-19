@@ -3,14 +3,16 @@
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
 import { Home, Music, CalendarDays, Compass } from 'lucide-react'
+import { useChurch } from '@/context/ChurchContext'
 
 // Phone-only bottom navigation (CSS shows it at ≤768px). Team, Church settings and Stats
 // live in the avatar menu on phones; desktop keeps every page in the top bar.
+// guestHidden: not shown to guest musicians, who only see the plans they're on.
 const tabs = [
-  { href: '/dashboard', label: 'Home',     Icon: Home },
-  { href: '/songs',     label: 'Songs',    Icon: Music },
-  { href: '/plans',     label: 'Plans',    Icon: CalendarDays },
-  { href: '/discover',  label: 'Discover', Icon: Compass },
+  { href: '/dashboard', label: 'Home',     Icon: Home,         guestHidden: false },
+  { href: '/songs',     label: 'Songs',    Icon: Music,        guestHidden: true  },
+  { href: '/plans',     label: 'Plans',    Icon: CalendarDays, guestHidden: false },
+  { href: '/discover',  label: 'Discover', Icon: Compass,      guestHidden: true  },
 ]
 
 // Pages with their own fixed bottom bar (Save / Cancel) or a full-screen view: no tab bar.
@@ -22,13 +24,14 @@ const HIDE_ON = [
 
 export function MobileTabBar() {
   const pathname = usePathname()
+  const { isGuest } = useChurch()
   if (HIDE_ON.some(re => re.test(pathname))) return null
 
   const isActive = (href: string) => pathname === href || pathname.startsWith(href + '/')
 
   return (
     <nav className="mobile-tabbar" aria-label="Main">
-      {tabs.map(({ href, label, Icon }) => (
+      {tabs.filter(t => !(isGuest && t.guestHidden)).map(({ href, label, Icon }) => (
         <Link
           key={href}
           href={href}

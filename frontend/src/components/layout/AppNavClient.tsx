@@ -7,14 +7,15 @@ import { useClerk } from '@clerk/nextjs'
 import { LogOut, HelpCircle, Home, BarChart2, UserCircle, Check, Plus, Users, Settings } from 'lucide-react'
 import { useChurch } from '@/context/ChurchContext'
 
+// guestHidden: not shown to guest musicians, who only see the plans they're on.
 const navLinks = [
-  { href: '/dashboard', label: <Home size={16} />,        adminOnly: false },
-  { href: '/songs',     label: 'Songs',                   adminOnly: false },
-  { href: '/plans',     label: 'Plans',                   adminOnly: false },
-  { href: '/discover',  label: 'Discover',                adminOnly: false },
-  { href: '/team',      label: 'Team',                    adminOnly: true  },
-  { href: '/settings',  label: 'Settings',                adminOnly: true  },
-  { href: '/stats',     label: <BarChart2 size={16} strokeWidth={2.5} />, adminOnly: false },
+  { href: '/dashboard', label: <Home size={16} />,        adminOnly: false, guestHidden: false },
+  { href: '/songs',     label: 'Songs',                   adminOnly: false, guestHidden: true  },
+  { href: '/plans',     label: 'Plans',                   adminOnly: false, guestHidden: false },
+  { href: '/discover',  label: 'Discover',                adminOnly: false, guestHidden: true  },
+  { href: '/team',      label: 'Team',                    adminOnly: true,  guestHidden: true  },
+  { href: '/settings',  label: 'Settings',                adminOnly: true,  guestHidden: true  },
+  { href: '/stats',     label: <BarChart2 size={16} strokeWidth={2.5} />, adminOnly: false, guestHidden: true },
 ]
 
 // Church list + "join or create another" link, shown in the account menu.
@@ -49,7 +50,7 @@ function ChurchSwitcher({ onNavigate }: { onNavigate: () => void }) {
 
 export function AppNavClient() {
   const pathname = usePathname()
-  const { church, loading, isAdmin } = useChurch()
+  const { church, loading, isAdmin, isGuest } = useChurch()
   const { signOut, user } = useClerk()
   const churchName = loading ? '…' : (church?.name || 'SongStack')
   const [menuOpen, setMenuOpen] = useState(false)
@@ -64,7 +65,7 @@ export function AppNavClient() {
   }, [menuOpen])
 
   const isActive = (href: string) => pathname === href || pathname.startsWith(href + '/')
-  const visibleLinks = navLinks.filter(link => !link.adminOnly || isAdmin)
+  const visibleLinks = navLinks.filter(link => (!link.adminOnly || isAdmin) && !(isGuest && link.guestHidden))
 
   const avatarInitial = (user?.firstName || user?.emailAddresses[0]?.emailAddress || '?').charAt(0).toUpperCase()
 
@@ -136,9 +137,11 @@ export function AppNavClient() {
                             </Link>
                           </>
                         )}
-                        <Link href="/stats" className={`app-nav-mobile-link nav-signout-btn ${isActive('/stats') ? 'is-active' : ''}`} onClick={close}>
-                          <BarChart2 size={16} /> Stats
-                        </Link>
+                        {!isGuest && (
+                          <Link href="/stats" className={`app-nav-mobile-link nav-signout-btn ${isActive('/stats') ? 'is-active' : ''}`} onClick={close}>
+                            <BarChart2 size={16} /> Stats
+                          </Link>
+                        )}
                       </div>
 
                       <ChurchSwitcher onNavigate={close} />
