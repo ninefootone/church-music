@@ -89,8 +89,10 @@ Next:
 - [x] **Per-service items ("9:15 only")** — BUILT 2026-11-18 (web + backend; `plan_items.service_times`, migration `2026-11-18-plan-item-service-times.sql`). See project doc `per-service-items.md`.
   - [x] iPad: "9:15 am only" label — live (production OTA 2026-11-18; tested on the Dev app, not staging).
 - [x] **Plans → Overview: faint divider between items** (done 2026-11-18) so it's obvious which × removes which item (Jon, 2026-11-18).
-  - [ ] Help copy: Plans → "One plan for repeated services" (see `help-updates-pending.md`).
-- [ ] Full Stage 2 (confirm screen, remembered matches, create plans, multi-church) — build order in the project doc. First: make the builder's save keep plan item ids (it deletes + re-inserts every item today).
+- [x] Stage 2 items 1, 1b, 2, 3, 4a, 4a part 2 — live 2026-11-18/19 (builder keeps item ids + conflict warning; per-service items; Settings → ChurchSuite questions; plans created from ChurchSuite; services that differ synced).
+- [x] **Truth model** — live 2026-11-19: for synced plans ChurchSuite controls the running order (removals, order, services, music team); SongStack keeps keys, notes, arrangements, files. SongStack-only plans untouched. Notices in the builder + Overview ("From ChurchSuite"). Details in `churchsuite-integration.md`.
+- [ ] **4b: Connect ChurchSuite for other churches** — encrypted per-church secrets, cron loops over connected churches, help copy (connect, what the sync controls, Settings → ChurchSuite, "setting up ChurchSuite plans so SongStack reads them well").
+- [ ] Optional: musician roles from ChurchSuite's Rotas module (`rotas.read`).
 - [ ] Late March 2027 (BST): change that service's cron schedule to `0 8,12,16 * * *`.
 - [ ] `sendBrevoEmail` (utils/email.js) resolves even when Brevo refuses (401 etc.) — every caller should check `status`; today a bad key fails silently everywhere except the ChurchSuite job.
 
