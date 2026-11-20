@@ -364,6 +364,8 @@ router.get('/:id', requireAuth, requireMemberOrGuest, async function(req, res, n
         CASE WHEN sa.id IS NOT NULL THEN sa.suggested_structure ELSE s.suggested_structure END AS song_suggested_structure,
         s.lyrics AS song_lyrics,
         s.default_duration AS song_default_duration,
+        COALESCE(sa.tempo, s.tempo) AS song_tempo,
+        COALESCE(sa.time_signature, s.time_signature) AS song_time_signature,
         COALESCE((SELECT JSON_AGG(jsonb_build_object('url', v.url, 'label', v.label, 'link_type', v.link_type) ORDER BY v.sort_order, v.id)
                   FROM song_videos v WHERE v.song_id = s.id AND v.arrangement_id IS NOT DISTINCT FROM si.arrangement_id), '[]') AS song_links
        FROM plan_items si
