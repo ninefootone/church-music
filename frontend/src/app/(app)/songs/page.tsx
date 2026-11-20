@@ -208,7 +208,11 @@ export default function SongsPage() {
         ) : songs.map((song, i) => (
           <Link key={song.id} href={`/songs/${song.id}`} className="song-row" style={song.retired ? { opacity: 0.5 } : undefined}>
             <div className="dash-row-content">
-              <div className="song-title">{song.title}</div>
+              <div className="song-title">
+                {song.title}
+                {/* +1: the song itself is the main arrangement (see claude/song-arrangements.md) */}
+                {!!song.arrangement_count && <span className="badge badge-arrangement">{song.arrangement_count + 1} arrangements</span>}
+              </div>
               <div className="song-meta song-meta--col">
                 {song.first_line && (
                   <span className="dash-row-meta--italic">{song.first_line}</span>

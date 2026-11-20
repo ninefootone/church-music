@@ -557,7 +557,7 @@ export default function SongDetailPage() {
                 </p>
                 <div className="file-list">
                   {mainFiles.map(f => (
-                    <FileRow key={f.id} file={f} songId={song.id} defaultKey={view.key || song.default_key} isAdmin={canManageSongs} downloadingId={downloadingId} deletingId={deletingId} onDownload={handleDownload} onDelete={handleDelete} onSaved={fetchSong} onView={f.file_type === 'chordpro' ? handleViewChordPro : undefined} onEdit={canManageSongs ? handleEditChordPro : undefined} />
+                    <FileRow key={f.id} file={f} songId={song.id} defaultKey={view.key || song.default_key} isAdmin={canManageSongs} downloadingId={downloadingId} deletingId={deletingId} onDownload={handleDownload} onDelete={handleDelete} onSaved={fetchSong} onView={f.file_type === 'chordpro' ? handleViewChordPro : undefined} onEdit={canManageSongs ? handleEditChordPro : undefined} arrangements={arrangements} mainArrangementName={mainArrangementName} />
                   ))}
                 </div>
               </div>
@@ -568,7 +568,7 @@ export default function SongDetailPage() {
                   <p className="downloads-group-label">Other keys</p>
                   <div className="file-list">
                   {otherFiles.map(f => (
-                    <FileRow key={f.id} file={f} songId={song.id} defaultKey={view.key || song.default_key} isAdmin={canManageSongs} downloadingId={downloadingId} deletingId={deletingId} onDownload={handleDownload} onDelete={handleDelete} onSaved={fetchSong} onView={f.file_type === 'chordpro' ? handleViewChordPro : undefined} onEdit={canManageSongs ? handleEditChordPro : undefined} />
+                    <FileRow key={f.id} file={f} songId={song.id} defaultKey={view.key || song.default_key} isAdmin={canManageSongs} downloadingId={downloadingId} deletingId={deletingId} onDownload={handleDownload} onDelete={handleDelete} onSaved={fetchSong} onView={f.file_type === 'chordpro' ? handleViewChordPro : undefined} onEdit={canManageSongs ? handleEditChordPro : undefined} arrangements={arrangements} mainArrangementName={mainArrangementName} />
                   ))}
                 </div>
                 </div>

@@ -30,9 +30,13 @@ interface FileRowProps {
   onSaved: () => void
   onView?: (fileId: string, label: string, key: string | null) => void
   onEdit?: (fileId: string) => void
+  /** The song's arrangements: when there are any, the edit form can move the file to another one. */
+  arrangements?: { id: string; name: string }[]
+  mainArrangementName?: string
 }
 
-export function FileRow({ file, songId, defaultKey, isAdmin, downloadingId, deletingId, onDownload, onDelete, onSaved, onView, onEdit }: FileRowProps) {
+export function FileRow({ file, songId, defaultKey, isAdmin, downloadingId, deletingId, onDownload, onDelete, onSaved, onView, onEdit, arrangements = [], mainArrangementName = 'Standard' }: FileRowProps) {
+  const [editArrangement, setEditArrangement] = useState<string>(file.arrangement_id || '')
   const [editing, setEditing] = useState(false)
   const [editType, setEditType] = useState(file.file_type || 'chords')
   const [editLabel, setEditLabel] = useState(file.label || '')
@@ -43,6 +47,7 @@ export function FileRow({ file, songId, defaultKey, isAdmin, downloadingId, dele
     setEditType(file.file_type || 'chords')
     setEditLabel(file.label || '')
     setEditKey(normaliseKey(file.key_of) || normaliseKey(defaultKey) || '')
+    setEditArrangement(file.arrangement_id || '')
     setEditing(true)
   }
 
@@ -59,6 +64,8 @@ export function FileRow({ file, songId, defaultKey, isAdmin, downloadingId, dele
         file_type: editType,
         label: editLabel,
         key_of: editKey || null,
+        // Only sent when moved, so the file stays put otherwise.
+        ...(editArrangement !== (file.arrangement_id || '') ? { arrangement_id: editArrangement || null } : {}),
       })
       onSaved()
       setEditing(false)
@@ -90,6 +97,15 @@ export function FileRow({ file, songId, defaultKey, isAdmin, downloadingId, dele
               {KEYS.map(k => <option key={k} value={k}>{k}</option>)}
             </select>
           </div>
+          {arrangements.length > 0 && (
+            <div>
+              <label className="label label--xs">Arrangement</label>
+              <select className="input input--sm" value={editArrangement} onChange={e => setEditArrangement(e.target.value)}>
+                <option value="">{mainArrangementName}</option>
+                {arrangements.map(a => <option key={a.id} value={a.id}>{a.name}</option>)}
+              </select>
+            </div>
+          )}
         </div>
         {onEdit && file.file_type === 'chordpro' && (
           <button
