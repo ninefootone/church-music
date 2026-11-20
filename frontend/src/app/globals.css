@@ -1087,11 +1087,22 @@ body.set-viewer-active { overflow: hidden; }
 }
 
   /* ── Musicians ── */
-  .musician-chip  { display: inline-flex; align-items: center; gap: 6px; padding: 6px 12px; background: var(--color-neutral-50); border: 1px solid var(--color-border); border-radius: var(--radius-sm); font-size: var(--text-sm); }
-  .musician-chip--unavailable { background: var(--color-error-bg, #fef2f2); border-color: var(--color-error-border, #fca5a5); }
-  .musician-chip--unavailable .musician-name { color: var(--color-error, #dc2626); }
-  .musician-name  { font-weight: 600; color: var(--color-text-primary); }
-  .musician-roles { color: var(--color-text-muted); }
+  /* Plan page musicians: a grid of cells with hairlines, like the file lists (2026-11-20). 3 columns, 1 on phones.
+     Lines = each cell's right + bottom shadow; the grid clips the ones on its outer edge (overflow: hidden). */
+  .musician-grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); border: 1px solid var(--color-border); border-radius: var(--radius-sm); overflow: hidden; background: var(--color-surface); }
+  @media (max-width: 768px) { .musician-grid { grid-template-columns: minmax(0, 1fr); } }
+  .musician-cell { display: flex; align-items: flex-start; gap: 4px; min-width: 0; padding: 10px 6px 10px 14px; box-shadow: 1px 0 0 var(--color-border), 0 1px 0 var(--color-border); }
+  .musician-cell--unavailable { background: var(--color-error-bg, #fdf0f0); }
+  .musician-cell--unavailable .musician-cell-name { color: var(--color-error, #dc2626); }
+  .musician-cell-main { flex: 1; min-width: 0; padding-top: 4px; }
+  .musician-cell-name { display: flex; flex-wrap: wrap; align-items: center; gap: 6px; font-size: 15px; font-weight: 600; line-height: 22px; color: var(--color-text-primary); overflow-wrap: anywhere; }
+  .musician-cell-roles { font-size: 13px; line-height: 18px; color: var(--color-text-secondary); }
+  .musician-cell-note { display: flex; flex-wrap: wrap; align-items: center; gap: 4px; margin-top: 2px; font-size: 13px; line-height: 18px; color: var(--color-text-secondary); }
+  .musician-cell-remove { flex-shrink: 0; width: 32px; height: 32px; display: inline-flex; align-items: center; justify-content: center; padding: 0; border: 0; border-radius: var(--radius-pill); background: transparent; color: var(--color-text-secondary); cursor: pointer; }
+  .musician-cell-remove:hover { background: var(--color-neutral-100); color: var(--color-text-primary); }
+  .musician-cell-add { display: flex; align-items: center; justify-content: center; gap: 6px; min-height: 64px; padding: 10px; border: 0; background: transparent; font: inherit; font-size: var(--text-sm); font-weight: 500; color: var(--color-brand-600); cursor: pointer; box-shadow: 1px 0 0 var(--color-border), 0 1px 0 var(--color-border); }
+  .musician-cell-add:hover { background: var(--color-brand-50); }
+  .badge-guest { font-size: 11px; font-weight: 700; letter-spacing: 0.04em; line-height: 16px; text-transform: uppercase; color: var(--color-accent-dark); background: var(--color-accent-light); padding: 1px 6px; border-radius: 4px; }
 
   /* ── Songs list ── */
   .songs-table {

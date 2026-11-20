@@ -526,7 +526,7 @@ export default function HelpPage() {
           content: () => (
             <div>
               <p className="help-content-body">
-                On the plan page, click <strong>Add</strong> next to <strong>Musicians</strong>. Search for a church member by name, or type the name of someone who isn&apos;t a member to add them by name only.
+                On the plan page, click <strong>Add musician</strong> at the end of the <strong>Musicians</strong> list. Search for a church member by name, or type the name of someone who isn&apos;t a member to add them by name only.
               </p>
               <p className="help-content-body">
                 Each musician can be given one or more roles for that plan (e.g. &quot;Guitar&quot;, &quot;Vocals&quot;). Roles are drawn from the list you&apos;ve set up in Settings, but you can type any role with <strong>Other…</strong>.
@@ -549,7 +549,7 @@ export default function HelpPage() {
                 A guest musician gets their own SongStack sign-in for the plans they&apos;re playing in — the running order, the music files and any rehearsal recordings — without joining your church as a member.
               </p>
               <p className="help-content-body">
-                <strong>Inviting a guest:</strong> on the plan page, click <strong>Add</strong> next to <strong>Musicians</strong>, type their name, pick their roles and tick <strong>Give them guest access</strong>, then click <strong>Invite guest</strong>. Copy the message (or just the link) and send it to them. Admins, members with <strong>Add &amp; edit plans</strong>, and whoever made the plan can invite guests.
+                <strong>Inviting a guest:</strong> on the plan page, click <strong>Add musician</strong> under <strong>Musicians</strong>, type their name, pick their roles and tick <strong>Give them guest access</strong>, then click <strong>Invite guest</strong>. Copy the message (or just the link) and send it to them. Admins, members with <strong>Add &amp; edit plans</strong>, and whoever made the plan can invite guests.
               </p>
               <p className="help-content-body">
                 The link works once, only for that person, and until a week after the plan. It&apos;s only shown when you create it — if it gets lost, click <strong>New link</strong> next to their name on the plan (the old link then stops working). On the plan they show as <strong>Guest (not joined yet)</strong> until they&apos;ve used it.

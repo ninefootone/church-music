@@ -470,6 +470,9 @@ export default function PlanDetailPage() {
   const activeStart = serviceTimes.find(t => t === serviceTime) ?? serviceTimes[0] ?? null
   const timingsAvailable = !!activeStart && (plan.items ?? []).some((item: any) => item.duration_minutes)
 
+  // Same rule the backend uses (canEditPlan): admin, "Add & edit plans", or the plan's creator.
+  const canEditThisPlan = isAdmin || canAddPlans || plan.created_by === userId
+
   return (
     <div>
       <Link href="/plans" className="back-link"><ArrowLeft size={14} /> Back to plans</Link>
@@ -543,25 +546,17 @@ export default function PlanDetailPage() {
         </div>
       </div>
 
-      {/* Musicians */}
+      {/* Musicians — grid of cells (3 columns, 1 on phones; CSS .musician-grid). The last cell adds a musician. */}
       <div className="card card--spaced">
         <div className="card-header-row">
           <div className="section-label section-label--flush">Musicians</div>
-          {(isAdmin || canAddPlans || plan.created_by === userId) && (
-            <button
-              onClick={() => setShowMusicianModal(true)}
-              className="btn btn-secondary btn-xs"
-            >
-              <Plus size={13} /> Add
-            </button>
-          )}
         </div>
-        {musicians.length === 0 ? (
+        {musicians.length === 0 && !canEditThisPlan ? (
           <p className="form-empty-note text-muted">
             No musicians added yet.
           </p>
         ) : (
-          <div className="file-group">
+          <div className="musician-grid">
             {Object.values(
               musicians.reduce((acc, m) => {
                 const key = m.user_id || m.name
@@ -573,45 +568,68 @@ export default function PlanDetailPage() {
                 if (m.guest_has_link && !m.guest_claimed_at) acc[key].linkRowId = m.id
                 return acc
               }, {} as Record<string, { name: string; user_id: string | null; roles: string[]; ids: string[]; isGuest: boolean; joined: boolean; linkRowId: string | null }>)
-            ).map(group => (
-              <div key={group.ids[0]} className={`musician-chip${group.user_id && unavailableUserIds.has(group.user_id) ? ' musician-chip--unavailable' : ''}`}>
-                <span className="musician-name">{group.name}</span>
-                <span className="musician-roles">{group.roles.join(', ')}</span>
-                {group.isGuest && (
-                  <span className="musician-roles" title={group.joined || group.user_id ? 'Guest musician — sees the plans they’re on' : 'Guest invite not used yet'}>
-                    · Guest{!(group.joined || group.user_id) && ' (not joined yet)'}
-                  </span>
-                )}
-                {group.linkRowId && (isAdmin || canAddPlans || plan.created_by === userId) && (
-                  <button
-                    onClick={async () => {
-                      setGuestLinkError('')
-                      try {
-                        const { data } = await api.post(`/api/plans/${id}/musicians/${group.linkRowId}/guest-link`)
-                        setGuestLink({ name: group.name, link: data.link })
-                      } catch {
-                        setGuestLinkError(`Couldn’t make a new link for ${group.name}. Please try again.`)
-                      }
-                    }}
-                    className="btn-inline-link"
-                    title="Make a new invite link (the old one stops working)"
-                  >
-                    New link
-                  </button>
-                )}
-                {(isAdmin || canAddPlans || plan.created_by === userId) && (
-                  <button
-                    onClick={async () => {
-                      await Promise.all(group.ids.map(rid => api.delete(`/api/plans/${id}/musicians/${rid}`)))
-                      setMusicians(prev => prev.filter(m => !group.ids.includes(m.id)))
-                    }}
-                    className="btn-icon-remove"
-                  >
-                    <X size={13} />
-                  </button>
-                )}
-              </div>
-            ))}
+            ).map(group => {
+              const unavailable = !!group.user_id && unavailableUserIds.has(group.user_id)
+              const notJoined = group.isGuest && !(group.joined || group.user_id)
+              return (
+                <div
+                  key={group.ids[0]}
+                  className={`musician-cell${unavailable ? ' musician-cell--unavailable' : ''}`}
+                  title={unavailable ? `${group.name} has marked themselves unavailable on this date` : undefined}
+                >
+                  <div className="musician-cell-main">
+                    <div className="musician-cell-name">
+                      {group.name}
+                      {group.isGuest && <span className="badge-guest" title="Guest musician — sees only the plans they’re on">Guest</span>}
+                    </div>
+                    <div className="musician-cell-roles">{group.roles.join(', ')}</div>
+                    {unavailable && <div className="musician-cell-note">Marked unavailable</div>}
+                    {notJoined && (
+                      <div className="musician-cell-note">
+                        Not joined yet
+                        {group.linkRowId && canEditThisPlan && (
+                          <>
+                            {' · '}
+                            <button
+                              onClick={async () => {
+                                setGuestLinkError('')
+                                try {
+                                  const { data } = await api.post(`/api/plans/${id}/musicians/${group.linkRowId}/guest-link`)
+                                  setGuestLink({ name: group.name, link: data.link })
+                                } catch {
+                                  setGuestLinkError(`Couldn’t make a new link for ${group.name}. Please try again.`)
+                                }
+                              }}
+                              className="btn-inline-link"
+                              title="Make a new invite link (the old one stops working)"
+                            >
+                              New link
+                            </button>
+                          </>
+                        )}
+                      </div>
+                    )}
+                  </div>
+                  {canEditThisPlan && (
+                    <button
+                      onClick={async () => {
+                        await Promise.all(group.ids.map(rid => api.delete(`/api/plans/${id}/musicians/${rid}`)))
+                        setMusicians(prev => prev.filter(m => !group.ids.includes(m.id)))
+                      }}
+                      className="musician-cell-remove"
+                      aria-label={`Remove ${group.name}`}
+                    >
+                      <X size={15} />
+                    </button>
+                  )}
+                </div>
+              )
+            })}
+            {canEditThisPlan && (
+              <button onClick={() => setShowMusicianModal(true)} className="musician-cell-add">
+                <Plus size={15} /> Add musician
+              </button>
+            )}
           </div>
         )}
         {guestLinkError && <p className="error-text">{guestLinkError}</p>}
