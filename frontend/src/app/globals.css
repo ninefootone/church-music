@@ -1087,16 +1087,17 @@ body.set-viewer-active { overflow: hidden; }
 }
 
   /* ── Musicians ── */
-  /* Plan page musicians: a grid of cells with hairlines, like the file lists (2026-11-20). 3 columns, 2 on phones.
-     Add is the button in the card header, not a cell.
+  /* Plan page musicians: a grid of cells with hairlines, like the file lists (2026-11-20).
+     Add is the button in the card header, not a cell. 4 columns on desktop, 3 on tablets, 2 on phones.
      Lines = each cell's right + bottom shadow; the grid clips the ones on its outer edge (overflow: hidden). */
-  .musician-grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); border: 1px solid var(--color-border); border-radius: var(--radius-sm); overflow: hidden; background: var(--color-surface); }
+  .musician-grid { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); border: 1px solid var(--color-border); border-radius: var(--radius-sm); overflow: hidden; background: var(--color-surface); }
+  @media (max-width: 1024px) { .musician-grid { grid-template-columns: repeat(3, minmax(0, 1fr)); } }
   @media (max-width: 768px) { .musician-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
   .musician-cell { display: flex; align-items: flex-start; gap: 4px; min-width: 0; padding: 10px 6px 10px 14px; box-shadow: 1px 0 0 var(--color-border), 0 1px 0 var(--color-border); }
   .musician-cell--unavailable { background: var(--color-error-bg, #fdf0f0); }
   .musician-cell--unavailable .musician-cell-name { color: var(--color-error, #dc2626); }
-  .musician-cell-main { flex: 1; min-width: 0; padding-top: 4px; }
-  .musician-cell-name { display: flex; flex-wrap: wrap; align-items: center; gap: 6px; font-size: 15px; font-weight: 600; line-height: 22px; color: var(--color-text-primary); overflow-wrap: anywhere; }
+  .musician-cell-main { flex: 1; min-width: 0; padding-top: 7px; }
+  .musician-cell-name { display: flex; flex-wrap: wrap; align-items: center; gap: 2px 6px; font-size: 15px; font-weight: 600; line-height: 18px; color: var(--color-text-primary); overflow-wrap: anywhere; }
   .musician-cell-roles { font-size: 13px; line-height: 18px; color: var(--color-text-secondary); }
   .musician-cell-note { display: flex; flex-wrap: wrap; align-items: center; gap: 4px; margin-top: 2px; font-size: 13px; line-height: 18px; color: var(--color-text-secondary); }
   .musician-cell-remove { flex-shrink: 0; width: 32px; height: 32px; display: inline-flex; align-items: center; justify-content: center; padding: 0; border: 0; border-radius: var(--radius-pill); background: transparent; color: var(--color-text-secondary); cursor: pointer; }

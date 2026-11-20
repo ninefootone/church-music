@@ -546,7 +546,7 @@ export default function PlanDetailPage() {
         </div>
       </div>
 
-      {/* Musicians — grid of cells (3 columns, 2 on phones; CSS .musician-grid). Add sits in the card header. */}
+      {/* Musicians — grid of cells (4 columns, 3 on tablets, 2 on phones; CSS .musician-grid). Add sits in the card header. */}
       <div className="card card--spaced">
         <div className="card-header-row">
           <div className="section-label section-label--flush">Musicians</div>
