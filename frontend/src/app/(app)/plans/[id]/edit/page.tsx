@@ -26,7 +26,7 @@ import { CSS } from '@dnd-kit/utilities'
 import { KeyBadge, CategoryBadge } from '@/components/ui/badges'
 import { useChurch } from '@/context/ChurchContext'
 import api from '@/lib/api'
-import { ArrangementBuilder } from '@/components/ui/ArrangementBuilder'
+import { StructureBuilder } from '@/components/ui/StructureBuilder'
 import { RichTextEditor } from '@/components/ui/RichTextEditor'
 import { ConfirmModal } from '@/components/ui/ConfirmModal'
 import { DEFAULT_SERVICE_ITEMS } from '@/lib/planItems'
@@ -56,13 +56,13 @@ interface PlanItem {
   song_author?: string | null
   song_default_key?: string
   song_category?: string
-  song_suggested_arrangement?: string
+  song_suggested_structure?: string
   song_default_duration?: number | null
   title: string
   content: string
   notes: string
   key_override: string
-  custom_arrangement: string
+  custom_structure: string
   expanded: boolean
   duration_minutes: number | null
   // Per-service items: the services ('HH:MM') this item is at on a plan with extra times. [] / absent = every service.
@@ -233,7 +233,7 @@ function SortableItem({
           </button>
         </div>
 
-        {/* Notes + arrangement */}
+        {/* Notes + structure */}
         {item.expanded && item.type !== 'song_slot' && (
           <div className="item-notes-panel">
             {planTimes.length > 1 && (
@@ -300,11 +300,11 @@ function SortableItem({
             {item.type === 'song' && (
               <div>
                 <p className="sub-section-label">
-                  Arrangement for this plan
+                  Structure for this plan
                 </p>
-                <ArrangementBuilder
-                  value={item.custom_arrangement || item.song_suggested_arrangement || ''}
-                  onChange={val => onUpdate({ custom_arrangement: val })}
+                <StructureBuilder
+                  value={item.custom_structure || item.song_suggested_structure || ''}
+                  onChange={val => onUpdate({ custom_structure: val })}
                 />
               </div>
             )}
@@ -391,8 +391,8 @@ export default function PlanEditPage() {
         content: item.content || '',
         notes: item.notes || '',
         key_override: normaliseKey(item.key_override) || normaliseKey(item.song_default_key),
-        custom_arrangement: item.custom_arrangement || '',
-        song_suggested_arrangement: item.song_suggested_arrangement || '',
+        custom_structure: item.custom_structure || '',
+        song_suggested_structure: item.song_suggested_structure || '',
         expanded: false,
         duration_minutes: item.duration_minutes ?? item.song_default_duration ?? null,
         service_times: (item.service_times ?? []).map((t: string) => t.slice(0, 5)),
@@ -426,10 +426,10 @@ export default function PlanEditPage() {
         id: newId(), type: 'song', song_id: song.id,
         song_title: song.title, song_author: song.author,
         song_default_key: song.default_key, song_category: song.category,
-        song_suggested_arrangement: (song as any).suggested_arrangement || '',
+        song_suggested_structure: (song as any).suggested_structure || '',
         song_default_duration: (song as any).default_duration ?? null,
         title: '', content: '', notes: '', key_override: normaliseKey(song.default_key),
-        custom_arrangement: '', expanded: false,
+        custom_structure: '', expanded: false,
         duration_minutes: (song as any).default_duration ?? null,
       }
       const slotIdx = prev.findIndex(i => i.type === 'song_slot')
@@ -444,7 +444,7 @@ export default function PlanEditPage() {
   const addItem = (type: string, label: string) => {
     setItems(prev => [...prev, {
       id: newId(), type, song_id: null,
-      title: label, content: '', notes: '', key_override: '', custom_arrangement: '', expanded: false,
+      title: label, content: '', notes: '', key_override: '', custom_structure: '', expanded: false,
       duration_minutes: null,
     }])
   }
@@ -453,7 +453,7 @@ export default function PlanEditPage() {
     setItems(prev => [...prev, {
       id: newId(), type: 'custom', song_id: null,
       title: s.title, content: s.content || '', notes: s.note || '',
-      key_override: '', custom_arrangement: '', expanded: false,
+      key_override: '', custom_structure: '', expanded: false,
       duration_minutes: null,
     }])
   }
@@ -488,7 +488,7 @@ export default function PlanEditPage() {
             type: item.type, song_id: item.song_id || null,
             title: item.title || null, content: item.content || null, notes: item.notes || null,
             key_override: item.key_override || null,
-            custom_arrangement: item.custom_arrangement || null,
+            custom_structure: item.custom_structure || null,
             duration_minutes: item.duration_minutes || null,
             service_times: item.service_times ?? [],
           }))
@@ -596,7 +596,7 @@ export default function PlanEditPage() {
         <div className="info-box">
           <p className="info-box-text">
             This plan&apos;s running order comes from ChurchSuite. Changes to songs and items made here are replaced at
-            the next sync (three times a day) — make them in ChurchSuite instead. Notes, keys and arrangements you add
+            the next sync (three times a day) — make them in ChurchSuite instead. Notes, keys and structures you add
             here stay.
           </p>
         </div>

@@ -245,7 +245,7 @@ router.get('/:id/detail', requireAuth, async (req, res, next) => {
     const song = await pool.query(
       `SELECT s.id, s.title, s.author, s.default_key, s.category,
               s.first_line, s.ccli_number, s.copyright_info, s.share_all_data,
-              s.notes, s.bible_references, s.suggested_arrangement,
+              s.notes, s.bible_references, s.suggested_structure,
               s.lyrics,
               s.discover_description, s.discover_image_key,
               COALESCE(JSON_AGG(DISTINCT jsonb_build_object('id', t.id, 'name', t.name)) FILTER (WHERE t.id IS NOT NULL), '[]') AS tags

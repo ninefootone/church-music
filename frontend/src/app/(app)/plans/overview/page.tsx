@@ -5,7 +5,7 @@
 // Musicians can be added, changed and removed here; songs added, chosen for a slot, swapped and
 // removed; service items and song slots added (title only) and removed; and every item dragged into a new order within its plan — always via the single-item
 // routes (reorder: PUT /items/order, 409 if the plan changed elsewhere), never the whole-list PUT /items. Other items
-// (readings, prayers, rich content), keys and arrangements are edited in the normal plan builder.
+// (readings, prayers, rich content), keys and structures are edited in the normal plan builder.
 // Data: GET /api/plans/overview (planners only, drafts included).
 
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
@@ -746,7 +746,7 @@ export default function PlansOverviewPage() {
           }
           message={
             confirmRemoveItem.item.type === 'song'
-              ? `Remove "${confirmRemoveItem.item.song_title || 'this song'}" from ${confirmRemoveItem.plan.title || 'this plan'}? Its key, arrangement and notes for this plan go with it.`
+              ? `Remove "${confirmRemoveItem.item.song_title || 'this song'}" from ${confirmRemoveItem.plan.title || 'this plan'}? Its key, structure and notes for this plan go with it.`
               : isSongSlot(confirmRemoveItem.item)
                 ? `Remove this "song to be chosen" slot from ${confirmRemoveItem.plan.title || 'this plan'}?`
                 : `Remove "${nonSongLabel(confirmRemoveItem.item)}" from ${confirmRemoveItem.plan.title || 'this plan'}? Any wording and notes added to it in this plan go with it.`

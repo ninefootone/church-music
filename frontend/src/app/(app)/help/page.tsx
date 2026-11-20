@@ -329,7 +329,7 @@ export default function HelpPage() {
                 <strong>Lyrics:</strong> paste lyrics directly. These appear on the song page and, while planning, via the <strong>Show lyrics</strong> button on a plan&apos;s running order. They are not shown on the public share link.
               </p>
               <p className="help-content-body">
-                <strong>Arrangement:</strong> set a default arrangement (e.g. Intro, Verse, Chorus, Bridge) using the arrangement builder. This can be customised per plan.
+                <strong>Structure:</strong> set a default structure (e.g. Intro, Verse, Chorus, Bridge) using the structure builder. This can be customised per plan.
               </p>
               <p className="help-content-body">
                 Once saved, you can upload files (chord charts, PDFs) from the song detail page.
@@ -343,10 +343,10 @@ export default function HelpPage() {
           content: () => (
             <div>
               <p className="help-content-body">
-                Open the song from your library and click <strong>Edit</strong>. You can update any field — title, author, key, lyrics, tags, CCLI details, arrangement, and more.
+                Open the song from your library and click <strong>Edit</strong>. You can update any field — title, author, key, lyrics, tags, CCLI details, structure, and more.
               </p>
               <p className="help-content-body">
-                Changes are saved when you click <strong>Save changes</strong>. Edits to a song&apos;s default arrangement don&apos;t affect arrangements that have already been customised on individual plans.
+                Changes are saved when you click <strong>Save changes</strong>. Edits to a song&apos;s default structure don&apos;t affect structures that have already been customised on individual plans.
               </p>
             </div>
           ),
@@ -498,24 +498,24 @@ export default function HelpPage() {
                 To remove a song from a plan, open the plan and use the x button next to the song. This only removes it from the plan — the song stays in your library.
               </p>
               <p className="help-content-body">
-                Click a song in the running order to expand it. This reveals its sheet music, any <strong>rehearsal recordings</strong> (play or download them right there), arrangement, CCLI details and any <strong>links</strong> saved on the song (YouTube, Spotify, Apple Music and so on) — click a link to open it in a new tab. If the song has lyrics saved in the library, a <strong>Show lyrics</strong> button appears here too — handy for checking the words while planning, without opening the song separately.
+                Click a song in the running order to expand it. This reveals its sheet music, any <strong>rehearsal recordings</strong> (play or download them right there), structure, CCLI details and any <strong>links</strong> saved on the song (YouTube, Spotify, Apple Music and so on) — click a link to open it in a new tab. If the song has lyrics saved in the library, a <strong>Show lyrics</strong> button appears here too — handy for checking the words while planning, without opening the song separately.
               </p>
             </div>
           ),
         },
         {
           id: 'custom-arrangements',
-          title: 'Custom arrangements per plan',
+          title: 'Custom structures per plan',
           content: () => (
             <div>
               <p className="help-content-body">
-                Each song has a default arrangement (if set on the song itself). When you add a song to a plan, it uses that default.
+                Each song has a default structure (if set on the song itself). When you add a song to a plan, it uses that default.
               </p>
               <p className="help-content-body">
-                You can override this for a specific plan without affecting the song&apos;s default. Click the arrangement on the plan to open the arrangement builder and customise the order and sections for that plan only.
+                You can override this for a specific plan without affecting the song&apos;s default. Click the structure on the plan to open the structure builder and customise the order and sections for that plan only.
               </p>
               <p className="help-content-body">
-                Custom arrangements are shown in the set viewer and included when you email or share the plan.
+                Custom structures are shown in the set viewer and included when you email or share the plan.
               </p>
             </div>
           ),
@@ -598,7 +598,7 @@ export default function HelpPage() {
           content: () => (
             <div>
               <p className="help-content-body">
-                Every plan has a public share link that gives read-only access — useful for sharing with musicians who aren&apos;t on SongStack. Anyone with the link can see the plan outline: the running order, song titles, authors, keys and capo, CCLI numbers, arrangements, the song&apos;s links (YouTube, Spotify, Apple Music and so on), and your team&apos;s notes. No account is needed for that.
+                Every plan has a public share link that gives read-only access — useful for sharing with musicians who aren&apos;t on SongStack. Anyone with the link can see the plan outline: the running order, song titles, authors, keys and capo, CCLI numbers, structures, the song&apos;s links (YouTube, Spotify, Apple Music and so on), and your team&apos;s notes. No account is needed for that.
               </p>
               <p className="help-content-body">
                 Sheet music, chord charts, full lyrics and Set mode are only shown to members of your church who are signed in. A visitor opening the same link sees the outline and a prompt to sign in. This keeps licensed material behind a team login — your CCL licence lets you reproduce it for your own team, not publish it openly on the web.
@@ -635,7 +635,7 @@ export default function HelpPage() {
           content: () => (
             <div>
               <p className="help-content-body">
-                From the plan detail page, click <strong>Email plan</strong>. This sends a formatted email with the full running order — song titles, keys, arrangements, and musicians — along with links to any attached files (rehearsal recordings aren&apos;t included).
+                From the plan detail page, click <strong>Email plan</strong>. This sends a formatted email with the full running order — song titles, keys, structures, and musicians — along with links to any attached files (rehearsal recordings aren&apos;t included).
               </p>
               <p className="help-content-body">
                 You can send to all church members, or enter a custom list of email addresses. This is useful for distributing the plan to musicians before a service.
@@ -710,13 +710,13 @@ export default function HelpPage() {
                 Use <strong>Earlier</strong> and <strong>Later</strong> to move one plan at a time, <strong>From</strong> to jump to a date, and <strong>Today</strong> to come back. <strong>Plans shown</strong> sets how many columns you see. Your choices for Plans shown, Song repeats and Rota counts are remembered in your browser.
               </p>
               <p className="help-content-body">
-                You can make quick changes right in a column, and they save straight away. <strong>Add song</strong> opens a song picker where each song shows when it was last sung before that plan and when it&apos;s next planned, so you can avoid repeats as you choose; the song goes at the end of the plan. Click a <strong>song</strong> to swap it for another (its key and arrangement for that plan are cleared; notes are kept), or a <strong>Song to be chosen</strong> slot to fill it.
+                You can make quick changes right in a column, and they save straight away. <strong>Add song</strong> opens a song picker where each song shows when it was last sung before that plan and when it&apos;s next planned, so you can avoid repeats as you choose; the song goes at the end of the plan. Click a <strong>song</strong> to swap it for another (its key and structure for that plan are cleared; notes are kept), or a <strong>Song to be chosen</strong> slot to fill it.
               </p>
               <p className="help-content-body">
                 <strong>Add item</strong> adds a service item from your church&apos;s list, an item with a title of your own, or a song slot. Drag the grip on the left of any row to change the order, and use the <strong>×</strong> on a row to remove it from that plan (you&apos;ll be asked to confirm). In the Musicians box, <strong>Add</strong> adds someone, clicking a name changes the person or their roles, and <strong>×</strong> removes them.
               </p>
               <p className="help-content-body">
-                Keys, arrangements, notes and the wording of service items are changed in the plan itself — click a plan&apos;s heading to open it, or <strong>Edit plan</strong> at the bottom of the column. If you have the same plan open for editing in another tab, save or close it before making changes in the overview: saving the plan editor afterwards puts back the version it had open.
+                Keys, structures, notes and the wording of service items are changed in the plan itself — click a plan&apos;s heading to open it, or <strong>Edit plan</strong> at the bottom of the column. If you have the same plan open for editing in another tab, save or close it before making changes in the overview: saving the plan editor afterwards puts back the version it had open.
               </p>
             </div>
           ),

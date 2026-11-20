@@ -139,7 +139,7 @@ async function createSongDB(client, data) {
     `INSERT INTO songs (
       church_id, title, author, default_key, first_line, lyrics,
       ccli_number, ccli_url, notes, bible_references,
-      suggested_arrangement
+      suggested_structure
     ) VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11)
     RETURNING *`,
     [
@@ -153,7 +153,7 @@ async function createSongDB(client, data) {
       data.ccli_url || null,
       data.notes || null,
       data.bible_references || null,
-      data.suggested_arrangement || null,
+      data.suggested_structure || null,
     ]
   );
   return res.rows[0];
@@ -272,7 +272,7 @@ async function main() {
               ccli_url:              row['Song Select Link'] || null,
               notes:                 row['Notes'] || null,
               bible_references:      row['Bible References'] || null,
-              suggested_arrangement: row['Suggested arrangement'] || null,
+              suggested_structure: row['Suggested arrangement'] || null,
             });
             songId = song.id;
             console.log(`  Created song ${songId}`);

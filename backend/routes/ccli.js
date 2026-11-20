@@ -12,7 +12,7 @@ router.get('/', requireAuth, requireMembership, async (req, res, next) => {
 
     // Songs from curator churches. `src` is the actual source song behind the
     // ccli_lookup row (the curator church's song with this CCLI number); we pull
-    // its time signature, BPM, suggested arrangement and copyright line/website,
+    // its time signature, BPM, suggested structure and copyright line/website,
     // plus its GLOBAL tags.
     // Only global tags are returned because their ids are portable across churches
     // — a curator's own church-scoped tag id would not validate for the importer.
@@ -31,7 +31,7 @@ router.get('/', requireAuth, requireMembership, async (req, res, next) => {
         ) AS in_library,
         src.time_signature,
         src.tempo,
-        src.suggested_arrangement,
+        src.suggested_structure,
         src.copyright_info,
         src.copyright_link,
         COALESCE(
@@ -45,7 +45,7 @@ router.get('/', requireAuth, requireMembership, async (req, res, next) => {
       FROM ccli_lookup cl
       INNER JOIN churches c ON c.id = cl.source_church_id
       LEFT JOIN LATERAL (
-        SELECT s2.id, s2.time_signature, s2.tempo, s2.suggested_arrangement,
+        SELECT s2.id, s2.time_signature, s2.tempo, s2.suggested_structure,
                s2.copyright_info, s2.copyright_link
         FROM songs s2
         WHERE s2.church_id = cl.source_church_id
@@ -72,7 +72,7 @@ router.get('/', requireAuth, requireMembership, async (req, res, next) => {
         TRUE AS in_library,
         s.time_signature,
         s.tempo,
-        s.suggested_arrangement,
+        s.suggested_structure,
         s.copyright_info,
         s.copyright_link,
         COALESCE(

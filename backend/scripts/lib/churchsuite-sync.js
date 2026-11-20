@@ -1,7 +1,7 @@
 // ChurchSuite → SongStack sync (Endcliffe for now). See project doc churchsuite-integration.md.
 //
 // TRUTH MODEL (Jon, 2026-11-19): for a church using ChurchSuite, ChurchSuite is where the plan's truth is; SongStack
-// manages what ChurchSuite doesn't (files, charts, recordings, markings, arrangements, notes).
+// manages what ChurchSuite doesn't (files, charts, recordings, markings, structures, notes).
 //
 // Which SongStack plan a ChurchSuite date controls: the plan whose START TIME is one of ChurchSuite's service times
 // that day (a plan with no start time counts only if it's the only plan that day; if ChurchSuite's plan names have no
@@ -17,7 +17,7 @@
 //   • keys: SongStack's plan key wins; ChurchSuite's key only fills a plan key that isn't set (a song's library
 //     default isn't a plan decision) — 'set_key'
 //   • lengths and liturgy words only fill gaps — 'set_item'
-//   • NEVER touched: pre-service items, notes, arrangements, titles of existing items, plan title/status/notes.
+//   • NEVER touched: pre-service items, notes, structures, titles of existing items, plan title/status/notes.
 //   • the music team: added (people on ChurchSuite song items + empty song slots; answers on Settings → ChurchSuite)
 //     and REMOVED when not in ChurchSuite (only when ChurchSuite has a team that date; likely-same names count as
 //     present) — 'add_musician' / 'remove_musician'
@@ -113,7 +113,7 @@ async function createPlanRow(client, { churchId, date, cps, times }) {
 // Fingerprint of a plan's items + musicians (same SQL in the undo script): undo only deletes a plan the sync
 // created if this still matches, i.e. nobody has edited it since.
 const PLAN_FINGERPRINT_SQL = `SELECT md5(
-  COALESCE((SELECT string_agg(ROW(id, type, song_id, title, notes, content, key_override, position, custom_arrangement,
+  COALESCE((SELECT string_agg(ROW(id, type, song_id, title, notes, content, key_override, position, custom_structure,
                                   duration_minutes, phase, service_times)::text, '|' ORDER BY position, id)
               FROM plan_items WHERE plan_id = $1), '') || '#' ||
   COALESCE((SELECT string_agg(ROW(id, name, role, user_id)::text, '|' ORDER BY id::text)

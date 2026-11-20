@@ -577,7 +577,7 @@ router.post('/', requireAuth, requirePermission('can_manage_songs'), async (req,
       return res.status(403).json({ error: SONG_LIMIT_MESSAGE, code: 'song_limit' });
     }
 
-    const { title, author, default_key: rawDefaultKey, category, first_line, lyrics, ccli_number, notes, bible_references, suggested_arrangement, ccli_url, share_all_data, copyright_info, copyright_link, in_discover, discover_description, tags, time_signature, tempo, default_duration, in_library } = req.body;
+    const { title, author, default_key: rawDefaultKey, category, first_line, lyrics, ccli_number, notes, bible_references, suggested_structure, ccli_url, share_all_data, copyright_info, copyright_link, in_discover, discover_description, tags, time_signature, tempo, default_duration, in_library } = req.body;
     const default_key = normaliseKey(rawDefaultKey);
 
     const isMasterLibrary = churchId === process.env.MASTER_CHURCH_ID;
@@ -591,9 +591,9 @@ router.post('/', requireAuth, requirePermission('can_manage_songs'), async (req,
     await client.query('BEGIN');
 
     const song = await client.query(
-      `INSERT INTO songs (church_id, title, author, default_key, category, first_line, lyrics, ccli_number, notes, bible_references, suggested_arrangement, ccli_url, share_all_data, copyright_info, copyright_link, in_discover, discover_description, time_signature, tempo, default_duration, in_library)
+      `INSERT INTO songs (church_id, title, author, default_key, category, first_line, lyrics, ccli_number, notes, bible_references, suggested_structure, ccli_url, share_all_data, copyright_info, copyright_link, in_discover, discover_description, time_signature, tempo, default_duration, in_library)
        VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15,$16,$17,$18,$19,$20,$21) RETURNING *`,
-      [churchId, title.trim(), author, default_key, category, first_line, lyrics, ccli_number, notes, bible_references, suggested_arrangement, ccli_url, shareEnabled, copyright_info ?? null, copyright_link ?? null, discoverEnabled, discover_description ?? null, time_signature ?? null, tempo ? parseInt(tempo) : null, default_duration ? parseInt(default_duration) : null, libraryEnabled]
+      [churchId, title.trim(), author, default_key, category, first_line, lyrics, ccli_number, notes, bible_references, suggested_structure, ccli_url, shareEnabled, copyright_info ?? null, copyright_link ?? null, discoverEnabled, discover_description ?? null, time_signature ?? null, tempo ? parseInt(tempo) : null, default_duration ? parseInt(default_duration) : null, libraryEnabled]
     );
 
     // Handle tags — insert only tags that exist and are global or this church's own.
@@ -669,7 +669,7 @@ router.patch('/:id/retire', requireAuth, requirePermission('can_manage_songs'), 
 // none were sent. To clear a field, send it as '' / null.
 // Song row, tags and the CCLI lookup are written in one transaction.
 const SONG_TEXT_FIELDS = ['title', 'author', 'default_key', 'category', 'first_line', 'lyrics', 'ccli_number',
-  'notes', 'bible_references', 'suggested_arrangement', 'ccli_url', 'copyright_info',
+  'notes', 'bible_references', 'suggested_structure', 'ccli_url', 'copyright_info',
   'copyright_link', 'discover_description', 'time_signature'];
 const SONG_INT_FIELDS = ['tempo', 'default_duration'];
 

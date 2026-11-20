@@ -38,7 +38,7 @@ export function AddToPlanModal({ song, onClose }: AddToPlanModalProps) {
       // Fetch current items
       const { data } = await api.get(`/api/plans/${plan.id}`)
       // Re-send EVERY field — the items endpoint replaces the whole running
-      // order, so anything left out here (content, arrangements, durations)
+      // order, so anything left out here (content, structures, durations)
       // would be wiped from the plan.
       const currentItems = (data.items || []).map((item: any) => ({
         id: item.id,
@@ -48,7 +48,7 @@ export function AddToPlanModal({ song, onClose }: AddToPlanModalProps) {
         notes: item.notes || null,
         content: item.content || null,
         key_override: item.key_override || null,
-        custom_arrangement: item.custom_arrangement || null,
+        custom_structure: item.custom_structure || null,
         duration_minutes: item.duration_minutes || null,
         phase: item.phase || 'service',
       }))
@@ -60,7 +60,7 @@ export function AddToPlanModal({ song, onClose }: AddToPlanModalProps) {
         notes: null,
         content: null,
         key_override: song.default_key || null,
-        custom_arrangement: null,
+        custom_structure: null,
         duration_minutes: (song as any).default_duration ?? null,
         phase: 'service',
       }

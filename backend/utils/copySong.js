@@ -17,12 +17,12 @@ async function copySongInto(client, t, churchId, { isSample = false } = {}) {
 
   const song = await client.query(
     `INSERT INTO songs (church_id, title, author, default_key, category, first_line, ccli_number,
-      suggested_arrangement, time_signature, tempo,
+      suggested_structure, time_signature, tempo,
       notes, bible_references, lyrics, copyright_info, copyright_link, is_template, is_sample)
      VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15,false,$16) RETURNING *`,
     [
       churchId, t.title, t.author, t.default_key, t.category, t.first_line, t.ccli_number,
-      t.suggested_arrangement ?? null,
+      t.suggested_structure ?? null,
       t.time_signature ?? null,
       t.tempo ?? null,
       t.share_all_data ? t.notes : null,

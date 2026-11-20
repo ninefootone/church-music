@@ -20,7 +20,7 @@ import {
   rectSortingStrategy,
 } from '@dnd-kit/sortable'
 import { CSS } from '@dnd-kit/utilities'
-import { parseArrangement } from '@/lib/arrangement'
+import { parseStructure } from '@/lib/structure'
 
 const PRESET_ELEMENTS = ['Intro', 'Verse', 'Pre-Chorus', 'Chorus', 'Bridge', 'Tag', 'Link', 'Turnaround', 'Instrumental', 'Ending']
 
@@ -28,7 +28,7 @@ type Item = { id: string; label: string }
 
 function toItems(value: string): { items: Item[]; isLegacy: boolean } {
   if (!value) return { items: [], isLegacy: false }
-  const parts = parseArrangement(value)
+  const parts = parseStructure(value)
   if (parts) return { items: parts.map((label, i) => ({ id: `${i}-${label}`, label })), isLegacy: false }
   return { items: [], isLegacy: true }
 }
@@ -67,14 +67,14 @@ function SortablePill({
     <div
       ref={setNodeRef}
       style={{ transform: CSS.Translate.toString(transform), transition }}
-      className={`arrangement-item${isDragging ? ' arrangement-item--dragging' : ''}`}
+      className={`structure-item${isDragging ? ' structure-item--dragging' : ''}`}
       {...attributes}
       {...listeners}
     >
-      <span className="arrangement-grip"><GripVertical size={14} /></span>
+      <span className="structure-grip"><GripVertical size={14} /></span>
       {editing ? (
         <input
-          className="arrangement-item-input"
+          className="structure-item-input"
           value={item.label}
           autoFocus
           onChange={e => onRename(e.target.value)}
@@ -82,11 +82,11 @@ function SortablePill({
           onKeyDown={e => { e.stopPropagation(); if (e.key === 'Enter') onStopEdit() }}
         />
       ) : (
-        <span className="arrangement-item-label" onClick={onStartEdit} title="Click to rename">
+        <span className="structure-item-label" onClick={onStartEdit} title="Click to rename">
           {item.label}
         </span>
       )}
-      <button type="button" className="arrangement-remove" onClick={onRemove} title="Remove">
+      <button type="button" className="structure-remove" onClick={onRemove} title="Remove">
         <X size={12} />
       </button>
     </div>
@@ -98,7 +98,7 @@ interface Props {
   onChange: (value: string) => void
 }
 
-export function ArrangementBuilder({ value, onChange }: Props) {
+export function StructureBuilder({ value, onChange }: Props) {
   const { items: initialItems, isLegacy } = toItems(value)
   const [items, setItems] = useState<Item[]>(initialItems)
   const [showLegacyPrompt, setShowLegacyPrompt] = useState(isLegacy)
@@ -165,11 +165,11 @@ export function ArrangementBuilder({ value, onChange }: Props) {
 
   if (showLegacyPrompt) {
     return (
-      <div className="arrangement-legacy-notice">
-        <p className="arrangement-legacy-text">
-          This song has an existing text arrangement: <em>{value}</em>
+      <div className="structure-legacy-notice">
+        <p className="structure-legacy-text">
+          This song has an existing text structure: <em>{value}</em>
         </p>
-        <div className="arrangement-legacy-actions">
+        <div className="structure-legacy-actions">
           <button type="button" className="btn btn-sm btn-primary" onClick={convertLegacy}>
             Convert to builder
           </button>
@@ -182,14 +182,14 @@ export function ArrangementBuilder({ value, onChange }: Props) {
   }
 
   return (
-    <div className="arrangement-builder">
-      <p className="arrangement-hint">Tap to add — these build the arrangement below.</p>
-      <div className="arrangement-presets">
+    <div className="structure-builder">
+      <p className="structure-hint">Tap to add — these build the structure below.</p>
+      <div className="structure-presets">
         {PRESET_ELEMENTS.map(el => (
           <button
             key={el}
             type="button"
-            className="btn btn-ghost btn-sm arrangement-preset-btn"
+            className="btn btn-ghost btn-sm structure-preset-btn"
             onClick={() => addElement(el)}
           >
             <Plus size={12} /> {el}
@@ -200,7 +200,7 @@ export function ArrangementBuilder({ value, onChange }: Props) {
       {items.length > 0 && (
         <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={handleDragEnd}>
           <SortableContext items={items.map(i => i.id)} strategy={rectSortingStrategy}>
-            <div className="arrangement-list">
+            <div className="structure-list">
               {items.map(item => (
                 <SortablePill
                   key={item.id}
@@ -218,11 +218,11 @@ export function ArrangementBuilder({ value, onChange }: Props) {
       )}
 
       {items.length === 0 && (
-        <p className="arrangement-empty">Add elements above to build the arrangement.</p>
+        <p className="structure-empty">Add elements above to build the structure.</p>
       )}
 
       {items.length > 0 && (
-        <p className="arrangement-hint">Click an item to rename it. Drag to reorder — easiest on a computer (on a phone or tablet, press and hold first).</p>
+        <p className="structure-hint">Click an item to rename it. Drag to reorder — easiest on a computer (on a phone or tablet, press and hold first).</p>
       )}
     </div>
   )

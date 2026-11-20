@@ -127,7 +127,7 @@ async function createSong(client, data) {
   const res = await client.query(
     `INSERT INTO songs (
       church_id, title, author, default_key, first_line, lyrics,
-      ccli_number, ccli_url, notes, bible_references, suggested_arrangement,
+      ccli_number, ccli_url, notes, bible_references, suggested_structure,
       copyright_info,
       is_draft, in_library, in_discover, share_all_data
     ) VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12, true, false, false, false)
@@ -143,7 +143,7 @@ async function createSong(client, data) {
       data.ccli_url || null,
       data.notes || null,
       data.bible_references || null,
-      data.suggested_arrangement || null,
+      data.suggested_structure || null,
       data.copyright_info || null,
     ]
   );
@@ -231,7 +231,7 @@ async function main() {
           ccli_url:              row['Song Select Link'] || null,
           notes:                 row['Notes'] || null,
           bible_references:      bibleRefs,
-          suggested_arrangement: row['Suggested Arrangement'] || null,
+          suggested_structure: row['Suggested Arrangement'] || null,
           copyright_info:        copyright,
         });
 

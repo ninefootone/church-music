@@ -7,7 +7,7 @@ import { ChevronDown, ChevronUp, FileText, ExternalLink, PlayCircle } from 'luci
 import axios from 'axios'
 import { useAuth } from '@clerk/nextjs'
 import { RichTextDisplay, LITURGY_ALLOWED_TAGS } from '@/components/ui/RichTextDisplay'
-import { parseArrangement } from '@/lib/arrangement'
+import { parseStructure } from '@/lib/structure'
 import { isSongSlot, nonSongLabel, withSongDefaultDurations } from '@/lib/planItems'
 import { planTimeLabel, isAtService, serviceOnlyLabel } from '@/lib/planTimes'
 import ServiceTimePills from '@/components/ui/ServiceTimePills'
@@ -235,15 +235,15 @@ function SongItem({ item, index, token, churchId, showTimings, showDurations, ca
             </div>
           )}
 
-          {(item.custom_arrangement || item.song_suggested_arrangement) && (() => {
-            const raw = item.custom_arrangement || item.song_suggested_arrangement
-            const parts = parseArrangement(raw)
+          {(item.custom_structure || item.song_suggested_structure) && (() => {
+            const raw = item.custom_structure || item.song_suggested_structure
+            const parts = parseStructure(raw)
             if (parts) return (
               <div className="song-section">
-                <p className="sub-section-label">Arrangement</p>
+                <p className="sub-section-label">Structure</p>
                 <div className="pill-row">
                   {parts.map((label, i) => (
-                    <span key={i} className="arrangement-pill arrangement-pill-sm">{label}</span>
+                    <span key={i} className="structure-pill structure-pill-sm">{label}</span>
                   ))}
                 </div>
               </div>

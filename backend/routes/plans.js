@@ -324,7 +324,7 @@ async function itemsVersion(db, planId) {
   const r = await db.query(
     `SELECT md5(COALESCE(string_agg(
               ROW(id, type, song_id, title, notes, content, key_override, position,
-                  custom_arrangement, duration_minutes, phase, service_times)::text, '|' ORDER BY position, id), '')) AS v
+                  custom_structure, duration_minutes, phase, service_times)::text, '|' ORDER BY position, id), '')) AS v
        FROM plan_items WHERE plan_id = $1`,
     [planId]
   );
@@ -350,11 +350,11 @@ router.get('/:id', requireAuth, requireMemberOrGuest, async function(req, res, n
 
     const items = await pool.query(
       `SELECT si.id, si.type, si.phase, si.title, si.notes, si.content, si.key_override, si.position, si.service_times,
-        si.custom_arrangement, si.duration_minutes,
+        si.custom_structure, si.duration_minutes,
         s.id AS song_id, s.title AS song_title, s.author AS song_author,
         s.default_key AS song_default_key, s.category AS song_category,
         s.ccli_number AS song_ccli_number,
-        s.suggested_arrangement AS song_suggested_arrangement,
+        s.suggested_structure AS song_suggested_structure,
         s.lyrics AS song_lyrics,
         s.default_duration AS song_default_duration,
         COALESCE((SELECT JSON_AGG(jsonb_build_object('url', v.url, 'label', v.label, 'link_type', v.link_type) ORDER BY v.sort_order, v.id)
@@ -391,11 +391,11 @@ router.get('/public/:token', async function(req, res, next) {
 
     const items = await pool.query(
       `SELECT si.type, si.phase, si.title, si.notes, si.content, si.key_override, si.position,
-        si.custom_arrangement, si.duration_minutes, si.service_times,
+        si.custom_structure, si.duration_minutes, si.service_times,
         s.id AS song_id, s.title AS song_title, s.author AS song_author,
         s.default_key AS song_default_key,
         s.ccli_number AS song_ccli_number,
-        s.suggested_arrangement AS song_suggested_arrangement,
+        s.suggested_structure AS song_suggested_structure,
         s.default_duration AS song_default_duration,
         COALESCE((SELECT JSON_AGG(jsonb_build_object('url', v.url, 'label', v.label, 'link_type', v.link_type) ORDER BY v.sort_order, v.id)
                   FROM song_videos v WHERE v.song_id = s.id), '[]') AS song_links
@@ -617,20 +617,20 @@ router.put('/:id/items', requireAuth, requireMembership, async function(req, res
       const item = items[i];
       const duration = parseInt(item.duration_minutes, 10) > 0 ? parseInt(item.duration_minutes, 10) : null;
       const phase = item.phase === 'pre-service' || item.phase === 'service' ? item.phase : null;
-      const values = [item.type.trim(), item.song_id || null, item.title || null, item.notes || null, sanitizeRichText(item.content), item.key_override || null, i, item.custom_arrangement || null, duration];
+      const values = [item.type.trim(), item.song_id || null, item.title || null, item.notes || null, sanitizeRichText(item.content), item.key_override || null, i, item.custom_structure || null, duration];
       const serviceTimes = parseItemServiceTimes(item.service_times).value; // validated above; undefined = not sent
       const itemId = item.id != null ? item.id.toLowerCase() : null;
       if (itemId && currentIds.has(itemId)) {
         await client.query(
           `UPDATE plan_items SET type=$1, song_id=$2, title=$3, notes=$4, content=$5, key_override=$6, position=$7,
-                  custom_arrangement=$8, duration_minutes=$9, phase=COALESCE($10, phase),
+                  custom_structure=$8, duration_minutes=$9, phase=COALESCE($10, phase),
                   service_times=COALESCE($13::time[], service_times)
             WHERE id=$11 AND plan_id=$12`,
           [...values, phase, itemId, planId, serviceTimes ?? null]
         );
       } else {
         await client.query(
-          'INSERT INTO plan_items (plan_id, type, song_id, title, notes, content, key_override, position, custom_arrangement, duration_minutes, phase, service_times) VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12)',
+          'INSERT INTO plan_items (plan_id, type, song_id, title, notes, content, key_override, position, custom_structure, duration_minutes, phase, service_times) VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12)',
           [planId, ...values, phase || 'service', serviceTimes || []]
         );
       }
@@ -646,10 +646,10 @@ router.put('/:id/items', requireAuth, requireMembership, async function(req, res
   }
 });
 
-// PATCH /:id/items/:itemId/arrangement — update custom arrangement only (annotators + full editors)
-router.patch('/:id/items/:itemId/arrangement', requireAuth, requireMembership, async function(req, res, next) {
+// PATCH /:id/items/:itemId/structure — update custom structure only (annotators + full editors)
+router.patch('/:id/items/:itemId/structure', requireAuth, requireMembership, async function(req, res, next) {
   try {
-    const { custom_arrangement } = req.body;
+    const { custom_structure } = req.body;
     const { id: planId, itemId } = req.params;
     // Full plan editors (same rule as PUT /:id/items) or "Add notes to plan items".
     const plan = await loadChurchPlan(planId, req.churchId);
@@ -664,8 +664,8 @@ router.patch('/:id/items/:itemId/arrangement', requireAuth, requireMembership, a
     }
 
     const result = await pool.query(
-      'UPDATE plan_items SET custom_arrangement=$1 WHERE id=$2 AND plan_id=$3 RETURNING *',
-      [custom_arrangement || null, itemId, planId]
+      'UPDATE plan_items SET custom_structure=$1 WHERE id=$2 AND plan_id=$3 RETURNING *',
+      [custom_structure || null, itemId, planId]
     );
     if (result.rows.length === 0) return res.status(404).json({ error: 'Item not found' });
     res.json(result.rows[0]);
@@ -706,7 +706,7 @@ router.patch('/:id/items/:itemId/notes', requireAuth, requireMembership, async f
 // The builder saves with PUT /:id/items, which deletes and re-inserts the WHOLE list. The
 // overview must not do that (two places editing the same plan = last save silently wins, and
 // every item gets a new id). These routes each change one thing, inside a transaction that
-// locks the plan row, and leave every other item — notes, arrangements, rich content — alone.
+// locks the plan row, and leave every other item — notes, structures, rich content — alone.
 // Each returns the plan's items in the same shape as GET /overview so the column can redraw.
 
 const OVERVIEW_ITEM_COLUMNS = `pi.id, pi.type, pi.phase, pi.title, pi.position, pi.key_override, pi.duration_minutes, pi.service_times,
@@ -815,7 +815,7 @@ router.post('/:id/items', requireAuth, requireMembership, function(req, res, nex
 });
 
 // PATCH /:id/items/:itemId/song — put a song into a "song to be chosen" slot, or swap the song
-// on a song row. Key and arrangement belong to the old song, so they're cleared; notes are kept.
+// on a song row. Key and structure belong to the old song, so they're cleared; notes are kept.
 // A slot's label ("Opening song") is dropped, as the builder does when it fills a slot.
 router.patch('/:id/items/:itemId/song', requireAuth, requireMembership, function(req, res, next) {
   const { song_id } = req.body || {};
@@ -832,7 +832,7 @@ router.patch('/:id/items/:itemId/song', requireAuth, requireMembership, function
     const duration = song.default_duration || (it.type === 'song_slot' ? it.duration_minutes : null) || null;
     await client.query(
       `UPDATE plan_items SET type = 'song', song_id = $1, title = NULL, key_override = NULL,
-              custom_arrangement = NULL, duration_minutes = $2
+              custom_structure = NULL, duration_minutes = $2
         WHERE id = $3 AND plan_id = $4`,
       [song.id, duration, req.params.itemId, req.params.id]
     );
@@ -1142,8 +1142,8 @@ router.post('/:id/email', requireAuth, requireMembership, async function(req, re
       const title = item.song_title || 'Untitled'
       const key = item.key_override || item.song_default_key || ''
       const keyBadge = key ? `<span style="display:inline-block;padding:2px 8px;background:#dbeafe;color:#1e40af;border-radius:4px;font-size:11px;font-weight:600;margin-left:6px;">${escapeHtml(key)}</span>` : ''
-      const arrangement = item.custom_arrangement || ''
-      const arrangementHtml = arrangement ? `<div style="font-size:12px;color:#6b7280;margin-top:3px;">${escapeHtml(arrangement)}</div>` : ''
+      const structure = item.custom_structure || ''
+      const structureHtml = structure ? `<div style="font-size:12px;color:#6b7280;margin-top:3px;">${escapeHtml(structure)}</div>` : ''
       const files = filesBySongId[item.song_id] || []
       const fileLinks = files.map(f => {
         const label = [f.label, f.key_of].filter(Boolean).join(' — ')
@@ -1161,7 +1161,7 @@ router.post('/:id/email', requireAuth, requireMembership, async function(req, re
         ${timingCell}
         <td style="padding:10px 16px;">
           <div style="font-size:15px;font-weight:600;color:#111827;">${escapeHtml(title)}${keyBadge}${onlyBadge(item)}</div>
-          ${arrangementHtml}
+          ${structureHtml}
           ${fileLinks ? `<div style="margin-top:4px;">${fileLinks}</div>` : ''}
         </td>
         <td style="padding:10px 16px;font-size:13px;color:#6b7280;">${item.song_category ? escapeHtml(item.song_category.replace(/_/g, '-').replace(/\b\w/g, c => c.toUpperCase())) : ''}</td>
@@ -1285,8 +1285,8 @@ router.post('/:id/duplicate', requireAuth, requirePermission('can_add_plans'), a
     const newId = newPlan.rows[0].id;
 
     await client.query(
-      `INSERT INTO plan_items (plan_id, type, title, notes, content, song_id, key_override, position, custom_arrangement, duration_minutes, phase, service_times)
-       SELECT $1, type, title, notes, content, song_id, key_override, position, custom_arrangement, duration_minutes, COALESCE(phase, 'service'), service_times
+      `INSERT INTO plan_items (plan_id, type, title, notes, content, song_id, key_override, position, custom_structure, duration_minutes, phase, service_times)
+       SELECT $1, type, title, notes, content, song_id, key_override, position, custom_structure, duration_minutes, COALESCE(phase, 'service'), service_times
          FROM plan_items WHERE plan_id = $2 ORDER BY position`,
       [newId, orig.id]
     );
@@ -1311,7 +1311,7 @@ router.post('/:id/duplicate', requireAuth, requirePermission('can_add_plans'), a
 
 // POST /api/plans/:id/split — multi-service plans (project doc multi-service-plans.md). When a repeated
 // service stops being identical, turn each extra time into its own plan: same date, items (with notes,
-// keys, arrangements), musicians, pre-service notes, title and status, with that time as its start time.
+// keys, structures), musicians, pre-service notes, title and status, with that time as its start time.
 // The original keeps its first time and loses its extra times. One transaction. Shared markings are per
 // song file, not per plan, so nothing to copy there.
 router.post('/:id/split', requireAuth, requirePermission('can_add_plans'), async function(req, res, next) {
@@ -1348,8 +1348,8 @@ router.post('/:id/split', requireAuth, requirePermission('can_add_plans'), async
       // Only the items at this service (per-service items, e.g. a 9:15-only baptism, stay with their
       // own service). The copies are plain every-service items of a single-service plan.
       await client.query(
-        `INSERT INTO plan_items (plan_id, type, title, notes, content, song_id, key_override, position, custom_arrangement, duration_minutes, phase)
-         SELECT $1, type, title, notes, content, song_id, key_override, position, custom_arrangement, duration_minutes, COALESCE(phase, 'service')
+        `INSERT INTO plan_items (plan_id, type, title, notes, content, song_id, key_override, position, custom_structure, duration_minutes, phase)
+         SELECT $1, type, title, notes, content, song_id, key_override, position, custom_structure, duration_minutes, COALESCE(phase, 'service')
            FROM plan_items WHERE plan_id = $2 AND ${AT_SERVICE_SQL('$3::time', '$4::time[]')} ORDER BY position`,
         [newId, orig.id, hhmm, allTimes]
       );

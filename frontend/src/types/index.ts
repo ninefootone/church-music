@@ -63,7 +63,7 @@ export interface Song {
   ccli_url: string | null
   notes: string | null
   bible_references: string | null
-  suggested_arrangement: string | null
+  suggested_structure: string | null
   time_signature: string | null
   tempo: number | null
   default_duration: number | null

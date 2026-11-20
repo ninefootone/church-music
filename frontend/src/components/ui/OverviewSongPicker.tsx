@@ -131,7 +131,7 @@ export function OverviewSongPicker({ planId, planTitle, planDate, mode, repeatWe
       ? 'Added at the end of the plan.'
       : mode.kind === 'fill'
         ? `For the slot${mode.label ? ` "${mode.label}"` : ''}.`
-        : `Replaces "${mode.currentTitle}". Its key and arrangement are cleared; notes are kept.`
+        : `Replaces "${mode.currentTitle}". Its key and structure are cleared; notes are kept.`
 
   const shown = filtered.slice(0, MAX_SHOWN)
 

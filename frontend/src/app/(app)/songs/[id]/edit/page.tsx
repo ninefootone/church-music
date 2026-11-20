@@ -12,7 +12,7 @@ import { Trash2 } from 'lucide-react'
 import CcliAutocomplete from '@/components/CcliAutocomplete'
 import api, { setAuthToken } from '@/lib/api'
 import { LyricsEditor } from '@/components/ui/LyricsEditor'
-import { ArrangementBuilder } from '@/components/ui/ArrangementBuilder'
+import { StructureBuilder } from '@/components/ui/StructureBuilder'
 import TagInput from '@/components/ui/TagInput'
 import { KEYS } from '@/lib/keys'
 
@@ -32,7 +32,7 @@ export default function EditSongPage() {
       errorRef.current?.scrollIntoView({ behavior: 'smooth', block: 'center' })
     }
   }, [error])
-  const [form, setForm] = useState({ title: '', author: '', default_key: '', category: '' as Category | '', first_line: '', ccli_number: '', lyrics: '', tags: [] as string[], notes: '', bible_references: '', suggested_arrangement: '', share_all_data: false, copyright_info: '', copyright_link: '', in_discover: false, discover_description: '', time_signature: '', tempo: '', is_draft: false, in_library: false })
+  const [form, setForm] = useState({ title: '', author: '', default_key: '', category: '' as Category | '', first_line: '', ccli_number: '', lyrics: '', tags: [] as string[], notes: '', bible_references: '', suggested_structure: '', share_all_data: false, copyright_info: '', copyright_link: '', in_discover: false, discover_description: '', time_signature: '', tempo: '', is_draft: false, in_library: false })
   const [discoverImageUrl, setDiscoverImageUrl] = useState<string | null>(null)
   const [discoverImageUploading, setDiscoverImageUploading] = useState(false)
 
@@ -43,7 +43,7 @@ export default function EditSongPage() {
     api.get(`/api/songs/${id}`).then(r => {
       const s: Song = r.data
       const normaliseKey = (k: string | null | undefined) => k ? k.replace(/♯/g, '#').replace(/♭/g, 'b') : ''
-      setForm({ title: s.title, author: s.author || '', default_key: normaliseKey(s.default_key), category: s.category || '', first_line: s.first_line || '', ccli_number: s.ccli_number || '', lyrics: s.lyrics || '',  tags: ((s.tags || []) as any[]).map((t: { id: string }) => t.id), notes: s.notes || '', bible_references: s.bible_references || '', suggested_arrangement: s.suggested_arrangement || '', share_all_data: !!s.share_all_data, copyright_info: s.copyright_info || '', copyright_link: s.copyright_link || '', in_discover: !!s.in_discover, discover_description: s.discover_description || '', time_signature: s.time_signature || '', tempo: s.tempo?.toString() || '', is_draft: !!s.is_draft, in_library: !!s.in_library })
+      setForm({ title: s.title, author: s.author || '', default_key: normaliseKey(s.default_key), category: s.category || '', first_line: s.first_line || '', ccli_number: s.ccli_number || '', lyrics: s.lyrics || '',  tags: ((s.tags || []) as any[]).map((t: { id: string }) => t.id), notes: s.notes || '', bible_references: s.bible_references || '', suggested_structure: s.suggested_structure || '', share_all_data: !!s.share_all_data, copyright_info: s.copyright_info || '', copyright_link: s.copyright_link || '', in_discover: !!s.in_discover, discover_description: s.discover_description || '', time_signature: s.time_signature || '', tempo: s.tempo?.toString() || '', is_draft: !!s.is_draft, in_library: !!s.in_library })
       if (s.discover_image_key) {
         ;(async () => {
           try {
@@ -189,10 +189,10 @@ export default function EditSongPage() {
           </div>
           <div className="form-field"><label className="label">Tags</label><TagInput value={form.tags} onChange={ids => setForm(f => ({ ...f, tags: ids }))} /></div>
           <div className="form-field">
-            <label className="label">Suggested arrangement</label>
-            <ArrangementBuilder
-              value={form.suggested_arrangement}
-              onChange={val => setForm(f => ({ ...f, suggested_arrangement: val }))}
+            <label className="label">Suggested structure</label>
+            <StructureBuilder
+              value={form.suggested_structure}
+              onChange={val => setForm(f => ({ ...f, suggested_structure: val }))}
             />
           </div>
           <div className="form-field">

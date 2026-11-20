@@ -152,7 +152,7 @@ church-music/
 │       │   ├── layout/AppNavClient    # Top navigation
 │       │   └── ui/                    # Shared UI components
 │       │       ├── badges.tsx         # CategoryBadge, KeyBadge
-│       │       ├── ArrangementBuilder # Drag-and-drop arrangement editor
+│       │       ├── StructureBuilder # Drag-and-drop song structure editor
 │       │       ├── ChordProViewer     # Fullscreen ChordPro viewer
 │       │       ├── LyricsDisplay      # HTML + plaintext lyrics renderer
 │       │       ├── LyricsEditor       # Rich lyrics editor

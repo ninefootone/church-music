@@ -4,7 +4,7 @@ import { useEffect, useState } from 'react'
 import { X, Music } from 'lucide-react'
 import { CategoryBadge, KeyBadge } from '@/components/ui/badges'
 import api from '@/lib/api'
-import { parseArrangement } from '@/lib/arrangement'
+import { parseStructure } from '@/lib/structure'
 import DOMPurify from 'dompurify'
 
 type SongDetail = {
@@ -19,7 +19,7 @@ type SongDetail = {
   share_all_data: boolean
   notes: string | null
   bible_references: string | null
-  suggested_arrangement: string | null
+  suggested_structure: string | null
   lyrics: string | null
   discover_description: string | null
   discover_image_url: string | null
@@ -92,7 +92,7 @@ export function DiscoverSongModal({
     return () => document.removeEventListener('keydown', handler)
   }, [onClose])
 
-  const arrangementParts = parseArrangement(song?.suggested_arrangement)
+  const structureParts = parseStructure(song?.suggested_structure)
 
   return (
     <div className="modal-overlay">
@@ -141,9 +141,9 @@ export function DiscoverSongModal({
             {song.tags.length > 0 && (
               <div className="song-section">
                 <p className="discover-modal__label">Tags</p>
-                <div className="arrangement-pills">
+                <div className="structure-pills">
                   {song.tags.map(t => (
-                    <span key={t.id} className="arrangement-pill">{t.name}</span>
+                    <span key={t.id} className="structure-pill">{t.name}</span>
                   ))}
                 </div>
               </div>
@@ -157,18 +157,18 @@ export function DiscoverSongModal({
               </div>
             )}
 
-            {/* Suggested arrangement */}
-            {song.suggested_arrangement && (
+            {/* Suggested structure */}
+            {song.suggested_structure && (
               <div className="song-section">
-                <p className="discover-modal__label">Suggested arrangement</p>
-                {arrangementParts ? (
-                  <div className="arrangement-pills">
-                    {arrangementParts.map((part, i) => (
-                      <span key={i} className="arrangement-pill">{part}</span>
+                <p className="discover-modal__label">Suggested structure</p>
+                {structureParts ? (
+                  <div className="structure-pills">
+                    {structureParts.map((part, i) => (
+                      <span key={i} className="structure-pill">{part}</span>
                     ))}
                   </div>
                 ) : (
-                  <p className="detail-text">{song.suggested_arrangement}</p>
+                  <p className="detail-text">{song.suggested_structure}</p>
                 )}
               </div>
             )}

@@ -12,7 +12,7 @@ import { Category } from '@/types'
 import CategorySelect from '@/components/ui/CategorySelect'
 import api, { setAuthToken } from '@/lib/api'
 import { LyricsEditor } from '@/components/ui/LyricsEditor'
-import { ArrangementBuilder } from '@/components/ui/ArrangementBuilder'
+import { StructureBuilder } from '@/components/ui/StructureBuilder'
 import { isOnFreePlan, countOwn, FREE_SONG_LIMIT } from '@/lib/freePlan'
 import { KEYS } from '@/lib/keys'
 
@@ -64,7 +64,7 @@ export default function NewSongPage() {
   const [form, setForm] = useState({
     title: '', author: '', default_key: '', category: '' as Category | '',
     first_line: '', ccli_number: '', lyrics: '', tags: [] as string[],
-    notes: '', bible_references: '', suggested_arrangement: '',
+    notes: '', bible_references: '', suggested_structure: '',
     share_all_data: false, copyright_info: '', copyright_link: '',
     in_discover: false, discover_description: '',
     time_signature: '', tempo: '', in_library: false,
@@ -180,7 +180,7 @@ export default function NewSongPage() {
                 ...f,
                 time_signature: f.time_signature || extras.time_signature,
                 tempo: f.tempo || extras.tempo,
-                suggested_arrangement: f.suggested_arrangement || extras.suggested_arrangement,
+                suggested_structure: f.suggested_structure || extras.suggested_structure,
                 copyright_info: f.copyright_info || extras.copyright_info,
                 copyright_link: f.copyright_link || extras.copyright_link,
                 tags: f.tags.length ? f.tags : extras.tags,
@@ -286,10 +286,10 @@ export default function NewSongPage() {
           </div>
 
           <div className="form-field">
-            <label className="label">Suggested arrangement</label>
-            <ArrangementBuilder
-              value={form.suggested_arrangement}
-              onChange={val => setForm(f => ({ ...f, suggested_arrangement: val }))}
+            <label className="label">Suggested structure</label>
+            <StructureBuilder
+              value={form.suggested_structure}
+              onChange={val => setForm(f => ({ ...f, suggested_structure: val }))}
             />
           </div>
 

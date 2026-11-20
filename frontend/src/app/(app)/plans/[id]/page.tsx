@@ -10,14 +10,14 @@ import { useAuth } from '@clerk/nextjs'
 import { useChurch } from '@/context/ChurchContext'
 import api from '@/lib/api'
 import { sameKey } from '@/lib/keys'
-import { parseArrangement } from '@/lib/arrangement'
+import { parseStructure } from '@/lib/structure'
 import { ConfirmModal } from '@/components/ui/ConfirmModal'
 import { PlanMusicianModal } from '@/components/ui/PlanMusicianModal'
 import { GuestLinkDialog } from '@/components/ui/GuestLinkDialog'
 import { PlanEmailModal } from '@/components/ui/PlanEmailModal'
 import { SaveAsTemplateModal } from '@/components/ui/SaveAsTemplateModal'
 import type { PlanMusician } from '@/types'
-import { ArrangementBuilder } from '@/components/ui/ArrangementBuilder'
+import { StructureBuilder } from '@/components/ui/StructureBuilder'
 import { LyricsDisplay } from '@/components/ui/LyricsDisplay'
 import { RichTextDisplay, LITURGY_ALLOWED_TAGS } from '@/components/ui/RichTextDisplay'
 import { isSongSlot, nonSongLabel, withSongDefaultDurations } from '@/lib/planItems'
@@ -54,21 +54,21 @@ function SongItem({ item, index, planId, canAnnotate, showTimings, showDurations
   const [editingNotes, setEditingNotes] = useState(false)
   const [notes, setNotes] = useState(item.notes || '')
   const [savingNotes, setSavingNotes] = useState(false)
-  const [editingArrangement, setEditingArrangement] = useState(false)
-  const [customArrangement, setCustomArrangement] = useState(item.custom_arrangement || '')
-  const [savingArrangement, setSavingArrangement] = useState(false)
+  const [editingStructure, setEditingStructure] = useState(false)
+  const [customStructure, setCustomStructure] = useState(item.custom_structure || '')
+  const [savingStructure, setSavingStructure] = useState(false)
   const [showLyrics, setShowLyrics] = useState(false)
 
-  const handleSaveArrangement = async () => {
-    setSavingArrangement(true)
+  const handleSaveStructure = async () => {
+    setSavingStructure(true)
     try {
-      await api.patch(`/api/plans/${planId}/items/${item.id}/arrangement`, { custom_arrangement: customArrangement })
-      item.custom_arrangement = customArrangement
-      setEditingArrangement(false)
+      await api.patch(`/api/plans/${planId}/items/${item.id}/structure`, { custom_structure: customStructure })
+      item.custom_structure = customStructure
+      setEditingStructure(false)
     } catch {
       // leave editing open on error
     } finally {
-      setSavingArrangement(false)
+      setSavingStructure(false)
     }
   }
 
@@ -275,35 +275,35 @@ function SongItem({ item, index, planId, canAnnotate, showTimings, showDurations
               </div>
             </div>
           )}
-          {editingArrangement ? (
+          {editingStructure ? (
             <div className="song-section" onClick={e => e.stopPropagation()}>
-              <p className="sub-section-label">Custom arrangement</p>
-              <ArrangementBuilder
-                value={customArrangement}
-                onChange={setCustomArrangement}
+              <p className="sub-section-label">Structure for this plan</p>
+              <StructureBuilder
+                value={customStructure}
+                onChange={setCustomStructure}
               />
               <div style={{ display: 'flex', gap: 6, marginTop: 8 }}>
-                <button className="btn btn-primary btn-xs" onClick={handleSaveArrangement} disabled={savingArrangement}>
-                  {savingArrangement ? 'Saving…' : 'Save'}
+                <button className="btn btn-primary btn-xs" onClick={handleSaveStructure} disabled={savingStructure}>
+                  {savingStructure ? 'Saving…' : 'Save'}
                 </button>
-                <button className="btn btn-secondary btn-xs" onClick={() => { setCustomArrangement(item.custom_arrangement || ''); setEditingArrangement(false) }}>
+                <button className="btn btn-secondary btn-xs" onClick={() => { setCustomStructure(item.custom_structure || ''); setEditingStructure(false) }}>
                   Cancel
                 </button>
               </div>
             </div>
           ) : (
             <>
-              {(customArrangement || item.song_suggested_arrangement) && (() => {
-                const raw = customArrangement || item.song_suggested_arrangement
-                const parts = parseArrangement(raw)
+              {(customStructure || item.song_suggested_structure) && (() => {
+                const raw = customStructure || item.song_suggested_structure
+                const parts = parseStructure(raw)
                 if (parts) return (
                   <div className="song-section">
                     <p className="sub-section-label">
-                      Arrangement{customArrangement ? <span className="label-note-inline"> (custom)</span> : ''}
+                      Structure{customStructure ? <span className="label-note-inline"> (custom)</span> : ''}
                     </p>
                     <div className="pill-row">
                       {parts.map((label, i) => (
-                        <span key={i} className="arrangement-pill arrangement-pill-sm">{label}</span>
+                        <span key={i} className="structure-pill structure-pill-sm">{label}</span>
                       ))}
                     </div>
                   </div>
@@ -313,9 +313,9 @@ function SongItem({ item, index, planId, canAnnotate, showTimings, showDurations
               {canAnnotate && (
                 <button
                   className="btn-inline-link"
-                  onClick={e => { e.stopPropagation(); setEditingArrangement(true) }}
+                  onClick={e => { e.stopPropagation(); setEditingStructure(true) }}
                 >
-                  {customArrangement ? 'Edit arrangement' : '+ Add arrangement'}
+                  {customStructure ? 'Edit structure' : '+ Add structure'}
                 </button>
               )}
             </>

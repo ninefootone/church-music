@@ -16,7 +16,7 @@ import { RecordingsSection } from '@/components/ui/RecordingsSection'
 import { AddLinkModal } from '@/components/ui/AddLinkModal'
 import { Song } from '@/types'
 import api from '@/lib/api'
-import { parseArrangement } from '@/lib/arrangement'
+import { parseStructure } from '@/lib/structure'
 import { useChurch } from '@/context/ChurchContext'
 import { AddToPlanModal } from '@/components/ui/AddToPlanModal'
 import { ConfirmModal } from '@/components/ui/ConfirmModal'
@@ -217,14 +217,14 @@ export default function SongDetailPage() {
     </div>
   )
 
-  function renderArrangement(value: string) {
+  function renderStructure(value: string) {
     if (!value) return null
-    const parts = parseArrangement(value)
+    const parts = parseStructure(value)
     if (parts) {
       return (
-        <div className="arrangement-pills">
+        <div className="structure-pills">
           {parts.map((label, i) => (
-            <span key={i} className="arrangement-pill">{label}</span>
+            <span key={i} className="structure-pill">{label}</span>
           ))}
         </div>
       )
@@ -403,10 +403,10 @@ export default function SongDetailPage() {
           )}
         </div>
 
-        {song.suggested_arrangement && (
+        {song.suggested_structure && (
           <div className="song-section">
-            <span className="section-label section-label--tight">Arrangement</span>
-            {renderArrangement(song.suggested_arrangement)}
+            <span className="section-label section-label--tight">Structure</span>
+            {renderStructure(song.suggested_structure)}
           </div>
         )}
 

@@ -66,7 +66,7 @@ async function insertTemplateItems(client, planId, items) {
   for (let i = 0; i < clean.length; i++) {
     const it = clean[i];
     await client.query(
-      'INSERT INTO plan_items (plan_id, type, song_id, title, notes, content, key_override, position, custom_arrangement, duration_minutes, phase, service_times) VALUES ($1,$2,NULL,$3,$4,$5,NULL,$6,NULL,$7,$8,$9)',
+      'INSERT INTO plan_items (plan_id, type, song_id, title, notes, content, key_override, position, custom_structure, duration_minutes, phase, service_times) VALUES ($1,$2,NULL,$3,$4,$5,NULL,$6,NULL,$7,$8,$9)',
       [planId, it.type, it.title, it.notes, it.content, i, it.duration_minutes, it.phase, it.service_times]
     );
   }
