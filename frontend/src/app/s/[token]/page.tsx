@@ -88,7 +88,7 @@ function SongItem({ item, index, token, churchId, showTimings, showDurations, ca
   )
 
   return (
-    <div className={`song-item-card${isSong ? ' song-item-card--song' : ''}${otherService ? ' song-item-card--other-service' : ''}`}>
+    <div className={`list-box-row${isSong ? ' list-box-row--tinted' : ''}${expanded ? ' list-box-row--open' : ''}${otherService ? ' list-box-row--faded' : ''}`}>
       <div
         className="item-row"
         style={{ cursor: canExpand ? 'pointer' : 'default' }}
@@ -389,6 +389,7 @@ export default function PublicPlanPage() {
                 interactive={showTimings && timingsAvailable}
               />
             )}
+            <div className="list-box">
             {(() => {
               const startTime = activeStart
               const anyDurations = plan.items.some((item: any) => item.duration_minutes)
@@ -418,6 +419,7 @@ export default function PublicPlanPage() {
                 )
               })
             })()}
+            </div>
           </>
         )}
       </main>

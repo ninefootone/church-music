@@ -165,7 +165,7 @@ export default function PlansPage() {
           {todayPlans.length > 0 && (
             <>
               <div className="section-label">Today</div>
-              {todayPlans.map(s => <PlanCard key={s.id} plan={s} />)}
+              <div className="list-box">{todayPlans.map(s => <PlanCard key={s.id} plan={s} />)}</div>
             </>
           )}
 
@@ -173,7 +173,7 @@ export default function PlansPage() {
           {futurePlans.length > 0 ? (
             <>
               <div className="section-label" style={{ marginTop: todayPlans.length > 0 ? 'var(--space-lg)' : 0 }}>Upcoming</div>
-              {futurePlans.map(s => <PlanCard key={s.id} plan={s} />)}
+              <div className="list-box">{futurePlans.map(s => <PlanCard key={s.id} plan={s} />)}</div>
             </>
           ) : todayPlans.length === 0 && (
             <div className="card card-notice">
@@ -185,7 +185,7 @@ export default function PlansPage() {
           {past.length > 0 && (
             <>
               <div className="section-label" style={{ marginTop: 'var(--space-lg)' }}>Past</div>
-              <div className="card card-past-list">
+              <div className="list-box">
                 {past.slice(0, visiblePast).map(s => <PastRow key={s.id} plan={s} />)}
               </div>
               {visiblePast < past.length && (

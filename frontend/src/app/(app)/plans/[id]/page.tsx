@@ -130,7 +130,7 @@ function SongItem({ item, index, planId, canAnnotate, showTimings, showDurations
   )
 
   return (
-    <div className={`song-item-card${isSong ? ' song-item-card--song' : ''}${otherService ? ' song-item-card--other-service' : ''}`}>
+    <div className={`list-box-row${isSong ? ' list-box-row--tinted' : ''}${expanded ? ' list-box-row--open' : ''}${otherService ? ' list-box-row--faded' : ''}`}>
       <div
         className="plan-item-row" style={{ cursor: canExpand ? 'pointer' : 'default' }}
         onClick={canExpand ? handleExpand : undefined}
@@ -664,6 +664,7 @@ export default function PlanDetailPage() {
                 interactive={showTimings && timingsAvailable}
               />
             )}
+            <div className="list-box">
             {(() => {
               const startTime = activeStart
               const anyDurations = plan.items.some((item: any) => item.duration_minutes)
@@ -693,6 +694,7 @@ export default function PlanDetailPage() {
                 )
               })
             })()}
+            </div>
           </>
         )}
       </div>
