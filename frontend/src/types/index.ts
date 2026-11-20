@@ -48,6 +48,22 @@ export interface SongFile {
   has_edits?: boolean
   file_size?: number | null
   uploaded_by_name?: string | null
+  arrangement_id?: string | null // NULL = the song's main arrangement
+}
+
+// A version of a song (own key, tempo, time signature, notes, structure, files). The song itself is the main
+// arrangement. See claude/song-arrangements.md.
+export interface SongArrangement {
+  id: string
+  song_id: string
+  name: string
+  default_key: string | null
+  tempo: number | null
+  time_signature: string | null
+  notes: string | null
+  suggested_structure: string | null
+  position: number
+  plan_count?: number
 }
 
 export interface Song {
@@ -94,6 +110,9 @@ export interface Song {
   matched_on?: string[]
   files?: SongFile[]
   recordings?: SongFile[] // rehearsal recordings (audio) — kept out of `files`
+  arrangements?: SongArrangement[]
+  arrangement_count?: number
+  main_arrangement_name?: string | null
   usage?: {
     times_sung: number
     times_planned: number

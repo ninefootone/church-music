@@ -4202,3 +4202,48 @@ body.plans-overview-active .app-main-content { max-width: 1680px; }
 .cs-remembered-hint { margin: 0 0 8px; }
 .cs-remembered { list-style: none; padding: 0; margin: 0; }
 .cs-remembered li { display: flex; justify-content: space-between; align-items: center; gap: 8px; padding: 8px 0; border-top: 1px solid var(--color-border); font-size: var(--text-sm); }
+
+/* ── Song arrangements switcher (song page) — see claude/song-arrangements.md ── */
+.arrangement-switcher {
+  margin: 0.25rem 0 1rem;
+}
+.arrangement-tabs {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.4rem;
+}
+.arrangement-tab {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.25rem;
+  font-size: var(--text-sm);
+  padding: 4px 12px;
+  border-radius: 999px;
+  border: 1px solid var(--color-border);
+  background: var(--color-surface);
+  color: var(--color-text-secondary);
+  cursor: pointer;
+}
+.arrangement-tab:hover { border-color: var(--color-border-hover); }
+.arrangement-tab--active {
+  background: var(--color-brand-600);
+  border-color: var(--color-brand-600);
+  color: #fff;
+}
+.arrangement-tab--active:hover { border-color: var(--color-brand-600); }
+.arrangement-tab--add {
+  border-style: dashed;
+  color: var(--color-brand-600);
+}
+.arrangement-bar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.5rem;
+  margin-top: 0.6rem;
+}
+.arrangement-bar-actions {
+  display: inline-flex;
+  gap: 0.4rem;
+}

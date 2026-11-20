@@ -14,7 +14,8 @@ import { LyricsDisplay } from '@/components/ui/LyricsDisplay'
 import { FileUploadModal } from '@/components/ui/FileUploadModal'
 import { RecordingsSection } from '@/components/ui/RecordingsSection'
 import { AddLinkModal } from '@/components/ui/AddLinkModal'
-import { Song } from '@/types'
+import { Song, SongArrangement } from '@/types'
+import { ArrangementModal } from '@/components/ui/ArrangementModal'
 import api from '@/lib/api'
 import { parseStructure } from '@/lib/structure'
 import { useChurch } from '@/context/ChurchContext'
@@ -49,6 +50,21 @@ export default function SongDetailPage() {
   const [chordProEdit, setChordProEdit] = useState<{ fileId: string; content: string; originalContent: string; hasEdits: boolean } | null>(null)
   const [editSaving, setEditSaving] = useState(false)
   const [editError, setEditError] = useState<string | null>(null)
+  // Arrangements (versions). null = the song's main arrangement. See claude/song-arrangements.md.
+  const [arrId, setArrId] = useState<string | null>(null)
+  const [arrModal, setArrModal] = useState<'add' | SongArrangement | null>(null)
+  const [deleteArr, setDeleteArr] = useState<SongArrangement | null>(null)
+  const [arrError, setArrError] = useState<string | null>(null)
+  // ?arrangement=<id> opens that arrangement (links from plans).
+  useEffect(() => {
+    const fromUrl = new URLSearchParams(window.location.search).get('arrangement')
+    if (fromUrl) setArrId(fromUrl)
+  }, [])
+  const selectArrangement = (next: string | null) => {
+    setArrId(next)
+    setArrError(null)
+    window.history.replaceState(null, '', next ? `?arrangement=${next}` : window.location.pathname)
+  }
 
   const startEditLink = (v: { id: string; url: string; label: string | null; link_type: string | null }) => {
     setEditingLinkId(v.id)
@@ -233,8 +249,31 @@ export default function SongDetailPage() {
     return <p className="detail-text">{value}</p>
   }
 
-  const mainFiles = (song.files || []).filter(f => !f.key_of || sameKey(f.key_of, song.default_key))
-  const otherFiles = (song.files || []).filter(f => f.key_of && !sameKey(f.key_of, song.default_key))
+  // The selected arrangement decides key, tempo, time, notes, structure, files and recordings.
+  const arrangements = song.arrangements || []
+  const arr = arrangements.find(a => a.id === arrId) || null
+  const mainArrangementName = song.main_arrangement_name || 'Standard'
+  const view = arr
+    ? { key: arr.default_key, tempo: arr.tempo, time: arr.time_signature, notes: arr.notes, structure: arr.suggested_structure }
+    : { key: song.default_key, tempo: song.tempo, time: song.time_signature, notes: song.notes, structure: song.suggested_structure }
+  const inThisArrangement = (f: { arrangement_id?: string | null }) => (f.arrangement_id || null) === (arr ? arr.id : null)
+  const arrFiles = (song.files || []).filter(inThisArrangement)
+  const arrRecordings = (song.recordings || []).filter(inThisArrangement)
+  const mainFiles = arrFiles.filter(f => !f.key_of || sameKey(f.key_of, view.key))
+  const otherFiles = arrFiles.filter(f => f.key_of && !sameKey(f.key_of, view.key))
+
+  const confirmDeleteArrangement = async () => {
+    if (!deleteArr) return
+    try {
+      await api.delete(`/api/songs/${song.id}/arrangements/${deleteArr.id}`)
+      setDeleteArr(null)
+      selectArrangement(null)
+      fetchSong()
+    } catch (err: any) {
+      setDeleteArr(null)
+      setArrError(err.response?.data?.error || 'Failed to delete the arrangement')
+    }
+  }
 
   return (
     <div className="page-constrained">
@@ -242,7 +281,7 @@ export default function SongDetailPage() {
         <ChordProViewer
           content={chordProFile.content}
           originalKey={chordProFile.key}
-          songKey={song.default_key}
+          songKey={view.key || song.default_key}
           label={chordProFile.label}
           onClose={() => setChordProFile(null)}
         />
@@ -274,7 +313,8 @@ export default function SongDetailPage() {
       {showUploadModal && (
         <FileUploadModal
           songId={song.id}
-          defaultKey={song.default_key}
+          defaultKey={view.key || song.default_key}
+          arrangementId={arr ? arr.id : null}
           onClose={() => setShowUploadModal(false)}
           onUploaded={fetchSong}
           mode={uploadMode}
@@ -308,6 +348,45 @@ export default function SongDetailPage() {
         </div>
         <p className="song-detail-author">{song.author}</p>
 
+        {/* Arrangement switcher — shown when the song has arrangements, or to people who can add one. */}
+        {(arrangements.length > 0 || canManageSongs) && (
+          <div className="arrangement-switcher">
+            <div className="arrangement-tabs" role="tablist" aria-label="Arrangements">
+              <button type="button" role="tab" aria-selected={!arr}
+                className={`arrangement-tab${!arr ? ' arrangement-tab--active' : ''}`}
+                onClick={() => selectArrangement(null)}>
+                {mainArrangementName}
+              </button>
+              {arrangements.map(a => (
+                <button key={a.id} type="button" role="tab" aria-selected={arr?.id === a.id}
+                  className={`arrangement-tab${arr?.id === a.id ? ' arrangement-tab--active' : ''}`}
+                  onClick={() => selectArrangement(a.id)}>
+                  {a.name}
+                </button>
+              ))}
+              {canManageSongs && (
+                <button type="button" className="arrangement-tab arrangement-tab--add" onClick={() => setArrModal('add')}>
+                  <Plus size={12} /> Add arrangement
+                </button>
+              )}
+            </div>
+            {arr && (
+              <div className="arrangement-bar">
+                <span className="text-muted text-sm">
+                  Key, tempo, notes, structure and files below are for this arrangement.
+                </span>
+                {canManageSongs && (
+                  <span className="arrangement-bar-actions">
+                    <button type="button" className="btn btn-sm btn-secondary" onClick={() => setArrModal(arr)}><Edit size={14} /> Edit arrangement</button>
+                    <button type="button" className="btn btn-sm btn-secondary btn-danger-text" onClick={() => { setArrError(null); setDeleteArr(arr) }}><Trash2 size={14} /> Delete</button>
+                  </span>
+                )}
+              </div>
+            )}
+            {arrError && <p className="input-error">{arrError}</p>}
+          </div>
+        )}
+
         <div className="meta-block">
           {song.category && (
             <div className="meta-row">
@@ -315,10 +394,10 @@ export default function SongDetailPage() {
               <CategoryBadge category={song.category} />
             </div>
           )}
-          {song.default_key && (
+          {view.key && (
             <div className="meta-row">
               <span className="meta-label">Key</span>
-              <KeyBadge keyOf={song.default_key} />
+              <KeyBadge keyOf={view.key} />
             </div>
           )}
           {song.first_line && (
@@ -341,16 +420,16 @@ export default function SongDetailPage() {
               <span className="meta-value">{song.bible_references}</span>
             </div>
           )}
-          {song.time_signature && (
+          {view.time && (
             <div className="meta-row">
               <span className="meta-label">Time</span>
-              <span className="meta-value">{song.time_signature}</span>
+              <span className="meta-value">{view.time}</span>
             </div>
           )}
-          {song.tempo && (
+          {view.tempo && (
             <div className="meta-row">
               <span className="meta-label">Tempo</span>
-              <span className="meta-value">{song.tempo} BPM</span>
+              <span className="meta-value">{view.tempo} BPM</span>
             </div>
           )}
           {song.ccli_number && (
@@ -365,10 +444,10 @@ export default function SongDetailPage() {
         </div>
 
         {/* Notes */}
-        {song.notes && (
+        {view.notes && (
           <div className="song-notes-block">
             <span className="section-label section-label--tight">Notes</span>
-            <p className="detail-text">{song.notes}</p>
+            <p className="detail-text">{view.notes}</p>
           </div>
         )}
 
@@ -403,10 +482,10 @@ export default function SongDetailPage() {
           )}
         </div>
 
-        {song.suggested_structure && (
+        {view.structure && (
           <div className="song-section">
             <span className="section-label section-label--tight">Structure</span>
-            {renderStructure(song.suggested_structure)}
+            {renderStructure(view.structure)}
           </div>
         )}
 
@@ -466,16 +545,16 @@ export default function SongDetailPage() {
           )}
         </div>
 
-        {song.files && song.files.length > 0 ? (
+        {arrFiles.length > 0 ? (
           <div className={`file-columns${mainFiles.length > 0 && otherFiles.length > 0 ? ' file-columns--two' : ''}`}>
             {mainFiles.length > 0 && (
               <div className="file-list-group">
                 <p className="downloads-group-label">
-                  Main key{song.default_key && <> — <KeyBadge keyOf={song.default_key} /></>}
+                  Main key{view.key && <> — <KeyBadge keyOf={view.key} /></>}
                 </p>
                 <div className="file-list">
                   {mainFiles.map(f => (
-                    <FileRow key={f.id} file={f} songId={song.id} defaultKey={song.default_key} isAdmin={canManageSongs} downloadingId={downloadingId} deletingId={deletingId} onDownload={handleDownload} onDelete={handleDelete} onSaved={fetchSong} onView={f.file_type === 'chordpro' ? handleViewChordPro : undefined} onEdit={canManageSongs ? handleEditChordPro : undefined} />
+                    <FileRow key={f.id} file={f} songId={song.id} defaultKey={view.key || song.default_key} isAdmin={canManageSongs} downloadingId={downloadingId} deletingId={deletingId} onDownload={handleDownload} onDelete={handleDelete} onSaved={fetchSong} onView={f.file_type === 'chordpro' ? handleViewChordPro : undefined} onEdit={canManageSongs ? handleEditChordPro : undefined} />
                   ))}
                 </div>
               </div>
@@ -486,7 +565,7 @@ export default function SongDetailPage() {
                   <p className="downloads-group-label">Other keys</p>
                   <div className="file-list">
                   {otherFiles.map(f => (
-                    <FileRow key={f.id} file={f} songId={song.id} defaultKey={song.default_key} isAdmin={canManageSongs} downloadingId={downloadingId} deletingId={deletingId} onDownload={handleDownload} onDelete={handleDelete} onSaved={fetchSong} onView={f.file_type === 'chordpro' ? handleViewChordPro : undefined} onEdit={canManageSongs ? handleEditChordPro : undefined} />
+                    <FileRow key={f.id} file={f} songId={song.id} defaultKey={view.key || song.default_key} isAdmin={canManageSongs} downloadingId={downloadingId} deletingId={deletingId} onDownload={handleDownload} onDelete={handleDelete} onSaved={fetchSong} onView={f.file_type === 'chordpro' ? handleViewChordPro : undefined} onEdit={canManageSongs ? handleEditChordPro : undefined} />
                   ))}
                 </div>
                 </div>
@@ -495,7 +574,7 @@ export default function SongDetailPage() {
           </div>
         ) : (
           <p className="text-muted text-italic">
-            No files uploaded yet.
+            {arr ? 'No files for this arrangement yet.' : 'No files uploaded yet.'}
             {canManageSongs && <> <button onClick={() => openUpload('files')} className="btn-inline-link">Upload a chord chart or sheet music.</button></>}
           </p>
         )}
@@ -503,7 +582,7 @@ export default function SongDetailPage() {
         {/* Rehearsal recordings */}
         <RecordingsSection
           songId={song.id}
-          recordings={song.recordings || []}
+          recordings={arrRecordings}
           canManage={canManageSongs}
           deletingId={deletingId}
           onUpload={() => openUpload('recordings')}
@@ -639,6 +718,24 @@ export default function SongDetailPage() {
             }
           }}
           onCancel={() => setShowDeleteSong(false)}
+        />
+      )}
+      {arrModal && (
+        <ArrangementModal
+          songId={song.id}
+          arrangement={arrModal === 'add' ? undefined : arrModal}
+          onClose={() => setArrModal(null)}
+          onSaved={saved => { setArrModal(null); selectArrangement(saved.id); fetchSong() }}
+        />
+      )}
+      {deleteArr && (
+        <ConfirmModal
+          title="Delete arrangement"
+          message={`Delete the "${deleteArr.name}" arrangement? Its files and recordings will move to ${mainArrangementName}.`}
+          confirmLabel="Delete arrangement"
+          danger
+          onConfirm={confirmDeleteArrangement}
+          onCancel={() => setDeleteArr(null)}
         />
       )}
       {showDeleteFile && (

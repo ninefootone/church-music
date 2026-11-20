@@ -44,9 +44,11 @@ interface FileUploadModalProps {
   onUploaded: () => void
   /** 'files' = sheet music (PDF/ChordPro); 'recordings' = rehearsal recordings (audio). */
   mode?: 'files' | 'recordings'
+  /** Upload into this arrangement (null/omitted = the song's main arrangement). */
+  arrangementId?: string | null
 }
 
-export function FileUploadModal({ songId, defaultKey, onClose, onUploaded, mode = 'files' }: FileUploadModalProps) {
+export function FileUploadModal({ songId, defaultKey, onClose, onUploaded, mode = 'files', arrangementId = null }: FileUploadModalProps) {
   const isRecordings = mode === 'recordings'
   const { getToken } = useAuth()
   const [entries, setEntries] = useState<FileEntry[]>([])
@@ -184,6 +186,7 @@ export function FileUploadModal({ songId, defaultKey, onClose, onUploaded, mode 
         formData.append('file_type', entry.fileType)
         formData.append('label', entry.label)
         formData.append('key_of', entry.keyOf)
+        if (arrangementId) formData.append('arrangement_id', arrangementId)
         if (entry.fileType === 'audio') formData.append('confirm_own_recording', String(confirmOwn))
 
         await api.post(`/api/uploads/songs/${songId}`, formData, {
