@@ -546,12 +546,20 @@ export default function PlanDetailPage() {
         </div>
       </div>
 
-      {/* Musicians — grid of cells (3 columns, 1 on phones; CSS .musician-grid). The last cell adds a musician. */}
+      {/* Musicians — grid of cells (3 columns, 2 on phones; CSS .musician-grid). Add sits in the card header. */}
       <div className="card card--spaced">
         <div className="card-header-row">
           <div className="section-label section-label--flush">Musicians</div>
+          {canEditThisPlan && (
+            <button
+              onClick={() => setShowMusicianModal(true)}
+              className="btn btn-secondary btn-xs"
+            >
+              <Plus size={13} /> Add
+            </button>
+          )}
         </div>
-        {musicians.length === 0 && !canEditThisPlan ? (
+        {musicians.length === 0 ? (
           <p className="form-empty-note text-muted">
             No musicians added yet.
           </p>
@@ -625,11 +633,6 @@ export default function PlanDetailPage() {
                 </div>
               )
             })}
-            {canEditThisPlan && (
-              <button onClick={() => setShowMusicianModal(true)} className="musician-cell-add">
-                <Plus size={15} /> Add musician
-              </button>
-            )}
           </div>
         )}
         {guestLinkError && <p className="error-text">{guestLinkError}</p>}
