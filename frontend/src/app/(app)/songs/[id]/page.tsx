@@ -341,7 +341,7 @@ export default function SongDetailPage() {
           </h1>
           {canManageSongs && (
             <div className="song-detail-actions">
-              <Link href={`/songs/${song.id}/edit`} className="btn btn-sm btn-secondary"><Edit size={14} /> Edit</Link>
+              <Link href={`/songs/${song.id}/edit${arr ? `?from=${arr.id}` : ''}`} className="btn btn-sm btn-secondary"><Edit size={14} /> {arrangements.length > 0 ? 'Edit song' : 'Edit'}</Link>
               <button onClick={() => setShowAddToPlan(true)} className="btn btn-sm btn-primary"><Plus size={14} /> Add to plan</button>
             </div>
           )}

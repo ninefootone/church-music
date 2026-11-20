@@ -37,11 +37,20 @@ export default function EditSongPage() {
   const [discoverImageUploading, setDiscoverImageUploading] = useState(false)
 
   const keys = KEYS
+  // Arrangements: this page edits the song + its main ("Standard") arrangement only. Key, time, tempo, notes and
+  // structure of the other arrangements are edited on the song page. See claude/song-arrangements.md.
+  const [arrangementNames, setArrangementNames] = useState<string[]>([])
+  const [mainArrangementName, setMainArrangementName] = useState('Standard')
+  const [cameFrom, setCameFrom] = useState<string | null>(null)
 
   useEffect(() => {
     if (!id) return
     api.get(`/api/songs/${id}`).then(r => {
       const s: Song = r.data
+      setArrangementNames((s.arrangements || []).map(a => a.name))
+      setMainArrangementName(s.main_arrangement_name || 'Standard')
+      const fromId = new URLSearchParams(window.location.search).get('from')
+      setCameFrom((s.arrangements || []).find(a => a.id === fromId)?.name || null)
       const normaliseKey = (k: string | null | undefined) => k ? k.replace(/♯/g, '#').replace(/♭/g, 'b') : ''
       setForm({ title: s.title, author: s.author || '', default_key: normaliseKey(s.default_key), category: s.category || '', first_line: s.first_line || '', ccli_number: s.ccli_number || '', lyrics: s.lyrics || '',  tags: ((s.tags || []) as any[]).map((t: { id: string }) => t.id), notes: s.notes || '', bible_references: s.bible_references || '', suggested_structure: s.suggested_structure || '', share_all_data: !!s.share_all_data, copyright_info: s.copyright_info || '', copyright_link: s.copyright_link || '', in_discover: !!s.in_discover, discover_description: s.discover_description || '', time_signature: s.time_signature || '', tempo: s.tempo?.toString() || '', is_draft: !!s.is_draft, in_library: !!s.in_library })
       if (s.discover_image_key) {
@@ -114,6 +123,18 @@ export default function EditSongPage() {
       </Link>
       <h1 className="page-title page-title--spaced">Edit song</h1>
       {error && <div ref={errorRef} className="error-box">{error}</div>}
+      {arrangementNames.length > 0 && (
+        <div className={cameFrom ? 'error-box' : 'info-box'}>
+          <p className={cameFrom ? '' : 'info-box-text'}>
+            {cameFrom && <><strong>You were looking at the {cameFrom} arrangement, but this page edits the song itself.</strong>{' '}</>}
+            The <strong>key, time signature, tempo, notes and structure</strong> here are for the{' '}
+            <strong>{mainArrangementName}</strong> arrangement only. To change {arrangementNames.map((n, i) => (
+              <span key={n}>{i > 0 && (i === arrangementNames.length - 1 ? ' or ' : ', ')}<strong>{n}</strong></span>
+            ))}, go back to the song, pick it, and click <strong>Edit arrangement</strong>.
+            Everything else (title, lyrics, CCLI, tags, copyright) is shared by all arrangements.
+          </p>
+        </div>
+      )}
       <div className="card">
         <form id="song-edit-form" onSubmit={handleSubmit}>
           {isMasterLibrary && (
@@ -147,7 +168,7 @@ export default function EditSongPage() {
           <div className="form-field"><label className="label">Author(s)</label><input className="input" value={form.author} onChange={e => setForm(f => ({ ...f, author: e.target.value }))} /></div>
           <div className="form-grid-2 form-field">
             <div>
-              <label className="label">Default key</label>
+              <label className="label">Default key{arrangementNames.length > 0 && <span className="label-note-inline"> ({mainArrangementName})</span>}</label>
               <select className="input" value={form.default_key} onChange={e => setForm(f => ({ ...f, default_key: e.target.value }))}>
                 <option value="">Select key…</option>
                 {keys.map(k => <option key={k} value={k}>{k}</option>)}
@@ -165,11 +186,11 @@ export default function EditSongPage() {
             <input className="input" placeholder="e.g. Romans 8, Colossians 3:1-4" value={form.bible_references} onChange={e => setForm(f => ({ ...f, bible_references: e.target.value }))} />
           </div>
           <div className="form-field">
-            <label className="label">Notes</label>
+            <label className="label">Notes{arrangementNames.length > 0 && <span className="label-note-inline"> ({mainArrangementName})</span>}</label>
             <textarea className="input" rows={3} placeholder="Performance notes, tips for the band…" value={form.notes} onChange={e => setForm(f => ({ ...f, notes: e.target.value }))} style={{ resize: 'vertical' }} />
               <div className="form-timing-grid" style={{ marginTop: '1rem' }}>
                 <div>
-                  <label className="label">Time Signature</label>
+                  <label className="label">Time Signature{arrangementNames.length > 0 && <span className="label-note-inline"> ({mainArrangementName})</span>}</label>
                   <select className="input" value={form.time_signature} onChange={e => setForm(f => ({ ...f, time_signature: e.target.value }))}>
                     <option value="">— select —</option>
                     <option value="4/4">4/4</option>
@@ -182,14 +203,14 @@ export default function EditSongPage() {
                   </select>
                 </div>
                 <div>
-                  <label className="label">Tempo (BPM)</label>
+                  <label className="label">Tempo (BPM){arrangementNames.length > 0 && <span className="label-note-inline"> ({mainArrangementName})</span>}</label>
                   <input className="input" type="number" min="40" max="240" placeholder="e.g. 120" value={form.tempo} onChange={e => setForm(f => ({ ...f, tempo: e.target.value }))} />
                 </div>
               </div>
           </div>
           <div className="form-field"><label className="label">Tags</label><TagInput value={form.tags} onChange={ids => setForm(f => ({ ...f, tags: ids }))} /></div>
           <div className="form-field">
-            <label className="label">Suggested structure</label>
+            <label className="label">Suggested structure{arrangementNames.length > 0 && <span className="label-note-inline"> ({mainArrangementName})</span>}</label>
             <StructureBuilder
               value={form.suggested_structure}
               onChange={val => setForm(f => ({ ...f, suggested_structure: val }))}
