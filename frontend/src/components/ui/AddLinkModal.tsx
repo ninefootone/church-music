@@ -22,11 +22,13 @@ interface LinkEntry {
 
 interface AddLinkModalProps {
   songId: string
+  /** Add the links to this arrangement (null/omitted = the song's main arrangement). */
+  arrangementId?: string | null
   onClose: () => void
   onSaved: () => void
 }
 
-export function AddLinkModal({ songId, onClose, onSaved }: AddLinkModalProps) {
+export function AddLinkModal({ songId, arrangementId = null, onClose, onSaved }: AddLinkModalProps) {
   const [entries, setEntries] = useState<LinkEntry[]>([
     { id: Math.random().toString(36).slice(2), url: '', label: '', link_type: 'youtube', status: 'pending' }
   ])
@@ -60,6 +62,7 @@ export function AddLinkModal({ songId, onClose, onSaved }: AddLinkModalProps) {
           label: entry.label || null,
           link_type: entry.link_type,
           sort_order: 0,
+          arrangement_id: arrangementId,
         })
         updateEntry(entry.id, { status: 'done' })
         anySaved = true

@@ -89,6 +89,7 @@ export interface Song {
     label: string | null
     sort_order: number
     link_type: string | null
+    arrangement_id?: string | null // NULL = the song's main arrangement
   }[]
   is_template: boolean
   template_status: TemplateStatus | null

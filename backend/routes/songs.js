@@ -850,10 +850,18 @@ router.post('/:id/videos', requireAuth, requirePermission('can_manage_songs'), a
     if (!url) return res.status(400).json({ error: 'url is required' });
     if (!(await songInChurch(req.params.id, req.churchId))) return res.status(404).json({ error: 'Song not found' });
 
+    // Links belong to one arrangement, like files (NULL = the song's main one). See claude/song-arrangements.md.
+    let arrangementId = req.body.arrangement_id || null;
+    if (arrangementId) {
+      const ok = UUID_RE.test(arrangementId) &&
+        (await pool.query('SELECT 1 FROM song_arrangements WHERE id = $1 AND song_id = $2', [arrangementId, req.params.id])).rows.length > 0;
+      if (!ok) return res.status(400).json({ error: 'Arrangement not found' });
+    }
+
     const result = await pool.query(
-      `INSERT INTO song_videos (song_id, url, label, sort_order, link_type)
-       VALUES ($1, $2, $3, $4, $5) RETURNING *`,
-      [req.params.id, url, label || null, sort_order || 0, link_type || 'youtube']
+      `INSERT INTO song_videos (song_id, url, label, sort_order, link_type, arrangement_id)
+       VALUES ($1, $2, $3, $4, $5, $6) RETURNING *`,
+      [req.params.id, url, label || null, sort_order || 0, link_type || 'youtube', arrangementId]
     );
 
     res.status(201).json(result.rows[0]);

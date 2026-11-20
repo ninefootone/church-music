@@ -259,6 +259,7 @@ export default function SongDetailPage() {
   const inThisArrangement = (f: { arrangement_id?: string | null }) => (f.arrangement_id || null) === (arr ? arr.id : null)
   const arrFiles = (song.files || []).filter(inThisArrangement)
   const arrRecordings = (song.recordings || []).filter(inThisArrangement)
+  const arrLinks = (song.videos || []).filter(inThisArrangement)
   const mainFiles = arrFiles.filter(f => !f.key_of || sameKey(f.key_of, view.key))
   const otherFiles = arrFiles.filter(f => f.key_of && !sameKey(f.key_of, view.key))
 
@@ -305,6 +306,7 @@ export default function SongDetailPage() {
       {showAddLink && (
         <AddLinkModal
           songId={song.id}
+          arrangementId={arr ? arr.id : null}
           onClose={() => setShowAddLink(false)}
           onSaved={fetchSong}
         />
@@ -373,7 +375,7 @@ export default function SongDetailPage() {
             {arr && (
               <div className="arrangement-bar">
                 <span className="text-muted text-sm">
-                  Key, tempo, notes, structure and files below are for this arrangement.
+                  Key, tempo, notes, structure, files, recordings and links below are for this arrangement.
                 </span>
                 {canManageSongs && (
                   <span className="arrangement-bar-actions">
@@ -590,7 +592,7 @@ export default function SongDetailPage() {
         />
 
         {/* Links */}
-        {(song.videos && song.videos.length > 0 || canManageSongs) && (
+        {(arrLinks.length > 0 || canManageSongs) && (
           <>
             <div className="divider" />
             <div className="card-header-row">
@@ -602,7 +604,7 @@ export default function SongDetailPage() {
               )}
             </div>
             <div className="link-list file-list">
-              {(song.videos || []).map(v => {
+              {arrLinks.map(v => {
                 const typeLabel = v.link_type === 'spotify' ? 'Spotify'
                   : v.link_type === 'apple_music' ? 'Apple Music'
                   : v.link_type === 'other' ? 'Link'
