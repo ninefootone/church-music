@@ -32,6 +32,11 @@ interface SongItem {
   song_default_key: string | null
 }
 
+// Files are keyed per song AND arrangement, so the same song twice in different arrangements keeps its own
+// files. The main arrangement keeps the plain song id (older saved selections still match).
+// See claude/song-arrangements.md.
+const fileKey = (item: SongItem) => item.arrangement_id ? `${item.song_id}:${item.arrangement_id}` : item.song_id!
+
 
 const FILE_TYPE_ORDER: Record<string, number> = {
   vocal: 0,
@@ -78,7 +83,7 @@ export default function SetModePage() {
         const results = await Promise.allSettled(
           songItems.map((item: SongItem) =>
             api.get(`/api/uploads/songs/${item.song_id}/files`, { params: { arrangement: item.arrangement_id || 'main' } })
-              .then(res => ({ songId: item.song_id!, files: res.data as SongFile[] }))
+              .then(res => ({ songId: fileKey(item), files: res.data as SongFile[] }))
           )
         )
 
@@ -88,7 +93,7 @@ export default function SetModePage() {
         results.forEach(result => {
           if (result.status === 'fulfilled') {
             const { songId, files } = result.value
-            const songItem = songItems.find(s => s.song_id === songId)
+            const songItem = songItems.find(s => fileKey(s) === songId)
             const songKey = songItem?.key_override || songItem?.song_default_key || null
             const pdfs = sortFiles(files, songKey)
             newFilesMap[songId] = pdfs
@@ -143,7 +148,7 @@ export default function SetModePage() {
 
     const pdfUrls: string[] = []
     for (const item of songItems) {
-      const songId = item.song_id!
+      const songId = fileKey(item)
       const files = filesMap[songId] || []
       const selectedIds = selected[songId] || new Set()
       const chosenFiles = files.filter(f => selectedIds.has(f.id) && f.file_type !== 'chordpro')
@@ -190,7 +195,7 @@ export default function SetModePage() {
     const setFiles: { url: string; label: string; file_type: string; songTitle: string; songKey: string | null; fileId: string; songId: string; hasEdits: boolean }[] = []
 
     for (const item of songItems) {
-      const songId = item.song_id!
+      const songId = fileKey(item)
       const files = filesMap[songId] || []
       const selectedIds = selected[songId] || new Set()
       const songKey = item.key_override || item.song_default_key || null
@@ -203,7 +208,7 @@ export default function SetModePage() {
           songTitle: item.song_title || '',
           songKey: f.file_type === 'chordpro' ? (chordProKeys[f.id] || songKey) : songKey,
           fileId: f.id,
-          songId: songId,
+          songId: item.song_id!,
           hasEdits: !!f.has_edits,
         })
       })
@@ -271,8 +276,8 @@ export default function SetModePage() {
       ) : (
         <div className="set-song-list">
           {songItems.map((item, index) => {
-            const files = filesMap[item.song_id!] || []
-            const selectedIds = selected[item.song_id!] || new Set()
+            const files = filesMap[fileKey(item)] || []
+            const selectedIds = selected[fileKey(item)] || new Set()
 
             return (
               <div key={item.id} className="card card--padded">
@@ -305,7 +310,7 @@ export default function SetModePage() {
                         <input
                           type="checkbox"
                           checked={selectedIds.has(file.id)}
-                          onChange={() => toggleFile(item.song_id!, file.id)}
+                          onChange={() => toggleFile(fileKey(item), file.id)}
                           style={{ width: 16, height: 16, accentColor: 'var(--color-brand-600)', flexShrink: 0 }}
                         />
                         {file.file_type === 'chordpro'

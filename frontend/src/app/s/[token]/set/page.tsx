@@ -31,6 +31,11 @@ interface SongItem {
   song_default_key: string | null
 }
 
+// Files are keyed per song AND arrangement, so the same song twice in different arrangements keeps its own
+// files. The main arrangement keeps the plain song id (older saved selections still match).
+// See claude/song-arrangements.md.
+const fileKey = (item: SongItem) => item.arrangement_id ? `${item.song_id}:${item.arrangement_id}` : item.song_id!
+
 
 const FILE_TYPE_ORDER: Record<string, number> = {
   vocal: 0,
@@ -81,7 +86,7 @@ export default function PublicSetModePage() {
               params: { arrangement: item.arrangement_id || 'main' },
               headers: { Authorization: `Bearer ${authToken}`, 'x-church-id': svc.church_id },
             })
-              .then(res => ({ songId: item.song_id!, files: res.data as SongFile[], item }))
+              .then(res => ({ songId: fileKey(item), files: res.data as SongFile[], item }))
           )
         )
 
@@ -146,7 +151,7 @@ export default function PublicSetModePage() {
     const setFiles: { url: string; label: string; file_type: string; songTitle: string; songKey: string | null }[] = []
 
     for (const item of songItems) {
-      const songId = item.song_id!
+      const songId = fileKey(item)
       const files = filesMap[songId] || []
       const selectedIds = selected[songId] || new Set()
       const songKey = item.key_override || item.song_default_key || null
@@ -241,8 +246,8 @@ export default function PublicSetModePage() {
         ) : (
           <div className="set-song-list">
             {songItems.map((item, index) => {
-              const files = filesMap[item.song_id!] || []
-              const selectedIds = selected[item.song_id!] || new Set()
+              const files = filesMap[fileKey(item)] || []
+              const selectedIds = selected[fileKey(item)] || new Set()
 
               return (
                 <div key={item.id} className="set-song-card">
@@ -278,7 +283,7 @@ export default function PublicSetModePage() {
                           <input
                             type="checkbox"
                             checked={selectedIds.has(file.id)}
-                            onChange={() => toggleFile(item.song_id!, file.id)}
+                            onChange={() => toggleFile(fileKey(item), file.id)}
                             style={{ width: 16, height: 16, accentColor: 'var(--color-brand-600)', flexShrink: 0 }}
                           />
                           {file.file_type === 'chordpro'
