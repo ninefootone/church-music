@@ -203,7 +203,8 @@ router.get('/overview', requireAuth, requireMembership, async function(req, res,
         `SELECT pi.plan_id, pi.id, pi.type, pi.phase, pi.title, pi.position, pi.key_override, pi.duration_minutes,
                 pi.service_times, s.id AS song_id,
                 CASE WHEN sa.id IS NOT NULL THEN s.title || ' — ' || sa.name ELSE s.title END AS song_title,
-                pi.arrangement_id, COALESCE(sa.default_key, s.default_key) AS song_default_key,
+                pi.arrangement_id, sa.name AS arrangement_name, s.title AS song_base_title,
+                COALESCE(sa.default_key, s.default_key) AS song_default_key,
                 s.default_duration AS song_default_duration
            FROM plan_items pi LEFT JOIN songs s ON s.id = pi.song_id
            LEFT JOIN song_arrangements sa ON sa.id = pi.arrangement_id AND sa.song_id = pi.song_id
@@ -741,7 +742,8 @@ router.patch('/:id/items/:itemId/notes', requireAuth, requireMembership, async f
 
 const OVERVIEW_ITEM_COLUMNS = `pi.id, pi.type, pi.phase, pi.title, pi.position, pi.key_override, pi.duration_minutes, pi.service_times,
   s.id AS song_id, CASE WHEN sa.id IS NOT NULL THEN s.title || ' — ' || sa.name ELSE s.title END AS song_title,
-  pi.arrangement_id, COALESCE(sa.default_key, s.default_key) AS song_default_key,
+  pi.arrangement_id, sa.name AS arrangement_name, s.title AS song_base_title,
+  COALESCE(sa.default_key, s.default_key) AS song_default_key,
   s.default_duration AS song_default_duration`;
 
 async function overviewItems(client, planId) {

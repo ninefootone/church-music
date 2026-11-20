@@ -52,6 +52,8 @@ interface OverviewItem {
   duration_minutes: number | null
   song_id: string | null
   song_title: string | null
+  song_base_title?: string | null // without the arrangement name
+  arrangement_name?: string | null
   song_default_key: string | null
   song_default_duration: number | null
 }
@@ -546,7 +548,7 @@ export default function PlansOverviewPage() {
                               title="Swap for another song"
                               onClick={() => openSongPicker(plan, { kind: 'swap', itemId: item.id, currentTitle: title })}
                             >
-                              {title}
+                              {item.arrangement_name ? (item.song_base_title || title) : title}
                             </button>
                             {k && <KeyBadge keyOf={k} />}
                             <button
@@ -559,6 +561,9 @@ export default function PlansOverviewPage() {
                               <X size={12} />
                             </button>
                           </div>
+                          {item.arrangement_name && (
+                            <div className="po-note"><span className="badge badge-arrangement badge-arrangement--flush">{item.arrangement_name}</span></div>
+                          )}
                           {serviceOnlyLabel(item, planServiceTimes(plan)) && (
                             <div className="po-note po-note-service">{serviceOnlyLabel(item, planServiceTimes(plan))}</div>
                           )}

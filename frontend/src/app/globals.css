@@ -4251,3 +4251,4 @@ body.plans-overview-active .app-main-content { max-width: 1680px; }
 .key-select.arrangement-select { width: auto; min-width: 96px; max-width: 170px; }
 /* Arrangement name next to a song's title in a plan (plan page, share page). */
 .badge-arrangement { background: var(--color-surface); color: var(--color-brand-700); border: 1px solid var(--color-brand-200); margin-left: 6px; vertical-align: middle; font-weight: 600; }
+.badge-arrangement--flush { margin-left: 0; }
