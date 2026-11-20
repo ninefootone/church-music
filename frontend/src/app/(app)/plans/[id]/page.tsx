@@ -132,7 +132,7 @@ function SongItem({ item, index, planId, canAnnotate, showTimings, showDurations
   return (
     <div className={`list-box-row${isSong ? ' list-box-row--tinted' : ''}${expanded ? ' list-box-row--open' : ''}${otherService ? ' list-box-row--faded' : ''}`}>
       <div
-        className="plan-item-row" style={{ cursor: canExpand ? 'pointer' : 'default' }}
+        className="plan-item-row list-box-row-head" style={{ cursor: canExpand ? 'pointer' : 'default' }}
         onClick={canExpand ? handleExpand : undefined}
       >
         {(showTimings || showDurations) && (

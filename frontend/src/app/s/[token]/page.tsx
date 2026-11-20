@@ -90,7 +90,7 @@ function SongItem({ item, index, token, churchId, showTimings, showDurations, ca
   return (
     <div className={`list-box-row${isSong ? ' list-box-row--tinted' : ''}${expanded ? ' list-box-row--open' : ''}${otherService ? ' list-box-row--faded' : ''}`}>
       <div
-        className="item-row"
+        className="item-row list-box-row-head"
         style={{ cursor: canExpand ? 'pointer' : 'default' }}
         onClick={canExpand ? handleExpand : undefined}
       >

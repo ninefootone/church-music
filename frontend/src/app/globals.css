@@ -1581,16 +1581,24 @@ body.set-viewer-active { overflow: hidden; }
   /* ── Shared list box (2026-11-20) ──
      One bordered box, rows joined by hairlines. Used by: plan page + share page running order, Plans list.
      Rows are the box's direct children. Modifiers: --tinted (songs: light blue), --open (an expanded row),
-     --faded (not at the selected service). Two tinted rows in a row get a bluer divider so they don't merge. */
+     --faded (not at the selected service), --dragging (plan builder). A row's clickable header can carry
+     .list-box-row-head (stronger tint when an open song). Two tinted rows in a row get a bluer divider so they
+     don't merge. .list-box--sortable (plan builder): no clipping, so a dragged row and its shadow aren't cut off. */
   .list-box { border: 1px solid var(--color-border); border-radius: var(--radius-md); overflow: hidden; background: var(--color-surface); }
   .list-box > * + * { border-top: 1px solid var(--color-border); }
   .list-box > .list-box-row--tinted + .list-box-row--tinted { border-top-color: var(--color-brand-200); }
   .list-box-row--tinted { background: var(--color-brand-50); }
-  .list-box-row--tinted.list-box-row--open > :first-child { background: var(--color-brand-100); }
+  .list-box-row--tinted.list-box-row--open > .list-box-row-head { background: var(--color-brand-100); }
   .list-box-row--tinted .badge-key { background: var(--color-surface); }
   .list-box .item-expanded { background: var(--color-surface); }
   .list-box-row--tinted .item-expanded { border-top-color: var(--color-brand-200); }
   .list-box-row--faded { opacity: 0.45; }
+  .list-box-row--tinted .item-notes-panel { background: var(--color-surface); border-top-color: var(--color-brand-200); }
+  .list-box--sortable { overflow: visible; }
+  .list-box--sortable > :first-child { border-top-left-radius: calc(var(--radius-md) - 1px); border-top-right-radius: calc(var(--radius-md) - 1px); }
+  .list-box--sortable > :last-child { border-bottom-left-radius: calc(var(--radius-md) - 1px); border-bottom-right-radius: calc(var(--radius-md) - 1px); }
+  .list-box-row--dragging { background: var(--color-surface); }
+  .list-box-row--dragging.list-box-row--tinted { background: var(--color-brand-50); }
   /* Plans list rows inside a list box: no card chrome of their own. */
   .list-box .plan-card { border: 0; border-radius: 0; margin: 0; box-shadow: none; }
   .list-box .plan-card:hover { box-shadow: none; background: var(--color-surface-hover); }

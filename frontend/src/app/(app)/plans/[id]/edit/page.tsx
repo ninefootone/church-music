@@ -114,7 +114,6 @@ function SortableItem({
     transform: CSS.Translate.toString(transform),
     transition,
     opacity: isDragging ? 0.85 : 1,
-    marginBottom: 6,
     position: 'relative' as const,
     zIndex: isDragging ? 2 : undefined,
     boxShadow: isDragging ? 'var(--shadow-md)' : undefined,
@@ -122,8 +121,11 @@ function SortableItem({
   }
 
   return (
-    <div ref={setNodeRef} style={style}>
-      <div className="card card--flush">
+    <div
+      ref={setNodeRef}
+      style={style}
+      className={`list-box-row${item.type === 'song' ? ' list-box-row--tinted' : ''}${item.expanded ? ' list-box-row--open' : ''}${isDragging ? ' list-box-row--dragging' : ''}`}
+    >
         {(showTimings || showDurations) && (
           <div className="item-timing-edit-row">
             {showTimings && calculatedStart && (
@@ -308,7 +310,6 @@ function SortableItem({
             )}
           </div>
         )}
-      </div>
     </div>
   )
 }
@@ -762,6 +763,8 @@ export default function PlanEditPage() {
           ) : (
             <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={handleDragEnd}>
               <SortableContext items={items.map(i => i.id)} strategy={verticalListSortingStrategy}>
+                {/* One joined list (shared .list-box style, as on the plan page); the dragged item lifts out with a shadow. */}
+                <div className="list-box list-box--sortable">
                 {items.map((item, idx) => (
                   <SortableItem
                     key={item.id}
@@ -777,6 +780,7 @@ export default function PlanEditPage() {
                     planTimes={planTimes}
                   />
                 ))}
+                </div>
               </SortableContext>
             </DndContext>
           )}
