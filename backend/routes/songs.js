@@ -395,7 +395,11 @@ router.get('/', requireAuth, requireMembership, async (req, res, next) => {
         COUNT(DISTINCT ss.id) FILTER (WHERE srv.plan_date > NOW()) AS times_planned,
         MAX(srv.plan_date) FILTER (WHERE srv.plan_date <= NOW()) AS last_sung,
         MIN(srv.plan_date) FILTER (WHERE srv.plan_date > NOW()) AS next_planned,
-        (SELECT COUNT(*)::int FROM song_arrangements sa WHERE sa.song_id = s.id) AS arrangement_count
+        (SELECT COUNT(*)::int FROM song_arrangements sa WHERE sa.song_id = s.id) AS arrangement_count,
+        -- Enough for the plan pickers' arrangement dropdown (see claude/song-arrangements.md).
+        (SELECT COALESCE(JSON_AGG(jsonb_build_object('id', sa.id, 'name', sa.name, 'default_key', sa.default_key,
+                  'suggested_structure', sa.suggested_structure) ORDER BY sa.position, sa.created_at), '[]')
+           FROM song_arrangements sa WHERE sa.song_id = s.id) AS arrangements
         /*MATCHED_ON*/
       FROM songs s
       LEFT JOIN song_tags st ON st.song_id = s.id

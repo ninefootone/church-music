@@ -91,8 +91,9 @@ function SongItem({ item, index, planId, canAnnotate, showTimings, showDurations
       try {
         // Rehearsal recordings come from their own endpoint (audio is kept out of /files).
         const [res, rec] = await Promise.all([
-          api.get(`/api/uploads/songs/${item.song_id}/files`),
-          api.get(`/api/uploads/songs/${item.song_id}/recordings`).catch(() => ({ data: [] })),
+          // Only the arrangement chosen for this plan (see claude/song-arrangements.md).
+          api.get(`/api/uploads/songs/${item.song_id}/files`, { params: { arrangement: item.arrangement_id || 'main' } }),
+          api.get(`/api/uploads/songs/${item.song_id}/recordings`, { params: { arrangement: item.arrangement_id || 'main' } }).catch(() => ({ data: [] })),
         ])
         setFiles(res.data)
         setRecordings(rec.data)
@@ -342,7 +343,7 @@ function SongItem({ item, index, planId, canAnnotate, showTimings, showDurations
           )}
           {item.song_id && !isGuest && (
             <div className="song-section">
-              <Link href={`/songs/${item.song_id}`} className="btn-inline-link">
+              <Link href={`/songs/${item.song_id}${item.arrangement_id ? `?arrangement=${item.arrangement_id}` : ''}`} className="btn-inline-link">
                 Open full song page →
               </Link>
             </div>

@@ -133,6 +133,8 @@ export interface PlanItem {
   plan_id: string
   type: string
   song_id: string | null
+  arrangement_id?: string | null // song arrangement chosen for this plan; NULL = the song's main one
+  arrangement_name?: string | null
   title: string | null
   notes: string | null
   key_override: string | null

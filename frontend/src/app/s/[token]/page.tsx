@@ -38,6 +38,7 @@ function SongItem({ item, index, token, churchId, showTimings, showDurations, ca
       try {
         const authToken = await getToken()
         const res = await axios.get(`${API}/api/uploads/songs/${item.song_id}/files`, {
+          params: { arrangement: item.arrangement_id || 'main' },
           headers: { Authorization: `Bearer ${authToken}`, 'x-church-id': churchId || '' },
         })
         setFiles(res.data)

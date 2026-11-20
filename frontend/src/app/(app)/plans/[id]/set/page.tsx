@@ -22,6 +22,7 @@ interface SongFile {
 }
 
 interface SongItem {
+  arrangement_id?: string | null // song arrangement for this plan; NULL = main (see claude/song-arrangements.md)
   id: string
   type: string
   song_id: string | null
@@ -76,7 +77,7 @@ export default function SetModePage() {
 
         const results = await Promise.allSettled(
           songItems.map((item: SongItem) =>
-            api.get(`/api/uploads/songs/${item.song_id}/files`)
+            api.get(`/api/uploads/songs/${item.song_id}/files`, { params: { arrangement: item.arrangement_id || 'main' } })
               .then(res => ({ songId: item.song_id!, files: res.data as SongFile[] }))
           )
         )

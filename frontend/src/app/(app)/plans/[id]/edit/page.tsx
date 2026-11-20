@@ -53,6 +53,9 @@ interface PlanItem {
   type: string
   song_id: string | null
   song_title?: string
+  // Arrangements: null = the song's main one. song_base_title is the title without the arrangement name.
+  arrangement_id?: string | null
+  song_base_title?: string
   song_author?: string | null
   song_default_key?: string
   song_category?: string
@@ -69,12 +72,22 @@ interface PlanItem {
   service_times?: string[]
 }
 
+interface SongArrangementBrief {
+  id: string
+  name: string
+  default_key: string | null
+  suggested_structure: string | null
+}
+
 interface Song {
   id: string
   title: string
   author: string | null
   default_key: string
   category: string
+  suggested_structure?: string | null
+  main_arrangement_name?: string | null
+  arrangements?: SongArrangementBrief[]
 }
 
 let idCounter = 0
@@ -84,7 +97,7 @@ const newId = () => `item-${++idCounter}`
 function SortableItem({
   item, idx, total,
   onRemove, onUpdate, onToggleExpanded,
-  showTimings, showDurations, calculatedStart, planTimes,
+  showTimings, showDurations, calculatedStart, planTimes, songInfo,
 }: {
   item: PlanItem
   idx: number
@@ -96,6 +109,8 @@ function SortableItem({
   showDurations: boolean
   calculatedStart: string | null
   planTimes: string[]
+  /** The library song (for its arrangements); undefined for non-songs or retired songs. */
+  songInfo?: Song
 }) {
   // Per-service: which of the plan's services this item is at (all of them when not restricted).
   const onlyLabel = serviceOnlyLabel(item, planTimes)
@@ -190,6 +205,28 @@ function SortableItem({
               </>
             )}
           </div>
+
+          {/* Arrangement — only for songs that have more than one */}
+          {item.type === 'song' && songInfo && (songInfo.arrangements || []).length > 0 && (
+            <select
+              value={item.arrangement_id || ''}
+              onChange={e => {
+                const a = (songInfo.arrangements || []).find(x => x.id === e.target.value) || null
+                const base = item.song_base_title || songInfo.title
+                onUpdate({
+                  arrangement_id: a ? a.id : null,
+                  song_title: a ? `${base} — ${a.name}` : base,
+                  key_override: normaliseKey(a ? (a.default_key || songInfo.default_key) : songInfo.default_key),
+                  song_suggested_structure: (a ? a.suggested_structure : songInfo.suggested_structure) || '',
+                })
+              }}
+              className="key-select arrangement-select"
+              aria-label="Arrangement"
+            >
+              <option value="">{songInfo.main_arrangement_name || 'Standard'}</option>
+              {(songInfo.arrangements || []).map(a => <option key={a.id} value={a.id}>{a.name}</option>)}
+            </select>
+          )}
 
           {/* Key override */}
           {item.type === 'song' && (
@@ -383,6 +420,8 @@ export default function PlanEditPage() {
         type: item.type,
         song_id: item.song_id,
         song_title: item.song_title,
+        arrangement_id: item.arrangement_id ?? null,
+        song_base_title: item.song_base_title ?? item.song_title,
         song_author: item.song_author,
         song_default_key: item.song_default_key,
         song_category: item.song_category,
@@ -424,7 +463,7 @@ export default function PlanEditPage() {
     setItems(prev => {
       const songItem: PlanItem = {
         id: newId(), type: 'song', song_id: song.id,
-        song_title: song.title, song_author: song.author,
+        song_title: song.title, song_base_title: song.title, arrangement_id: null, song_author: song.author,
         song_default_key: song.default_key, song_category: song.category,
         song_suggested_structure: (song as any).suggested_structure || '',
         song_default_duration: (song as any).default_duration ?? null,
@@ -486,6 +525,7 @@ export default function PlanEditPage() {
           items: items.map(item => ({
             id: item.dbId || undefined,
             type: item.type, song_id: item.song_id || null,
+            arrangement_id: item.song_id ? (item.arrangement_id || null) : null,
             title: item.title || null, content: item.content || null, notes: item.notes || null,
             key_override: item.key_override || null,
             custom_structure: item.custom_structure || null,
@@ -778,6 +818,7 @@ export default function PlanEditPage() {
                     showDurations={showDurations}
                     calculatedStart={startTimes[idx]}
                     planTimes={planTimes}
+                    songInfo={item.song_id ? songs.find(s => s.id === item.song_id) : undefined}
                   />
                 ))}
                 </div>

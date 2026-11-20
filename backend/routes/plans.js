@@ -201,9 +201,12 @@ router.get('/overview', requireAuth, requireMembership, async function(req, res,
     const [items, musicians, unavailability] = await Promise.all([
       pool.query(
         `SELECT pi.plan_id, pi.id, pi.type, pi.phase, pi.title, pi.position, pi.key_override, pi.duration_minutes,
-                pi.service_times, s.id AS song_id, s.title AS song_title, s.default_key AS song_default_key,
+                pi.service_times, s.id AS song_id,
+                CASE WHEN sa.id IS NOT NULL THEN s.title || ' — ' || sa.name ELSE s.title END AS song_title,
+                pi.arrangement_id, COALESCE(sa.default_key, s.default_key) AS song_default_key,
                 s.default_duration AS song_default_duration
            FROM plan_items pi LEFT JOIN songs s ON s.id = pi.song_id
+           LEFT JOIN song_arrangements sa ON sa.id = pi.arrangement_id AND sa.song_id = pi.song_id
           WHERE pi.plan_id = ANY($1::uuid[])
           ORDER BY pi.plan_id, pi.position`,
         [planIds]
@@ -351,16 +354,20 @@ router.get('/:id', requireAuth, requireMemberOrGuest, async function(req, res, n
     const items = await pool.query(
       `SELECT si.id, si.type, si.phase, si.title, si.notes, si.content, si.key_override, si.position, si.service_times,
         si.custom_structure, si.duration_minutes,
-        s.id AS song_id, s.title AS song_title, s.author AS song_author,
-        s.default_key AS song_default_key, s.category AS song_category,
+        s.id AS song_id, CASE WHEN sa.id IS NOT NULL THEN s.title || ' — ' || sa.name ELSE s.title END AS song_title, s.author AS song_author,
+        -- Arrangements: song_title includes the arrangement name, and key / structure / links come from the
+        -- chosen arrangement (NULL = the song's main one). See claude/song-arrangements.md.
+        si.arrangement_id, sa.name AS arrangement_name, s.title AS song_base_title,
+        COALESCE(sa.default_key, s.default_key) AS song_default_key, s.category AS song_category,
         s.ccli_number AS song_ccli_number,
-        s.suggested_structure AS song_suggested_structure,
+        CASE WHEN sa.id IS NOT NULL THEN sa.suggested_structure ELSE s.suggested_structure END AS song_suggested_structure,
         s.lyrics AS song_lyrics,
         s.default_duration AS song_default_duration,
         COALESCE((SELECT JSON_AGG(jsonb_build_object('url', v.url, 'label', v.label, 'link_type', v.link_type) ORDER BY v.sort_order, v.id)
-                  FROM song_videos v WHERE v.song_id = s.id), '[]') AS song_links
+                  FROM song_videos v WHERE v.song_id = s.id AND v.arrangement_id IS NOT DISTINCT FROM si.arrangement_id), '[]') AS song_links
        FROM plan_items si
        LEFT JOIN songs s ON s.id = si.song_id
+       LEFT JOIN song_arrangements sa ON sa.id = si.arrangement_id AND sa.song_id = si.song_id
        WHERE si.plan_id = $1
        ORDER BY si.position`,
       [req.params.id]
@@ -392,15 +399,17 @@ router.get('/public/:token', async function(req, res, next) {
     const items = await pool.query(
       `SELECT si.type, si.phase, si.title, si.notes, si.content, si.key_override, si.position,
         si.custom_structure, si.duration_minutes, si.service_times,
-        s.id AS song_id, s.title AS song_title, s.author AS song_author,
-        s.default_key AS song_default_key,
+        s.id AS song_id, CASE WHEN sa.id IS NOT NULL THEN s.title || ' — ' || sa.name ELSE s.title END AS song_title, s.author AS song_author,
+        si.arrangement_id, sa.name AS arrangement_name, s.title AS song_base_title,
+        COALESCE(sa.default_key, s.default_key) AS song_default_key,
         s.ccli_number AS song_ccli_number,
-        s.suggested_structure AS song_suggested_structure,
+        CASE WHEN sa.id IS NOT NULL THEN sa.suggested_structure ELSE s.suggested_structure END AS song_suggested_structure,
         s.default_duration AS song_default_duration,
         COALESCE((SELECT JSON_AGG(jsonb_build_object('url', v.url, 'label', v.label, 'link_type', v.link_type) ORDER BY v.sort_order, v.id)
-                  FROM song_videos v WHERE v.song_id = s.id), '[]') AS song_links
+                  FROM song_videos v WHERE v.song_id = s.id AND v.arrangement_id IS NOT DISTINCT FROM si.arrangement_id), '[]') AS song_links
        FROM plan_items si
        LEFT JOIN songs s ON s.id = si.song_id
+       LEFT JOIN song_arrangements sa ON sa.id = si.arrangement_id AND sa.song_id = si.song_id
        WHERE si.plan_id = $1
        ORDER BY si.position`,
       [plan.rows[0].id]
@@ -596,6 +605,22 @@ router.put('/:id/items', requireAuth, requireMembership, async function(req, res
         return res.status(400).json({ error: 'One or more songs were not found in this church' });
       }
     }
+    // Arrangements: each sent arrangement_id must belong to that item's song (songs already checked above).
+    // An item that doesn't send arrangement_id keeps its current one (unless its song changed).
+    const arrIds = [...new Set(items.map(it => it && it.arrangement_id).filter(Boolean))];
+    if (arrIds.some(id => typeof id !== 'string' || !UUID_RE.test(id))) {
+      return res.status(400).json({ error: 'Invalid arrangement id' });
+    }
+    const arrSong = new Map();
+    if (arrIds.length > 0) {
+      const ar = await pool.query('SELECT id, song_id FROM song_arrangements WHERE id = ANY($1::uuid[])', [arrIds]);
+      for (const r of ar.rows) arrSong.set(r.id, r.song_id);
+    }
+    for (const it of items) {
+      if (it.arrangement_id && arrSong.get(it.arrangement_id.toLowerCase()) !== (it.song_id || '').toLowerCase()) {
+        return res.status(400).json({ error: "An arrangement doesn't belong to its song" });
+      }
+    }
 
     // One transaction with the plan row locked (same lock as the overview's single-item
     // routes and the ChurchSuite sync), so a failure can't leave the plan half-saved.
@@ -620,18 +645,23 @@ router.put('/:id/items', requireAuth, requireMembership, async function(req, res
       const values = [item.type.trim(), item.song_id || null, item.title || null, item.notes || null, sanitizeRichText(item.content), item.key_override || null, i, item.custom_structure || null, duration];
       const serviceTimes = parseItemServiceTimes(item.service_times).value; // validated above; undefined = not sent
       const itemId = item.id != null ? item.id.toLowerCase() : null;
+      const arrSent = Object.prototype.hasOwnProperty.call(item, 'arrangement_id');
+      const arrValue = item.song_id && item.arrangement_id ? item.arrangement_id : null;
       if (itemId && currentIds.has(itemId)) {
         await client.query(
           `UPDATE plan_items SET type=$1, song_id=$2, title=$3, notes=$4, content=$5, key_override=$6, position=$7,
                   custom_structure=$8, duration_minutes=$9, phase=COALESCE($10, phase),
-                  service_times=COALESCE($13::time[], service_times)
+                  service_times=COALESCE($13::time[], service_times),
+                  arrangement_id = CASE WHEN $14 THEN $15::uuid
+                                        WHEN song_id IS DISTINCT FROM $2 THEN NULL
+                                        ELSE arrangement_id END
             WHERE id=$11 AND plan_id=$12`,
-          [...values, phase, itemId, planId, serviceTimes ?? null]
+          [...values, phase, itemId, planId, serviceTimes ?? null, arrSent, arrValue]
         );
       } else {
         await client.query(
-          'INSERT INTO plan_items (plan_id, type, song_id, title, notes, content, key_override, position, custom_structure, duration_minutes, phase, service_times) VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12)',
-          [planId, ...values, phase || 'service', serviceTimes || []]
+          'INSERT INTO plan_items (plan_id, type, song_id, title, notes, content, key_override, position, custom_structure, duration_minutes, phase, service_times, arrangement_id) VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13)',
+          [planId, ...values, phase || 'service', serviceTimes || [], arrValue]
         );
       }
     }
@@ -710,13 +740,15 @@ router.patch('/:id/items/:itemId/notes', requireAuth, requireMembership, async f
 // Each returns the plan's items in the same shape as GET /overview so the column can redraw.
 
 const OVERVIEW_ITEM_COLUMNS = `pi.id, pi.type, pi.phase, pi.title, pi.position, pi.key_override, pi.duration_minutes, pi.service_times,
-  s.id AS song_id, s.title AS song_title, s.default_key AS song_default_key,
+  s.id AS song_id, CASE WHEN sa.id IS NOT NULL THEN s.title || ' — ' || sa.name ELSE s.title END AS song_title,
+  pi.arrangement_id, COALESCE(sa.default_key, s.default_key) AS song_default_key,
   s.default_duration AS song_default_duration`;
 
 async function overviewItems(client, planId) {
   const r = await client.query(
     `SELECT ${OVERVIEW_ITEM_COLUMNS}
        FROM plan_items pi LEFT JOIN songs s ON s.id = pi.song_id
+       LEFT JOIN song_arrangements sa ON sa.id = pi.arrangement_id AND sa.song_id = pi.song_id
       WHERE pi.plan_id = $1 ORDER BY pi.position, pi.id`,
     [planId]
   );
@@ -768,6 +800,16 @@ async function loadChurchSong(client, songId, churchId) {
 }
 
 const SONG_NOT_FOUND = { status: 400, body: { error: 'That song was not found in this church' } };
+const ARRANGEMENT_NOT_FOUND = { status: 400, body: { error: "That arrangement wasn't found for this song" } };
+
+// An optional arrangement for a song: null/'' → null (the main arrangement), one of the song's → its id,
+// anything else → false. See claude/song-arrangements.md.
+async function loadSongArrangement(client, songId, arrangementId) {
+  if (arrangementId == null || arrangementId === '') return null;
+  if (!isUuid(arrangementId)) return false;
+  const r = await client.query('SELECT id FROM song_arrangements WHERE id = $1 AND song_id = $2', [arrangementId, songId]);
+  return r.rows[0] ? r.rows[0].id : false;
+}
 const ITEM_NOT_FOUND = { status: 404, body: { error: 'Plan item not found' } };
 
 // POST /:id/items — add one item. Position: { position? } (0-based; omitted or too big = end).
@@ -777,14 +819,16 @@ const ITEM_NOT_FOUND = { status: 404, body: { error: 'Plan item not found' } };
 //   { type: 'custom', title }      → a service item with just a title ("Other" / the default chips)
 //   { type: 'song_slot', title? }  → a "song to be chosen" slot, with an optional label
 router.post('/:id/items', requireAuth, requireMembership, function(req, res, next) {
-  const { song_id, snippet_id, type, title, position } = req.body || {};
+  const { song_id, snippet_id, type, title, position, arrangement_id } = req.body || {};
   withEditablePlan(req, res, next, async (client) => {
     let row;
     if (song_id != null) {
       const song = await loadChurchSong(client, song_id, req.churchId);
       if (!song) return SONG_NOT_FOUND;
+      const arrangementId = await loadSongArrangement(client, song.id, arrangement_id);
+      if (arrangementId === false) return ARRANGEMENT_NOT_FOUND;
       // key_override stays NULL so the song's default key shows (the builder fills it on next open).
-      row = { type: 'song', song_id: song.id, title: null, notes: null, content: null, duration: song.default_duration || null };
+      row = { type: 'song', song_id: song.id, title: null, notes: null, content: null, duration: song.default_duration || null, arrangement_id: arrangementId };
     } else if (snippet_id != null) {
       const snip = isUuid(snippet_id)
         ? await client.query('SELECT title, content, note FROM church_liturgy_snippets WHERE id = $1 AND church_id = $2', [snippet_id, req.churchId])
@@ -807,9 +851,9 @@ router.post('/:id/items', requireAuth, requireMembership, function(req, res, nex
     if (!Number.isFinite(pos) || pos < 0 || pos > n) pos = n;
     await client.query('UPDATE plan_items SET position = position + 1 WHERE plan_id = $1 AND position >= $2', [req.params.id, pos]);
     await client.query(
-      `INSERT INTO plan_items (plan_id, type, song_id, title, notes, content, position, duration_minutes, phase)
-       VALUES ($1, $2, $3, $4, $5, $6, $7, $8, 'service')`,
-      [req.params.id, row.type, row.song_id, row.title, row.notes, row.content, pos, row.duration]
+      `INSERT INTO plan_items (plan_id, type, song_id, title, notes, content, position, duration_minutes, phase, arrangement_id)
+       VALUES ($1, $2, $3, $4, $5, $6, $7, $8, 'service', $9)`,
+      [req.params.id, row.type, row.song_id, row.title, row.notes, row.content, pos, row.duration, row.arrangement_id || null]
     );
   });
 });
@@ -818,10 +862,12 @@ router.post('/:id/items', requireAuth, requireMembership, function(req, res, nex
 // on a song row. Key and structure belong to the old song, so they're cleared; notes are kept.
 // A slot's label ("Opening song") is dropped, as the builder does when it fills a slot.
 router.patch('/:id/items/:itemId/song', requireAuth, requireMembership, function(req, res, next) {
-  const { song_id } = req.body || {};
+  const { song_id, arrangement_id } = req.body || {};
   withEditablePlan(req, res, next, async (client) => {
     const song = await loadChurchSong(client, song_id, req.churchId);
     if (!song) return SONG_NOT_FOUND;
+    const arrangementId = await loadSongArrangement(client, song.id, arrangement_id);
+    if (arrangementId === false) return ARRANGEMENT_NOT_FOUND;
     const item = await client.query('SELECT type, duration_minutes FROM plan_items WHERE id = $1 AND plan_id = $2', [req.params.itemId, req.params.id]);
     if (item.rows.length === 0) return ITEM_NOT_FOUND;
     const it = item.rows[0];
@@ -832,9 +878,9 @@ router.patch('/:id/items/:itemId/song', requireAuth, requireMembership, function
     const duration = song.default_duration || (it.type === 'song_slot' ? it.duration_minutes : null) || null;
     await client.query(
       `UPDATE plan_items SET type = 'song', song_id = $1, title = NULL, key_override = NULL,
-              custom_structure = NULL, duration_minutes = $2
+              custom_structure = NULL, duration_minutes = $2, arrangement_id = $5
         WHERE id = $3 AND plan_id = $4`,
-      [song.id, duration, req.params.itemId, req.params.id]
+      [song.id, duration, req.params.itemId, req.params.id, arrangementId]
     );
   });
 });
@@ -1050,10 +1096,12 @@ router.post('/:id/email', requireAuth, requireMembership, async function(req, re
 
     // Fetch items
     const itemsResult = await pool.query(
-      `SELECT si.*, s.title AS song_title, s.default_key AS song_default_key, s.category AS song_category,
+      `SELECT si.*, CASE WHEN sa.id IS NOT NULL THEN s.title || ' — ' || sa.name ELSE s.title END AS song_title,
+              COALESCE(sa.default_key, s.default_key) AS song_default_key, s.category AS song_category,
               s.default_duration AS song_default_duration
        FROM plan_items si
        LEFT JOIN songs s ON s.id = si.song_id
+       LEFT JOIN song_arrangements sa ON sa.id = si.arrangement_id AND sa.song_id = si.song_id
        WHERE si.plan_id = $1
        ORDER BY si.position ASC`,
       [planId]
@@ -1285,8 +1333,8 @@ router.post('/:id/duplicate', requireAuth, requirePermission('can_add_plans'), a
     const newId = newPlan.rows[0].id;
 
     await client.query(
-      `INSERT INTO plan_items (plan_id, type, title, notes, content, song_id, key_override, position, custom_structure, duration_minutes, phase, service_times)
-       SELECT $1, type, title, notes, content, song_id, key_override, position, custom_structure, duration_minutes, COALESCE(phase, 'service'), service_times
+      `INSERT INTO plan_items (plan_id, type, title, notes, content, song_id, key_override, position, custom_structure, duration_minutes, phase, service_times, arrangement_id)
+       SELECT $1, type, title, notes, content, song_id, key_override, position, custom_structure, duration_minutes, COALESCE(phase, 'service'), service_times, arrangement_id
          FROM plan_items WHERE plan_id = $2 ORDER BY position`,
       [newId, orig.id]
     );
@@ -1348,8 +1396,8 @@ router.post('/:id/split', requireAuth, requirePermission('can_add_plans'), async
       // Only the items at this service (per-service items, e.g. a 9:15-only baptism, stay with their
       // own service). The copies are plain every-service items of a single-service plan.
       await client.query(
-        `INSERT INTO plan_items (plan_id, type, title, notes, content, song_id, key_override, position, custom_structure, duration_minutes, phase)
-         SELECT $1, type, title, notes, content, song_id, key_override, position, custom_structure, duration_minutes, COALESCE(phase, 'service')
+        `INSERT INTO plan_items (plan_id, type, title, notes, content, song_id, key_override, position, custom_structure, duration_minutes, phase, arrangement_id)
+         SELECT $1, type, title, notes, content, song_id, key_override, position, custom_structure, duration_minutes, COALESCE(phase, 'service'), arrangement_id
            FROM plan_items WHERE plan_id = $2 AND ${AT_SERVICE_SQL('$3::time', '$4::time[]')} ORDER BY position`,
         [newId, orig.id, hhmm, allTimes]
       );

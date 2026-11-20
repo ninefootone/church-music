@@ -12,11 +12,18 @@ interface AddToPlanModalProps {
     id: string
     title: string
     default_key?: string
+    main_arrangement_name?: string | null
+    arrangements?: { id: string; name: string; default_key: string | null }[]
   }
+  /** The arrangement selected on the song page (null = the main one). See claude/song-arrangements.md. */
+  initialArrangementId?: string | null
   onClose: () => void
 }
 
-export function AddToPlanModal({ song, onClose }: AddToPlanModalProps) {
+export function AddToPlanModal({ song, initialArrangementId = null, onClose }: AddToPlanModalProps) {
+  const arrangements = song.arrangements || []
+  const [arrangementId, setArrangementId] = useState<string | null>(initialArrangementId)
+  const chosenArrangement = arrangements.find(a => a.id === arrangementId) || null
   const router = useRouter()
   const [plans, setPlans] = useState<any[]>([])
   const [loading, setLoading] = useState(true)
@@ -44,6 +51,7 @@ export function AddToPlanModal({ song, onClose }: AddToPlanModalProps) {
         id: item.id,
         type: item.type,
         song_id: item.song_id || null,
+        arrangement_id: item.arrangement_id || null,
         title: item.title || null,
         notes: item.notes || null,
         content: item.content || null,
@@ -56,10 +64,11 @@ export function AddToPlanModal({ song, onClose }: AddToPlanModalProps) {
       const newSong = {
         type: 'song',
         song_id: song.id,
+        arrangement_id: chosenArrangement ? chosenArrangement.id : null,
         title: null,
         notes: null,
         content: null,
-        key_override: song.default_key || null,
+        key_override: (chosenArrangement ? chosenArrangement.default_key : null) || song.default_key || null,
         custom_structure: null,
         duration_minutes: (song as any).default_duration ?? null,
         phase: 'service',
@@ -104,8 +113,18 @@ export function AddToPlanModal({ song, onClose }: AddToPlanModalProps) {
           </button>
         </div>
 
+        {arrangements.length > 0 && (
+          <div className="form-field" style={{ marginBottom: '0.75rem' }}>
+            <label className="label">Arrangement</label>
+            <select className="input" value={arrangementId || ''} onChange={e => setArrangementId(e.target.value || null)}>
+              <option value="">{song.main_arrangement_name || 'Standard'}</option>
+              {arrangements.map(a => <option key={a.id} value={a.id}>{a.name}</option>)}
+            </select>
+          </div>
+        )}
+
         <p className="modal-subtitle">
-          Adding <strong>{song.title}</strong> to:
+          Adding <strong>{song.title}{chosenArrangement ? ` — ${chosenArrangement.name}` : ''}</strong> to:
         </p>
 
         {error && <div className="error-box">{error}</div>}

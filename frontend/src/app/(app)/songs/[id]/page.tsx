@@ -326,6 +326,7 @@ export default function SongDetailPage() {
       {showAddToPlan && song && (
         <AddToPlanModal
           song={song}
+          initialArrangementId={arr ? arr.id : null}
           onClose={() => setShowAddToPlan(false)}
         />
       )}

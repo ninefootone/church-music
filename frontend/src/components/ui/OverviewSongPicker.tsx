@@ -21,6 +21,8 @@ interface PickerSong {
   title: string
   author: string | null
   default_key: string | null
+  main_arrangement_name?: string | null
+  arrangements?: { id: string; name: string; default_key: string | null }[]
 }
 
 interface Use {
@@ -56,6 +58,8 @@ export function OverviewSongPicker({ planId, planTitle, planDate, mode, repeatWe
   const [query, setQuery] = useState('')
   const [saving, setSaving] = useState<string | null>(null)
   const [error, setError] = useState<string | null>(null)
+  // A song with arrangements asks which one before saving (see claude/song-arrangements.md).
+  const [pickArrangementFor, setPickArrangementFor] = useState<PickerSong | null>(null)
 
   const load = () => {
     setLoadError(null)
@@ -66,6 +70,7 @@ export function OverviewSongPicker({ planId, planTitle, planDate, mode, repeatWe
       .then(([s, h]) => {
         const list: PickerSong[] = (s.data || []).map((x: PickerSong) => ({
           id: x.id, title: x.title, author: x.author, default_key: x.default_key,
+          main_arrangement_name: x.main_arrangement_name, arrangements: x.arrangements || [],
         }))
         list.sort((a, b) => (a.title || '').localeCompare(b.title || ''))
         setSongs(list)
@@ -99,15 +104,20 @@ export function OverviewSongPicker({ planId, planTitle, planDate, mode, repeatWe
     return out
   }
 
-  const choose = async (song: PickerSong) => {
+  const choose = async (song: PickerSong, arrangementId?: string | null) => {
     if (saving) return
+    if (arrangementId === undefined && (song.arrangements || []).length > 0) {
+      setPickArrangementFor(song)
+      return
+    }
     setSaving(song.id)
     setError(null)
     try {
+      const body = { song_id: song.id, arrangement_id: arrangementId || null }
       if (mode.kind === 'add') {
-        await api.post(`/api/plans/${planId}/items`, { song_id: song.id })
+        await api.post(`/api/plans/${planId}/items`, body)
       } else {
-        await api.patch(`/api/plans/${planId}/items/${mode.itemId}/song`, { song_id: song.id })
+        await api.patch(`/api/plans/${planId}/items/${mode.itemId}/song`, body)
       }
       onChosen()
       onClose()
@@ -160,7 +170,27 @@ export function OverviewSongPicker({ planId, planTitle, planDate, mode, repeatWe
 
         {error && <p className="error-text">{error}</p>}
 
-        {loadError ? (
+        {pickArrangementFor ? (
+          <div className="po-message">
+            <p><strong>{pickArrangementFor.title}</strong> — which arrangement?</p>
+            <ul className="po-picker-list">
+              {[{ id: null as string | null, name: pickArrangementFor.main_arrangement_name || 'Standard', default_key: pickArrangementFor.default_key },
+                ...(pickArrangementFor.arrangements || [])].map(a => (
+                <li key={a.id || 'main'}>
+                  <button type="button" className="po-picker-song" disabled={!!saving}
+                    onClick={() => choose(pickArrangementFor, a.id)}>
+                    <span className="po-picker-row">
+                      <span className="po-picker-title">{a.name}</span>
+                      {a.default_key && <KeyBadge keyOf={a.default_key} />}
+                    </span>
+                    {saving === pickArrangementFor.id && <span className="po-picker-muted">Saving…</span>}
+                  </button>
+                </li>
+              ))}
+            </ul>
+            <button type="button" className="btn btn-secondary btn-sm" disabled={!!saving} onClick={() => setPickArrangementFor(null)}>Back to songs</button>
+          </div>
+        ) : loadError ? (
           <div className="po-message">
             <div className="error-box">{loadError}</div>
             <button type="button" className="btn btn-secondary btn-sm" onClick={load}>Try again</button>

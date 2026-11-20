@@ -13,6 +13,15 @@ const { v4: uuidv4 } = require('uuid');
 const { normaliseKey } = require('../utils/keys');
 const { isUuid } = require('../utils/ids');
 
+// ?arrangement= on the file/recording lists: undefined → no filter; 'main' → arrangement_id IS NULL;
+// a uuid → that arrangement. sql(n, prefix) returns the AND-clause using parameter $n.
+function arrangementFilter(raw) {
+  if (raw === undefined || raw === '') return { sql: () => '', params: [] };
+  if (raw === 'main') return { sql: (n, p = '') => ` AND ${p}arrangement_id IS NULL`, params: [] };
+  if (!isUuid(raw)) return { error: 'Arrangement not found' };
+  return { sql: (n, p = '') => ` AND ${p}arrangement_id = $${n}`, params: [raw] };
+}
+
 // A file can belong to one of the song's arrangements (song_files.arrangement_id; NULL = the main one).
 // Returns { value } (uuid or null) or { error }. See claude/song-arrangements.md.
 async function cleanArrangementId(raw, songId) {
@@ -397,11 +406,15 @@ router.get('/songs/:songId/files', requireAuth, requireMemberOrGuest, async func
       return res.status(404).json({ error: 'Song not found' });
     }
 
+    // ?arrangement=<id> or ?arrangement=main → only that arrangement's files (plan pages, set view).
+    // No parameter → every file (older iPad builds). See claude/song-arrangements.md.
+    const arrFilter = arrangementFilter(req.query.arrangement);
+    if (arrFilter.error) return res.status(400).json({ error: arrFilter.error });
     const files = await pool.query(
       // Rehearsal recordings (audio) are left out: iPad build 4 treats every file here as sheet
       // music and downloads all of them for offline. See claude/rehearsal-recordings.md.
-      "SELECT * FROM song_files WHERE song_id = $1 AND file_type <> 'audio' ORDER BY key_of, file_type",
-      [req.params.songId]
+      "SELECT * FROM song_files WHERE song_id = $1 AND file_type <> 'audio'" + arrFilter.sql(2) + " ORDER BY key_of, file_type",
+      [req.params.songId, ...arrFilter.params]
     );
 
     const filesWithUrls = await Promise.all(files.rows.map(async function(file) {
@@ -429,15 +442,17 @@ router.get('/songs/:songId/recordings', requireAuth, requireMemberOrGuest, async
     if (isGuest(req) && !(await guestCanSeeSong(req, req.params.songId))) {
       return res.status(404).json({ error: 'Song not found' });
     }
+    const arrFilter = arrangementFilter(req.query.arrangement);
+    if (arrFilter.error) return res.status(400).json({ error: arrFilter.error });
     const result = await pool.query(
       `SELECT sf.id, sf.song_id, sf.file_type, sf.label, sf.key_of, sf.file_size, sf.uploaded_at,
               COALESCE(NULLIF(u.name, ''), u.email) AS uploaded_by_name
          FROM song_files sf
          JOIN songs s ON s.id = sf.song_id
          LEFT JOIN users u ON u.id = sf.uploaded_by
-        WHERE sf.song_id = $1 AND s.church_id = $2 AND sf.file_type = 'audio'
+        WHERE sf.song_id = $1 AND s.church_id = $2 AND sf.file_type = 'audio'` + arrFilter.sql(3, 'sf.') + `
         ORDER BY sf.key_of, sf.uploaded_at`,
-      [req.params.songId, req.churchId]
+      [req.params.songId, req.churchId, ...arrFilter.params]
     );
     res.json(result.rows);
   } catch (err) {
