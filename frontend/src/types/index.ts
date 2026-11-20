@@ -135,6 +135,7 @@ export interface PlanItem {
   song_id: string | null
   arrangement_id?: string | null // song arrangement chosen for this plan; NULL = the song's main one
   arrangement_name?: string | null
+  song_base_title?: string | null // song title without the arrangement name
   title: string | null
   notes: string | null
   key_override: string | null

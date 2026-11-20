@@ -189,7 +189,8 @@ function SortableItem({
             ) : item.type === 'song' ? (
               <>
                 <p className="dash-row-title">
-                  {item.song_title}
+                  {/* The arrangement shows in its own dropdown, so just the song's title here. */}
+                  {item.song_base_title || item.song_title}
                   {onlyLabel && <span className="badge badge-service-only">{onlyLabel}</span>}
                 </p>
               </>

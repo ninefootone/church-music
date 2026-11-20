@@ -108,7 +108,11 @@ function SongItem({ item, index, token, churchId, showTimings, showDurations, ca
 
         <div className="dash-row-content">
           <p className={`item-title${isSongSlot(item) ? ' song-slot-label' : ''}`} style={{ fontWeight: isSong ? 600 : 400, color: isSong ? 'var(--color-text-primary)' : 'var(--color-text-secondary)' }}>
-            {isSong && item.song_title ? item.song_title : nonSongLabel(item)}
+            {isSong && item.song_title
+              ? (item.arrangement_name
+                  ? <>{item.song_base_title}<span className="badge badge-arrangement">{item.arrangement_name}</span></>
+                  : item.song_title)
+              : nonSongLabel(item)}
             {onlyLabel && <span className="badge badge-service-only">{onlyLabel}</span>}
           </p>
           {item.notes && (
