@@ -11,6 +11,16 @@ const { requireAuth, requireAdmin, requireMembership, requireMemberOrGuest, requ
 const { isGuest, guestCanSeeSong } = require('../utils/guestAccess');
 const { v4: uuidv4 } = require('uuid');
 const { normaliseKey } = require('../utils/keys');
+const { isUuid } = require('../utils/ids');
+
+// A file can belong to one of the song's arrangements (song_files.arrangement_id; NULL = the main one).
+// Returns { value } (uuid or null) or { error }. See claude/song-arrangements.md.
+async function cleanArrangementId(raw, songId) {
+  if (raw === undefined || raw === null || raw === '' || raw === 'null') return { value: null };
+  if (!isUuid(raw)) return { error: 'Arrangement not found' };
+  const r = await pool.query('SELECT 1 FROM song_arrangements WHERE id = $1 AND song_id = $2', [raw, songId]);
+  return r.rows.length ? { value: raw } : { error: 'Arrangement not found' };
+}
 const { sendBrevoEmail, escapeHtml } = require('../utils/email');
 
 const endpoint = process.env.R2_ENDPOINT ||
@@ -288,6 +298,9 @@ router.post('/songs/:songId', requireAuth, requirePermission('can_manage_songs')
       return res.status(400).json({ error: 'No file provided' });
     }
 
+    const arrangement = await cleanArrangementId(req.body.arrangement_id, songId);
+    if (arrangement.error) return res.status(400).json({ error: arrangement.error });
+
     const ext = req.file.originalname.split('.').pop();
     const extLower = (ext || '').toLowerCase();
     const isAudio = AUDIO_EXT.includes(extLower);
@@ -326,8 +339,8 @@ router.post('/songs/:songId', requireAuth, requirePermission('can_manage_songs')
     }));
 
     const result = await pool.query(
-      'INSERT INTO song_files (song_id, file_type, label, key_of, r2_key, file_size, uploaded_by) VALUES ($1,$2,$3,$4,$5,$6,$7) RETURNING *',
-      [songId, file_type, label, key_of || null, r2Key, req.file.size, req.user.id]
+      'INSERT INTO song_files (song_id, file_type, label, key_of, r2_key, file_size, uploaded_by, arrangement_id) VALUES ($1,$2,$3,$4,$5,$6,$7,$8) RETURNING *',
+      [songId, file_type, label, key_of || null, r2Key, req.file.size, req.user.id, arrangement.value]
     );
 
     res.status(201).json(result.rows[0]);
@@ -444,13 +457,18 @@ router.patch('/songs/:songId/files/:fileId', requireAuth, requirePermission('can
     if (file_type === 'audio') {
       return res.status(400).json({ error: 'Upload an audio file to add a rehearsal recording.' });
     }
+    // Moving a file to another arrangement: only when arrangement_id is sent (null = the main one).
+    const moveArrangement = 'arrangement_id' in req.body;
+    const arrangement = moveArrangement ? await cleanArrangementId(req.body.arrangement_id, req.params.songId) : { value: null };
+    if (arrangement.error) return res.status(400).json({ error: arrangement.error });
     const result = await pool.query(
       // A recording's type can't be changed (and nothing can become one) — see the upload route.
-      `UPDATE song_files sf SET file_type = CASE WHEN sf.file_type = 'audio' THEN sf.file_type ELSE COALESCE($1, sf.file_type) END, label = COALESCE($2, sf.label), key_of = $3
+      `UPDATE song_files sf SET file_type = CASE WHEN sf.file_type = 'audio' THEN sf.file_type ELSE COALESCE($1, sf.file_type) END, label = COALESCE($2, sf.label), key_of = $3,
+           arrangement_id = CASE WHEN $7 THEN $8::uuid ELSE sf.arrangement_id END
        FROM songs s
        WHERE sf.id = $4 AND sf.song_id = $5 AND sf.song_id = s.id AND s.church_id = $6
        RETURNING sf.*`,
-      [file_type, label, normaliseKey(key_of) || null, req.params.fileId, req.params.songId, req.churchId]
+      [file_type, label, normaliseKey(key_of) || null, req.params.fileId, req.params.songId, req.churchId, moveArrangement, arrangement.value]
     );
     if (result.rows.length === 0) {
       return res.status(404).json({ error: 'File not found' });

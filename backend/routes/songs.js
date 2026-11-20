@@ -2,7 +2,7 @@ const express = require('express');
 const router = express.Router();
 const { requireIdParams } = require('../utils/ids');
 // Malformed IDs in the URL → 404 before any handler runs (see utils/ids.js).
-requireIdParams(router, { id: 'Not found', videoId: 'Link not found' });
+requireIdParams(router, { id: 'Not found', videoId: 'Link not found', arrangementId: 'Arrangement not found' });
 const pool = require('../db/pool');
 const { requireAuth, requireMembership, requireAdmin, requirePermission } = require('../middleware/auth');
 const { songLimitReached, SONG_LIMIT_MESSAGE } = require('../utils/limits');
@@ -394,7 +394,8 @@ router.get('/', requireAuth, requireMembership, async (req, res, next) => {
         COUNT(DISTINCT ss.id) FILTER (WHERE srv.plan_date <= NOW()) AS times_sung,
         COUNT(DISTINCT ss.id) FILTER (WHERE srv.plan_date > NOW()) AS times_planned,
         MAX(srv.plan_date) FILTER (WHERE srv.plan_date <= NOW()) AS last_sung,
-        MIN(srv.plan_date) FILTER (WHERE srv.plan_date > NOW()) AS next_planned
+        MIN(srv.plan_date) FILTER (WHERE srv.plan_date > NOW()) AS next_planned,
+        (SELECT COUNT(*)::int FROM song_arrangements sa WHERE sa.song_id = s.id) AS arrangement_count
         /*MATCHED_ON*/
       FROM songs s
       LEFT JOIN song_tags st ON st.song_id = s.id
@@ -522,6 +523,13 @@ router.get('/:id', requireAuth, requireMembership, async (req, res, next) => {
       [req.params.id]
     );
 
+    // Arrangements (versions). The song itself is the main one; see claude/song-arrangements.md.
+    const arrangements = await pool.query(
+      `SELECT sa.*, (SELECT COUNT(*)::int FROM plan_items pi WHERE pi.arrangement_id = sa.id) AS plan_count
+         FROM song_arrangements sa WHERE sa.song_id = $1 ORDER BY sa.position, sa.created_at`,
+      [req.params.id]
+    );
+
     // Usage stats
     const usage = await pool.query(
       `SELECT
@@ -550,6 +558,7 @@ router.get('/:id', requireAuth, requireMembership, async (req, res, next) => {
       files: files.rows,
       recordings: recordings,
       videos: videos.rows,
+      arrangements: arrangements.rows,
       usage: usage.rows[0],
       recent_plans: recentPlans.rows,
     });
@@ -890,5 +899,130 @@ router.delete('/:id/videos/:videoId', requireAuth, requirePermission('can_manage
     next(err);
   }
 });
+
+// ── Arrangements (versions of a song) ─────────────────────────────────────────
+// One song, several arrangements: the song's own fields are the main arrangement ("Standard" unless
+// songs.main_arrangement_name is set); song_arrangements rows hold only what differs (name, key, tempo,
+// time signature, notes, structure). Files point at one via song_files.arrangement_id (NULL = main).
+// See claude/song-arrangements.md.
+const ARR_FIELDS = ['name', 'default_key', 'tempo', 'time_signature', 'notes', 'suggested_structure'];
+
+function cleanArrangementName(raw) {
+  return typeof raw === 'string' ? raw.trim().replace(/\s+/g, ' ').slice(0, 80) : '';
+}
+
+// A name must differ from the main arrangement's and from the song's other arrangements.
+async function arrangementNameProblem(songId, name, exceptId) {
+  const main = await pool.query('SELECT main_arrangement_name FROM songs WHERE id = $1', [songId]);
+  const mainName = (main.rows[0]?.main_arrangement_name || 'Standard').toLowerCase();
+  if (name.toLowerCase() === mainName) return `"${name}" is the name of this song's main arrangement — choose another name.`;
+  const dup = await pool.query(
+    'SELECT 1 FROM song_arrangements WHERE song_id = $1 AND lower(name) = lower($2) AND ($3::uuid IS NULL OR id <> $3)',
+    [songId, name, exceptId || null]
+  );
+  if (dup.rows.length) return `This song already has an arrangement called "${name}".`;
+  return null;
+}
+
+function cleanTempo(raw) {
+  if (raw === null || raw === undefined || raw === '') return { value: null };
+  const n = Number(raw);
+  if (!Number.isInteger(n) || n < 1 || n > 400) return { error: 'Tempo must be a whole number of BPM (1–400).' };
+  return { value: n };
+}
+
+// POST /songs/:id/arrangements { name } — copies key, tempo, time signature and notes from the song;
+// structure starts empty and no files are copied.
+router.post('/:id/arrangements', requireAuth, requirePermission('can_manage_songs'), async (req, res, next) => {
+  try {
+    const songId = req.params.id;
+    if (!(await songInChurch(songId, req.churchId))) return res.status(404).json({ error: 'Song not found' });
+    const name = cleanArrangementName(req.body.name);
+    if (!name) return res.status(400).json({ error: 'Give the arrangement a name, e.g. Contemporary.' });
+    const problem = await arrangementNameProblem(songId, name);
+    if (problem) return res.status(400).json({ error: problem });
+
+    const result = await pool.query(
+      `INSERT INTO song_arrangements (song_id, name, default_key, tempo, time_signature, notes, position)
+       SELECT s.id, $2, s.default_key, s.tempo, s.time_signature, s.notes,
+              COALESCE((SELECT MAX(position) + 1 FROM song_arrangements WHERE song_id = s.id), 1)
+         FROM songs s WHERE s.id = $1
+       RETURNING *`,
+      [songId, name]
+    );
+    res.status(201).json({ ...result.rows[0], plan_count: 0 });
+  } catch (err) {
+    if (err.code === '23505') return res.status(400).json({ error: 'This song already has an arrangement with that name.' });
+    next(err);
+  }
+});
+
+// PUT /songs/:id/arrangements/:arrangementId — updates only the fields sent.
+router.put('/:id/arrangements/:arrangementId', requireAuth, requirePermission('can_manage_songs'), async (req, res, next) => {
+  try {
+    const { id: songId, arrangementId } = req.params;
+    if (!(await songInChurch(songId, req.churchId))) return res.status(404).json({ error: 'Arrangement not found' });
+
+    const sets = [];
+    const vals = [];
+    for (const field of ARR_FIELDS) {
+      if (!(field in req.body)) continue;
+      let v = req.body[field];
+      if (field === 'name') {
+        v = cleanArrangementName(v);
+        if (!v) return res.status(400).json({ error: 'The arrangement needs a name.' });
+        const problem = await arrangementNameProblem(songId, v, arrangementId);
+        if (problem) return res.status(400).json({ error: problem });
+      } else if (field === 'tempo') {
+        const t = cleanTempo(v);
+        if (t.error) return res.status(400).json({ error: t.error });
+        v = t.value;
+      } else if (field === 'default_key') {
+        v = normaliseKey(v) || null;
+      } else {
+        v = typeof v === 'string' && v.trim() !== '' ? v : null;
+      }
+      vals.push(v);
+      sets.push(`${field} = $${vals.length}`);
+    }
+    if (!sets.length) return res.status(400).json({ error: 'Nothing to update.' });
+
+    vals.push(arrangementId, songId);
+    const result = await pool.query(
+      `UPDATE song_arrangements SET ${sets.join(', ')}
+        WHERE id = $${vals.length - 1} AND song_id = $${vals.length}
+       RETURNING *, (SELECT COUNT(*)::int FROM plan_items pi WHERE pi.arrangement_id = song_arrangements.id) AS plan_count`,
+      vals
+    );
+    if (result.rows.length === 0) return res.status(404).json({ error: 'Arrangement not found' });
+    res.json(result.rows[0]);
+  } catch (err) {
+    if (err.code === '23505') return res.status(400).json({ error: 'This song already has an arrangement with that name.' });
+    next(err);
+  }
+});
+
+// DELETE /songs/:id/arrangements/:arrangementId — refused while any plan uses it.
+// Its files fall back to the main arrangement (song_files.arrangement_id ON DELETE SET NULL).
+router.delete('/:id/arrangements/:arrangementId', requireAuth, requirePermission('can_manage_songs'), async (req, res, next) => {
+  try {
+    const { id: songId, arrangementId } = req.params;
+    if (!(await songInChurch(songId, req.churchId))) return res.status(404).json({ error: 'Arrangement not found' });
+    const used = await pool.query('SELECT COUNT(*)::int AS n FROM plan_items WHERE arrangement_id = $1', [arrangementId]);
+    if (used.rows[0].n > 0) {
+      const n = used.rows[0].n;
+      return res.status(409).json({ error: `This arrangement is used in ${n} plan${n === 1 ? '' : 's'}. Change those plans to another arrangement first.` });
+    }
+    const result = await pool.query(
+      'DELETE FROM song_arrangements WHERE id = $1 AND song_id = $2 RETURNING id',
+      [arrangementId, songId]
+    );
+    if (result.rows.length === 0) return res.status(404).json({ error: 'Arrangement not found' });
+    res.json({ success: true });
+  } catch (err) {
+    next(err);
+  }
+});
+
 
 module.exports = router;
