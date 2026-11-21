@@ -9,7 +9,7 @@ import { KEYS, normaliseKey } from '@/lib/keys'
 import { StructureBuilder } from '@/components/ui/StructureBuilder'
 import { SongArrangement } from '@/types'
 
-const TIME_SIGNATURES = ['4/4', '3/4', '6/8', '9/8', '12/8', '2/4', '3/2', '5/4', '7/8']
+const TIME_SIGNATURES = ['4/4', '3/4', '6/8', '9/8', '12/8', '2/4', '2/2', '3/2', '5/4', '7/8']
 
 interface ArrangementModalProps {
   songId: string

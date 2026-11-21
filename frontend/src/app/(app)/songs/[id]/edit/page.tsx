@@ -199,6 +199,7 @@ export default function EditSongPage() {
                     <option value="9/8">9/8</option>
                     <option value="12/8">12/8</option>
                     <option value="2/4">2/4</option>
+                    <option value="2/2">2/2</option>
                     <option value="3/2">3/2</option>
                     <option value="5/4">5/4</option>
                     <option value="7/8">7/8</option>

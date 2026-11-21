@@ -497,7 +497,7 @@ router.get('/', requireAuth, requireMembership, async (req, res, next) => {
 // ---- Tempo & time page (/songs/tempo) — added 2026-11-21 for the iPad metronome ----
 // The same list as the Time Signature dropdowns on the new song + edit song pages and ArrangementModal.tsx (keep all four in step: a value the edit page can't show
 // would be wiped the next time that song is saved there).
-const TIME_SIGNATURES = ['4/4', '3/4', '6/8', '9/8', '12/8', '2/4', '3/2', '5/4', '7/8'];
+const TIME_SIGNATURES = ['4/4', '3/4', '6/8', '9/8', '12/8', '2/4', '2/2', '3/2', '5/4', '7/8'];
 
 // GET /songs/tempo-check — every non-retired song (its main arrangement) and every other arrangement, with tempo +
 // time signature, plus a suggestion from the curated Song Stack Library (same CCLI number) where it has one.
