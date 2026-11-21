@@ -8,7 +8,7 @@ import { Document, Page, pdfjs } from 'react-pdf'
 import 'react-pdf/dist/Page/AnnotationLayer.css'
 import 'react-pdf/dist/Page/TextLayer.css'
 import DOMPurify from 'dompurify'
-import { semitonesBetween, paginateChordPro, prepareChordPro, finishChordProHtml } from '@/lib/chordproRender'
+import { transposeSteps, paginateChordPro, prepareChordPro, finishChordProHtml } from '@/lib/chordproRender'
 
 if (typeof window !== 'undefined') {
   pdfjs.GlobalWorkerOptions.workerSrc = `//unpkg.com/pdfjs-dist@${pdfjs.version}/legacy/build/pdf.worker.min.mjs`
@@ -175,7 +175,7 @@ export function PublicSetViewerPage() {
               const rawKey = song.metadata?.get('key')
               const originalKey = Array.isArray(rawKey) ? rawKey[0] : rawKey
               if (originalKey && typeof originalKey === 'string') {
-                const semitones = semitonesBetween(originalKey, file.songKey)
+                const semitones = transposeSteps(originalKey, file.songKey)
                 if (semitones !== 0) rendered = song.transpose(semitones)
               }
             }

@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react'
 import { X, ChevronUp, ChevronDown } from 'lucide-react'
-import { renderChordPro, semitonesBetween } from '@/lib/chordproRender'
+import { renderChordPro, transposeSteps } from '@/lib/chordproRender'
 import { KEYS } from '@/lib/keys'
 
 
@@ -22,7 +22,7 @@ export function ChordProViewer({ content, originalKey, songKey, label, onClose }
   useEffect(() => {
     let cancelled = false
     const fromKey = originalKey || songKey
-    const semitones = selectedKey && fromKey ? semitonesBetween(fromKey, selectedKey) : 0
+    const semitones = selectedKey && fromKey ? transposeSteps(fromKey, selectedKey) : 0
     renderChordPro(content, semitones).then(result => {
       if (cancelled) return
       if (result.ok) { setRendered(result.html); return }

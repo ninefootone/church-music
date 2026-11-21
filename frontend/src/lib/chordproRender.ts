@@ -35,6 +35,21 @@ export function semitonesBetween(from: string, to: string): number {
   return (b - a + 12) % 12
 }
 
+/**
+ * Semitones to pass to song.transpose() to get from `from` to `to`. ChordSheetJS spells black notes by
+ * DIRECTION, not key (up → sharps, down → flats), so a D chart moved up to Eb showed D# G# A#. Move DOWN
+ * when the target is a flat key — spelt with a flat (Eb, Db, Gb, Bbm…), F, or Dm/Gm/Cm/Fm — otherwise up.
+ */
+export function transposeSteps(from: string, to: string): number {
+  const up = semitonesBetween(from, to)
+  if (!up) return 0
+  const m = (to || '').replace(/♯/g, '#').replace(/♭/g, 'b').trim().match(/^([A-Ga-g])([#b]?)(m(?!aj))?/)
+  const b = rootPitch(to)
+  if (!m || b === null) return up
+  const flat = m[2] === 'b' || (!m[2] && [3, 5, 8, 10].includes(m[3] ? (b + 3) % 12 : b))
+  return flat ? up - 12 : up
+}
+
 // ── Pre/post-processing shared by every ChordPro render (viewer, editor preview, set viewers) ──
 //
 // 1. Custom sections get a heading. {start_of_key_change_link} shows "Key change link", the
