@@ -494,6 +494,83 @@ router.get('/', requireAuth, requireMembership, async (req, res, next) => {
 });
 
 // GET /songs/:id — single song with files
+// ---- Tempo & time page (/songs/tempo) — added 2026-11-21 for the iPad metronome ----
+// The same list as the song edit page's Time Signature dropdown (keep them in step: a value the edit page can't show
+// would be wiped the next time that song is saved there).
+const TIME_SIGNATURES = ['4/4', '3/4', '6/8', '12/8', '2/4', '5/4', '7/8'];
+
+// GET /songs/tempo-check — every non-retired song (its main arrangement) and every other arrangement, with tempo +
+// time signature, plus a suggestion from the curated Song Stack Library (same CCLI number) where it has one.
+// Song managers only. Must sit above GET /:id.
+router.get('/tempo-check', requireAuth, requirePermission('can_manage_songs'), async (req, res, next) => {
+  try {
+    const { rows } = await pool.query(
+      `SELECT s.id AS song_id, NULL::uuid AS arrangement_id, s.title, s.author,
+              COALESCE(s.main_arrangement_name, 'Standard') AS version,
+              EXISTS (SELECT 1 FROM song_arrangements a WHERE a.song_id = s.id) AS has_arrangements,
+              s.tempo, NULLIF(TRIM(s.time_signature), '') AS time_signature,
+              sug.tempo AS suggested_tempo, sug.time_signature AS suggested_time_signature
+         FROM songs s
+         LEFT JOIN LATERAL (
+           SELECT m.tempo, NULLIF(TRIM(m.time_signature), '') AS time_signature
+             FROM songs m
+             JOIN churches mc ON mc.id = m.church_id AND mc.is_curator = TRUE
+            WHERE m.church_id <> s.church_id
+              AND NULLIF(s.ccli_number::text, '') IS NOT NULL
+              AND m.ccli_number = s.ccli_number
+              AND (m.tempo > 0 OR NULLIF(TRIM(m.time_signature), '') IS NOT NULL)
+            ORDER BY m.updated_at DESC NULLS LAST
+            LIMIT 1
+         ) sug ON TRUE
+        WHERE s.church_id = $1 AND s.retired IS NOT TRUE
+       UNION ALL
+       SELECT s.id, sa.id, s.title, s.author, sa.name, TRUE,
+              sa.tempo, NULLIF(TRIM(sa.time_signature), ''),
+              NULL::int, NULL::text
+         FROM song_arrangements sa
+         JOIN songs s ON s.id = sa.song_id
+        WHERE s.church_id = $1 AND s.retired IS NOT TRUE
+        ORDER BY title, song_id, arrangement_id NULLS FIRST, version`,
+      [req.churchId]
+    );
+    res.json({ rows, time_signatures: TIME_SIGNATURES });
+  } catch (err) {
+    next(err);
+  }
+});
+
+// PATCH /songs/:id/tempo { tempo?, time_signature? } — the song's main arrangement only; other arrangements use
+// PUT /songs/:id/arrangements/:arrangementId. Only touches these two columns ('' / null clears).
+router.patch('/:id/tempo', requireAuth, requirePermission('can_manage_songs'), async (req, res, next) => {
+  try {
+    if (!UUID_RE.test(req.params.id)) return res.status(404).json({ error: 'Song not found' });
+    const body = req.body || {};
+    const sets = [];
+    const vals = [];
+    if ('tempo' in body) {
+      const t = cleanTempo(body.tempo);
+      if (t.error) return res.status(400).json({ error: t.error });
+      vals.push(t.value); sets.push(`tempo = $${vals.length}`);
+    }
+    if ('time_signature' in body) {
+      const v = body.time_signature == null ? '' : String(body.time_signature).trim();
+      if (v !== '' && !TIME_SIGNATURES.includes(v)) return res.status(400).json({ error: 'Unknown time signature.' });
+      vals.push(v || null); sets.push(`time_signature = $${vals.length}`);
+    }
+    if (!sets.length) return res.status(400).json({ error: 'Nothing to update.' });
+    vals.push(req.params.id, req.churchId);
+    const r = await pool.query(
+      `UPDATE songs SET ${sets.join(', ')} WHERE id = $${vals.length - 1} AND church_id = $${vals.length}
+       RETURNING id, tempo, time_signature`,
+      vals
+    );
+    if (!r.rows.length) return res.status(404).json({ error: 'Song not found' });
+    res.json(r.rows[0]);
+  } catch (err) {
+    next(err);
+  }
+});
+
 router.get('/:id', requireAuth, requireMembership, async (req, res, next) => {
   try {
     const { churchId } = req;

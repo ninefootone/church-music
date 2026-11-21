@@ -4252,3 +4252,31 @@ body.plans-overview-active .app-main-content { max-width: 1680px; }
 /* Arrangement name next to a song's title in a plan (plan page, share page). */
 .badge-arrangement { background: var(--color-surface); color: var(--color-brand-700); border: 1px solid var(--color-brand-200); margin-left: 6px; vertical-align: middle; font-weight: 600; }
 .badge-arrangement--flush { margin-left: 0; }
+
+/* Songs → Tempo & time (/songs/tempo), 2026-11-21 — bulk tempo + time signature editor for the iPad metronome. */
+.tempo-intro { color: var(--color-text-secondary); margin: 0 0 1rem; max-width: 720px; }
+.tempo-toolbar { display: flex; flex-wrap: wrap; align-items: center; gap: 12px; margin-bottom: 1rem; }
+.tempo-filters { display: flex; gap: 8px; }
+.tempo-search { position: relative; flex: 1 1 220px; max-width: 320px; }
+.tempo-search-icon { position: absolute; left: 10px; top: 50%; transform: translateY(-50%); color: var(--color-text-muted); }
+.tempo-search-input { padding-left: 32px; }
+.tempo-count { color: var(--color-text-muted); font-size: 14px; margin-left: auto; }
+.tempo-row { display: grid; grid-template-columns: minmax(0, 1fr) 110px 120px minmax(0, 220px); align-items: center; gap: 12px; padding: 10px 14px; }
+.tempo-row-song { min-width: 0; }
+.tempo-row-title { font-weight: 600; color: var(--color-text-primary); text-decoration: none; }
+.tempo-row-title:hover { text-decoration: underline; }
+.tempo-row-sub { font-size: 13px; color: var(--color-text-muted); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.tempo-field { display: flex; flex-direction: column; gap: 2px; }
+.tempo-field-label { font-size: 11px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.04em; color: var(--color-text-muted); }
+.tempo-input, .tempo-select { padding-top: 6px; padding-bottom: 6px; }
+.tempo-row-end { display: flex; align-items: center; justify-content: flex-end; gap: 8px; flex-wrap: wrap; }
+.tempo-suggest { white-space: nowrap; }
+.tempo-status { font-size: 13px; color: var(--color-text-muted); white-space: nowrap; }
+.tempo-status--ok { color: var(--color-success); }
+.tempo-status--err { color: var(--color-danger); white-space: normal; }
+@media (max-width: 640px) {
+  .tempo-row { grid-template-columns: 1fr 1fr; }
+  .tempo-row-song, .tempo-row-end { grid-column: 1 / -1; }
+  .tempo-row-end { justify-content: flex-start; }
+  .tempo-count { margin-left: 0; }
+}

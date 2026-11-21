@@ -92,6 +92,9 @@ export default function SongsPage() {
             </button>
           )}
           {canManageSongs && (
+            <Link href="/songs/tempo" className="btn-text">Tempo &amp; time</Link>
+          )}
+          {canManageSongs && (
             <Link href="/songs/new" className="btn btn-primary btn-compact">
               <Plus size={16} /> Add new
             </Link>
