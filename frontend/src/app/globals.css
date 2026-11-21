@@ -4266,6 +4266,8 @@ body.plans-overview-active .app-main-content { max-width: 1680px; }
 .tempo-row-title { font-weight: 600; color: var(--color-text-primary); text-decoration: none; }
 .tempo-row-title:hover { text-decoration: underline; }
 .tempo-row-sub { font-size: 13px; color: var(--color-text-muted); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.tempo-ccli { color: var(--color-brand-600); text-decoration: none; font-weight: 600; }
+.tempo-ccli:hover { text-decoration: underline; }
 .tempo-field { display: flex; flex-direction: column; gap: 2px; }
 .tempo-field-label { font-size: 11px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.04em; color: var(--color-text-muted); }
 .tempo-input, .tempo-select { padding-top: 6px; padding-bottom: 6px; }

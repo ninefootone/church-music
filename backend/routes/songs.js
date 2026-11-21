@@ -506,6 +506,7 @@ router.get('/tempo-check', requireAuth, requirePermission('can_manage_songs'), a
   try {
     const { rows } = await pool.query(
       `SELECT s.id AS song_id, NULL::uuid AS arrangement_id, s.title, s.author,
+              NULLIF(s.ccli_number::text, '') AS ccli_number,
               COALESCE(s.main_arrangement_name, 'Standard') AS version,
               EXISTS (SELECT 1 FROM song_arrangements a WHERE a.song_id = s.id) AS has_arrangements,
               s.tempo, NULLIF(TRIM(s.time_signature), '') AS time_signature,
@@ -524,7 +525,7 @@ router.get('/tempo-check', requireAuth, requirePermission('can_manage_songs'), a
          ) sug ON TRUE
         WHERE s.church_id = $1 AND s.retired IS NOT TRUE
        UNION ALL
-       SELECT s.id, sa.id, s.title, s.author, sa.name, TRUE,
+       SELECT s.id, sa.id, s.title, s.author, NULLIF(s.ccli_number::text, ''), sa.name, TRUE,
               sa.tempo, NULLIF(TRIM(sa.time_signature), ''),
               NULL::int, NULL::text
          FROM song_arrangements sa

@@ -17,6 +17,7 @@ type Row = {
   arrangement_id: string | null
   title: string
   author: string | null
+  ccli_number: string | null
   version: string
   has_arrangements: boolean
   tempo: number | null
@@ -166,7 +167,18 @@ export default function TempoPage() {
                 <div className="tempo-row-song">
                   <Link href={`/songs/${r.song_id}`} className="tempo-row-title">{r.title}</Link>
                   {r.has_arrangements && <span className="badge badge-arrangement">{r.version}</span>}
-                  {r.author && <div className="tempo-row-sub">{r.author}</div>}
+                  {(r.author || r.ccli_number) && (
+                    <div className="tempo-row-sub">
+                      {r.author}
+                      {r.author && r.ccli_number && ' · '}
+                      {r.ccli_number && (
+                        <a href={`https://songselect.ccli.com/songs/${encodeURIComponent(r.ccli_number.trim())}`} target="_blank" rel="noopener noreferrer"
+                          className="tempo-ccli" title="Open on SongSelect (tempo and time signature are on the song's page there)">
+                          CCLI {r.ccli_number} ↗
+                        </a>
+                      )}
+                    </div>
+                  )}
                 </div>
                 <label className="tempo-field">
                   <span className="tempo-field-label">BPM</span>
