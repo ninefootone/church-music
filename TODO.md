@@ -32,6 +32,13 @@ Next:
       are useless offline).
 - [x] Annotation persistence — DONE (local personal markings + server-stored shared markings; no PDF round-trip).
 - [ ] Bluetooth foot-controller page turns.
+- [ ] **iPad 1.2.0 — metronome ("Click") + arrow keys / pedal modes + Mac** — TestFlight build 8 (tag `ipad-1.2-tf2`,
+      2026-11-22; also on Jon's Mac via TestFlight) + staging OTA "type a tempo". Waiting on tester feedback, then App
+      Store submission (production build from `main`). Decide first whether 1.2 waits for personal markings sync.
+      Full detail: project doc `metronome.md`. Updates for 1.1 users must now come from tag `ipad-1.1`.
+- [ ] **Before April 2027: build the iPad app with Xcode 27** (Apple warning ITMS-90725 on build 8 — EAS's default image
+      for SDK 57 is Xcode 26). Plan: upgrade to Expo SDK 58 early 2027 (Xcode 27 default; remove the
+      `expo-build-properties` `enableSceneSupport` key then), Preview test, new build.
 - [ ] Android build (same codebase) — later.
 - [ ] Store assets, TestFlight, submit & review.
 - [x] **iPad app: plans don't refresh after web edits (found 2026-10-01).** DONE 2026-11-04: pull to refresh (list + inside a plan) and "Changed · Update" for downloaded plans — see project doc `ipad-multichurch-and-changed-download-2026-11.md`. Original notes: (1) The Plans list (`HomeScreen.tsx`, effect keyed on `reloadKey` only) is fetched ONCE at mount — a title/date change or new plan made on the website only shows after quitting and relaunching the app. Fix: pull-to-refresh (`RefreshControl`) + re-run the load on `AppState` → active and when returning to the Plans tab. (2) A downloaded plan (✓ Offline) opens from the manifest snapshot with no network check (`openPlan`, by design) so web changes to its SONGS/ORDER never appear until remove + re-download, and — unlike custom sets — nothing says it's stale. Risk: leader swaps a song Saturday night, band plays Friday's download. Fix: when online, compare the server plan (`/plans/:id` item ids/order/key overrides) to the snapshot and show "Changed since download · Update" on the row and in plan detail. JS-only → ship by OTA AFTER App Store approval (reviewers' devices pull the production channel). Test on Dev first.
