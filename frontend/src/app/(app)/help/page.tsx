@@ -348,6 +348,35 @@ export default function HelpPage() {
               <p className="help-content-body">
                 Changes are saved when you click <strong>Save changes</strong>. Edits to a song&apos;s default structure don&apos;t affect structures that have already been customised on individual plans.
               </p>
+              <p className="help-content-body">
+                If the song has more than one arrangement, the button reads <strong>Edit song</strong>, and the key, time signature, tempo, notes and structure on that page are the <strong>Standard</strong> arrangement&apos;s. To change another arrangement, select it on the song page and click <strong>Edit arrangement</strong> — see <strong>Songs → Arrangements</strong>.
+              </p>
+            </div>
+          ),
+        },
+        {
+          id: 'arrangements',
+          title: 'Arrangements',
+          content: () => (
+            <div>
+              <p className="help-content-body">
+                An <strong>arrangement</strong> is another version of the same song — for example a contemporary version of a hymn, or a slower version you use at evening services. Each arrangement has its own key, tempo, time signature, notes, structure, files, rehearsal recordings and links. The lyrics, CCLI number, tags and copyright are shared by every arrangement.
+              </p>
+              <p className="help-content-body">
+                <strong>Adding one:</strong> on the song page, click <strong>+ Add arrangement</strong> under the author and give it a name. It starts with the song&apos;s key, tempo, time signature and notes; its structure and files start empty. The song&apos;s original version is called <strong>Standard</strong>.
+              </p>
+              <p className="help-content-body">
+                <strong>Switching:</strong> the pills under the author (e.g. <strong>Standard · Contemporary</strong>) switch between arrangements. Everything below them — key, tempo, notes, structure, files, recordings and links — is for the selected arrangement. To add files, recordings or links to an arrangement, select it first and then upload or add them as normal.
+              </p>
+              <p className="help-content-body">
+                <strong>Editing:</strong> select the arrangement and click <strong>Edit arrangement</strong>. To move a file to a different arrangement, edit the file and change its <strong>Arrangement</strong>.
+              </p>
+              <p className="help-content-body">
+                <strong>Deleting:</strong> select it and click <strong>Delete</strong>. You can&apos;t delete an arrangement while a plan uses it — change those plans first. When you delete one, its files, recordings and links move to Standard rather than being lost.
+              </p>
+              <p className="help-content-body">
+                In the song list, a song with arrangements shows a small label such as <strong>2 arrangements</strong>. Arrangements can be managed by admins and members with <strong>Add &amp; edit songs</strong>.
+              </p>
             </div>
           ),
         },
@@ -369,7 +398,13 @@ export default function HelpPage() {
                 To upload, open the song and click <strong>Upload file</strong>, then drag files into the box or click it to choose them. You can upload multiple files at once and give each one a label (e.g. &quot;Guitar chart&quot;, &quot;Full score&quot;). Labels can be edited after upload.
               </p>
               <p className="help-content-body">
-                Audio files go in <strong>Rehearsal recordings</strong> instead — see the next topic.
+                Audio files go in <strong>Rehearsal recordings</strong> instead — see <strong>Songs → Rehearsal recordings</strong>.
+              </p>
+              <p className="help-content-body">
+                Give each file the key it&apos;s written in. On the song page files are listed under <strong>Main key</strong> and <strong>Other keys</strong>, and on a plan the files in that plan&apos;s key are listed first.
+              </p>
+              <p className="help-content-body">
+                <strong>Editing a ChordPro file:</strong> admins and members with <strong>Add &amp; edit songs</strong> can click <strong>Edit ChordPro content</strong> on a ChordPro file&apos;s row on the song page. The editor shows the text on the left and a live preview on the right (on a phone or narrow window, switch between them with the <strong>Edit</strong> and <strong>Preview</strong> tabs). Mistakes are listed underneath with a link to the line: an unclosed chord bracket or an unfinished <code>{'{…}'}</code> must be fixed before you can save, while likely typos are only warnings. Your edited version is kept separately from the file you uploaded, and <strong>Revert to original</strong> puts the uploaded version back.
               </p>
               <p className="help-content-body">
                 A note on copyright: uploading files doesn&apos;t grant you the right to reproduce them. Make sure your church holds a valid CCLI licence that covers the songs you&apos;re uploading charts for.
@@ -399,6 +434,26 @@ export default function HelpPage() {
               </p>
               <p className="help-content-body">
                 Recordings can only be played by signed-in members of your church. They aren&apos;t included in shared plan links or plan emails. In the iPad app, tap <strong>Listen</strong> in the song viewer to play them; they also download with your plans for offline use.
+              </p>
+            </div>
+          ),
+        },
+        {
+          id: 'tempo-and-time',
+          title: 'Tempo & time',
+          content: () => (
+            <div>
+              <p className="help-content-body">
+                The iPad app&apos;s metronome starts at each song&apos;s <strong>tempo</strong>, and uses the <strong>time signature</strong> to click the quavers (in threes for 6/8, 9/8 and 12/8) and to accent the first beat. To fill these in quickly for your whole library, go to <strong>Songs → Tempo &amp; time</strong> (admins and members with <strong>Add &amp; edit songs</strong>).
+              </p>
+              <p className="help-content-body">
+                The page starts on <strong>Missing something</strong>: every song (and each extra arrangement) that&apos;s missing a tempo or time signature. Type a tempo and press Tab or Enter, or pick a time signature — each change saves straight away and shows <strong>✓ Saved</strong>. Songs you finish stay on the list until you reload, so it doesn&apos;t jump about while you work. <strong>All songs</strong> shows everything, and you can search by title or author.
+              </p>
+              <p className="help-content-body">
+                Where the song has a CCLI number, <strong>CCLI ↗</strong> opens it on SongSelect, which often shows the tempo and time signature. Some songs also offer a <strong>Use …</strong> button with values from the SongStack library&apos;s copy of the song — check they suit how your church plays it.
+              </p>
+              <p className="help-content-body">
+                <strong>Which beat is the tempo?</strong> Use the beat you count: in 6/8, 9/8 and 12/8 that&apos;s the dotted crotchet (two, three or four per bar), and in 2/2 and 3/2 it&apos;s the minim. If SongSelect gives a different beat, convert it — for example a 2/2 song listed at 140 crotchets a minute is 70.
               </p>
             </div>
           ),
@@ -498,7 +553,10 @@ export default function HelpPage() {
                 To remove a song from a plan, open the plan and use the x button next to the song. This only removes it from the plan — the song stays in your library.
               </p>
               <p className="help-content-body">
-                Click a song in the running order to expand it. This reveals its sheet music, any <strong>rehearsal recordings</strong> (play or download them right there), structure, CCLI details and any <strong>links</strong> saved on the song (YouTube, Spotify, Apple Music and so on) — click a link to open it in a new tab. If the song has lyrics saved in the library, a <strong>Show lyrics</strong> button appears here too — handy for checking the words while planning, without opening the song separately.
+                Click a song in the running order to expand it. This reveals its sheet music, any <strong>rehearsal recordings</strong> (play or download them right there), structure, CCLI details and any <strong>links</strong> saved on the song (YouTube, Spotify, Apple Music and so on) — click a link to open it in a new tab. Files in the plan&apos;s key are listed first, with other keys underneath. If the song has lyrics saved in the library, a <strong>Show lyrics</strong> button appears here too — handy for checking the words while planning, without opening the song separately. <strong>Open full song page →</strong> at the bottom takes you to the song itself.
+              </p>
+              <p className="help-content-body">
+                <strong>Arrangements:</strong> if a song has more than one arrangement, choose which one in the dropdown next to its key while editing the plan (or in <strong>Add to plan</strong> on the song page, or when adding from <strong>Planning several weeks at once</strong>). The plan then shows the arrangement&apos;s name, and its key, structure, files, recordings and links. See <strong>Songs → Arrangements</strong>.
               </p>
             </div>
           ),
@@ -684,6 +742,9 @@ export default function HelpPage() {
                 <strong>Song slots</strong> are placeholders in the running order. While editing a plan you can add one with <strong>+ Song slot</strong> under Other items and give it an optional label such as &quot;Response song&quot;. An empty slot shows as <em>Song to be chosen</em> on the plan, the share link and the email, and you&apos;ll be asked to confirm if you publish while any are still empty.
               </p>
               <p className="help-content-body">
+                A template keeps each item&apos;s minutes (songs without any use the song&apos;s default length). To change a template&apos;s durations, set them on a plan and use <strong>Save as template → Replace an existing template</strong>.
+              </p>
+              <p className="help-content-body">
                 Changing a template doesn&apos;t affect plans already made from it. To rename, edit or delete templates, go to <strong>Plans → Templates</strong> (admins can also use <strong>Settings → Plan templates</strong>). Saving and managing templates needs the <strong>Add &amp; edit plans</strong> permission.
               </p>
             </div>
@@ -776,7 +837,7 @@ export default function HelpPage() {
           content: () => (
             <div>
               <p className="help-content-body">
-                Go to the <strong>Team</strong> page and click <strong>Invite member</strong>. Share your church&apos;s invite link directly. Anyone who signs up via that link is automatically connected to your church.
+                Go to the <strong>Team</strong> page and click <strong>Invite member</strong>. It shows a ready-written message with your church&apos;s invite link — copy it and send it by email, text or WhatsApp. The person opens the link, signs in or creates a free account, and taps <strong>Join church</strong>. The message also includes your invite code, in case they&apos;re asked to type it. This works for people who already use SongStack with another church too.
               </p>
               <p className="help-content-body">
                 New members join as standard members with no extra permissions. You can adjust their permissions after they&apos;ve joined.
@@ -898,10 +959,10 @@ export default function HelpPage() {
           content: () => (
             <div>
               <p className="help-content-body">
-                Your church has a unique invite link that you can share with anyone you want to join. Find it on the <strong>Team</strong> page under the invite section.
+                Your church has an invite code. You&apos;ll find it in <strong>Settings → Invite</strong>, where you can copy it or <strong>Regenerate</strong> it — regenerating makes a new code and stops the old code and link working, which is useful if one has been shared too widely.
               </p>
               <p className="help-content-body">
-                Anyone who signs up via the link is automatically connected to your church as a standard member.
+                The easiest way to invite someone is <strong>Team → Invite member</strong>, which gives you a message with the link to copy (see <strong>Team &amp; permissions → Inviting members</strong>). People who join this way become standard members; you can change their permissions afterwards.
               </p>
             </div>
           ),
