@@ -36,6 +36,14 @@ Next:
       2026-11-22; also on Jon's Mac via TestFlight) + staging OTA "type a tempo". Waiting on tester feedback, then App
       Store submission (production build from `main`). Decide first whether 1.2 waits for personal markings sync.
       Full detail: project doc `metronome.md`. Updates for 1.1 users must now come from tag `ipad-1.1`.
+- [ ] **NEXT: personal markings sync to the account** (iPad + Mac). Plan + open design question (per-stroke vs per-file)
+      in project doc `ipad-1-1-release-plan.md` → "NEXT — personal markings". Decide whether 1.2 waits for it.
+- [ ] **Later: remote click** (iPad controls the click on a Mac near the desk). Spike PASSED 2026-11-23 (branch
+      `spike-remote-click`, not merged). Results + checklist: project doc `remote-click-spike.md`. ~3 sessions.
+- [ ] **Maybe (after tester feedback, batch with other native work): type the metronome tempo with a hardware keyboard**
+      (Mac / iPad keyboard). Plan: `SongstackKeys` `ArrowKeysView` gets a `digits` prop — while the Click sheet's keypad
+      is open it also handles 0–9, Delete, Return (= Done), Esc (= Cancel) and emits `onKey`; SetPlayer passes "typing"
+      down to the viewers. Arrows/pedal keep working. Native → needs a build (not an OTA). ~½ hour.
 - [ ] **Before April 2027: build the iPad app with Xcode 27** (Apple warning ITMS-90725 on build 8 — EAS's default image
       for SDK 57 is Xcode 26). Plan: upgrade to Expo SDK 58 early 2027 (Xcode 27 default; remove the
       `expo-build-properties` `enableSceneSupport` key then), Preview test, new build.
