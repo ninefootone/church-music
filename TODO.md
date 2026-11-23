@@ -34,10 +34,15 @@ Next:
 - [ ] Bluetooth foot-controller page turns.
 - [ ] **iPad 1.2.0 — metronome ("Click") + arrow keys / pedal modes + Mac** — TestFlight build 8 (tag `ipad-1.2-tf2`,
       2026-11-22; also on Jon's Mac via TestFlight) + staging OTA "type a tempo". Waiting on tester feedback, then App
-      Store submission (production build from `main`). Decide first whether 1.2 waits for personal markings sync.
+      Store submission (production build from `main`). 1.2 does NOT wait for markings sync (parked 2026-11-23).
       Full detail: project doc `metronome.md`. Updates for 1.1 users must now come from tag `ipad-1.1`.
-- [ ] **NEXT: personal markings sync to the account** (iPad + Mac). Plan + open design question (per-stroke vs per-file)
-      in project doc `ipad-1-1-release-plan.md` → "NEXT — personal markings". Decide whether 1.2 waits for it.
+- [x] **Personal markings stored per account on the device** (`annotations/u_<userId>/`) — DONE 2026-11-23 on `main`,
+      staging OTA to TestFlight build 8 (tested: existing markings moved, account switch keeps them separate). Fixes a
+      shared-iPad leak (the next account saw the previous person's ink). Reaches App Store users with 1.2 (NOT ported to
+      1.1). Project doc `personal-markings-2026-11.md`.
+- [ ] **Parked: personal markings sync to the account** (server copy; iPad + Mac). Not worth it yet — revisit if Mac
+      availability goes on and people use two devices, or someone asks. Per-stroke design ready in
+      `personal-markings-2026-11.md`.
 - [ ] **Later: remote click** (iPad controls the click on a Mac near the desk). Spike PASSED 2026-11-23 (branch
       `spike-remote-click`, not merged). Results + checklist: project doc `remote-click-spike.md`. ~3 sessions.
 - [ ] **Maybe (after tester feedback, batch with other native work): type the metronome tempo with a hardware keyboard**
