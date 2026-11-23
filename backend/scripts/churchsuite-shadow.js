@@ -51,7 +51,8 @@ function blocks(text) {
   for (const line of text.split('\n')) {
     if (line.startsWith('══ Summary')) { key = null; continue; }
     if (line.startsWith('══ ')) { key = line; out[key] = []; continue; }
-    if (key) out[key].push(line);
+    // The "frozen on the day" label appears when a date becomes today — not a change worth an email.
+    if (key && !line.includes('❄')) out[key].push(line);
   }
   for (const k of Object.keys(out)) out[k] = out[k].join('\n').trim();
   return out;

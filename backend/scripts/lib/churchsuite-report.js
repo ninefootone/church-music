@@ -51,6 +51,8 @@ function multisetDiff(a, b) {   // items in a not in b (by normalised label), ke
 // cs = createClient(...) from ./churchsuite; ss = the SongStack export object
 // ({ church, exported_at, members, plans }); from/to = YYYY-MM-DD.
 // Returns { text, summary } — text is the full report, summary the last three lines.
+const londonToday = () => new Intl.DateTimeFormat('en-CA', { timeZone: 'Europe/London' }).format(new Date());
+
 async function buildReport(cs, ss, from, to) {
   const lines = [];
   const emit = (s = '') => lines.push(s);
@@ -77,6 +79,8 @@ async function buildReport(cs, ss, from, to) {
     say(`ChurchSuite: ${cps.length ? cps.map(p => `"${p.name}" → ${nice(p.serviceTime)} [${p.status}]`).join('; ') : '— none —'}`);
     say(`SongStack:   ${sps.length ? sps.map(p => `${p.title ? `"${p.title}" ` : ''}${[p.start, ...(p.extra || [])].map(nice).join(' & ')} [${p.status}]`).join('; ') : '— none —'}`);
 
+    // Frozen on the day (Jon, 2026-11-23): the sync never changes a plan on or before the day of its service.
+    if (date <= londonToday()) say('  ❄ Today or earlier — frozen: the sync doesn\'t change plans on the day (fix anything in SongStack directly).');
     if (!cps.length) { say('  → Only in SongStack. A sync would leave it alone (not linked).'); emit(out.join('\n') + '\n'); continue; }
     if (!sps.length) { say(`  → Only in ChurchSuite. A sync would CREATE a SongStack plan${cps.length > 1 ? ` with ${cps.length} service times` : ''}.`); changes++; emit(out.join('\n') + '\n'); continue; }
     if (sps.length > 1) say(`  ⚠ ${sps.length} SongStack plans on this date — comparing with the first only.`);
@@ -109,7 +113,7 @@ async function buildReport(cs, ss, from, to) {
       }
       if (itemsA.length || itemsB.length) {
         tally.itemOnlyDiffs++;
-        say(`  ℹ Non-song items differ between services — would be marked on the one plan:`);
+        say(`  ℹ Non-song items differ between services — marked on the one plan as at one service only:`);
         if (itemsA.length) say(`      "${nice(ref.serviceTime)} only": ${itemsA.join(', ')}`);
         if (itemsB.length) say(`      "${nice(other.serviceTime)} only": ${itemsB.join(', ')}`);
       }
@@ -143,7 +147,7 @@ async function buildReport(cs, ss, from, to) {
         else if (!m.key && m.default_key && m.default_key !== s.key) songLines.push(`      ℹ ${s.label}: SongStack uses song default ${m.default_key} (ChurchSuite says ${s.key} — ignored)`);
       }
     }
-    ssSongs.forEach((s, i) => { if (!used.has(i)) { songLines.push(`      − ${ssSongTitle(s)}  (in SongStack, not in ChurchSuite — notes would be kept, item flagged)`); tally.songChanges++; changes++; } });
+    ssSongs.forEach((s, i) => { if (!used.has(i)) { songLines.push(`      − ${ssSongTitle(s)}  (in SongStack, not in ChurchSuite — the sync would remove it)`); tally.songChanges++; changes++; } });
     const inOrder = order.every((v, i) => i === 0 || v > order[i - 1]);
     if (!inOrder) { songLines.push('      ↕ song order differs'); tally.songChanges++; changes++; }
     const realChanges = songLines.some(l => /^\s+[+~−↕]/.test(l));
@@ -183,7 +187,7 @@ async function buildReport(cs, ss, from, to) {
         else { tally.peopleNotMembers.add(t.name); say(`      + ${t.name} — not on the SongStack plan; NOT a SongStack member → would be added by name only${only}`); }
       }
     }
-    for (const [k, m] of ssMus) if (!team.has(k) && ![...team.values()].some(t => likelySamePerson(t.name, m.name))) say(`      − ${m.name}${m.role ? ` (${m.role})` : ''} — on the SongStack plan, not on any ChurchSuite song item (would be kept)`);
+    for (const [k, m] of ssMus) if (!team.has(k) && ![...team.values()].some(t => likelySamePerson(t.name, m.name))) say(`      − ${m.name}${m.role ? ` (${m.role})` : ''} — on the SongStack plan, not on any ChurchSuite song item (${team.size ? "the sync would remove them unless they're a guest" : 'kept — ChurchSuite has no music team that day'})`);
 
     const others = new Set();
     for (const p of cps) for (const i of p.items) if (i.kind !== 'song' && i.kind !== 'slot') for (const n of i.people) if (!team.has(norm(n))) others.add(n);

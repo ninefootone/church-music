@@ -7,7 +7,8 @@
 // that day (a plan with no start time counts only if it's the only plan that day; if ChurchSuite's plan names have no
 // times, the only plan that day). Other SongStack plans on that date — e.g. an evening service made in SongStack only —
 // are never touched. No controlled plan → one is CREATED. Two → skipped with a note. Dates ChurchSuite has nothing
-// for are never looked at.
+// for are never looked at. FROZEN ON THE DAY: the sync only works on dates from TOMORROW onwards — a plan is never
+// changed on the day of its service (Jon, 2026-11-23), so same-day fixes made in SongStack stand.
 //
 // For a controlled (or just-created) plan, reconcile() makes it match ChurchSuite (all services merged):
 //   • service times = ChurchSuite's (start + extra times) — 'set_plan_times'
@@ -34,6 +35,8 @@ const { csServiceTime, matchSong, likelySamePerson, ssSongVariants, STRUCTURAL }
 const { formatClock } = require('../../utils/extraTimes');
 
 const londonToday = () => new Intl.DateTimeFormat('en-CA', { timeZone: 'Europe/London' }).format(new Date());
+// 'YYYY-MM-DD' + n days → 'YYYY-MM-DD' (calendar arithmetic in UTC, so no daylight-saving surprises).
+const addDays = (ymd, n) => { const d = new Date(`${ymd}T12:00:00Z`); d.setUTCDate(d.getUTCDate() + n); return d.toISOString().slice(0, 10); };
 const DEFAULT_ROLE = 'Musician';
 
 // Full plan item rows (for matching, updating and — when removed — logging in full so undo can restore them).
@@ -306,8 +309,14 @@ async function applySync({ pool, cs, churchId, from, to, apply, runId, recordQue
     if (q) { if (!q.payload.dates.includes(date)) q.payload.dates.push(date); return; }
     questions.set(k, { kind, key, planId, date, payload: { ...payload, dates: [date] } });
   };
+  // FREEZE ON THE DAY (decided by Jon 2026-11-23): the sync never changes a plan on the day of its service
+  // (or any earlier day). Same-day fixes made in SongStack — e.g. a wrong song in ChurchSuite, corrected so the
+  // CCLI report and the files people open are right — must stand, and nothing should move under musicians
+  // on the morning. So the earliest date the sync works on is TOMORROW (London).
+  // (Before 2026-11-23 this happened by accident: ChurchSuite's `starts_after` excludes the date given.)
   const today = londonToday();
-  const start = from > today ? from : today;
+  const tomorrow = addDays(today, 1);
+  const start = from > tomorrow ? from : tomorrow;
 
   const library = (await pool.query(
     `SELECT id, title AS song, first_line, default_key, default_duration
@@ -337,7 +346,8 @@ async function applySync({ pool, cs, churchId, from, to, apply, runId, recordQue
        FROM plans
       WHERE church_id = $1 AND plan_date BETWEEN $2::date AND $3::date`, [churchId, start, to])).rows;
 
-  const csPlans = await cs.plans(start, to);
+  // `starts_after` is exclusive, so ask from the day before and then keep only `start` onwards explicitly.
+  const csPlans = (await cs.plans(addDays(start, -1), to)).filter(p => p.date >= start);
   for (const p of csPlans) { p.items = await cs.planItems(p.id); p.serviceTime = csServiceTime(p, p.items); }
 
   const dates = [...new Set(csPlans.map(p => p.date))].sort();
