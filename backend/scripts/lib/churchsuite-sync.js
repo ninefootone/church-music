@@ -29,7 +29,7 @@
 
 const crypto = require('crypto');
 const { norm, titleVariants } = require('./churchsuite');
-const { csServiceTime, matchSong, likelySamePerson, ssSongVariants, STRUCTURAL } = require('./churchsuite-report');
+const { csServiceTime, groupServices, matchSong, likelySamePerson, ssSongVariants, STRUCTURAL } = require('./churchsuite-report');
 // NB the Railway cron service installs only the ROOT package.json (pg, dotenv…) — don't require backend modules that
 // need other npm packages (utils/sanitize needs sanitize-html → crashed the job on 2026-11-18).
 const { formatClock } = require('../../utils/extraTimes');
@@ -352,15 +352,19 @@ async function applySync({ pool, cs, churchId, from, to, apply, runId, recordQue
 
   const dates = [...new Set(csPlans.map(p => p.date))].sort();
   for (const date of dates) {
-    const cps = csPlans.filter(p => p.date === date).sort((a, b) => a.serviceTime.localeCompare(b.serviceTime));
+   // One SongStack plan per group of nearby services (see groupServices: 9:15 + 11:00 together, 7pm separate).
+   const dayGroups = groupServices(csPlans.filter(p => p.date === date).sort((a, b) => a.serviceTime.localeCompare(b.serviceTime)));
+   for (const cps of dayGroups) {
     const sps = ssPlans.filter(p => p.date === date);
-    const note = text => notes.push({ date, text });
-    const act = text => actions.push({ date, text });
     const times = [...new Set(cps.map(p => p.serviceTime).filter(Boolean))].sort();
+    // Two plans on one date (morning + evening): say which one each line is about.
+    const tag = dayGroups.length > 1 ? `[${times.length ? times.map(formatClock).join(' & ') : 'no time'}] ` : '';
+    const note = text => notes.push({ date, text: tag + text });
+    const act = text => actions.push({ date, text: tag + text });
 
     // Which SongStack plan does ChurchSuite control here? (header)
     const controlled = times.length
-      ? sps.filter(p => (p.start ? times.includes(p.start) : sps.length === 1))
+      ? sps.filter(p => (p.start ? times.includes(p.start) : sps.length === 1 && dayGroups.length === 1))
       : (sps.length === 1 ? sps : []);
     if (controlled.length > 1) { note(`${controlled.length} SongStack plans at ChurchSuite's service times on this date — skipped (not sure which to update).`); continue; }
     if (!times.length && sps.length > 1) { note(`${sps.length} SongStack plans on this date and no service time in ChurchSuite's plan names — skipped.`); continue; }
@@ -493,6 +497,7 @@ async function applySync({ pool, cs, churchId, from, to, apply, runId, recordQue
     } finally {
       client.release();
     }
+   }
   }
   if (recordQuestions) await saveQuestions(pool, churchId, [...questions.values()]);
   return { actions, notes, questions: [...questions.values()] };

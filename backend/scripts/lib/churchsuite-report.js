@@ -9,12 +9,48 @@ const nice = t => { if (!t) return '?'; const [h, m] = t.split(':').map(Number);
 const dayLabel = d => new Date(`${d}T12:00:00Z`).toLocaleDateString('en-GB', { weekday: 'short', day: 'numeric', month: 'short', year: 'numeric' });
 
 // Service time for a ChurchSuite plan: time in its name ("Sunday 9:15"), else the Welcome item's start, else the plan time.
+// Service time from the plan name: "Sunday 9:15", "Sunday 11:00", "7pm Sunday Church", "6.30pm Evening"…
+function timeFromName(name) {
+  const fmt = (h, m, ap) => {
+    h = parseInt(h, 10);
+    if (ap && /pm/i.test(ap) && h < 12) h += 12;
+    if (ap && /am/i.test(ap) && h === 12) h = 0;
+    return h <= 23 ? `${String(h).padStart(2, '0')}:${m}` : null;
+  };
+  let m = (name || '').match(/(\d{1,2})[:.](\d{2})\s*(am|pm)?/i);
+  if (m) return fmt(m[1], m[2], m[3]);
+  m = (name || '').match(/\b(\d{1,2})\s*(am|pm)\b/i);
+  if (m) return fmt(m[1], '00', m[2]);
+  return null;
+}
+
 function csServiceTime(plan, items) {
-  const m = (plan.name || '').match(/(\d{1,2})[:.](\d{2})/);
-  if (m) return `${m[1].padStart(2, '0')}:${m[2]}`;
+  const fromName = timeFromName(plan.name);
+  if (fromName) return fromName;
   const welcome = items.find(i => /welcome/i.test(i.type_name) && i.time_start);
   if (welcome) return hhmm(welcome.time_start);
   return hhmm(plan.time);
+}
+
+// SERVICE GROUPS (decided by Jon 2026-11-23): ChurchSuite plans on the same date are ONE SongStack plan (one service
+// at several times) only when their times are close together. A gap of more than SERVICE_GAP_MINUTES starts a new
+// plan — so 9:15 + 11:00 stay one plan, a 7pm evening service is its own plan. Chosen over ChurchSuite's Service
+// link (Endcliffe's 9:15 and 11:00 are linked to DIFFERENT Services; the evening plan to none) and over comparing
+// content (plans fill up during the week, so the answer would change and plans would split/merge back and forth).
+// Plans with no time join the first group. `cps` must be sorted by serviceTime.
+const SERVICE_GAP_MINUTES = 180;
+function groupServices(cps) {
+  const mins = t => { const [h, m] = t.split(':').map(Number); return h * 60 + m; };
+  const groups = [];
+  let cur = null, last = null;
+  for (const p of cps.filter(x => x.serviceTime)) {
+    const t = mins(p.serviceTime);
+    if (!cur || t - last > SERVICE_GAP_MINUTES) { cur = []; groups.push(cur); }
+    cur.push(p); last = t;
+  }
+  const untimed = cps.filter(x => !x.serviceTime);
+  if (untimed.length) { if (groups.length) groups[0].push(...untimed); else groups.push(untimed); }
+  return groups;
 }
 
 const STRUCTURAL = /^(set ?up|tech|music rehearsal.*|rehearsal.*|sound ?check)$/;
@@ -68,14 +104,26 @@ async function buildReport(cs, ss, from, to) {
   emit(`ChurchSuite: ${csPlans.length} plans · SongStack (${ss.church}, exported ${String(ss.exported_at).slice(0, 16).replace('T', ' ')}): ${ss.plans.length} plans · ${from} → ${to}\n`);
 
   for (const date of dates) {
+   // Same grouping as the sync: nearby ChurchSuite services = one SongStack plan; a far-apart one (evening) = its own.
+   const groups = groupServices(csPlans.filter(p => p.date === date).sort((a, b) => a.serviceTime.localeCompare(b.serviceTime)));
+   const daySs = ss.plans.filter(p => p.date === date);
+   const units = groups.map(g => {
+     const times = g.map(p => p.serviceTime).filter(Boolean);
+     return { cps: g, sps: daySs.filter(p => (p.start ? times.includes(p.start) : groups.length === 1 && daySs.length === 1)) };
+   });
+   const claimed = new Set(units.flatMap(u => u.sps));
+   const leftover = daySs.filter(p => !claimed.has(p));
+   if (leftover.length || !units.length) units.push({ cps: [], sps: leftover });
+   for (const { cps, sps } of units) {
     tally.dates++;
-    const cps = csPlans.filter(p => p.date === date).sort((a, b) => a.serviceTime.localeCompare(b.serviceTime));
-    const sps = ss.plans.filter(p => p.date === date);
     const out = [];
     const say = (s = '') => out.push(s);
     let changes = 0;
 
-    say(`══ ${dayLabel(date)} ${'═'.repeat(40)}`);
+    const label = units.length > 1
+      ? ` · ${cps.length ? cps.map(p => nice(p.serviceTime)).join(' & ') : sps.map(p => nice(p.start)).join(' & ')}`
+      : '';
+    say(`══ ${dayLabel(date)}${label} ${'═'.repeat(40)}`);
     say(`ChurchSuite: ${cps.length ? cps.map(p => `"${p.name}" → ${nice(p.serviceTime)} [${p.status}]`).join('; ') : '— none —'}`);
     say(`SongStack:   ${sps.length ? sps.map(p => `${p.title ? `"${p.title}" ` : ''}${[p.start, ...(p.extra || [])].map(nice).join(' & ')} [${p.status}]`).join('; ') : '— none —'}`);
 
@@ -196,6 +244,7 @@ async function buildReport(cs, ss, from, to) {
     if (!changes) tally.identical++;
     say(changes ? '' : '  → Already in step. A sync would change nothing.');
     emit(out.join('\n') + '\n');
+   }
   }
 
   emit('══ Summary ' + '═'.repeat(40));
@@ -208,4 +257,4 @@ async function buildReport(cs, ss, from, to) {
 }
 
 // Shared with churchsuite-sync.js so the sync matches exactly the way the report does.
-module.exports = { buildReport, csServiceTime, matchSong, likelySamePerson, multisetDiff, ssSongTitle, ssSongVariants, STRUCTURAL };
+module.exports = { buildReport, csServiceTime, groupServices, timeFromName, SERVICE_GAP_MINUTES, matchSong, likelySamePerson, multisetDiff, ssSongTitle, ssSongVariants, STRUCTURAL };
