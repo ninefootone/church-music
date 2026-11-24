@@ -87,7 +87,12 @@ async function run() {
 
   const { rows: [{ export: exported }] } = await pool.query(exportSql(), [CS_SHADOW_CHURCH]);
   const ss = JSON.parse(exported);
-  const { text, summary } = await buildReport(cs, ss, ymd(from), ymd(to));
+  // Answers given on Settings → ChurchSuite, so the report doesn't keep asking about names already confirmed.
+  const peopleAnswers = new Map((await pool.query(
+    `SELECT cp.cs_key, cp.decision, u.name AS member_name
+       FROM churchsuite_people cp LEFT JOIN users u ON u.id = cp.user_id
+      WHERE cp.church_id = $1`, [church.id])).rows.map(r => [r.cs_key, r]));
+  const { text, summary } = await buildReport(cs, ss, ymd(from), ymd(to), peopleAnswers);
 
   // The sync's notes (and, in report mode, its preview) are stored as part of the report, so a change
   // there sends an email too. Applied changes always send one (below), so they're left out.

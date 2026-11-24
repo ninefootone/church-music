@@ -89,7 +89,9 @@ function multisetDiff(a, b) {   // items in a not in b (by normalised label), ke
 // Returns { text, summary } — text is the full report, summary the last three lines.
 const londonToday = () => new Intl.DateTimeFormat('en-CA', { timeZone: 'Europe/London' }).format(new Date());
 
-async function buildReport(cs, ss, from, to) {
+// peopleAnswers (optional): Map cs_key → { decision, member_name } — the answers given on Settings → ChurchSuite,
+// so the report treats a confirmed name ("Samuel Hinds" = Sam Hinds) the way the sync does instead of asking again.
+async function buildReport(cs, ss, from, to, peopleAnswers = new Map()) {
   const lines = [];
   const emit = (s = '') => lines.push(s);
   const csPlans = await cs.plans(from, to);
@@ -214,9 +216,9 @@ async function buildReport(cs, ss, from, to) {
 
     // --- people: music team = people assigned to song items in ChurchSuite (any service)
     const team = new Map();
-    for (const p of cps) for (const i of p.items) if (i.kind === 'song' || i.kind === 'slot') for (const n of i.people) {
-      if (!team.has(norm(n))) team.set(norm(n), { name: n, services: new Set() });
-      team.get(norm(n)).services.add(p.serviceTime);
+    for (const p of cps) for (const i of p.items) if (i.kind === 'song' || i.kind === 'slot') for (const pr of (i.peopleRefs || i.people.map(n => ({ name: n, key: null })))) {
+      if (!team.has(norm(pr.name))) team.set(norm(pr.name), { name: pr.name, key: pr.key, services: new Set() });
+      team.get(norm(pr.name)).services.add(p.serviceTime);
     }
     const ssMus = new Map((sp.musicians || []).map(m => [norm(m.name), m]));
     if (team.size || ssMus.size) say('  Music team:');
@@ -225,7 +227,19 @@ async function buildReport(cs, ss, from, to) {
       const only = t.services.size < cps.length ? `  (only at ${[...t.services].map(nice).join(', ')})` : '';
       if (m) say(`      ✓ ${t.name} — on the SongStack plan${m.role ? ` as ${m.role}` : ''}${m.linked ? ' (linked account)' : ' (name only)'}${only}`);
       else {
+        // Already answered on Settings → ChurchSuite — report it the way the sync treats it, never ask again.
+        const answer = t.key ? peopleAnswers.get(t.key) : null;
+        if (answer && answer.decision === 'ignore') { say(`      · ${t.name} — never added (as you chose)${only}`); continue; }
+        const answeredAs = answer && answer.decision === 'member' && answer.member_name ? ssMus.get(norm(answer.member_name)) : null;
+        const nickOnPlan = [...ssMus.values()].find(m => likelySamePerson(m.name, t.name));
+        if (answeredAs || (answer && answer.decision === 'name_only' && nickOnPlan)) {
+          const m2 = answeredAs || nickOnPlan;
+          say(`      ✓ ${t.name} — on the SongStack plan as "${m2.name}" (confirmed)${m2.role ? ` as ${m2.role}` : ''}${only}`);
+          continue;
+        }
         changes++;
+        if (answer && answer.decision === 'member' && answer.member_name) { tally.peopleToAdd.add(t.name); say(`      + ${t.name} — confirmed as ${answer.member_name} → would link to their account${only}`); continue; }
+        if (answer && answer.decision === 'name_only') { tally.peopleToAdd.add(t.name); tally.peopleNotMembers.add(t.name); say(`      + ${t.name} — would be added by name only (as you chose)${only}`); continue; }
         const nick = [...ssMus.values()].find(m => likelySamePerson(m.name, t.name))
           || [...members.values()].map(n => ({ name: n, member: true })).find(m => likelySamePerson(m.name, t.name));
         if (nick) { tally.nicknames.add(`${t.name} = ${nick.name}?`); say(`      ? ${t.name} — probably "${nick.name}"${nick.member ? ' (SongStack member)' : ' (on the SongStack plan)'} → would ask to confirm once, then remember${only}`); continue; }
