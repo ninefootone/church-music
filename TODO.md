@@ -33,8 +33,10 @@ Next:
 - [x] Annotation persistence — DONE (local personal markings + server-stored shared markings; no PDF round-trip).
 - [ ] Bluetooth foot-controller page turns.
 - [ ] **iPad 1.2.0 — metronome ("Click") + arrow keys / pedal modes + Mac** — TestFlight build 8 (tag `ipad-1.2-tf2`,
-      2026-11-22; also on Jon's Mac via TestFlight) + staging OTA "type a tempo". Waiting on tester feedback, then App
-      Store submission (production build from `main`). 1.2 does NOT wait for markings sync (parked 2026-11-23).
+      2026-11-22; also on Jon's Mac via TestFlight) + staging OTA "type a tempo". **2026-11-24: beat dots (Show the beat
+      / Silent) + iPad time-signature picker (only when the website has none) on `main` — native, so BUILD 9 next
+      (no staging OTAs from `main` until then).** Test build 9, then App Store submission (production build from
+      `main`). 1.2 does NOT wait for markings sync (parked 2026-11-23).
       Full detail: project doc `metronome.md`. Updates for 1.1 users must now come from tag `ipad-1.1`.
 - [x] **Personal markings stored per account on the device** (`annotations/u_<userId>/`) — DONE 2026-11-23 on `main`,
       staging OTA to TestFlight build 8 (tested: existing markings moved, account switch keeps them separate). Fixes a
