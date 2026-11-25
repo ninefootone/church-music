@@ -35,9 +35,9 @@ Next:
 - [ ] **iPad 1.2.0 — metronome ("Click") + arrow keys / pedal modes + Mac** — TestFlight build 9 live 2026-11-24 (tag
       `ipad-1.2-tf3`). **2026-11-25 (on `main`): tester feedback round** — Quavers → Subdivisions, gear → Click settings,
       subdivisions per song, "Dotted ♩ per minute" label + "Music says ♪ =" helper, help text; plus NATIVE fixes (dots line
-      up with the accent after a time-signature change; dots squeeze to fit). **Native → BUILD 10 next = 1.2.0 release
-      candidate. NO staging OTAs from `main` until build 10 is on TestFlight.** Test build 10, then App Store submission
-      (production build from `main`). Full detail: project doc `metronome.md`. Updates for 1.1 users come from tag `ipad-1.1`.
+      up with the accent after a time-signature change; dots squeeze to fit). **TestFlight BUILD 10 live 2026-11-25 (tag
+      `ipad-1.2-tf4`), tested iPad + Mac; staging OTAs from `main` OK.** Next: App Store 1.2.0 submission (production
+      build from `main`). Full detail: project doc `metronome.md`. Updates for 1.1 users come from tag `ipad-1.1`.
 - [ ] **iPad 1.3 (one native build):** click sounds (Beep, Woodblock, Tick, Cowbell, Soft), subdivisions "Same as the
       beat", maybe one dot per click in 6/8. Mockups + detail: `metronome.md` → 2026-11-25 section.
 - [x] **Personal markings stored per account on the device** (`annotations/u_<userId>/`) — DONE 2026-11-23 on `main`,
