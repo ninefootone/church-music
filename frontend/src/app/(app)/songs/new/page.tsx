@@ -15,6 +15,7 @@ import { LyricsEditor } from '@/components/ui/LyricsEditor'
 import { StructureBuilder } from '@/components/ui/StructureBuilder'
 import { isOnFreePlan, countOwn, FREE_SONG_LIMIT } from '@/lib/freePlan'
 import { KEYS } from '@/lib/keys'
+import TempoHint from '@/components/ui/TempoHint'
 
 type SongLink = { url: string; label: string; link_type: string }
 
@@ -278,7 +279,8 @@ export default function NewSongPage() {
                 </div>
                 <div style={{ flex: 1 }}>
                   <label className="label">Tempo (BPM)</label>
-                  <input className="input" type="number" min="40" max="240" placeholder="e.g. 120" value={form.tempo} onChange={e => setForm(f => ({ ...f, tempo: e.target.value }))} />
+                  <input className="input" type="number" min="20" max="300" placeholder="e.g. 120" value={form.tempo} onChange={e => setForm(f => ({ ...f, tempo: e.target.value }))} />
+                  <TempoHint tempo={form.tempo} timeSignature={form.time_signature} onUse={n => setForm(f => ({ ...f, tempo: String(n) }))} />
                 </div>
               </div>
           </div>

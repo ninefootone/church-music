@@ -22,6 +22,7 @@ import { useChurch } from '@/context/ChurchContext'
 import { AddToPlanModal } from '@/components/ui/AddToPlanModal'
 import { ConfirmModal } from '@/components/ui/ConfirmModal'
 import { planTimeLabel } from '@/lib/planTimes'
+import { isCompound } from '@/lib/tempoNote'
 
 export default function SongDetailPage() {
   const { id } = useParams()
@@ -432,7 +433,7 @@ export default function SongDetailPage() {
           {view.tempo && (
             <div className="meta-row">
               <span className="meta-label">Tempo</span>
-              <span className="meta-value">{view.tempo} BPM</span>
+              <span className="meta-value">{view.tempo} {isCompound(view.time) ? 'dotted ♩ per min' : 'BPM'}</span>
             </div>
           )}
           {song.ccli_number && (

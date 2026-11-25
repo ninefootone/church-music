@@ -15,6 +15,7 @@ import { LyricsEditor } from '@/components/ui/LyricsEditor'
 import { StructureBuilder } from '@/components/ui/StructureBuilder'
 import TagInput from '@/components/ui/TagInput'
 import { KEYS } from '@/lib/keys'
+import TempoHint from '@/components/ui/TempoHint'
 
 export default function EditSongPage() {
   const { id } = useParams()
@@ -207,7 +208,8 @@ export default function EditSongPage() {
                 </div>
                 <div>
                   <label className="label">Tempo (BPM){arrangementNames.length > 0 && <span className="label-note-inline"> ({mainArrangementName})</span>}</label>
-                  <input className="input" type="number" min="40" max="240" placeholder="e.g. 120" value={form.tempo} onChange={e => setForm(f => ({ ...f, tempo: e.target.value }))} />
+                  <input className="input" type="number" min="20" max="300" placeholder="e.g. 120" value={form.tempo} onChange={e => setForm(f => ({ ...f, tempo: e.target.value }))} />
+                  <TempoHint tempo={form.tempo} timeSignature={form.time_signature} onUse={n => setForm(f => ({ ...f, tempo: String(n) }))} />
                 </div>
               </div>
           </div>

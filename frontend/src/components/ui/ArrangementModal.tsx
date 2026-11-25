@@ -7,6 +7,7 @@ import { X } from 'lucide-react'
 import api from '@/lib/api'
 import { KEYS, normaliseKey } from '@/lib/keys'
 import { StructureBuilder } from '@/components/ui/StructureBuilder'
+import TempoHint from '@/components/ui/TempoHint'
 import { SongArrangement } from '@/types'
 
 const TIME_SIGNATURES = ['4/4', '3/4', '6/8', '9/8', '12/8', '2/4', '2/2', '3/2', '5/4', '7/8']
@@ -88,8 +89,9 @@ export function ArrangementModal({ songId, arrangement, onClose, onSaved }: Arra
                   </div>
                   <div>
                     <label className="label">Tempo (BPM)</label>
-                    <input className="input" type="number" min="1" max="400" placeholder="e.g. 120" value={form.tempo}
+                    <input className="input" type="number" min="20" max="300" placeholder="e.g. 120" value={form.tempo}
                       onChange={e => setForm(f => ({ ...f, tempo: e.target.value }))} />
+                    <TempoHint tempo={form.tempo} timeSignature={form.time_signature} onUse={n => setForm(f => ({ ...f, tempo: String(n) }))} />
                   </div>
                 </div>
               </div>
