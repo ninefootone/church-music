@@ -32,12 +32,14 @@ Next:
       are useless offline).
 - [x] Annotation persistence — DONE (local personal markings + server-stored shared markings; no PDF round-trip).
 - [ ] Bluetooth foot-controller page turns.
-- [ ] **iPad 1.2.0 — metronome ("Click") + arrow keys / pedal modes + Mac** — TestFlight build 8 (tag `ipad-1.2-tf2`,
-      2026-11-22; also on Jon's Mac via TestFlight) + staging OTA "type a tempo". **2026-11-24: beat dots (Show the beat
-      / Silent) + iPad time-signature picker (only when the website has none) on `main` — native, so BUILD 9 next
-      (no staging OTAs from `main` until then).** Test build 9, then App Store submission (production build from
-      `main`). 1.2 does NOT wait for markings sync (parked 2026-11-23).
-      Full detail: project doc `metronome.md`. Updates for 1.1 users must now come from tag `ipad-1.1`.
+- [ ] **iPad 1.2.0 — metronome ("Click") + arrow keys / pedal modes + Mac** — TestFlight build 9 live 2026-11-24 (tag
+      `ipad-1.2-tf3`). **2026-11-25 (on `main`): tester feedback round** — Quavers → Subdivisions, gear → Click settings,
+      subdivisions per song, "Dotted ♩ per minute" label + "Music says ♪ =" helper, help text; plus NATIVE fixes (dots line
+      up with the accent after a time-signature change; dots squeeze to fit). **Native → BUILD 10 next = 1.2.0 release
+      candidate. NO staging OTAs from `main` until build 10 is on TestFlight.** Test build 10, then App Store submission
+      (production build from `main`). Full detail: project doc `metronome.md`. Updates for 1.1 users come from tag `ipad-1.1`.
+- [ ] **iPad 1.3 (one native build):** click sounds (Beep, Woodblock, Tick, Cowbell, Soft), subdivisions "Same as the
+      beat", maybe one dot per click in 6/8. Mockups + detail: `metronome.md` → 2026-11-25 section.
 - [x] **Personal markings stored per account on the device** (`annotations/u_<userId>/`) — DONE 2026-11-23 on `main`,
       staging OTA to TestFlight build 8 (tested: existing markings moved, account switch keeps them separate). Fixes a
       shared-iPad leak (the next account saw the previous person's ink). Reaches App Store users with 1.2 (NOT ported to
