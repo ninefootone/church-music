@@ -36,10 +36,11 @@ Next:
       `ipad-1.2-tf3`). **2026-11-25 (on `main`): tester feedback round** — Quavers → Subdivisions, gear → Click settings,
       subdivisions per song, "Dotted ♩ per minute" label + "Music says ♪ =" helper, help text; plus NATIVE fixes (dots line
       up with the accent after a time-signature change; dots squeeze to fit). **TestFlight BUILD 10 live 2026-11-25 (tag
-      `ipad-1.2-tf4`), tested iPad + Mac; staging OTAs from `main` OK.** Next: App Store 1.2.0 submission (production
-      build from `main`). Full detail: project doc `metronome.md`. Updates for 1.1 users come from tag `ipad-1.1`.
-- [ ] **iPad 1.3 (one native build):** click sounds (Beep, Woodblock, Tick, Cowbell, Soft), subdivisions "Same as the
-      beat", maybe one dot per click in 6/8. Mockups + detail: `metronome.md` → 2026-11-25 section.
+      `ipad-1.2-tf4`), tested iPad + Mac. 1.2.0 SUBMITTED for review 2026-11-25 (build 11, tag `ipad-1.2.0`, manual
+      release — Jon presses Release after tester feedback).** 1.2 fixes: branch off `ipad-1.2.0` (`main` is 1.3.0 now). Full detail: project doc `metronome.md`. Updates for 1.1 users come from tag `ipad-1.1`.
+- [ ] **iPad 1.3 (`main` = 1.3.0 since 2026-11-25) — plan agreed, start from project doc `ipad-1-3-plan.md`:** click
+      sounds + "Same as the beat"; remote click (iPad → Mac); personal markings sync; Mac availability ON + text size;
+      iPhone (plan doc first — lyrics-first set view, phone toolbar, metronome).
 - [x] **Personal markings stored per account on the device** (`annotations/u_<userId>/`) — DONE 2026-11-23 on `main`,
       staging OTA to TestFlight build 8 (tested: existing markings moved, account switch keeps them separate). Fixes a
       shared-iPad leak (the next account saw the previous person's ink). Reaches App Store users with 1.2 (NOT ported to
