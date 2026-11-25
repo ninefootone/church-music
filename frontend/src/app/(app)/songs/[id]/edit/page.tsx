@@ -209,9 +209,9 @@ export default function EditSongPage() {
                 <div>
                   <label className="label">Tempo (BPM){arrangementNames.length > 0 && <span className="label-note-inline"> ({mainArrangementName})</span>}</label>
                   <input className="input" type="number" min="20" max="300" placeholder="e.g. 120" value={form.tempo} onChange={e => setForm(f => ({ ...f, tempo: e.target.value }))} />
-                  <TempoHint tempo={form.tempo} timeSignature={form.time_signature} onUse={n => setForm(f => ({ ...f, tempo: String(n) }))} />
                 </div>
               </div>
+              <TempoHint tempo={form.tempo} timeSignature={form.time_signature} onUse={n => setForm(f => ({ ...f, tempo: String(n) }))} />
           </div>
           <div className="form-field"><label className="label">Tags</label><TagInput value={form.tags} onChange={ids => setForm(f => ({ ...f, tags: ids }))} /></div>
           <div className="form-field">

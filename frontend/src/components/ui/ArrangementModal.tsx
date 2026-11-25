@@ -91,9 +91,9 @@ export function ArrangementModal({ songId, arrangement, onClose, onSaved }: Arra
                     <label className="label">Tempo (BPM)</label>
                     <input className="input" type="number" min="20" max="300" placeholder="e.g. 120" value={form.tempo}
                       onChange={e => setForm(f => ({ ...f, tempo: e.target.value }))} />
-                    <TempoHint tempo={form.tempo} timeSignature={form.time_signature} onUse={n => setForm(f => ({ ...f, tempo: String(n) }))} />
                   </div>
                 </div>
+                <TempoHint tempo={form.tempo} timeSignature={form.time_signature} onUse={n => setForm(f => ({ ...f, tempo: String(n) }))} />
               </div>
               <div className="form-field">
                 <label className="label">Notes</label>
