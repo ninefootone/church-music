@@ -4261,7 +4261,7 @@ body.plans-overview-active .app-main-content { max-width: 1680px; }
 .tempo-search-icon { position: absolute; left: 10px; top: 50%; transform: translateY(-50%); color: var(--color-text-muted); }
 .tempo-search-input { padding-left: 32px; }
 .tempo-count { color: var(--color-text-muted); font-size: 14px; margin-left: auto; }
-.tempo-row { display: grid; grid-template-columns: minmax(0, 1fr) 96px 110px 190px; align-items: center; gap: 8px 12px; padding: 10px 14px; }
+.tempo-row { display: grid; grid-template-columns: minmax(0, 1fr) 116px 110px 190px; align-items: center; gap: 8px 12px; padding: 10px 14px; }
 .tempo-row-song { min-width: 0; }
 .tempo-row-title { font-weight: 600; color: var(--color-text-primary); text-decoration: none; }
 .tempo-row-title:hover { text-decoration: underline; }
@@ -4269,7 +4269,7 @@ body.plans-overview-active .app-main-content { max-width: 1680px; }
 .tempo-ccli { color: var(--color-brand-600); text-decoration: none; font-weight: 600; white-space: nowrap; }
 .tempo-ccli:hover { text-decoration: underline; }
 .tempo-field { display: flex; flex-direction: column; gap: 2px; }
-.tempo-field-label { font-size: 11px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.04em; color: var(--color-text-muted); }
+.tempo-field-label { white-space: nowrap; font-size: 11px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.04em; color: var(--color-text-muted); }
 .tempo-input, .tempo-select { padding-top: 6px; padding-bottom: 6px; }
 .tempo-row-end { display: flex; align-items: center; justify-content: flex-end; gap: 8px; flex-wrap: wrap; }
 .tempo-suggest { white-space: nowrap; }
@@ -4278,7 +4278,7 @@ body.plans-overview-active .app-main-content { max-width: 1680px; }
 .tempo-status--err { color: var(--color-danger); white-space: normal; }
 /* Narrower windows / tablets: song name on its own line, BPM + Time side by side under it, Use/Saved after. */
 @media (max-width: 860px) {
-  .tempo-row { grid-template-columns: 96px 120px minmax(0, 1fr); padding: 12px 14px; }
+  .tempo-row { grid-template-columns: 116px 120px minmax(0, 1fr); padding: 12px 14px; }
   .tempo-row-song { grid-column: 1 / -1; }
   .tempo-row-end { justify-content: flex-start; align-self: end; }
   .tempo-count { margin-left: 0; flex-basis: 100%; }

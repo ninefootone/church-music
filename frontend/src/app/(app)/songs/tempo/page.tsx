@@ -4,6 +4,8 @@
 // 2026-11-21 for the iPad metronome, which reads them). Every church; song managers only. Each change saves on its own:
 // tempo when you leave the box, time signature as soon as you pick it. Rows are filtered by what was missing when the
 // page LOADED, so a row you've just finished doesn't jump away while you're working down the list.
+// Tempo = the beat you count (dotted ♩ in 6/8 etc. — see lib/tempoNote.ts). Each tempo box is labelled with its note,
+// and "Check 6/8 tempos" lists compound-time songs whose tempo looks like a ♪ tempo, with a one-tap ÷3 (2026-11-25).
 // Backend: GET /api/songs/tempo-check, PATCH /api/songs/:id/tempo, PUT /api/songs/:id/arrangements/:arrangementId.
 
 import { useEffect, useMemo, useState } from 'react'
@@ -11,6 +13,7 @@ import Link from 'next/link'
 import { Search } from 'lucide-react'
 import { useChurch } from '@/context/ChurchContext'
 import api from '@/lib/api'
+import { tempoNote, looksLikeQuaverTempo } from '@/lib/tempoNote'
 
 type Row = {
   song_id: string
@@ -29,6 +32,8 @@ type Status = { state: 'saving' | 'saved' | 'error'; msg?: string }
 
 const rowKey = (r: Row) => r.arrangement_id ?? `song:${r.song_id}`
 const isMissing = (r: Row) => !(r.tempo && r.tempo > 0) || !r.time_signature
+const isSuspect = (r: Row) => looksLikeQuaverTempo(r.tempo, r.time_signature)
+type Filter = 'missing' | 'check' | 'all'
 
 export default function TempoPage() {
   const { church, loading: churchLoading, canManageSongs } = useChurch()
@@ -37,7 +42,8 @@ export default function TempoPage() {
   const [loading, setLoading] = useState(true)
   const [loadError, setLoadError] = useState(false)
   const [missingAtLoad, setMissingAtLoad] = useState<Set<string>>(new Set())
-  const [missingOnly, setMissingOnly] = useState(true)
+  const [suspectAtLoad, setSuspectAtLoad] = useState<Set<string>>(new Set())
+  const [filter, setFilter] = useState<Filter>('missing')
   const [search, setSearch] = useState('')
   const [tempoDrafts, setTempoDrafts] = useState<Record<string, string>>({})
   const [status, setStatus] = useState<Record<string, Status>>({})
@@ -50,6 +56,7 @@ export default function TempoPage() {
       setRows(list)
       setSigs(data.time_signatures ?? [])
       setMissingAtLoad(new Set(list.filter(isMissing).map(rowKey)))
+      setSuspectAtLoad(new Set(list.filter(isSuspect).map(rowKey)))
       setTempoDrafts({})
       setStatus({})
     } catch {
@@ -64,11 +71,12 @@ export default function TempoPage() {
   const visible = useMemo(() => {
     const q = search.trim().toLowerCase()
     return rows.filter(r =>
-      (!missingOnly || missingAtLoad.has(rowKey(r))) &&
+      (filter === 'all' || (filter === 'missing' ? missingAtLoad : suspectAtLoad).has(rowKey(r))) &&
       (!q || r.title.toLowerCase().includes(q) || (r.author ?? '').toLowerCase().includes(q)))
-  }, [rows, missingOnly, missingAtLoad, search])
+  }, [rows, filter, missingAtLoad, suspectAtLoad, search])
 
   const stillMissing = rows.filter(isMissing).length
+  const stillSuspect = rows.filter(isSuspect).length
 
   const save = async (r: Row, change: { tempo?: number | null; time_signature?: string | null }) => {
     const k = rowKey(r)
@@ -95,6 +103,13 @@ export default function TempoPage() {
     }
     if (next === (r.tempo ?? null)) return
     save(r, { tempo: next })
+  }
+
+  // "♪ = 110" typed as the tempo of a 6/8 song: the dotted ♩ is a third of it.
+  const fromQuaver = (r: Row) => {
+    if (!r.tempo) return
+    setTempoDrafts(d => { const n = { ...d }; delete n[rowKey(r)]; return n })
+    save(r, { tempo: Math.round(r.tempo / 3) })
   }
 
   const applySuggestion = (r: Row) => {
@@ -127,14 +142,21 @@ export default function TempoPage() {
       </div>
 
       <p className="tempo-intro">
-        The iPad app&apos;s metronome starts at each song&apos;s tempo, and uses the time signature to count quavers
-        (in threes for 6/8 and 12/8) and accent beat 1. Each change saves straight away.
+        The iPad app&apos;s metronome starts at each song&apos;s tempo, and uses the time signature to count the beats and
+        subdivisions (in threes for 6/8, 9/8 and 12/8). The tempo is the beat you count: a <strong>dotted ♩</strong> in
+        6/8, 9/8 and 12/8 — so if the music says ♪ = 110, the tempo is 37. Each change saves straight away.
       </p>
 
       <div className="tempo-toolbar">
         <div className="tempo-filters">
-          <button type="button" className={`filter-chip${missingOnly ? ' is-active' : ''}`} onClick={() => setMissingOnly(true)}>Missing something</button>
-          <button type="button" className={`filter-chip${!missingOnly ? ' is-active' : ''}`} onClick={() => setMissingOnly(false)}>All songs</button>
+          <button type="button" className={`filter-chip${filter === 'missing' ? ' is-active' : ''}`} onClick={() => setFilter('missing')}>Missing something</button>
+          {suspectAtLoad.size > 0 && (
+            <button type="button" className={`filter-chip${filter === 'check' ? ' is-active' : ''}`} onClick={() => setFilter('check')}
+              title="6/8, 9/8 and 12/8 songs with a tempo of 100 or more — probably a ♪ tempo">
+              Check 6/8 tempos ({stillSuspect})
+            </button>
+          )}
+          <button type="button" className={`filter-chip${filter === 'all' ? ' is-active' : ''}`} onClick={() => setFilter('all')}>All songs</button>
         </div>
         <div className="tempo-search">
           <Search size={16} className="tempo-search-icon" />
@@ -150,7 +172,9 @@ export default function TempoPage() {
         <p className="text-danger">Couldn&apos;t load your songs. <button type="button" className="btn-text" onClick={load}>Try again</button></p>
       )}
       {!loading && !loadError && visible.length === 0 && (
-        <p className="tempo-intro">{missingOnly && !search ? 'Every song has a tempo and time signature.' : 'No songs match.'}</p>
+        <p className="tempo-intro">
+          {search ? 'No songs match.' : filter === 'missing' ? 'Every song has a tempo and time signature.' : filter === 'check' ? 'Nothing to check.' : 'No songs match.'}
+        </p>
       )}
 
       {!loading && !loadError && visible.length > 0 && (
@@ -181,7 +205,7 @@ export default function TempoPage() {
                   )}
                 </div>
                 <label className="tempo-field">
-                  <span className="tempo-field-label">BPM</span>
+                  <span className="tempo-field-label" title="The tempo counts this note (beats per minute)">{tempoNote(r.time_signature)} / min</span>
                   <input
                     className="input tempo-input"
                     type="number" inputMode="numeric" min={20} max={300} placeholder="—"
@@ -203,6 +227,12 @@ export default function TempoPage() {
                   </select>
                 </label>
                 <div className="tempo-row-end">
+                  {isSuspect(r) && (
+                    <button type="button" className="btn btn-secondary btn-compact tempo-suggest" onClick={() => fromQuaver(r)}
+                      title={`If the music says ♪ = ${r.tempo}, the dotted ♩ tempo is ${Math.round((r.tempo ?? 0) / 3)}`}>
+                      ♪ = {r.tempo}? Use {Math.round((r.tempo ?? 0) / 3)}
+                    </button>
+                  )}
                   {canSuggest && (
                     <button type="button" className="btn btn-secondary btn-compact tempo-suggest" onClick={() => applySuggestion(r)}
                       title="From the Song Stack Library's copy of this song">
