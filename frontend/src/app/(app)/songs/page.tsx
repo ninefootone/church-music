@@ -92,9 +92,6 @@ export default function SongsPage() {
             </button>
           )}
           {canManageSongs && (
-            <Link href="/songs/tempo" className="btn-text">Tempo &amp; time</Link>
-          )}
-          {canManageSongs && (
             <Link href="/songs/new" className="btn btn-primary btn-compact">
               <Plus size={16} /> Add new
             </Link>
@@ -254,6 +251,13 @@ export default function SongsPage() {
           </Link>
         ))}
       </div>
+      {/* Tempo & time moved out of the header (2026-11-26): useful for filling in the whole library for the iPad
+          metronome, but most people don't need it, so it's a quiet link under the list. */}
+      {canManageSongs && songs.length > 0 && (
+        <p className="songs-footer-note">
+          Using the iPad metronome? <Link href="/songs/tempo" className="link-brand">Fill in tempos and time signatures</Link> for all your songs.
+        </p>
+      )}
     </div>
   )
 }

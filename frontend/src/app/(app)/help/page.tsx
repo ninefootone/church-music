@@ -444,7 +444,7 @@ export default function HelpPage() {
           content: () => (
             <div>
               <p className="help-content-body">
-                The iPad app&apos;s metronome starts at each song&apos;s <strong>tempo</strong>, and uses the <strong>time signature</strong> to click the quavers (in threes for 6/8, 9/8 and 12/8) and to accent the first beat. To fill these in quickly for your whole library, go to <strong>Songs → Tempo &amp; time</strong> (admins and members with <strong>Add &amp; edit songs</strong>).
+                The iPad app&apos;s metronome starts at each song&apos;s <strong>tempo</strong>, and uses the <strong>time signature</strong> to click the quavers (in threes for 6/8, 9/8 and 12/8) and to accent the first beat. To fill these in quickly for your whole library, go to <strong>Songs</strong> and click <strong>Fill in tempos and time signatures</strong> under the list (admins and members with <strong>Add &amp; edit songs</strong>).
               </p>
               <p className="help-content-body">
                 The page starts on <strong>Missing something</strong>: every song (and each extra arrangement) that&apos;s missing a tempo or time signature. Type a tempo and press Tab or Enter, or pick a time signature — each change saves straight away and shows <strong>✓ Saved</strong>. Songs you finish stay on the list until you reload, so it doesn&apos;t jump about while you work. <strong>All songs</strong> shows everything, and you can search by title or author.

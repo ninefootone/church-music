@@ -4254,6 +4254,7 @@ body.plans-overview-active .app-main-content { max-width: 1680px; }
 .badge-arrangement--flush { margin-left: 0; }
 
 /* Songs → Tempo & time (/songs/tempo), 2026-11-21 — bulk tempo + time signature editor for the iPad metronome. */
+.songs-footer-note { margin: var(--space-md) 0 0; font-size: var(--text-sm); color: var(--color-text-muted); text-align: center; }
 .tempo-hint { grid-column: 1 / -1; font-size: var(--text-sm); color: var(--color-text-muted); margin-top: 4px; } /* full width when it sits in a form grid */
 .tempo-hint--warn { color: var(--color-warning-700, #92400e); }
 .tempo-hint-use { font-weight: 600; color: var(--color-brand-600); text-decoration: underline; }
