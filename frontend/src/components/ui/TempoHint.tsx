@@ -19,13 +19,14 @@ export default function TempoHint({ tempo, timeSignature, onUse }: {
       return (
         <div className="tempo-hint tempo-hint--warn">
           Very fast for a dotted ♩ in {timeSignature}. If the music says ♪ = {n}, the tempo is {fixed}.{' '}
-          <button type="button" className="btn-text tempo-hint-use" onClick={() => onUse(fixed)}>Use {fixed}</button>
+          <button type="button" className="btn-text tempo-hint-use" onClick={() => onUse(fixed)}>Use {fixed} (= ♪ {fixed * 3})</button>
         </div>
       )
     }
-    return <div className="tempo-hint">Dotted ♩ per minute. If the music says ♪ = 110, enter 37.</div>
+    // Show the ♪ equivalent the iPad shows ("Same as ♪ = 111"), so admins and leaders see the same pair of numbers.
+    const eq = Number.isInteger(n) && n > 0 ? ` (= ♪ ${n * 3})` : ''
+    return <div className="tempo-hint">Dotted ♩ per minute{eq}. If the music says ♪ = 110, enter 37.</div>
   }
-  const note = tempoNote(timeSignature)
-  if (note === '♩') return null   // x/4 or no time signature: "BPM" is clear enough
-  return <div className="tempo-hint">{note} per minute.</div>
+  // Always say which note the tempo counts, even in 4/4 (consistent with 6/8 — Jon, 2026-11-26).
+  return <div className="tempo-hint">{tempoNote(timeSignature)} per minute.</div>
 }

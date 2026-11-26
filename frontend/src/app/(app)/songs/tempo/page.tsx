@@ -229,7 +229,7 @@ export default function TempoPage() {
                 <div className="tempo-row-end">
                   {isSuspect(r) && (
                     <button type="button" className="btn btn-secondary btn-compact tempo-suggest" onClick={() => fromQuaver(r)}
-                      title={`If the music says ♪ = ${r.tempo}, the dotted ♩ tempo is ${Math.round((r.tempo ?? 0) / 3)}`}>
+                      title={`If the music says ♪ = ${r.tempo}, the dotted ♩ tempo is ${Math.round((r.tempo ?? 0) / 3)} (the iPad shows it as ♪ = ${Math.round((r.tempo ?? 0) / 3) * 3})`}>
                       ♪ = {r.tempo}? Use {Math.round((r.tempo ?? 0) / 3)}
                     </button>
                   )}
