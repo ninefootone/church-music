@@ -39,14 +39,15 @@ Next:
       `ipad-1.2-tf4`), tested iPad + Mac. 1.2.0 SUBMITTED for review 2026-11-25 (build 11, tag `ipad-1.2.0`, manual
       release — Jon presses Release after tester feedback).** 1.2 fixes: branch off `ipad-1.2.0` (`main` is 1.3.0 now). Full detail: project doc `metronome.md`. Updates for 1.1 users come from tag `ipad-1.1`.
 - [ ] **iPad 1.3 (`main` = 1.3.0 since 2026-11-25) — plan agreed, start from project doc `ipad-1-3-plan.md`:** click
-      sounds + "Same as the beat"; remote click (iPad → Mac); personal markings sync; Mac availability ON + text size;
+      sounds + "Same as the beat" ✅; remote click (iPad → Mac) ✅ built; personal markings sync ✅ 2026-11-27; Mac availability ON + text size (next);
       iPhone (plan doc first — lyrics-first set view, phone toolbar, metronome).
 - [x] **Personal markings stored per account on the device** (`annotations/u_<userId>/`) — DONE 2026-11-23 on `main`,
       staging OTA to TestFlight build 8 (tested: existing markings moved, account switch keeps them separate). Fixes a
       shared-iPad leak (the next account saw the previous person's ink). Reaches App Store users with 1.2 (NOT ported to
       1.1). Project doc `personal-markings-2026-11.md`.
-- [ ] **Parked: personal markings sync to the account** (server copy; iPad + Mac). Not worth it yet — revisit if Mac
-      availability goes on and people use two devices, or someone asks. Per-stroke design ready in
+- [x] **Personal markings sync to the account** (iPad + Mac) — DONE 2026-11-27 (iPad 1.3 step 3): table
+      `personal_annotations` + `/api/personal-annotations` (live), app `personalSync.ts` (JS, staging OTA to TestFlight;
+      reaches App Store users with 1.3). Guests not synced. Privacy policy + help updated. Project doc
       `personal-markings-2026-11.md`.
 - [ ] **Later: remote click** (iPad controls the click on a Mac near the desk). Spike PASSED 2026-11-23 (branch
       `spike-remote-click`, not merged). Results + checklist: project doc `remote-click-spike.md`. ~3 sessions.
