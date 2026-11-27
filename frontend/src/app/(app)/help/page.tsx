@@ -229,7 +229,7 @@ export default function HelpPage() {
                 <strong>In the iPad app:</strong> go to <strong>Settings</strong> and use the red <strong>Delete account</strong> card at the very bottom. If you haven&apos;t joined a church yet, there&apos;s a <strong>Delete my account</strong> link on the Join your church screen.
               </p>
               <p className="help-content-body">
-                <strong>What happens:</strong> your account and personal details are removed. Your name on past plans becomes &ldquo;Former member&rdquo;. Shared PDF markings you drew stay for the church but are no longer attributed to you. In the iPad app, your personal markings, downloads and custom sets are cleared from that iPad. Copies can remain in our nightly backups for up to 14 days.
+                <strong>What happens:</strong> your account and personal details are removed. Your name on past plans becomes &ldquo;Former member&rdquo;. Shared PDF markings you drew stay for the church but are no longer attributed to you. Your personal markings are deleted, and the iPad app clears your markings, downloads and custom sets from that iPad. Copies can remain in our nightly backups for up to 14 days.
               </p>
               <p className="help-content-body">
                 <strong>When it&apos;s blocked:</strong> you&apos;ll see a message explaining why, and nothing is changed. This happens if you&apos;re the only admin of a church that still has other members (make someone else an admin from the Team page first), or if your church has an active subscription (cancel it under <strong>Settings → Billing</strong> first).
