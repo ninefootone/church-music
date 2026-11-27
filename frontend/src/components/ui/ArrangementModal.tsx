@@ -7,6 +7,7 @@ import { X } from 'lucide-react'
 import api from '@/lib/api'
 import { KEYS, normaliseKey } from '@/lib/keys'
 import { StructureBuilder } from '@/components/ui/StructureBuilder'
+import { LyricsEditor } from '@/components/ui/LyricsEditor'
 import TempoHint from '@/components/ui/TempoHint'
 import { SongArrangement } from '@/types'
 
@@ -16,11 +17,13 @@ interface ArrangementModalProps {
   songId: string
   /** Omit to add a new arrangement (name only — key, tempo, time signature and notes are copied from the song). */
   arrangement?: SongArrangement
+  /** The song's own lyrics — copied in when "Alternate lyrics" is ticked. */
+  songLyrics?: string | null
   onClose: () => void
   onSaved: (arr: SongArrangement) => void
 }
 
-export function ArrangementModal({ songId, arrangement, onClose, onSaved }: ArrangementModalProps) {
+export function ArrangementModal({ songId, arrangement, songLyrics, onClose, onSaved }: ArrangementModalProps) {
   const isNew = !arrangement
   const [form, setForm] = useState({
     name: arrangement?.name || '',
@@ -30,6 +33,15 @@ export function ArrangementModal({ songId, arrangement, onClose, onSaved }: Arra
     notes: arrangement?.notes || '',
     suggested_structure: arrangement?.suggested_structure || '',
   })
+  // Alternate lyrics: off (NULL) = same words as the song, the usual case. On = this arrangement's own copy, for
+  // when it sings different verses of the same song. See claude/song-arrangements.md.
+  const [altLyrics, setAltLyrics] = useState(!!arrangement?.lyrics)
+  const [lyrics, setLyrics] = useState(arrangement?.lyrics || '')
+
+  const toggleAltLyrics = (on: boolean) => {
+    setAltLyrics(on)
+    if (on && !lyrics) setLyrics(songLyrics || '')
+  }
   const [saving, setSaving] = useState(false)
   const [error, setError] = useState<string | null>(null)
 
@@ -41,7 +53,7 @@ export function ArrangementModal({ songId, arrangement, onClose, onSaved }: Arra
     try {
       const { data } = isNew
         ? await api.post(`/api/songs/${songId}/arrangements`, { name: form.name })
-        : await api.put(`/api/songs/${songId}/arrangements/${arrangement!.id}`, form)
+        : await api.put(`/api/songs/${songId}/arrangements/${arrangement!.id}`, { ...form, lyrics: altLyrics ? lyrics : null })
       onSaved(data)
     } catch (err: any) {
       setError(err.response?.data?.error || 'Failed to save the arrangement')
@@ -104,6 +116,30 @@ export function ArrangementModal({ songId, arrangement, onClose, onSaved }: Arra
                 <label className="label">Suggested structure</label>
                 <StructureBuilder value={form.suggested_structure}
                   onChange={val => setForm(f => ({ ...f, suggested_structure: val }))} />
+              </div>
+              <div className="form-field">
+                <label className="checkbox-label" style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                  <input type="checkbox" checked={altLyrics} onChange={e => toggleAltLyrics(e.target.checked)} />
+                  <span className="label" style={{ margin: 0 }}>Alternate lyrics</span>
+                </label>
+                <p className="text-muted text-sm" style={{ marginTop: '0.35rem' }}>
+                  {altLyrics
+                    ? 'This arrangement shows these lyrics instead of the song’s. If the words are a different song with its own CCLI number, add it as a new song instead.'
+                    : 'Off: this arrangement uses the song’s lyrics. Tick it when you sing different verses in this arrangement.'}
+                </p>
+                {altLyrics && (
+                  <>
+                    <div style={{ marginTop: '0.5rem' }}>
+                      <LyricsEditor value={lyrics} onChange={setLyrics} />
+                    </div>
+                    {songLyrics && (
+                      <button type="button" className="btn btn-ghost" style={{ marginTop: '0.35rem' }}
+                        onClick={() => setLyrics(songLyrics)}>
+                        Reset to song lyrics
+                      </button>
+                    )}
+                  </>
+                )}
               </div>
             </>
           )}

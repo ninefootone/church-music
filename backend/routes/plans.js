@@ -362,7 +362,7 @@ router.get('/:id', requireAuth, requireMemberOrGuest, async function(req, res, n
         COALESCE(sa.default_key, s.default_key) AS song_default_key, s.category AS song_category,
         s.ccli_number AS song_ccli_number,
         CASE WHEN sa.id IS NOT NULL THEN sa.suggested_structure ELSE s.suggested_structure END AS song_suggested_structure,
-        s.lyrics AS song_lyrics,
+        COALESCE(sa.lyrics, s.lyrics) AS song_lyrics, -- arrangement's alternate lyrics, if any
         s.default_duration AS song_default_duration,
         COALESCE(sa.tempo, s.tempo) AS song_tempo,
         COALESCE(sa.time_signature, s.time_signature) AS song_time_signature,

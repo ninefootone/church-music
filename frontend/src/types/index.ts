@@ -62,6 +62,8 @@ export interface SongArrangement {
   time_signature: string | null
   notes: string | null
   suggested_structure: string | null
+  /** Alternate lyrics (other verses of the same song). NULL = same as the song's. */
+  lyrics?: string | null
   position: number
   plan_count?: number
 }

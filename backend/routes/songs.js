@@ -995,7 +995,9 @@ router.delete('/:id/videos/:videoId', requireAuth, requirePermission('can_manage
 // songs.main_arrangement_name is set); song_arrangements rows hold only what differs (name, key, tempo,
 // time signature, notes, structure). Files point at one via song_files.arrangement_id (NULL = main).
 // See claude/song-arrangements.md.
-const ARR_FIELDS = ['name', 'default_key', 'tempo', 'time_signature', 'notes', 'suggested_structure'];
+// lyrics: NULL = same as the song's (the usual case). Set only when this arrangement sings different verses of the
+// SAME song (same CCLI number) — a song with different words is a separate song. See claude/song-arrangements.md.
+const ARR_FIELDS = ['name', 'default_key', 'tempo', 'time_signature', 'notes', 'suggested_structure', 'lyrics'];
 
 function cleanArrangementName(raw) {
   return typeof raw === 'string' ? raw.trim().replace(/\s+/g, ' ').slice(0, 80) : '';
@@ -1069,6 +1071,9 @@ router.put('/:id/arrangements/:arrangementId', requireAuth, requirePermission('c
         v = t.value;
       } else if (field === 'default_key') {
         v = normaliseKey(v) || null;
+      } else if (field === 'lyrics') {
+        // An emptied editor sends '<p></p>' — treat any text-less HTML as "same as the song".
+        v = typeof v === 'string' && v.replace(/<[^>]*>/g, '').replace(/&nbsp;/g, ' ').trim() !== '' ? v : null;
       } else {
         v = typeof v === 'string' && v.trim() !== '' ? v : null;
       }

@@ -257,6 +257,8 @@ export default function SongDetailPage() {
   const view = arr
     ? { key: arr.default_key, tempo: arr.tempo, time: arr.time_signature, notes: arr.notes, structure: arr.suggested_structure }
     : { key: song.default_key, tempo: song.tempo, time: song.time_signature, notes: song.notes, structure: song.suggested_structure }
+  // An arrangement with alternate lyrics (other verses of the same song) shows its own; otherwise the song's.
+  const viewLyrics = arr?.lyrics || song.lyrics
   const inThisArrangement = (f: { arrangement_id?: string | null }) => (f.arrangement_id || null) === (arr ? arr.id : null)
   const arrFiles = (song.files || []).filter(inThisArrangement)
   const arrRecordings = (song.recordings || []).filter(inThisArrangement)
@@ -458,17 +460,19 @@ export default function SongDetailPage() {
         {/* Lyrics */}
         <div>
           <div className="card-header-row">
-            <span className="section-label section-label--flush">Lyrics</span>
-            {song.lyrics && (
+            <span className="section-label section-label--flush">
+              Lyrics{arr?.lyrics ? ` — ${arr.name}` : ''}
+            </span>
+            {viewLyrics && (
               <button onClick={() => setShowFullLyrics(!showFullLyrics)} className="btn btn-ghost">
                 {showFullLyrics ? 'Collapse' : 'Show full lyrics'}
               </button>
             )}
           </div>
-          {song.lyrics ? (
+          {viewLyrics ? (
             <div className="lyrics-wrap">
               <div style={{ maxHeight: showFullLyrics ? 'none' : 140, overflow: 'hidden' }}>
-                <LyricsDisplay lyrics={song.lyrics} />
+                <LyricsDisplay lyrics={viewLyrics} />
               </div>
               {!showFullLyrics && (
                 <div className="lyrics-fade" />
@@ -728,6 +732,7 @@ export default function SongDetailPage() {
         <ArrangementModal
           songId={song.id}
           arrangement={arrModal === 'add' ? undefined : arrModal}
+          songLyrics={song.lyrics}
           onClose={() => setArrModal(null)}
           onSaved={saved => { setArrModal(null); selectArrangement(saved.id); fetchSong() }}
         />
