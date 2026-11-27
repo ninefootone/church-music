@@ -131,3 +131,4 @@ router.post('/files/:fileId/strokes', requireAuth, requireMembership, async (req
 });
 
 module.exports = router;
+module.exports.cleanStroke = cleanStroke; // reused by routes/personalAnnotations.js (PDF personal strokes)

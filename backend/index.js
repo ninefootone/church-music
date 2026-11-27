@@ -19,6 +19,7 @@ const superAdminRoutes = require('./routes/superadmin');
 const unavailabilityRoutes = require('./routes/unavailability');
 const playlistRoutes = require('./routes/playlists');
 const annotationRoutes = require('./routes/annotations');
+const personalAnnotationRoutes = require('./routes/personalAnnotations');
 const accountRoutes = require('./routes/account');
 const planTemplateRoutes = require('./routes/planTemplates');
 const libraryTaggingRoutes = require('./routes/libraryTagging');
@@ -37,6 +38,8 @@ app.use('/api/stripe', stripeRoutes);
 // Shared PDF markings: a page of ink can exceed express.json's 100kb default, so this route gets its own larger
 // parser, mounted BEFORE the global one (body-parser skips already-parsed bodies).
 app.use('/api/annotations', express.json({ limit: '2mb' }), annotationRoutes);
+// Personal markings sync (the first upload from a device sends lots of strokes at once) — same larger parser.
+app.use('/api/personal-annotations', express.json({ limit: '2mb' }), personalAnnotationRoutes);
 app.use(express.json());
 
 app.get('/health', (req, res) => res.json({ status: 'ok' }));
