@@ -39,7 +39,7 @@ Next:
       `ipad-1.2-tf4`), tested iPad + Mac. 1.2.0 SUBMITTED for review 2026-11-25 (build 11, tag `ipad-1.2.0`, manual
       release — Jon presses Release after tester feedback).** 1.2 fixes: branch off `ipad-1.2.0` (`main` is 1.3.0 now). Full detail: project doc `metronome.md`. Updates for 1.1 users come from tag `ipad-1.1`.
 - [ ] **iPad 1.3 (`main` = 1.3.0 since 2026-11-25) — plan agreed, start from project doc `ipad-1-3-plan.md`:** click
-      sounds + "Same as the beat" ✅; remote click (iPad → Mac) ✅ built; personal markings sync ✅ 2026-11-27; Mac availability ON + text size (next);
+      sounds + "Same as the beat" ✅; remote click (iPad → Mac) ✅ built; personal markings sync ✅ 2026-11-27; Mac polish ✅ 2026-11-27 (max width, text size, type the tempo on a keyboard) → TestFlight tf2 next; Mac availability ON at submission;
       iPhone (plan doc first — lyrics-first set view, phone toolbar, metronome).
 - [x] **Personal markings stored per account on the device** (`annotations/u_<userId>/`) — DONE 2026-11-23 on `main`,
       staging OTA to TestFlight build 8 (tested: existing markings moved, account switch keeps them separate). Fixes a
@@ -51,7 +51,7 @@ Next:
       `personal-markings-2026-11.md`.
 - [ ] **Later: remote click** (iPad controls the click on a Mac near the desk). Spike PASSED 2026-11-23 (branch
       `spike-remote-click`, not merged). Results + checklist: project doc `remote-click-spike.md`. ~3 sessions.
-- [ ] **Maybe (after tester feedback, batch with other native work): type the metronome tempo with a hardware keyboard**
+- [x] **DONE 2026-11-27 (iPad 1.3, see `ipad-1-3-plan.md` — built as a module flag + event, not a view prop): type the metronome tempo with a hardware keyboard**
       (Mac / iPad keyboard). Plan: `SongstackKeys` `ArrowKeysView` gets a `digits` prop — while the Click sheet's keypad
       is open it also handles 0–9, Delete, Return (= Done), Esc (= Cancel) and emits `onKey`; SetPlayer passes "typing"
       down to the viewers. Arrows/pedal keep working. Native → needs a build (not an OTA). ~½ hour.
