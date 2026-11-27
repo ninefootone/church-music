@@ -40,7 +40,7 @@ Next:
       release — Jon presses Release after tester feedback).** 1.2 fixes: branch off `ipad-1.2.0` (`main` is 1.3.0 now). Full detail: project doc `metronome.md`. Updates for 1.1 users come from tag `ipad-1.1`.
 - [ ] **iPad 1.3 (`main` = 1.3.0 since 2026-11-25) — plan agreed, start from project doc `ipad-1-3-plan.md`:** click
       sounds + "Same as the beat" ✅; remote click (iPad → Mac) ✅ built; personal markings sync ✅ 2026-11-27; Mac polish ✅ 2026-11-27 (max width, text size, type the tempo on a keyboard) → TestFlight tf2 = build 13 (Team; Musicians once tf1 passes beta review); Mac availability ON at submission;
-      iPhone (plan doc first — lyrics-first set view, phone toolbar, metronome).
+      iPhone — plan AGREED 2026-11-27 (project doc `iphone-plan.md`), builds as 1.4 after 1.3 is submitted.
 - [x] **Personal markings stored per account on the device** (`annotations/u_<userId>/`) — DONE 2026-11-23 on `main`,
       staging OTA to TestFlight build 8 (tested: existing markings moved, account switch keeps them separate). Fixes a
       shared-iPad leak (the next account saw the previous person's ink). Reaches App Store users with 1.2 (NOT ported to
